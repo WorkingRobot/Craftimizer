@@ -6,6 +6,7 @@ internal class Veneration : BaseAction
 
     public override ActionCategory Category => ActionCategory.Buffs;
     public override int Level => 15;
+    public override int ActionId => 19297;
 
     public override int CPCost => 18;
     public override float Efficiency => 0f;

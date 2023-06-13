@@ -6,6 +6,7 @@ internal class FocusedTouch : BaseAction
 
     public override ActionCategory Category => ActionCategory.Quality;
     public override int Level => 68;
+    public override int ActionId => 100243;
 
     public override int CPCost => 18;
     public override float Efficiency => 1.50f;

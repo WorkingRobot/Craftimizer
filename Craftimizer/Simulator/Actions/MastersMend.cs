@@ -6,6 +6,7 @@ internal class MastersMend : BaseAction
 
     public override ActionCategory Category => ActionCategory.Durability;
     public override int Level => 7;
+    public override int ActionId => 100003;
 
     public override int CPCost => 88;
     public override float Efficiency => 0f;

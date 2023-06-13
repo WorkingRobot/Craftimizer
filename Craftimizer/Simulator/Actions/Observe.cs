@@ -6,6 +6,7 @@ internal class Observe : BaseAction
 
     public override ActionCategory Category => ActionCategory.Other;
     public override int Level => 13;
+    public override int ActionId => 100010;
 
     public override int CPCost => 7;
     public override float Efficiency => 0f;

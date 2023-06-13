@@ -6,6 +6,7 @@ internal class Innovation : BaseAction
 
     public override ActionCategory Category => ActionCategory.Buffs;
     public override int Level => 26;
+    public override int ActionId => 19004;
 
     public override int CPCost => 18;
     public override float Efficiency => 0f;

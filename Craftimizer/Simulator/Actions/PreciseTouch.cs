@@ -6,6 +6,7 @@ internal class PreciseTouch : BaseAction
 
     public override ActionCategory Category => ActionCategory.Quality;
     public override int Level => 53;
+    public override int ActionId => 100128;
 
     public override int CPCost => 18;
     public override float Efficiency => 1.50f;

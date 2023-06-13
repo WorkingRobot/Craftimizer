@@ -6,6 +6,7 @@ internal class HastyTouch : BaseAction
 
     public override ActionCategory Category => ActionCategory.Quality;
     public override int Level => 9;
+    public override int ActionId => 100355;
 
     public override int CPCost => 0;
     public override float Efficiency => 1.00f;

@@ -6,6 +6,7 @@ internal class WasteNot2 : BaseAction
 
     public override ActionCategory Category => ActionCategory.Durability;
     public override int Level => 47;
+    public override int ActionId => 4639;
 
     public override int CPCost => 98;
     public override float Efficiency => 0f;

@@ -6,6 +6,7 @@ internal class FocusedSynthesis : BaseAction
 
     public override ActionCategory Category => ActionCategory.Synthesis;
     public override int Level => 67;
+    public override int ActionId => 100235;
 
     public override int CPCost => 5;
     public override float Efficiency => 2.00f;

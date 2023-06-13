@@ -6,6 +6,7 @@ internal class PrudentTouch : BaseAction
 
     public override ActionCategory Category => ActionCategory.Quality;
     public override int Level => 66;
+    public override int ActionId => 100227;
 
     public override int CPCost => 25;
     public override float Efficiency => 1.00f;

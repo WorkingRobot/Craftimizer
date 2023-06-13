@@ -6,6 +6,7 @@ internal class Manipulation : BaseAction
 
     public override ActionCategory Category => ActionCategory.Durability;
     public override int Level => 65;
+    public override int ActionId => 4574;
 
     public override int CPCost => 96;
     public override float Efficiency => 0f;

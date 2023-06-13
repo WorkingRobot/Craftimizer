@@ -6,6 +6,7 @@ internal class TricksOfTheTrade : BaseAction
 
     public override ActionCategory Category => ActionCategory.Other;
     public override int Level => 13;
+    public override int ActionId => 100371;
 
     public override int CPCost => 0;
     public override float Efficiency => 0f;

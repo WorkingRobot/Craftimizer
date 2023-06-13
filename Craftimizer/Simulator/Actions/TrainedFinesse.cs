@@ -6,6 +6,7 @@ internal class TrainedFinesse : BaseAction
 
     public override ActionCategory Category => ActionCategory.Quality;
     public override int Level => 90;
+    public override int ActionId => 100435;
 
     public override int CPCost => 32;
     public override float Efficiency => 1.00f;

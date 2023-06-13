@@ -6,6 +6,7 @@ internal class FinalAppraisal : BaseAction
 
     public override ActionCategory Category => ActionCategory.Synthesis;
     public override int Level => 42;
+    public override int ActionId => 19012;
 
     public override int CPCost => 1;
     public override float Efficiency => 0f;

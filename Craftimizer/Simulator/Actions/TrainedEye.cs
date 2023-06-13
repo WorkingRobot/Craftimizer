@@ -6,6 +6,7 @@ internal class TrainedEye : BaseAction
 
     public override ActionCategory Category => ActionCategory.FirstTurn;
     public override int Level => 80;
+    public override int ActionId => 100283;
 
     public override int CPCost => 250;
     public override float Efficiency => 0f;

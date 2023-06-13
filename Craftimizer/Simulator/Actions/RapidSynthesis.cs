@@ -6,6 +6,7 @@ internal class RapidSynthesis : BaseAction
 
     public override ActionCategory Category => ActionCategory.Synthesis;
     public override int Level => 9;
+    public override int ActionId => 100363;
 
     public override int CPCost => 0;
     // Rapid Synthesis Mastery Trait

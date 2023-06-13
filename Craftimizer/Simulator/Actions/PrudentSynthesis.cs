@@ -6,6 +6,7 @@ internal class PrudentSynthesis : BaseAction
 
     public override ActionCategory Category => ActionCategory.Synthesis;
     public override int Level => 88;
+    public override int ActionId => 100427;
 
     public override int CPCost => 18;
     public override float Efficiency => 1.80f;

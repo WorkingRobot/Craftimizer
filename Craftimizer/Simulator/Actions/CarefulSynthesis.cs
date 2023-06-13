@@ -6,6 +6,7 @@ internal class CarefulSynthesis : BaseAction
 
     public override ActionCategory Category => ActionCategory.Synthesis;
     public override int Level => 62;
+    public override int ActionId => 100203;
 
     public override int CPCost => 7;
     // Careful Synthesis Mastery Trait

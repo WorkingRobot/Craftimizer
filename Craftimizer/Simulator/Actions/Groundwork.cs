@@ -6,6 +6,7 @@ internal class Groundwork : BaseAction
 
     public override ActionCategory Category => ActionCategory.Synthesis;
     public override int Level => 72;
+    public override int ActionId => 100403;
 
     public override int CPCost => 18;
     // Groundwork Mastery Trait
