@@ -1,0 +1,12 @@
+{
+    "Author": "WorkingRobot",
+    "Name": "Craftimizer",
+    "Punchline": "Craft stuff xd",
+    "Description": "In-game craftiming optimizer",
+    "InternalName": "craftimizer",
+    "ApplicableVersion": "any",
+    "Tags": [
+        "crafting",
+        "simulator"
+    ]
+}
