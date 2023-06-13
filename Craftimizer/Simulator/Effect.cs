@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator;
 
-internal enum Effect
+public enum Effect
 {
     InnerQuiet,
     WasteNot,

@@ -5,12 +5,16 @@ using System.Collections.Generic;
 
 namespace Craftimizer.Simulator;
 
-internal class Simulation
+public class Simulation
 {
     public CharacterStats Stats { get; }
     public Recipe Recipe { get; }
     public RecipeLevelTable RecipeTable => Recipe.RecipeLevelTable.Value!;
     public int RLvl => (int)RecipeTable.RowId;
+
+    public int MaxDurability => RecipeTable.Durability * Recipe.DurabilityFactor;
+    public int MaxQuality => (int)RecipeTable.Quality * Recipe.QualityFactor;
+    public int MaxProgress => RecipeTable.Difficulty * Recipe.DifficultyFactor;
 
     public int StepCount => ActionHistory.Count;
     public int Progress { get; private set; }
@@ -29,7 +33,43 @@ internal class Simulation
     {
         Stats = stats;
         Recipe = recipe;
+        Progress = 0;
+        Quality = 0;
+        Durability = MaxDurability;
+        CP = Stats.CP;
+        Condition = Condition.Normal;
     }
+
+    public CompletionReason? Execute(BaseAction action)
+    {
+        if (!action.CanUse)
+            return null;
+
+        action.Use();
+        ActionHistory.Add(action);
+
+        for (var i = 0; i < ActiveEffects.Count; ++i)
+        {
+            var (effect, strength, stepsLeft) = ActiveEffects[i];
+            if (stepsLeft == 1)
+            {
+                ActiveEffects.RemoveAt(i);
+                --i;
+            }
+            else
+                ActiveEffects[i] = (effect, strength, stepsLeft - 1);
+        }
+
+        if (Progress >= MaxProgress)
+            return CompletionReason.ProgressComplete;
+        if (Durability <= 0)
+            return CompletionReason.NoMoreDurability;
+
+        return null;
+    }
+
+    public CompletionReason? Execute<T>() where T : BaseAction =>
+        Execute((T)Activator.CreateInstance(typeof(T), this)!);
 
     public (int Strength, int Duration)? GetEffect(Effect effect)
     {
@@ -116,6 +156,12 @@ internal class Simulation
             baseIncrease *= RecipeTable.ProgressModifier / 100;
 
         Progress += (int)(baseIncrease * efficiency);
+
+        if (HasEffect(Effect.FinalAppraisal) && Progress >= MaxProgress)
+        {
+            Progress = MaxProgress - 1;
+            RemoveEffect(Effect.FinalAppraisal);
+        }
     }
 
     public void IncreaseQuality(float efficiency)

@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator;
 
-internal enum ActionCategory
+public enum ActionCategory
 {
     FirstTurn,
     Synthesis,

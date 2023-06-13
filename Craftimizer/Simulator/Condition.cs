@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator;
 
-internal enum Condition
+public enum Condition
 {
     Poor,
     Normal,

@@ -3,12 +3,12 @@ using Craftimizer.Plugin;
 
 namespace Craftimizer.Simulator;
 
-internal record CharacterStats
+public record CharacterStats
 {
-    public int Craftsmanship { get; }
-    public int Control { get; }
-    public int CP { get; }
-    public int Level { get; }
+    public int Craftsmanship { get; init; }
+    public int Control { get; init; }
+    public int CP { get; init; }
+    public int Level { get; init; }
 
     public int CLvl => Level <= 80
             ? LuminaSheets.ParamGrowSheet.GetRow((uint)Level)!.CraftingLevel
