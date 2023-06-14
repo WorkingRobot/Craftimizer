@@ -10,8 +10,6 @@ internal class HastyTouch : BaseAction
 
     public override int CPCost => 0;
     public override float Efficiency => 1.00f;
+    public override bool IncreasesQuality => true;
     public override float SuccessRate => 0.60f;
-
-    public override void UseSuccess() =>
-        Simulation.IncreaseQuality(Efficiency);
 }

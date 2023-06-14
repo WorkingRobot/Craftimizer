@@ -9,7 +9,6 @@ internal class WasteNot : BaseAction
     public override int ActionId => 4631;
 
     public override int CPCost => 56;
-    public override float Efficiency => 0f;
     public override int DurabilityCost => 0;
 
     public override void UseSuccess()

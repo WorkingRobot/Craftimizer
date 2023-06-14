@@ -10,11 +10,12 @@ internal class PreparatoryTouch : BaseAction
 
     public override int CPCost => 40;
     public override float Efficiency => 2.00f;
+    public override bool IncreasesQuality => true;
     public override int DurabilityCost => 20;
 
     public override void UseSuccess()
     {
-        Simulation.IncreaseQuality(Efficiency);
+        base.UseSuccess();
         Simulation.StrengthenEffect(Effect.InnerQuiet);
     }
 }

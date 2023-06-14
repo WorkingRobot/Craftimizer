@@ -10,10 +10,6 @@ internal class DelicateSynthesis : BaseAction
 
     public override int CPCost => 32;
     public override float Efficiency => 1.00f;
-
-    public override void UseSuccess()
-    {
-        Simulation.IncreaseQuality(Efficiency);
-        Simulation.IncreaseProgress(Efficiency);
-    }
+    public override bool IncreasesProgress => true;
+    public override bool IncreasesQuality => true;
 }

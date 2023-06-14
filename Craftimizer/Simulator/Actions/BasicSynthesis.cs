@@ -11,7 +11,5 @@ internal class BasicSynthesis : BaseAction
     public override int CPCost => 0;
     // Basic Synthesis Mastery Trait
     public override float Efficiency => Simulation.Stats.Level >= 31 ? 1.20f : 1.00f;
-
-    public override void UseSuccess() =>
-        Simulation.IncreaseProgress(Efficiency);
+    public override bool IncreasesProgress => true;
 }

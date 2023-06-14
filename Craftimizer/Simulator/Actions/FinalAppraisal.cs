@@ -9,8 +9,8 @@ internal class FinalAppraisal : BaseAction
     public override int ActionId => 19012;
 
     public override int CPCost => 1;
-    public override float Efficiency => 0f;
     public override int DurabilityCost => 0;
+    public override bool IncreasesStepCount => false;
 
     public override void UseSuccess() =>
         Simulation.AddEffect(Effect.FinalAppraisal, 5);

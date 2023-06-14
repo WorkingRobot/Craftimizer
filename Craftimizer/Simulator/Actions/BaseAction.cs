@@ -25,9 +25,12 @@ public abstract class BaseAction
     public abstract int ActionId { get; }
 
     public abstract int CPCost { get; }
-    public abstract float Efficiency { get; }
+    public virtual float Efficiency => 0f;
+    public virtual bool IncreasesProgress => false;
+    public virtual bool IncreasesQuality => false;
     public virtual float SuccessRate => 1f;
     public virtual int DurabilityCost => 10;
+    public virtual bool IncreasesStepCount => true;
 
     private (CraftAction? CraftAction, Action? Action) GetActionRow(ClassJob classJob)
     {
@@ -95,5 +98,14 @@ public abstract class BaseAction
             UseSuccess();
     }
 
-    public abstract void UseSuccess();
+    public virtual void UseSuccess()
+    {
+        if (Efficiency != 0f)
+        {
+            if (IncreasesProgress)
+                Simulation.IncreaseProgress(Efficiency);
+            if (IncreasesQuality)
+                Simulation.IncreaseQuality(Efficiency);
+        }
+    }
 }

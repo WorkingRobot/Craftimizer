@@ -10,8 +10,6 @@ internal class FocusedSynthesis : BaseAction
 
     public override int CPCost => 5;
     public override float Efficiency => 2.00f;
+    public override bool IncreasesProgress => true;
     public override float SuccessRate => Simulation.GetPreviousAction() is Observe ? 1.00f : 0.50f;
-
-    public override void UseSuccess() =>
-        Simulation.IncreaseProgress(Efficiency);
 }

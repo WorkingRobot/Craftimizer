@@ -10,9 +10,14 @@ internal class Groundwork : BaseAction
 
     public override int CPCost => 18;
     // Groundwork Mastery Trait
-    public override float Efficiency => Simulation.Stats.Level >= 86 ? 3.60f : 3.00f;
+    public override float Efficiency
+    {
+        get
+        {
+            var ret = Simulation.Stats.Level >= 86 ? 3.60f : 3.00f;
+            return Simulation.Durability < DurabilityCost ? ret / 2 : ret;
+        }
+    }
+    public override bool IncreasesProgress => true;
     public override int DurabilityCost => 20;
-
-    public override void UseSuccess() =>
-        Simulation.IncreaseProgress(Efficiency);
 }

@@ -9,8 +9,5 @@ internal class Observe : BaseAction
     public override int ActionId => 100010;
 
     public override int CPCost => 7;
-    public override float Efficiency => 0f;
     public override int DurabilityCost => 0;
-
-    public override void UseSuccess() { }
 }

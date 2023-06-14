@@ -10,11 +10,9 @@ internal class IntensiveSynthesis : BaseAction
 
     public override int CPCost => 6;
     public override float Efficiency => 4.00f;
+    public override bool IncreasesProgress => true;
 
     public override bool CanUse =>
         (Simulation.Condition == Condition.Good || Simulation.Condition == Condition.Excellent)
         && base.CanUse;
-
-    public override void UseSuccess() =>
-        Simulation.IncreaseProgress(Efficiency);
 }

@@ -10,6 +10,7 @@ internal class PreciseTouch : BaseAction
 
     public override int CPCost => 18;
     public override float Efficiency => 1.50f;
+    public override bool IncreasesQuality => true;
 
     public override bool CanUse =>
         (Simulation.Condition == Condition.Good || Simulation.Condition == Condition.Excellent)
@@ -17,7 +18,7 @@ internal class PreciseTouch : BaseAction
 
     public override void UseSuccess()
     {
-        Simulation.IncreaseQuality(Efficiency);
+        base.UseSuccess();
         Simulation.StrengthenEffect(Effect.InnerQuiet);
     }
 }

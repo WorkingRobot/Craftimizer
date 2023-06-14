@@ -10,12 +10,13 @@ internal class MuscleMemory : BaseAction
 
     public override int CPCost => 6;
     public override float Efficiency => 3.00f;
+    public override bool IncreasesProgress => true;
 
     public override bool CanUse => Simulation.IsFirstStep && base.CanUse;
 
     public override void UseSuccess()
     {
-        Simulation.IncreaseProgress(Efficiency);
+        base.UseSuccess();
         Simulation.AddEffect(Effect.MuscleMemory, 5);
     }
 }

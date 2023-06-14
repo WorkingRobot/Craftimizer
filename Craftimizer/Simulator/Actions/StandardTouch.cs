@@ -10,7 +10,5 @@ internal class StandardTouch : BaseAction
 
     public override int CPCost => Simulation.GetPreviousAction() is BasicTouch ? 18 : 32;
     public override float Efficiency => 1.25f;
-
-    public override void UseSuccess() =>
-        Simulation.IncreaseQuality(Efficiency);
+    public override bool IncreasesQuality => true;
 }

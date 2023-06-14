@@ -9,7 +9,6 @@ internal class MastersMend : BaseAction
     public override int ActionId => 100003;
 
     public override int CPCost => 88;
-    public override float Efficiency => 0f;
     public override int DurabilityCost => 0;
 
     public override void UseSuccess() =>

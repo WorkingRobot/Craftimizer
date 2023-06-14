@@ -9,7 +9,6 @@ internal class Innovation : BaseAction
     public override int ActionId => 19004;
 
     public override int CPCost => 18;
-    public override float Efficiency => 0f;
     public override int DurabilityCost => 0;
 
     public override void UseSuccess() =>
