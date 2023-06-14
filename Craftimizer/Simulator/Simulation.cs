@@ -17,6 +17,7 @@ public class Simulation
     public int MaxQuality => (int)RecipeTable.Quality * Recipe.QualityFactor / 100;
     public int MaxProgress => RecipeTable.Difficulty * Recipe.DifficultyFactor / 100;
 
+    public bool IsComplete { get; private set; }
     public int StepCount { get; private set; }
     public int Progress { get; private set; }
     public int Quality { get; private set; }
@@ -26,6 +27,7 @@ public class Simulation
     public List<(Effect effect, int strength, int stepsLeft)> ActiveEffects { get; } = new();
     public List<BaseAction> ActionHistory { get; } = new();
 
+    // https://github.com/ffxiv-teamcraft/simulator/blob/0682dfa76043ff4ccb38832c184d046ceaff0733/src/model/tables.ts#L2
     private static readonly int[] HQPercentTable = {
         1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8,
         9, 9, 9, 10, 10, 10, 11, 11, 11, 12, 12, 12, 13, 13, 13, 14, 14, 14, 15, 15, 15, 16, 16, 17, 17,
@@ -42,6 +44,7 @@ public class Simulation
     {
         Stats = stats;
         Recipe = recipe;
+        IsComplete = false;
         StepCount = 0;
         Progress = 0;
         Quality = 0;
@@ -50,10 +53,19 @@ public class Simulation
         Condition = Condition.Normal;
     }
 
-    public CompletionReason? Execute(BaseAction action)
+    public ActionResponse Execute(BaseAction action)
     {
+        if (IsComplete)
+            return ActionResponse.SimulationComplete;
+
         if (!action.CanUse)
-            return null;
+        {
+            if (action.Level > Stats.Level)
+                return ActionResponse.ActionNotUnlocked;
+            if (action.CPCost > CP)
+                return ActionResponse.NotEnoughCP;
+            return ActionResponse.CannotUseAction;
+        }
 
         action.Use();
         ActionHistory.Add(action);
@@ -71,14 +83,20 @@ public class Simulation
         }
 
         if (Progress >= MaxProgress)
-            return CompletionReason.ProgressComplete;
+        {
+            IsComplete = true;
+            return ActionResponse.ProgressComplete;
+        }
         if (Durability <= 0)
-            return CompletionReason.NoMoreDurability;
+        {
+            IsComplete = true;
+            return ActionResponse.NoMoreDurability;
+        }
 
-        return null;
+        return ActionResponse.UsedAction;
     }
 
-    public CompletionReason? Execute<T>() where T : BaseAction =>
+    public ActionResponse Execute<T>() where T : BaseAction =>
         Execute((T)Activator.CreateInstance(typeof(T), this)!);
 
     public (int Strength, int Duration)? GetEffect(Effect effect)

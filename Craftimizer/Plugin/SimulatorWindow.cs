@@ -49,6 +49,8 @@ public class SimulatorWindow : Window
         ImGui.EndChild();
         ImGui.TableNextColumn();
         ImGui.BeginChild("CraftimizerSimulator", Vector2.Zero, true, ImGuiWindowFlags.NoDecoration);
+        ImGui.Text($"Step {Simulation.StepCount + 1}");
+        ImGui.Text($"{Simulation.HQPercent}%% HQ");
         ImGui.PushStyleColor(ImGuiCol.PlotHistogram, new Vector4(.2f, 1f, .2f, 1f));
         ImGui.ProgressBar(Math.Min((float)Simulation.Progress / Simulation.MaxProgress, 1f), new Vector2(200, 20), $"{Simulation.Progress} / {Simulation.MaxProgress}");
         ImGui.PopStyleColor();
@@ -61,7 +63,6 @@ public class SimulatorWindow : Window
         ImGui.PushStyleColor(ImGuiCol.PlotHistogram, new Vector4(1f, .2f, 1f, 1f));
         ImGui.ProgressBar(Math.Clamp((float)Simulation.CP / Simulation.Stats.CP, 0f, 1f), new Vector2(200, 20), $"{Simulation.CP} / {Simulation.Stats.CP}");
         ImGui.PopStyleColor();
-        ImGui.Text($"{Simulation.HQPercent}%% HQ");
         ImGuiHelpers.ScaledDummy(5);
         ImGui.Text($"Effects:");
         foreach (var (effect, strength, stepsLeft) in Simulation.ActiveEffects)
