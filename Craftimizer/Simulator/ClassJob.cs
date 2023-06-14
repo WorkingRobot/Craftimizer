@@ -16,9 +16,8 @@ public enum ClassJob
 
 internal static class ClassJobExtensions
 {
-    public static bool IsClassJob(this ClassJobCategory me, ClassJob classJob)
-    {
-        return classJob switch
+    public static bool IsClassJob(this ClassJobCategory me, ClassJob classJob) =>
+        classJob switch
         {
             ClassJob.Carpenter => me.CRP,
             ClassJob.Blacksmith => me.BSM,
@@ -30,5 +29,4 @@ internal static class ClassJobExtensions
             ClassJob.Culinarian => me.CUL,
             _ => false
         };
-    }
 }
