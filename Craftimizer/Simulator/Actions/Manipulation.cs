@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class Manipulation : BaseAction
+internal class Manipulation : BaseBuffAction
 {
     public Manipulation(Simulation simulation) : base(simulation) { }
 
@@ -9,8 +9,7 @@ internal class Manipulation : BaseAction
     public override int ActionId => 4574;
 
     public override int CPCost => 96;
-    public override int DurabilityCost => 0;
 
-    public override void UseSuccess() =>
-        Simulation.AddEffect(Effect.Manipulation, 8);
+    public override Effect Effect => Effect.Manipulation;
+    public override int EffectDuration => 8;
 }

@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class WasteNot2 : BaseAction
+internal class WasteNot2 : BaseBuffAction
 {
     public WasteNot2(Simulation simulation) : base(simulation) { }
 
@@ -9,11 +9,8 @@ internal class WasteNot2 : BaseAction
     public override int ActionId => 4639;
 
     public override int CPCost => 98;
-    public override int DurabilityCost => 0;
 
-    public override void UseSuccess()
-    {
-        Simulation.RemoveEffect(Effect.WasteNot);
-        Simulation.AddEffect(Effect.WasteNot2, 8);
-    }
+    public override Effect Effect => Effect.WasteNot2;
+    public override int EffectDuration => 8;
+    public override Effect[] ConflictingEffects => new[] { Effect.WasteNot };
 }

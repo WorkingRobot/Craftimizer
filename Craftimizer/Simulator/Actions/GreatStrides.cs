@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class GreatStrides : BaseAction
+internal class GreatStrides : BaseBuffAction
 {
     public GreatStrides(Simulation simulation) : base(simulation) { }
 
@@ -9,8 +9,7 @@ internal class GreatStrides : BaseAction
     public override int ActionId => 260;
 
     public override int CPCost => 32;
-    public override int DurabilityCost => 0;
 
-    public override void UseSuccess() =>
-        Simulation.AddEffect(Effect.GreatStrides, 3);
+    public override Effect Effect => Effect.GreatStrides;
+    public override int EffectDuration => 3;
 }

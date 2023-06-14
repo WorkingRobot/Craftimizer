@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class Veneration : BaseAction
+internal class Veneration : BaseBuffAction
 {
     public Veneration(Simulation simulation) : base(simulation) { }
 
@@ -11,6 +11,6 @@ internal class Veneration : BaseAction
     public override int CPCost => 18;
     public override int DurabilityCost => 0;
 
-    public override void UseSuccess() =>
-        Simulation.AddEffect(Effect.Veneration, 4);
+    public override Effect Effect => Effect.Veneration;
+    public override int EffectDuration => 4;
 }

@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class Innovation : BaseAction
+internal class Innovation : BaseBuffAction
 {
     public Innovation(Simulation simulation) : base(simulation) { }
 
@@ -9,8 +9,7 @@ internal class Innovation : BaseAction
     public override int ActionId => 19004;
 
     public override int CPCost => 18;
-    public override int DurabilityCost => 0;
 
-    public override void UseSuccess() =>
-        Simulation.AddEffect(Effect.Innovation, 4);
+    public override Effect Effect => Effect.Innovation;
+    public override int EffectDuration => 4;
 }
