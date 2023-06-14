@@ -3,6 +3,7 @@ using ImGuiScene;
 using Lumina.Excel.GeneratedSheets;
 using System;
 using System.Linq;
+using System.Text;
 using Action = Lumina.Excel.GeneratedSheets.Action;
 
 namespace Craftimizer.Simulator.Actions;
@@ -109,6 +110,30 @@ public abstract class BaseAction
                 Simulation.IncreaseProgress(Efficiency);
             if (IncreasesQuality)
                 Simulation.IncreaseQuality(Efficiency);
+        }
+    }
+
+    public virtual string Tooltip
+    {
+        get
+        {
+            var builder = new StringBuilder();
+            builder.AppendLine(GetName(ClassJob.Carpenter));
+            if (!CanUse)
+                builder.AppendLine($"Cannot Use");
+            builder.AppendLine($"Level {Level}");
+            builder.AppendLine($"CP Cost: {CPCost}");
+            if (DurabilityCost != 0)
+                builder.AppendLine($"Durability Cost: {DurabilityCost}");
+            if (IncreasesProgress)
+                builder.AppendLine($"+{Simulation.CalculateProgressGain(Efficiency)} Progress");
+            if (IncreasesQuality)
+                builder.AppendLine($"+{Simulation.CalculateQualityGain(Efficiency)} Quality");
+            if (!IncreasesStepCount)
+                builder.AppendLine($"Does Not Increase Step Count");
+            if (SuccessRate != 1f)
+                builder.AppendLine($"{SuccessRate * 100}%% Success Rate");
+            return builder.ToString();
         }
     }
 }

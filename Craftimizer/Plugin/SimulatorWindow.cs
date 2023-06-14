@@ -40,7 +40,7 @@ public class SimulatorWindow : Window
             if (ImGui.ImageButton(action.GetIcon(ClassJob.Carpenter).ImGuiHandle, new Vector2(ImGui.GetFontSize() * 2)))
                 Simulation.Execute(action);
             if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-                ImGui.SetTooltip(action.GetName(ClassJob.Carpenter));
+                ImGui.SetTooltip(action.Tooltip);
             ImGui.EndDisabled();
             if (++i % 5 != 0)
                 ImGui.SameLine();
@@ -84,7 +84,7 @@ public class SimulatorWindow : Window
         i = 0;
         foreach(var action in Simulation.ActionHistory)
         {
-            ImGui.Image(action.GetIcon(ClassJob.Carpenter).ImGuiHandle, new Vector2(ImGui.GetFontSize() * 1.5f));
+            ImGui.Image(action.GetIcon(ClassJob.Carpenter).ImGuiHandle, new Vector2(ImGui.GetFontSize() * 2f));
             if (ImGui.IsItemHovered())
                 ImGui.SetTooltip(action.GetName(ClassJob.Carpenter));
             if (++i % 5 != 0)
