@@ -1,5 +1,6 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
+using Dalamud.Interface;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
@@ -47,6 +48,19 @@ public class SimulatorWindow : Window
         ImGui.EndChild();
         ImGui.TableNextColumn();
         ImGui.BeginChild("CraftimizerSimulator", Vector2.Zero, true, ImGuiWindowFlags.NoDecoration);
+        ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(.2f, 1f, .2f, 1f));
+        ImGui.ProgressBar(Math.Min((float)Simulation.Progress / Simulation.MaxProgress, 1f), new Vector2(200, 10));
+        ImGui.PopStyleColor();
+        ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(.2f, .2f, 1f, 1f));
+        ImGui.ProgressBar(Math.Min((float)Simulation.Quality / Simulation.MaxQuality, 1f), new Vector2(200, 10));
+        ImGui.PopStyleColor();
+        ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1f, 1f, .2f, 1f));
+        ImGui.ProgressBar(Math.Clamp((float)Simulation.Durability / Simulation.MaxDurability, 0f, 1f), new Vector2(200, 10));
+        ImGui.PopStyleColor();
+        ImGuiHelpers.ScaledDummy(5);
+        ImGui.Text($"Effects:");
+        foreach (var (effect, strength, stepsLeft) in Simulation.ActiveEffects)
+            ImGui.Text($"{effect} {strength} - {stepsLeft}");
         ImGui.EndChild();
         ImGui.EndTable();
     }

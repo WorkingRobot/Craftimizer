@@ -128,6 +128,9 @@ public class Simulation
     public void RestoreDurability(int amount)
     {
         Durability += amount;
+
+        if (Durability > MaxDurability)
+            Durability = MaxDurability;
     }
 
     public void ReduceCP(int amount)
@@ -138,6 +141,9 @@ public class Simulation
     public void RestoreCP(int amount)
     {
         CP += amount;
+        
+        if (CP > Stats.CP)
+            CP = Stats.CP;
     }
 
     public void IncreaseProgress(float efficiency)
