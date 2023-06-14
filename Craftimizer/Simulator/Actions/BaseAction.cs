@@ -96,6 +96,9 @@ public abstract class BaseAction
 
         if (Simulation.RollSuccess(SuccessRate))
             UseSuccess();
+
+        if (IncreasesStepCount)
+            Simulation.IncreaseStepCount();
     }
 
     public virtual void UseSuccess()
