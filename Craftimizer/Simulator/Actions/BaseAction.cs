@@ -125,10 +125,13 @@ public abstract class BaseAction
             builder.AppendLine($"CP Cost: {CPCost}");
             if (DurabilityCost != 0)
                 builder.AppendLine($"Durability Cost: {DurabilityCost}");
-            if (IncreasesProgress)
-                builder.AppendLine($"+{Simulation.CalculateProgressGain(Efficiency)} Progress");
-            if (IncreasesQuality)
-                builder.AppendLine($"+{Simulation.CalculateQualityGain(Efficiency)} Quality");
+            if (Efficiency != 0)
+            {
+                if (IncreasesProgress)
+                    builder.AppendLine($"+{Simulation.CalculateProgressGain(Efficiency)} Progress");
+                if (IncreasesQuality)
+                    builder.AppendLine($"+{Simulation.CalculateQualityGain(Efficiency)} Quality");
+            }
             if (!IncreasesStepCount)
                 builder.AppendLine($"Does Not Increase Step Count");
             if (SuccessRate != 1f)

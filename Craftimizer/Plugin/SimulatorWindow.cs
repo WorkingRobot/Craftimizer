@@ -33,17 +33,22 @@ public class SimulatorWindow : Window
         ImGui.TableNextColumn();
         ImGui.BeginChild("CraftimizerActions", Vector2.Zero, true, ImGuiWindowFlags.NoDecoration);
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
-        var i = 0;
-        foreach(var action in AvailableActions)
+        foreach(var category in AvailableActions.GroupBy(a=>a.Category))
         {
-            ImGui.BeginDisabled(!action.CanUse);
-            if (ImGui.ImageButton(action.GetIcon(ClassJob.Carpenter).ImGuiHandle, new Vector2(ImGui.GetFontSize() * 2)))
-                Simulation.Execute(action);
-            if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-                ImGui.SetTooltip(action.Tooltip);
-            ImGui.EndDisabled();
-            if (++i % 5 != 0)
-                ImGui.SameLine();
+            var i = 0;
+            ImGuiUtils.BeginGroupPanel(category.Key.ToString());
+            foreach (var action in category)
+            {
+                ImGui.BeginDisabled(!action.CanUse);
+                if (ImGui.ImageButton(action.GetIcon(ClassJob.Carpenter).ImGuiHandle, new Vector2(ImGui.GetFontSize() * 2)))
+                    Simulation.Execute(action);
+                if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+                    ImGui.SetTooltip(action.Tooltip);
+                ImGui.EndDisabled();
+                if (++i % 5 != 0)
+                    ImGui.SameLine();
+            }
+            ImGuiUtils.EndGroupPanel();
         }
         ImGui.PopStyleVar();
         ImGui.EndChild();
@@ -81,14 +86,16 @@ public class SimulatorWindow : Window
                 ImGui.Text($"> {stepsLeft}");
         }
         ImGuiHelpers.ScaledDummy(5);
-        i = 0;
-        foreach(var action in Simulation.ActionHistory)
         {
-            ImGui.Image(action.GetIcon(ClassJob.Carpenter).ImGuiHandle, new Vector2(ImGui.GetFontSize() * 2f));
-            if (ImGui.IsItemHovered())
-                ImGui.SetTooltip(action.GetName(ClassJob.Carpenter));
-            if (++i % 5 != 0)
-                ImGui.SameLine();
+            var i = 0;
+            foreach (var action in Simulation.ActionHistory)
+            {
+                ImGui.Image(action.GetIcon(ClassJob.Carpenter).ImGuiHandle, new Vector2(ImGui.GetFontSize() * 2f));
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip(action.GetName(ClassJob.Carpenter));
+                if (++i % 5 != 0)
+                    ImGui.SameLine();
+            }
         }
         ImGui.EndChild();
         ImGui.EndTable();
