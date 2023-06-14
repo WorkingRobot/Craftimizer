@@ -1,4 +1,5 @@
 using Craftimizer.Simulator.Actions;
+using Dalamud.Logging;
 using Lumina.Excel.GeneratedSheets;
 using System;
 using System.Collections.Generic;
@@ -12,11 +13,11 @@ public class Simulation
     public RecipeLevelTable RecipeTable => Recipe.RecipeLevelTable.Value!;
     public int RLvl => (int)RecipeTable.RowId;
 
-    public int MaxDurability => RecipeTable.Durability * Recipe.DurabilityFactor;
-    public int MaxQuality => (int)RecipeTable.Quality * Recipe.QualityFactor;
-    public int MaxProgress => RecipeTable.Difficulty * Recipe.DifficultyFactor;
+    public int MaxDurability => RecipeTable.Durability * Recipe.DurabilityFactor / 100;
+    public int MaxQuality => (int)RecipeTable.Quality * Recipe.QualityFactor / 100;
+    public int MaxProgress => RecipeTable.Difficulty * Recipe.DifficultyFactor / 100;
 
-    public int StepCount => ActionHistory.Count;
+    public int StepCount { get; private set; }
     public int Progress { get; private set; }
     public int Quality { get; private set; }
     public int Durability { get; private set; }
@@ -24,6 +25,14 @@ public class Simulation
     public Condition Condition { get; private set; }
     public List<(Effect effect, int strength, int stepsLeft)> ActiveEffects { get; } = new();
     public List<BaseAction> ActionHistory { get; } = new();
+
+    private static readonly int[] HQPercentTable = {
+        1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8,
+        9, 9, 9, 10, 10, 10, 11, 11, 11, 12, 12, 12, 13, 13, 13, 14, 14, 14, 15, 15, 15, 16, 16, 17, 17,
+        17, 18, 18, 18, 19, 19, 20, 20, 21, 22, 23, 24, 26, 28, 31, 34, 38, 42, 47, 52, 58, 64, 68, 71,
+        74, 76, 78, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 94, 96, 98, 100
+    };
+    public int HQPercent => HQPercentTable[(int)Math.Clamp((float)Quality / MaxQuality * 100, 0, 100)];
 
     public bool IsFirstStep => StepCount == 0;
 
@@ -33,6 +42,7 @@ public class Simulation
     {
         Stats = stats;
         Recipe = recipe;
+        StepCount = 0;
         Progress = 0;
         Quality = 0;
         Durability = MaxDurability;
@@ -110,13 +120,14 @@ public class Simulation
 
     public bool HasEffect(Effect effect) => GetEffect(effect) != null;
 
-    public BaseAction? GetPreviousAction(int stepsBack = 1)
-    {
-        return StepCount < stepsBack ? null : ActionHistory[^stepsBack];
-    }
+    public BaseAction? GetPreviousAction(int stepsBack = 1) =>
+        ActionHistory.Count < stepsBack ? null : ActionHistory[^stepsBack];
 
     public bool RollSuccess(float successRate) =>
         successRate >= Random.NextSingle();
+
+    public void IncreaseStepCount() =>
+        StepCount++;
 
     public void ReduceDurability(int amount)
     {
@@ -146,40 +157,47 @@ public class Simulation
             CP = Stats.CP;
     }
 
-    public void IncreaseProgress(float efficiency)
+    public int CalculateProgressGain(float efficiency)
     {
+        var buffModifier = 1.00f;
         if (HasEffect(Effect.MuscleMemory))
         {
-            efficiency += 1.00f;
+            buffModifier += 1.00f;
             RemoveEffect(Effect.MuscleMemory);
         }
         if (HasEffect(Effect.Veneration))
-            efficiency += 0.50f;
+            buffModifier += 0.50f;
 
         // https://github.com/NotRanged/NotRanged.github.io/blob/0f4aee074f969fb05aad34feaba605057c08ffd1/app/js/ffxivcraftmodel.js#L88
-        var baseIncrease = Stats.Craftsmanship * 10 / RecipeTable.ProgressDivider + 2;
+        PluginLog.LogDebug($"Efficiency: {efficiency}");
+        PluginLog.LogDebug($"Buff Modifier: {buffModifier}");
+        var baseIncrease = (Stats.Craftsmanship * 10f / RecipeTable.ProgressDivider) + 2;
+        PluginLog.LogDebug($"Increase: {baseIncrease}");
         if (Stats.CLvl <= RLvl)
-            baseIncrease *= RecipeTable.ProgressModifier / 100;
-
-        Progress += (int)(baseIncrease * efficiency);
-
-        if (HasEffect(Effect.FinalAppraisal) && Progress >= MaxProgress)
         {
-            Progress = MaxProgress - 1;
-            RemoveEffect(Effect.FinalAppraisal);
+            baseIncrease *= RecipeTable.ProgressModifier / 100f;
+            PluginLog.LogDebug($"Boosted Increase: {baseIncrease}");
         }
+        baseIncrease = MathF.Floor(baseIncrease);
+        PluginLog.LogDebug($"Adj. Increase: {baseIncrease}");
+
+        var progressGain = (int)(baseIncrease * efficiency * buffModifier);
+        PluginLog.LogDebug($"Progress Gain: {progressGain}");
+        return progressGain;
     }
 
-    public void IncreaseQuality(float efficiency)
+    public int CalculateQualityGain(float efficiency)
     {
-        efficiency += (GetEffect(Effect.InnerQuiet)?.Strength ?? 0) * 0.10f;
+        var buffModifier = 1.00f;
         if (HasEffect(Effect.GreatStrides))
         {
-            efficiency += 1.00f;
+            buffModifier += 1.00f;
             RemoveEffect(Effect.GreatStrides);
         }
         if (HasEffect(Effect.Innovation))
-            efficiency += 0.50f;
+            buffModifier += 0.50f;
+
+        buffModifier *= 1 + ((GetEffect(Effect.InnerQuiet)?.Strength ?? 0) * 0.10f);
 
         var conditionModifier = Condition switch
         {
@@ -189,13 +207,46 @@ public class Simulation
             _ => 1.00f,
         };
 
-        var baseIncrease = Stats.Craftsmanship * 10 / RecipeTable.ProgressDivider + 2;
+        PluginLog.LogDebug($"Efficiency: {efficiency}");
+        PluginLog.LogDebug($"Buff Modifier: {buffModifier}");
+        PluginLog.LogDebug($"Cond Modifier: {conditionModifier}");
+        var baseIncrease = (Stats.Control * 10f / RecipeTable.QualityDivider) + 35;
+        PluginLog.LogDebug($"Increase: {baseIncrease}");
         if (Stats.CLvl <= RLvl)
-            baseIncrease *= RecipeTable.ProgressModifier / 100;
+        {
+            baseIncrease *= RecipeTable.QualityModifier / 100f;
+            PluginLog.LogDebug($"Boosted Increase: {baseIncrease}");
+        }
+        baseIncrease = MathF.Floor(baseIncrease);
+        PluginLog.LogDebug($"Adj. Increase: {baseIncrease}");
 
-        Quality += (int)(baseIncrease * efficiency * conditionModifier);
+        var qualityGain = (int)(baseIncrease * efficiency * conditionModifier * buffModifier);
+        PluginLog.LogDebug($"Quality Gain: {qualityGain}");
+        return qualityGain;
+    }
+
+    public void IncreaseProgressRaw(int progressGain)
+    {
+        Progress += progressGain;
+
+        if (HasEffect(Effect.FinalAppraisal) && Progress >= MaxProgress)
+        {
+            Progress = MaxProgress - 1;
+            RemoveEffect(Effect.FinalAppraisal);
+        }
+    }
+
+    public void IncreaseQualityRaw(int qualityGain)
+    {
+        Quality += qualityGain;
 
         if (Stats.Level >= 11)
             StrengthenEffect(Effect.InnerQuiet);
     }
+
+    public void IncreaseProgress(float efficiency) =>
+        IncreaseProgressRaw(CalculateProgressGain(efficiency));
+
+    public void IncreaseQuality(float efficiency) =>
+        IncreaseQualityRaw(CalculateQualityGain(efficiency));
 }

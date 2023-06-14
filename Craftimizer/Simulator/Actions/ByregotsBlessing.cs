@@ -13,6 +13,9 @@ internal class ByregotsBlessing : BaseAction
 
     public override bool CanUse => Simulation.HasEffect(Effect.InnerQuiet) && base.CanUse;
 
-    public override void UseSuccess() =>
+    public override void UseSuccess()
+    {
         Simulation.IncreaseQuality(Efficiency);
+        Simulation.RemoveEffect(Effect.InnerQuiet);
+    }
 }

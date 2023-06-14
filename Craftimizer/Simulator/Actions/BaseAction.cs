@@ -88,11 +88,11 @@ public abstract class BaseAction
         Simulation.ReduceCP(CPCost);
         Simulation.ReduceDurability(DurabilityCost);
 
-        if (Simulation.RollSuccess(SuccessRate))
-            UseSuccess();
-
         if (Simulation.HasEffect(Effect.Manipulation))
             Simulation.RestoreDurability(5);
+
+        if (Simulation.RollSuccess(SuccessRate))
+            UseSuccess();
     }
 
     public abstract void UseSuccess();
