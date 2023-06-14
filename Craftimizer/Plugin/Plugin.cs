@@ -42,5 +42,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         if (command != "/craft")
             return;
+
+        SimulatorWindow.IsOpen = true;
     }
 }
