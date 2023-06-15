@@ -11,8 +11,16 @@ internal class IntensiveSynthesis : BaseAction
     public override int CPCost => 6;
     public override float Efficiency => 4.00f;
     public override bool IncreasesProgress => true;
+    public override bool IsGuaranteedAction => false;
 
     public override bool CanUse =>
-        (Simulation.Condition == Condition.Good || Simulation.Condition == Condition.Excellent)
+        (Simulation.Condition == Condition.Good || Simulation.Condition == Condition.Excellent || Simulation.HasEffect(EffectType.HeartAndSoul))
         && base.CanUse;
+
+    public override void UseSuccess()
+    {
+        base.UseSuccess();
+        if (Simulation.Condition != Condition.Good && Simulation.Condition != Condition.Excellent)
+            Simulation.RemoveEffect(EffectType.HeartAndSoul);
+    }
 }

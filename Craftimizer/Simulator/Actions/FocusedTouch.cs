@@ -11,5 +11,5 @@ internal class FocusedTouch : BaseAction
     public override int CPCost => 18;
     public override float Efficiency => 1.50f;
     public override bool IncreasesQuality => true;
-    public override float SuccessRate => Simulation.GetPreviousAction() is Observe ? 1.00f : 0.50f;
+    public override float SuccessRate => Simulation.IsPreviousAction<Observe>() ? 1.00f : 0.50f;
 }

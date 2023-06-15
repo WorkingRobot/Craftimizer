@@ -2,6 +2,8 @@ using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
+using Dalamud.Logging;
+using Dalamud.Utility;
 using ImGuiNET;
 using System;
 using System.Linq;
@@ -14,6 +16,8 @@ public class SimulatorWindow : Window
     public Simulation Simulation { get; }
     public BaseAction[] AvailableActions { get; }
 
+    private bool showOnlyGuaranteedActions = true;
+
     public SimulatorWindow() : base("Craftimizer")
     {
         SizeConstraints = new WindowSizeConstraints()
@@ -22,7 +26,7 @@ public class SimulatorWindow : Window
             MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
         };
 
-        Simulation = new(new CharacterStats { Craftsmanship = 4041, Control = 3905, CP = 609, Level = 90 }, LuminaSheets.RecipeSheet.GetRow(35573)!);
+        Simulation = new(new CharacterStats { Craftsmanship = 4041, Control = 3905, CP = 609, Level = 90 }, LuminaSheets.RecipeSheet.GetRow(35499)!);
         AvailableActions = BaseAction.Actions.Select(a => (Activator.CreateInstance(a, Simulation)! as BaseAction)!).ToArray();
     }
 
@@ -32,18 +36,22 @@ public class SimulatorWindow : Window
         ImGui.TableSetupColumn("CraftimizerActionsColumn", ImGuiTableColumnFlags.WidthFixed, 300);
         ImGui.TableNextColumn();
         ImGui.BeginChild("CraftimizerActions", Vector2.Zero, true, ImGuiWindowFlags.NoDecoration);
+        ImGui.Checkbox("Show only guaranteed actions", ref showOnlyGuaranteedActions);
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
-        foreach(var category in AvailableActions.GroupBy(a=>a.Category))
+        foreach(var category in AvailableActions.GroupBy(a => a.Category))
         {
             var i = 0;
-            ImGuiUtils.BeginGroupPanel(category.Key.ToString());
-            foreach (var action in category)
+            ImGuiUtils.BeginGroupPanel(category.Key.GetDisplayName());
+            foreach (var action in category.OrderBy(a => a.Level))
             {
+                if (showOnlyGuaranteedActions && !action.IsGuaranteedAction)
+                    continue;
+
                 ImGui.BeginDisabled(!action.CanUse);
                 if (ImGui.ImageButton(action.GetIcon(ClassJob.Carpenter).ImGuiHandle, new Vector2(ImGui.GetFontSize() * 2)))
                     Simulation.Execute(action);
                 if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-                    ImGui.SetTooltip(action.Tooltip);
+                    ImGui.SetTooltip(action.GetTooltip(true));
                 ImGui.EndDisabled();
                 if (++i % 5 != 0)
                     ImGui.SameLine();
@@ -55,6 +63,9 @@ public class SimulatorWindow : Window
         ImGui.TableNextColumn();
         ImGui.BeginChild("CraftimizerSimulator", Vector2.Zero, true, ImGuiWindowFlags.NoDecoration);
         ImGui.Text($"Step {Simulation.StepCount + 1}");
+        ImGui.Text(Simulation.Condition.Name());
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip(Simulation.Condition.Description(Simulation.Stats.HasRelic));
         ImGui.Text($"{Simulation.HQPercent}%% HQ");
         ImGui.PushStyleColor(ImGuiCol.PlotHistogram, new Vector4(.2f, 1f, .2f, 1f));
         ImGui.ProgressBar(Math.Min((float)Simulation.Progress / Simulation.MaxProgress, 1f), new Vector2(200, 20), $"{Simulation.Progress} / {Simulation.MaxProgress}");
@@ -70,20 +81,14 @@ public class SimulatorWindow : Window
         ImGui.PopStyleColor();
         ImGuiHelpers.ScaledDummy(5);
         ImGui.Text($"Effects:");
-        foreach (var (effect, strength, stepsLeft) in Simulation.ActiveEffects)
+        foreach (var effect in Simulation.ActiveEffects)
         {
-            var status = effect.Status();
-            var icon = Icons.GetIconFromId((ushort)status.Icon);
+            var icon = effect.Icon;
             var h = ImGui.GetFontSize() * 1.25f;
             var w = icon.Width * h / icon.Height;
             ImGui.Image(icon.ImGuiHandle, new Vector2(w, h));
-            if (ImGui.IsItemHovered())
-                ImGui.SetTooltip(status.Name.ToString());
             ImGui.SameLine();
-            if (stepsLeft < 0)
-                ImGui.Text($"{strength}");
-            else
-                ImGui.Text($"> {stepsLeft}");
+            ImGui.Text(effect.Tooltip);
         }
         ImGuiHelpers.ScaledDummy(5);
         {
@@ -92,7 +97,7 @@ public class SimulatorWindow : Window
             {
                 ImGui.Image(action.GetIcon(ClassJob.Carpenter).ImGuiHandle, new Vector2(ImGui.GetFontSize() * 2f));
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip(action.GetName(ClassJob.Carpenter));
+                    ImGui.SetTooltip(action.GetTooltip(false));
                 if (++i % 5 != 0)
                     ImGui.SameLine();
             }

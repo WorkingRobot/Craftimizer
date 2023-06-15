@@ -17,6 +17,6 @@ internal class MuscleMemory : BaseAction
     public override void UseSuccess()
     {
         base.UseSuccess();
-        Simulation.AddEffect(Effect.MuscleMemory, 5);
+        Simulation.AddEffect(EffectType.MuscleMemory, 5);
     }
 }

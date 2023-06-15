@@ -1,4 +1,5 @@
 using Craftimizer.Plugin;
+using Dalamud.Utility;
 using ImGuiScene;
 using Lumina.Excel.GeneratedSheets;
 using System;
@@ -32,6 +33,7 @@ public abstract class BaseAction
     public virtual float SuccessRate => 1f;
     public virtual int DurabilityCost => 10;
     public virtual bool IncreasesStepCount => true;
+    public virtual bool IsGuaranteedAction => SuccessRate == 1f;
 
     private (CraftAction? CraftAction, Action? Action) GetActionRow(ClassJob classJob)
     {
@@ -67,9 +69,9 @@ public abstract class BaseAction
     {
         var (craftAction, action) = GetActionRow(classJob);
         if (craftAction != null)
-            return craftAction.Name;
+            return craftAction.Name.ToDalamudString().TextValue;
         else if (action != null)
-            return action.Name;
+            return action.Name.ToDalamudString().TextValue;
         return "Unknown";
     }
 
@@ -92,7 +94,7 @@ public abstract class BaseAction
         Simulation.ReduceCP(CPCost);
         Simulation.ReduceDurability(DurabilityCost);
 
-        if (Simulation.HasEffect(Effect.Manipulation))
+        if (Simulation.HasEffect(EffectType.Manipulation))
             Simulation.RestoreDurability(5);
 
         if (Simulation.RollSuccess(SuccessRate))
@@ -113,30 +115,28 @@ public abstract class BaseAction
         }
     }
 
-    public virtual string Tooltip
+    public virtual string GetTooltip(bool addUsability)
     {
-        get
+        var builder = new StringBuilder();
+        builder.AppendLine(GetName(ClassJob.Carpenter));
+        if (addUsability && !CanUse)
+            builder.AppendLine($"Cannot Use");
+        builder.AppendLine($"Level {Level}");
+        if (CPCost != 0)
+            builder.AppendLine($"-{Simulation.CalculateCPCost(CPCost)} CP");
+        if (DurabilityCost != 0)
+            builder.AppendLine($"-{Simulation.CalculateDurabilityCost(DurabilityCost)} Durability");
+        if (Efficiency != 0)
         {
-            var builder = new StringBuilder();
-            builder.AppendLine(GetName(ClassJob.Carpenter));
-            if (!CanUse)
-                builder.AppendLine($"Cannot Use");
-            builder.AppendLine($"Level {Level}");
-            builder.AppendLine($"CP Cost: {CPCost}");
-            if (DurabilityCost != 0)
-                builder.AppendLine($"Durability Cost: {DurabilityCost}");
-            if (Efficiency != 0)
-            {
-                if (IncreasesProgress)
-                    builder.AppendLine($"+{Simulation.CalculateProgressGain(Efficiency)} Progress");
-                if (IncreasesQuality)
-                    builder.AppendLine($"+{Simulation.CalculateQualityGain(Efficiency)} Quality");
-            }
-            if (!IncreasesStepCount)
-                builder.AppendLine($"Does Not Increase Step Count");
-            if (SuccessRate != 1f)
-                builder.AppendLine($"{SuccessRate * 100}%% Success Rate");
-            return builder.ToString();
+            if (IncreasesProgress)
+                builder.AppendLine($"+{Simulation.CalculateProgressGain(Efficiency)} Progress");
+            if (IncreasesQuality)
+                builder.AppendLine($"+{Simulation.CalculateQualityGain(Efficiency)} Quality");
         }
+        if (!IncreasesStepCount)
+            builder.AppendLine($"Does Not Increase Step Count");
+        if (SuccessRate != 1f)
+            builder.AppendLine($"{Simulation.CalculateSuccessRate(SuccessRate) * 100}%% Success Rate");
+        return builder.ToString();
     }
 }

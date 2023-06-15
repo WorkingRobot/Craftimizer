@@ -11,6 +11,5 @@ internal class FinalAppraisal : BaseBuffAction
     public override int CPCost => 1;
     public override bool IncreasesStepCount => false;
 
-    public override Effect Effect => Effect.FinalAppraisal;
-    public override int EffectDuration => 5;
+    public override Effect Effect => new() { Type = EffectType.FinalAppraisal, Duration = 5 };
 }

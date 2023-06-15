@@ -3,6 +3,7 @@ using Dalamud.Logging;
 using Lumina.Excel.GeneratedSheets;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Craftimizer.Simulator;
 
@@ -12,6 +13,7 @@ public class Simulation
     public Recipe Recipe { get; }
     public RecipeLevelTable RecipeTable => Recipe.RecipeLevelTable.Value!;
     public int RLvl => (int)RecipeTable.RowId;
+    public readonly Condition[] AvailableConditions;
 
     public int MaxDurability => RecipeTable.Durability * Recipe.DurabilityFactor / 100;
     public int MaxQuality => (int)RecipeTable.Quality * Recipe.QualityFactor / 100;
@@ -24,7 +26,7 @@ public class Simulation
     public int Durability { get; private set; }
     public int CP { get; private set; }
     public Condition Condition { get; private set; }
-    public List<(Effect effect, int strength, int stepsLeft)> ActiveEffects { get; } = new();
+    public List<Effect> ActiveEffects { get; } = new();
     public List<BaseAction> ActionHistory { get; } = new();
 
     // https://github.com/ffxiv-teamcraft/simulator/blob/0682dfa76043ff4ccb38832c184d046ceaff0733/src/model/tables.ts#L2
@@ -51,6 +53,7 @@ public class Simulation
         Durability = MaxDurability;
         CP = Stats.CP;
         Condition = Condition.Normal;
+        AvailableConditions = ConditionUtils.GetPossibleConditions(RecipeTable.ConditionsFlag);
     }
 
     public ActionResponse Execute(BaseAction action)
@@ -72,14 +75,13 @@ public class Simulation
 
         for (var i = 0; i < ActiveEffects.Count; ++i)
         {
-            var (effect, strength, stepsLeft) = ActiveEffects[i];
-            if (stepsLeft == 1)
+            var effect = ActiveEffects[i];
+            effect.Duration--;
+            if (effect.Duration == 0)
             {
                 ActiveEffects.RemoveAt(i);
                 --i;
             }
-            else
-                ActiveEffects[i] = (effect, strength, stepsLeft - 1);
         }
 
         if (Progress >= MaxProgress)
@@ -99,59 +101,91 @@ public class Simulation
     public ActionResponse Execute<T>() where T : BaseAction =>
         Execute((T)Activator.CreateInstance(typeof(T), this)!);
 
-    public (int Strength, int Duration)? GetEffect(Effect effect)
-    {
-        var idx = ActiveEffects.FindIndex(x => x.effect == effect);
-        if (idx == -1)
-            return null;
-        var (_, strength, duration) = ActiveEffects[idx];
-        return (strength, duration);
-    }
+    public Effect? GetEffect(EffectType effect) =>
+        ActiveEffects.FirstOrDefault(e => e.Type == effect);
 
-    public void AddEffect(Effect effect, int duration, int strength = 1)
+    public void AddEffect(EffectType effect, int? duration = null, int? strength = null)
     {
+        if (Condition == Condition.Primed && duration != null)
+            duration += 2;
+
         // Duration will be decreased in the next step, so we need to add 1
-        duration += 1;
+        if (duration != null)
+            duration++;
 
-        var idx = ActiveEffects.FindIndex(x => x.effect == effect);
-        if (idx == -1)
-            ActiveEffects.Add((effect, strength, duration));
+        var currentEffect = GetEffect(effect);
+        if (currentEffect != null) {
+            currentEffect.Duration = duration;
+            currentEffect.Strength = strength;
+        }
         else
-            ActiveEffects[idx] = (effect, strength, duration);
+            ActiveEffects.Add(new Effect { Type = effect, Duration = duration, Strength = strength });
     }
 
-    public void StrengthenEffect(Effect effect, int duration = -1)
+    public void StrengthenEffect(EffectType effect, int? duration = null)
     {
-        var idx = ActiveEffects.FindIndex(x => x.effect == effect);
-        if (idx == -1)
-            ActiveEffects.Add((effect, 1, duration));
+        if (duration != null)
+            duration += 1;
+
+        var currentEffect = GetEffect(effect);
+        if (currentEffect != null)
+        {
+            if (effect.Status().MaxStacks > currentEffect.Strength)
+                currentEffect.Strength++;
+        }
         else
-            ActiveEffects[idx] = (effect, ActiveEffects[idx].strength + 1, duration);
+            AddEffect(effect, duration, 1);
     }
 
-    public void RemoveEffect(Effect effect)
-    {
-        var idx = ActiveEffects.FindIndex(x => x.effect == effect);
-        if (idx != -1)
-            ActiveEffects.RemoveAt(idx);
-    }
+    public void RemoveEffect(EffectType effect) =>
+        ActiveEffects.RemoveAll(e => e.Type == effect);
 
-    public bool HasEffect(Effect effect) => GetEffect(effect) != null;
+    public bool HasEffect(EffectType effect) =>
+        ActiveEffects.Any(e => e.Type == effect);
 
-    public BaseAction? GetPreviousAction(int stepsBack = 1) =>
-        ActionHistory.Count < stepsBack ? null : ActionHistory[^stepsBack];
+    public bool IsPreviousAction<T>(int stepsBack = 1) where T : BaseAction =>
+        ActionHistory.Count >= stepsBack && ActionHistory[^stepsBack] is T;
 
-    public bool RollSuccess(float successRate) =>
+    public int CountPreviousAction<T>() where T : BaseAction =>
+        ActionHistory.Count(x => x is T);
+
+    public bool RollSuccessRaw(float successRate) =>
         successRate >= Random.NextSingle();
 
-    public void IncreaseStepCount() =>
-        StepCount++;
+    public bool RollSuccess(float successRate) =>
+        RollSuccessRaw(CalculateSuccessRate(successRate));
 
-    public void ReduceDurability(int amount)
+    public void IncreaseStepCount()
     {
-        if (HasEffect(Effect.WasteNot) || HasEffect(Effect.WasteNot2))
-            amount /= 2;
-        Durability -= amount;
+        StepCount++;
+        StepCondition();
+    }
+
+    private float GetConditionChance(Condition condition) =>
+        condition switch
+        {
+            Condition.Good => Recipe.IsExpert ? 0.12f : (Stats.Level >= 63 ? 0.15f : 0.18f),
+            Condition.Excellent => 0.04f,
+            Condition.Centered => 0.15f,
+            Condition.Sturdy => 0.15f,
+            Condition.Pliant => 0.10f,
+            Condition.Malleable => 0.13f,
+            Condition.Primed => 0.15f,
+            Condition.GoodOmen => 0.12f, // https://github.com/ffxiv-teamcraft/simulator/issues/77
+            _ => 0.00f
+        };
+
+    public void StepCondition()
+    {
+        var conditionChance = Random.NextSingle();
+
+        Condition = Condition switch {
+            Condition.Poor => Condition.Normal,
+            Condition.Good => Condition.Normal,
+            Condition.Excellent => Condition.Poor,
+            Condition.GoodOmen => Condition.Good,
+            _ => AvailableConditions.FirstOrDefault(c => (conditionChance -= GetConditionChance(c)) < 0, Condition.Normal)
+        };
     }
 
     public void RestoreDurability(int amount)
@@ -162,11 +196,6 @@ public class Simulation
             Durability = MaxDurability;
     }
 
-    public void ReduceCP(int amount)
-    {
-        CP -= amount;
-    }
-
     public void RestoreCP(int amount)
     {
         CP += amount;
@@ -175,82 +204,104 @@ public class Simulation
             CP = Stats.CP;
     }
 
-    public int CalculateProgressGain(float efficiency)
+    public float CalculateSuccessRate(float successRate)
+    {
+        if (Condition == Condition.Centered)
+            successRate += 0.25f;
+        return Math.Clamp(successRate, 0, 1);
+    }
+
+    public int CalculateDurabilityCost(int amount)
+    {
+        var amt = (double)amount;
+        if (HasEffect(EffectType.WasteNot) || HasEffect(EffectType.WasteNot2))
+            amt /= 2;
+        if (Condition == Condition.Sturdy)
+            amt /= 2;
+        return (int)Math.Ceiling(amt);
+    }
+
+    public int CalculateCPCost(int amount)
+    {
+        var amt = (double)amount;
+        if (Condition == Condition.Pliant)
+            amt /= 2;
+        return (int)Math.Ceiling(amt);
+    }
+
+    public int CalculateProgressGain(float efficiency, bool dryRun = true)
     {
         var buffModifier = 1.00f;
-        if (HasEffect(Effect.MuscleMemory))
+        if (HasEffect(EffectType.MuscleMemory))
         {
             buffModifier += 1.00f;
-            RemoveEffect(Effect.MuscleMemory);
+            if (!dryRun)
+                RemoveEffect(EffectType.MuscleMemory);
         }
-        if (HasEffect(Effect.Veneration))
+        if (HasEffect(EffectType.Veneration))
             buffModifier += 0.50f;
 
-        // https://github.com/NotRanged/NotRanged.github.io/blob/0f4aee074f969fb05aad34feaba605057c08ffd1/app/js/ffxivcraftmodel.js#L88
-        PluginLog.LogDebug($"Efficiency: {efficiency}");
-        PluginLog.LogDebug($"Buff Modifier: {buffModifier}");
-        var baseIncrease = (Stats.Craftsmanship * 10f / RecipeTable.ProgressDivider) + 2;
-        PluginLog.LogDebug($"Increase: {baseIncrease}");
-        if (Stats.CLvl <= RLvl)
+        var conditionModifier = Condition switch
         {
-            baseIncrease *= RecipeTable.ProgressModifier / 100f;
-            PluginLog.LogDebug($"Boosted Increase: {baseIncrease}");
-        }
-        baseIncrease = MathF.Floor(baseIncrease);
-        PluginLog.LogDebug($"Adj. Increase: {baseIncrease}");
+            Condition.Malleable => 1.50f,
+            _ => 1.00f
+        };
 
-        var progressGain = (int)(baseIncrease * efficiency * buffModifier);
-        PluginLog.LogDebug($"Progress Gain: {progressGain}");
+        // https://github.com/NotRanged/NotRanged.github.io/blob/0f4aee074f969fb05aad34feaba605057c08ffd1/app/js/ffxivcraftmodel.js#L88
+        var baseIncrease = (Stats.Craftsmanship * 10f / RecipeTable.ProgressDivider) + 2;
+        if (Stats.CLvl <= RLvl)
+            baseIncrease *= RecipeTable.ProgressModifier / 100f;
+        baseIncrease = MathF.Floor(baseIncrease);
+
+        var progressGain = (int)(baseIncrease * efficiency * conditionModifier * buffModifier);
         return progressGain;
     }
 
-    public int CalculateQualityGain(float efficiency)
+    public int CalculateQualityGain(float efficiency, bool dryRun = true)
     {
         var buffModifier = 1.00f;
-        if (HasEffect(Effect.GreatStrides))
+        if (HasEffect(EffectType.GreatStrides))
         {
             buffModifier += 1.00f;
-            RemoveEffect(Effect.GreatStrides);
+            if (!dryRun)
+                RemoveEffect(EffectType.GreatStrides);
         }
-        if (HasEffect(Effect.Innovation))
+        if (HasEffect(EffectType.Innovation))
             buffModifier += 0.50f;
 
-        buffModifier *= 1 + ((GetEffect(Effect.InnerQuiet)?.Strength ?? 0) * 0.10f);
+        buffModifier *= 1 + ((GetEffect(EffectType.InnerQuiet)?.Strength ?? 0) * 0.10f);
 
         var conditionModifier = Condition switch
         {
             Condition.Poor => 0.50f,
-            Condition.Good => 1.50f, // 1.75f if relic tool
+            Condition.Good => Stats.HasRelic ? 1.75f : 1.50f,
             Condition.Excellent => 4.00f,
             _ => 1.00f,
         };
 
-        PluginLog.LogDebug($"Efficiency: {efficiency}");
-        PluginLog.LogDebug($"Buff Modifier: {buffModifier}");
-        PluginLog.LogDebug($"Cond Modifier: {conditionModifier}");
         var baseIncrease = (Stats.Control * 10f / RecipeTable.QualityDivider) + 35;
-        PluginLog.LogDebug($"Increase: {baseIncrease}");
         if (Stats.CLvl <= RLvl)
-        {
             baseIncrease *= RecipeTable.QualityModifier / 100f;
-            PluginLog.LogDebug($"Boosted Increase: {baseIncrease}");
-        }
         baseIncrease = MathF.Floor(baseIncrease);
-        PluginLog.LogDebug($"Adj. Increase: {baseIncrease}");
 
         var qualityGain = (int)(baseIncrease * efficiency * conditionModifier * buffModifier);
-        PluginLog.LogDebug($"Quality Gain: {qualityGain}");
         return qualityGain;
     }
+
+    public void ReduceDurabilityRaw(int amount) =>
+        Durability -= amount;
+
+    public void ReduceCPRaw(int amount) =>
+        CP -= amount;
 
     public void IncreaseProgressRaw(int progressGain)
     {
         Progress += progressGain;
 
-        if (HasEffect(Effect.FinalAppraisal) && Progress >= MaxProgress)
+        if (HasEffect(EffectType.FinalAppraisal) && Progress >= MaxProgress)
         {
             Progress = MaxProgress - 1;
-            RemoveEffect(Effect.FinalAppraisal);
+            RemoveEffect(EffectType.FinalAppraisal);
         }
     }
 
@@ -259,12 +310,18 @@ public class Simulation
         Quality += qualityGain;
 
         if (Stats.Level >= 11)
-            StrengthenEffect(Effect.InnerQuiet);
+            StrengthenEffect(EffectType.InnerQuiet);
     }
 
+    public void ReduceDurability(int amount) =>
+        ReduceDurabilityRaw(CalculateDurabilityCost(amount));
+
+    public void ReduceCP(int amount) =>
+        ReduceCPRaw(CalculateCPCost(amount));
+
     public void IncreaseProgress(float efficiency) =>
-        IncreaseProgressRaw(CalculateProgressGain(efficiency));
+        IncreaseProgressRaw(CalculateProgressGain(efficiency, false));
 
     public void IncreaseQuality(float efficiency) =>
-        IncreaseQualityRaw(CalculateQualityGain(efficiency));
+        IncreaseQualityRaw(CalculateQualityGain(efficiency, false));
 }

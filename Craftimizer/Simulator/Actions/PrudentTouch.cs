@@ -14,6 +14,6 @@ internal class PrudentTouch : BaseAction
     public override int DurabilityCost => base.DurabilityCost / 2;
 
     public override bool CanUse =>
-        !(Simulation.HasEffect(Effect.WasteNot) || Simulation.HasEffect(Effect.WasteNot2))
+        !(Simulation.HasEffect(EffectType.WasteNot) || Simulation.HasEffect(EffectType.WasteNot2))
         && base.CanUse;
 }

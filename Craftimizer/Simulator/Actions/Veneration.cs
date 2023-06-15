@@ -11,6 +11,5 @@ internal class Veneration : BaseBuffAction
     public override int CPCost => 18;
     public override int DurabilityCost => 0;
 
-    public override Effect Effect => Effect.Veneration;
-    public override int EffectDuration => 4;
+    public override Effect Effect => new() { Type = EffectType.Veneration, Duration = 4 };
 }

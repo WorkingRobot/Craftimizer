@@ -8,8 +8,7 @@ public abstract class BaseBuffAction : BaseAction
     public BaseBuffAction(Simulation simulation) : base(simulation) { }
 
     public abstract Effect Effect { get; }
-    public abstract int EffectDuration { get; }
-    public virtual Effect[] ConflictingEffects => Array.Empty<Effect>();
+    public virtual EffectType[] ConflictingEffects => Array.Empty<EffectType>();
 
     public override int DurabilityCost => 0;
 
@@ -18,18 +17,13 @@ public abstract class BaseBuffAction : BaseAction
         if (ConflictingEffects.Length != 0)
             foreach(var effect in ConflictingEffects)
                 Simulation.RemoveEffect(effect);
-        Simulation.AddEffect(Effect, EffectDuration);
+        Simulation.AddEffect(Effect.Type, Effect.Duration, Effect.Strength);
     }
 
-    public override string Tooltip {
-        get
-        {
-            var builder = new StringBuilder(base.Tooltip);
-            builder.AppendLine($"Effect: {Effect.Status().Name}");
-            builder.AppendLine($"Duration: {EffectDuration} steps");
-            foreach(var effect in ConflictingEffects)
-                builder.AppendLine($"Conflicts with: {effect.Status().Name}");
-            return builder.ToString();
-        }
+    public override string GetTooltip(bool addUsability)
+    {
+        var builder = new StringBuilder(base.GetTooltip(addUsability));
+        builder.AppendLine($"Effect: {Effect.Tooltip}");
+        return builder.ToString();
     }
 }

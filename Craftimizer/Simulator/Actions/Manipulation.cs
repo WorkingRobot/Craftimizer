@@ -10,6 +10,5 @@ internal class Manipulation : BaseBuffAction
 
     public override int CPCost => 96;
 
-    public override Effect Effect => Effect.Manipulation;
-    public override int EffectDuration => 8;
+    public override Effect Effect => new() { Type = EffectType.Manipulation, Duration = 8 };
 }

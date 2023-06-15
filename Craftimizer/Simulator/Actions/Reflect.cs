@@ -17,6 +17,6 @@ internal class Reflect : BaseAction
     public override void UseSuccess()
     {
         base.UseSuccess();
-        Simulation.StrengthenEffect(Effect.InnerQuiet);
+        Simulation.StrengthenEffect(EffectType.InnerQuiet);
     }
 }

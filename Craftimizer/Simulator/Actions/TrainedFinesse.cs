@@ -14,6 +14,6 @@ internal class TrainedFinesse : BaseAction
     public override int DurabilityCost => 0;
 
     public override bool CanUse =>
-        (Simulation.GetEffect(Effect.InnerQuiet)?.Strength ?? 0) == 10
+        (Simulation.GetEffect(EffectType.InnerQuiet)?.Strength ?? 0) == 10
         && base.CanUse;
 }

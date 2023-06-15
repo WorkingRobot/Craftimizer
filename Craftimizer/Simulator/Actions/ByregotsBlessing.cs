@@ -9,14 +9,14 @@ internal class ByregotsBlessing : BaseAction
     public override int ActionId => 100339;
 
     public override int CPCost => 24;
-    public override float Efficiency => 1.00f + (0.20f * (Simulation.GetEffect(Effect.InnerQuiet)?.Strength ?? 0));
+    public override float Efficiency => 1.00f + (0.20f * (Simulation.GetEffect(EffectType.InnerQuiet)?.Strength ?? 0));
     public override bool IncreasesQuality => true;
 
-    public override bool CanUse => Simulation.HasEffect(Effect.InnerQuiet) && base.CanUse;
+    public override bool CanUse => Simulation.HasEffect(EffectType.InnerQuiet) && base.CanUse;
 
     public override void UseSuccess()
     {
         base.UseSuccess();
-        Simulation.RemoveEffect(Effect.InnerQuiet);
+        Simulation.RemoveEffect(EffectType.InnerQuiet);
     }
 }

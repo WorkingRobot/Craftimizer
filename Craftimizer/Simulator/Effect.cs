@@ -1,38 +1,39 @@
 using Craftimizer.Plugin;
-using Lumina.Excel.GeneratedSheets;
+using Dalamud.Utility;
+using ImGuiScene;
+using System;
+using System.Text;
 
 namespace Craftimizer.Simulator;
 
-public enum Effect
+public record Effect
 {
-    InnerQuiet,
-    WasteNot,
-    Veneration,
-    GreatStrides,
-    Innovation,
-    FinalAppraisal,
-    WasteNot2,
-    MuscleMemory,
-    Manipulation,
-}
+    public EffectType Type { get; init; }
+    public int? Duration { get; set; }
+    public int? Strength { get; set; }
 
-internal static class EffectExtensions
-{
-    public static uint StatusId(this Effect me) =>
-        me switch
+    public ushort IconId { get
         {
-            Effect.InnerQuiet => 251,
-            Effect.WasteNot => 252,
-            Effect.Veneration => 2226,
-            Effect.GreatStrides => 254,
-            Effect.Innovation => 2189,
-            Effect.FinalAppraisal => 2190,
-            Effect.WasteNot2 => 257,
-            Effect.MuscleMemory => 2191,
-            Effect.Manipulation => 258,
-            _ => 3412,
-        };
+            var status = Type.Status();
+            var iconId = status.Icon;
+            if (status.MaxStacks != 0 && Strength != null)
+                iconId += (uint)Math.Clamp(Strength.Value, 1, status.MaxStacks) - 1;
+            return (ushort)iconId;
+        }
+    }
 
-    public static Status Status(this Effect me) =>
-        LuminaSheets.StatusSheet.GetRow(me.StatusId())!;
+    public TextureWrap Icon => Icons.GetIconFromId(IconId);
+
+    public string Tooltip { get
+        {
+            var status = Type.Status();
+            var name = new StringBuilder();
+            name.Append(status.Name.ToDalamudString().TextValue);
+            if (status.MaxStacks != 0 && Strength != null)
+                name.Append($" {Strength}");
+            if (!status.IsPermanent && Duration != null)
+                name.Append($" > {Duration}");
+            return name.ToString();
+        }
+    }
 }

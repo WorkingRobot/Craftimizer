@@ -8,7 +8,7 @@ internal class StandardTouch : BaseAction
     public override int Level => 18;
     public override int ActionId => 100004;
 
-    public override int CPCost => Simulation.GetPreviousAction() is BasicTouch ? 18 : 32;
+    public override int CPCost => Simulation.IsPreviousAction<BasicTouch>() ? 18 : 32;
     public override float Efficiency => 1.25f;
     public override bool IncreasesQuality => true;
 }
