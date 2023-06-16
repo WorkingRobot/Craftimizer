@@ -11,5 +11,5 @@ internal class HeartAndSoul : BaseBuffAction
 
     public override Effect Effect => new() { Type = EffectType.HeartAndSoul };
 
-    public override bool CanUse => Simulation.Stats.IsSpecialist && Simulation.CountPreviousAction(ActionType.HeartAndSoul) == 0;
+    public override bool CanUse => Simulation.Input.Stats.IsSpecialist && Simulation.CountPreviousAction(ActionType.HeartAndSoul) == 0;
 }

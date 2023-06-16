@@ -61,7 +61,7 @@ internal static class ActionUtils
 
     private static BaseAction Action(this ActionType me) => Actions[(int)me];
 
-    public static BaseAction With(this ActionType me, Simulation simulation)
+    public static BaseAction With(this ActionType me, SimulationState simulation)
     {
         BaseAction.TLSSimulation.Value = simulation;
         return Action(me);

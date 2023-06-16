@@ -1,23 +1,13 @@
 using Craftimizer.Simulator.Actions;
-using Dalamud.Logging;
-using Lumina.Excel.GeneratedSheets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Craftimizer.Simulator;
 
-public class Simulation
+public record struct SimulationState
 {
-    public CharacterStats Stats { get; }
-    public Recipe Recipe { get; }
-    public RecipeLevelTable RecipeTable => Recipe.RecipeLevelTable.Value!;
-    public int RLvl => (int)RecipeTable.RowId;
-    public readonly Condition[] AvailableConditions;
-
-    public int MaxDurability => RecipeTable.Durability * Recipe.DurabilityFactor / 100;
-    public int MaxQuality => (int)RecipeTable.Quality * Recipe.QualityFactor / 100;
-    public int MaxProgress => RecipeTable.Difficulty * Recipe.DifficultyFactor / 100;
+    public readonly SimulationInput Input { get; }
 
     public bool IsComplete { get; private set; }
     public int StepCount { get; private set; }
@@ -26,8 +16,8 @@ public class Simulation
     public int Durability { get; private set; }
     public int CP { get; private set; }
     public Condition Condition { get; private set; }
-    public List<Effect> ActiveEffects { get; } = new();
-    public List<ActionType> ActionHistory { get; } = new();
+    public List<Effect> ActiveEffects { get; }
+    public List<ActionType> ActionHistory { get; }
 
     // https://github.com/ffxiv-teamcraft/simulator/blob/0682dfa76043ff4ccb38832c184d046ceaff0733/src/model/tables.ts#L2
     private static readonly int[] HQPercentTable = {
@@ -36,27 +26,33 @@ public class Simulation
         17, 18, 18, 18, 19, 19, 20, 20, 21, 22, 23, 24, 26, 28, 31, 34, 38, 42, 47, 52, 58, 64, 68, 71,
         74, 76, 78, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 94, 96, 98, 100
     };
-    public int HQPercent => HQPercentTable[(int)Math.Clamp((float)Quality / MaxQuality * 100, 0, 100)];
+    public int HQPercent => HQPercentTable[(int)Math.Clamp((float)Quality / Input.MaxQuality * 100, 0, 100)];
 
     public bool IsFirstStep => StepCount == 0;
 
-    private Random Random { get; } = new();
-
-    public Simulation(CharacterStats stats, Recipe recipe)
+    public SimulationState(SimulationInput input)
     {
-        Stats = stats;
-        Recipe = recipe;
+        Input = input;
+
         IsComplete = false;
         StepCount = 0;
         Progress = 0;
         Quality = 0;
-        Durability = MaxDurability;
-        CP = Stats.CP;
+        Durability = Input.MaxDurability;
+        CP = Input.Stats.CP;
         Condition = Condition.Normal;
-        AvailableConditions = ConditionUtils.GetPossibleConditions(RecipeTable.ConditionsFlag);
+        ActiveEffects = new();
+        ActionHistory = new();
     }
 
-    public ActionResponse Execute(ActionType action)
+    public (ActionResponse Response, SimulationState NewState) Execute(ActionType action)
+    {
+        var newState = this;
+        var response = newState.ExecuteSelf(action);
+        return (response, newState);
+    }
+
+    public ActionResponse ExecuteSelf(ActionType action)
     {
         if (IsComplete)
             return ActionResponse.SimulationComplete;
@@ -64,7 +60,7 @@ public class Simulation
         var baseAction = action.With(this);
         if (!baseAction.CanUse)
         {
-            if (baseAction.Level > Stats.Level)
+            if (baseAction.Level > Input.Stats.Level)
                 return ActionResponse.ActionNotUnlocked;
             if (baseAction.CPCost > CP)
                 return ActionResponse.NotEnoughCP;
@@ -85,7 +81,7 @@ public class Simulation
             }
         }
 
-        if (Progress >= MaxProgress)
+        if (Progress >= Input.MaxProgress)
         {
             IsComplete = true;
             return ActionResponse.ProgressComplete;
@@ -112,7 +108,8 @@ public class Simulation
             duration++;
 
         var currentEffect = GetEffect(effect);
-        if (currentEffect != null) {
+        if (currentEffect != null)
+        {
             currentEffect.Duration = duration;
             currentEffect.Strength = strength;
         }
@@ -148,7 +145,7 @@ public class Simulation
         ActionHistory.Count(a => a == action);
 
     public bool RollSuccessRaw(float successRate) =>
-        successRate >= Random.NextSingle();
+        successRate >= Input.Random.NextSingle();
 
     public bool RollSuccess(float successRate) =>
         RollSuccessRaw(CalculateSuccessRate(successRate));
@@ -159,10 +156,10 @@ public class Simulation
         StepCondition();
     }
 
-    private float GetConditionChance(Condition condition) =>
+    private static float GetConditionChance(SimulationInput input, Condition condition) =>
         condition switch
         {
-            Condition.Good => Recipe.IsExpert ? 0.12f : (Stats.Level >= 63 ? 0.15f : 0.18f),
+            Condition.Good => input.Recipe.IsExpert ? 0.12f : (input.Stats.Level >= 63 ? 0.15f : 0.18f),
             Condition.Excellent => 0.04f,
             Condition.Centered => 0.15f,
             Condition.Sturdy => 0.15f,
@@ -173,16 +170,26 @@ public class Simulation
             _ => 0.00f
         };
 
+    private Condition GetNextRandomCondition()
+    {
+        var conditionChance = Input.Random.NextSingle();
+
+        foreach (var condition in Input.AvailableConditions)
+            if ((conditionChance -= GetConditionChance(Input, condition)) < 0)
+                return condition;
+
+        return Condition.Normal;
+    }
+
     public void StepCondition()
     {
-        var conditionChance = Random.NextSingle();
-
-        Condition = Condition switch {
+        Condition = Condition switch
+        {
             Condition.Poor => Condition.Normal,
             Condition.Good => Condition.Normal,
             Condition.Excellent => Condition.Poor,
             Condition.GoodOmen => Condition.Good,
-            _ => AvailableConditions.FirstOrDefault(c => (conditionChance -= GetConditionChance(c)) < 0, Condition.Normal)
+            _ => GetNextRandomCondition()
         };
     }
 
@@ -190,16 +197,16 @@ public class Simulation
     {
         Durability += amount;
 
-        if (Durability > MaxDurability)
-            Durability = MaxDurability;
+        if (Durability > Input.MaxDurability)
+            Durability = Input.MaxDurability;
     }
 
     public void RestoreCP(int amount)
     {
         CP += amount;
-        
-        if (CP > Stats.CP)
-            CP = Stats.CP;
+
+        if (CP > Input.Stats.CP)
+            CP = Input.Stats.CP;
     }
 
     public float CalculateSuccessRate(float successRate)
@@ -246,9 +253,9 @@ public class Simulation
         };
 
         // https://github.com/NotRanged/NotRanged.github.io/blob/0f4aee074f969fb05aad34feaba605057c08ffd1/app/js/ffxivcraftmodel.js#L88
-        var baseIncrease = (Stats.Craftsmanship * 10f / RecipeTable.ProgressDivider) + 2;
-        if (Stats.CLvl <= RLvl)
-            baseIncrease *= RecipeTable.ProgressModifier / 100f;
+        var baseIncrease = (Input.Stats.Craftsmanship * 10f / Input.RecipeTable.ProgressDivider) + 2;
+        if (Input.Stats.CLvl <= Input.RLvl)
+            baseIncrease *= Input.RecipeTable.ProgressModifier / 100f;
         baseIncrease = MathF.Floor(baseIncrease);
 
         var progressGain = (int)(baseIncrease * efficiency * conditionModifier * buffModifier);
@@ -272,14 +279,14 @@ public class Simulation
         var conditionModifier = Condition switch
         {
             Condition.Poor => 0.50f,
-            Condition.Good => Stats.HasRelic ? 1.75f : 1.50f,
+            Condition.Good => Input.Stats.HasRelic ? 1.75f : 1.50f,
             Condition.Excellent => 4.00f,
             _ => 1.00f,
         };
 
-        var baseIncrease = (Stats.Control * 10f / RecipeTable.QualityDivider) + 35;
-        if (Stats.CLvl <= RLvl)
-            baseIncrease *= RecipeTable.QualityModifier / 100f;
+        var baseIncrease = (Input.Stats.Control * 10f / Input.RecipeTable.QualityDivider) + 35;
+        if (Input.Stats.CLvl <= Input.RLvl)
+            baseIncrease *= Input.RecipeTable.QualityModifier / 100f;
         baseIncrease = MathF.Floor(baseIncrease);
 
         var qualityGain = (int)(baseIncrease * efficiency * conditionModifier * buffModifier);
@@ -296,9 +303,9 @@ public class Simulation
     {
         Progress += progressGain;
 
-        if (HasEffect(EffectType.FinalAppraisal) && Progress >= MaxProgress)
+        if (HasEffect(EffectType.FinalAppraisal) && Progress >= Input.MaxProgress)
         {
-            Progress = MaxProgress - 1;
+            Progress = Input.MaxProgress - 1;
             RemoveEffect(EffectType.FinalAppraisal);
         }
     }
@@ -307,7 +314,7 @@ public class Simulation
     {
         Quality += qualityGain;
 
-        if (Stats.Level >= 11)
+        if (Input.Stats.Level >= 11)
             StrengthenEffect(EffectType.InnerQuiet);
     }
 

@@ -8,6 +8,6 @@ internal class CarefulSynthesis : BaseAction
 
     public override int CPCost => 7;
     // Careful Synthesis Mastery Trait
-    public override float Efficiency => Simulation.Stats.Level >= 82 ? 1.80f : 1.50f;
+    public override float Efficiency => Simulation.Input.Stats.Level >= 82 ? 1.80f : 1.50f;
     public override bool IncreasesProgress => true;
 }

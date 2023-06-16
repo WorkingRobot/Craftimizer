@@ -12,5 +12,5 @@ internal class TrainedEye : BaseAction
     public override bool CanUse => Simulation.IsFirstStep && base.CanUse;
 
     public override void UseSuccess() =>
-        Simulation.IncreaseQualityRaw(Simulation.MaxQuality - Simulation.Quality);
+        Simulation.IncreaseQualityRaw(Simulation.Input.MaxQuality - Simulation.Quality);
 }

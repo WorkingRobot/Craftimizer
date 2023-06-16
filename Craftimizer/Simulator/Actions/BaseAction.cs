@@ -6,8 +6,8 @@ namespace Craftimizer.Simulator.Actions;
 
 internal abstract class BaseAction
 {
-    internal static readonly ThreadLocal<Simulation> TLSSimulation = new(false);
-    protected static Simulation Simulation => TLSSimulation.Value ?? throw new NullReferenceException();
+    internal static readonly ThreadLocal<SimulationState?> TLSSimulation = new(false);
+    protected static SimulationState Simulation => TLSSimulation.Value ?? throw new NullReferenceException();
 
     public BaseAction() { }
 
@@ -28,7 +28,7 @@ internal abstract class BaseAction
     public virtual bool IsGuaranteedAction => SuccessRate == 1f;
 
     public virtual bool CanUse =>
-        Simulation.Stats.Level >= Level && Simulation.CP >= CPCost;
+        Simulation.Input.Stats.Level >= Level && Simulation.CP >= CPCost;
 
     public virtual void Use()
     {
