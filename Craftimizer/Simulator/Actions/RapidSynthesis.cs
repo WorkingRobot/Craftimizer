@@ -2,11 +2,9 @@ namespace Craftimizer.Simulator.Actions;
 
 internal class RapidSynthesis : BaseAction
 {
-    public RapidSynthesis(Simulation simulation) : base(simulation) { }
-
     public override ActionCategory Category => ActionCategory.Synthesis;
     public override int Level => 9;
-    public override int ActionId => 100363;
+    public override uint ActionId => 100363;
 
     public override int CPCost => 0;
     // Rapid Synthesis Mastery Trait

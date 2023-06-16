@@ -15,7 +15,7 @@ public record Effect
     public ushort IconId { get
         {
             var status = Type.Status();
-            var iconId = status.Icon;
+            uint iconId = status.Icon;
             if (status.MaxStacks != 0 && Strength != null)
                 iconId += (uint)Math.Clamp(Strength.Value, 1, status.MaxStacks) - 1;
             return (ushort)iconId;

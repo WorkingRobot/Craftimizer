@@ -2,11 +2,9 @@ namespace Craftimizer.Simulator.Actions;
 
 internal class CarefulSynthesis : BaseAction
 {
-    public CarefulSynthesis(Simulation simulation) : base(simulation) { }
-
     public override ActionCategory Category => ActionCategory.Synthesis;
     public override int Level => 62;
-    public override int ActionId => 100203;
+    public override uint ActionId => 100203;
 
     public override int CPCost => 7;
     // Careful Synthesis Mastery Trait

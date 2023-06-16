@@ -2,11 +2,9 @@ namespace Craftimizer.Simulator.Actions;
 
 internal class Groundwork : BaseAction
 {
-    public Groundwork(Simulation simulation) : base(simulation) { }
-
     public override ActionCategory Category => ActionCategory.Synthesis;
     public override int Level => 72;
-    public override int ActionId => 100403;
+    public override uint ActionId => 100403;
 
     public override int CPCost => 18;
     // Groundwork Mastery Trait

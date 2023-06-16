@@ -3,10 +3,8 @@ using System.Text;
 
 namespace Craftimizer.Simulator.Actions;
 
-public abstract class BaseBuffAction : BaseAction
+internal abstract class BaseBuffAction : BaseAction
 {
-    public BaseBuffAction(Simulation simulation) : base(simulation) { }
-
     public abstract Effect Effect { get; }
     public virtual EffectType[] ConflictingEffects => Array.Empty<EffectType>();
 

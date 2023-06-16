@@ -2,11 +2,9 @@ namespace Craftimizer.Simulator.Actions;
 
 internal class ByregotsBlessing : BaseAction
 {
-    public ByregotsBlessing(Simulation simulation) : base(simulation) { }
-
     public override ActionCategory Category => ActionCategory.Quality;
     public override int Level => 50;
-    public override int ActionId => 100339;
+    public override uint ActionId => 100339;
 
     public override int CPCost => 24;
     public override float Efficiency => 1.00f + (0.20f * (Simulation.GetEffect(EffectType.InnerQuiet)?.Strength ?? 0));

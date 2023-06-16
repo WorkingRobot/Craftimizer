@@ -2,8 +2,6 @@ using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
-using Dalamud.Logging;
-using Dalamud.Utility;
 using ImGuiNET;
 using System;
 using System.Linq;
@@ -14,7 +12,6 @@ namespace Craftimizer.Plugin;
 public class SimulatorWindow : Window
 {
     public Simulation Simulation { get; }
-    public BaseAction[] AvailableActions { get; }
 
     private bool showOnlyGuaranteedActions = true;
 
@@ -27,7 +24,6 @@ public class SimulatorWindow : Window
         };
 
         Simulation = new(new CharacterStats { Craftsmanship = 4041, Control = 3905, CP = 609, Level = 90 }, LuminaSheets.RecipeSheet.GetRow(35499)!);
-        AvailableActions = BaseAction.Actions.Select(a => (Activator.CreateInstance(a, Simulation)! as BaseAction)!).ToArray();
     }
 
     public override void Draw()
@@ -38,20 +34,21 @@ public class SimulatorWindow : Window
         ImGui.BeginChild("CraftimizerActions", Vector2.Zero, true, ImGuiWindowFlags.NoDecoration);
         ImGui.Checkbox("Show only guaranteed actions", ref showOnlyGuaranteedActions);
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
-        foreach(var category in AvailableActions.GroupBy(a => a.Category))
+        foreach(var category in Enum.GetValues<ActionType>().GroupBy(a => a.Category()))
         {
             var i = 0;
             ImGuiUtils.BeginGroupPanel(category.Key.GetDisplayName());
-            foreach (var action in category.OrderBy(a => a.Level))
+            foreach (var action in category.OrderBy(a => a.Level()))
             {
-                if (showOnlyGuaranteedActions && !action.IsGuaranteedAction)
+                var baseAction = action.With(Simulation);
+                if (showOnlyGuaranteedActions && !baseAction.IsGuaranteedAction)
                     continue;
 
-                ImGui.BeginDisabled(!action.CanUse);
+                ImGui.BeginDisabled(!baseAction.CanUse);
                 if (ImGui.ImageButton(action.GetIcon(ClassJob.Carpenter).ImGuiHandle, new Vector2(ImGui.GetFontSize() * 2)))
                     Simulation.Execute(action);
                 if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-                    ImGui.SetTooltip(action.GetTooltip(true));
+                    ImGui.SetTooltip($"{action.GetName(ClassJob.Carpenter)}\n{baseAction.GetTooltip(true)}");
                 ImGui.EndDisabled();
                 if (++i % 5 != 0)
                     ImGui.SameLine();
@@ -95,9 +92,10 @@ public class SimulatorWindow : Window
             var i = 0;
             foreach (var action in Simulation.ActionHistory)
             {
+                var baseAction = action.With(Simulation);
                 ImGui.Image(action.GetIcon(ClassJob.Carpenter).ImGuiHandle, new Vector2(ImGui.GetFontSize() * 2f));
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip(action.GetTooltip(false));
+                    ImGui.SetTooltip($"{action.GetName(ClassJob.Carpenter)}\n{baseAction.GetTooltip(false)}");
                 if (++i % 5 != 0)
                     ImGui.SameLine();
             }

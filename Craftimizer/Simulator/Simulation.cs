@@ -27,7 +27,7 @@ public class Simulation
     public int CP { get; private set; }
     public Condition Condition { get; private set; }
     public List<Effect> ActiveEffects { get; } = new();
-    public List<BaseAction> ActionHistory { get; } = new();
+    public List<ActionType> ActionHistory { get; } = new();
 
     // https://github.com/ffxiv-teamcraft/simulator/blob/0682dfa76043ff4ccb38832c184d046ceaff0733/src/model/tables.ts#L2
     private static readonly int[] HQPercentTable = {
@@ -56,21 +56,22 @@ public class Simulation
         AvailableConditions = ConditionUtils.GetPossibleConditions(RecipeTable.ConditionsFlag);
     }
 
-    public ActionResponse Execute(BaseAction action)
+    public ActionResponse Execute(ActionType action)
     {
         if (IsComplete)
             return ActionResponse.SimulationComplete;
 
-        if (!action.CanUse)
+        var baseAction = action.With(this);
+        if (!baseAction.CanUse)
         {
-            if (action.Level > Stats.Level)
+            if (baseAction.Level > Stats.Level)
                 return ActionResponse.ActionNotUnlocked;
-            if (action.CPCost > CP)
+            if (baseAction.CPCost > CP)
                 return ActionResponse.NotEnoughCP;
             return ActionResponse.CannotUseAction;
         }
 
-        action.Use();
+        baseAction.Use();
         ActionHistory.Add(action);
 
         for (var i = 0; i < ActiveEffects.Count; ++i)
@@ -97,9 +98,6 @@ public class Simulation
 
         return ActionResponse.UsedAction;
     }
-
-    public ActionResponse Execute<T>() where T : BaseAction =>
-        Execute((T)Activator.CreateInstance(typeof(T), this)!);
 
     public Effect? GetEffect(EffectType effect) =>
         ActiveEffects.FirstOrDefault(e => e.Type == effect);
@@ -143,11 +141,11 @@ public class Simulation
     public bool HasEffect(EffectType effect) =>
         ActiveEffects.Any(e => e.Type == effect);
 
-    public bool IsPreviousAction<T>(int stepsBack = 1) where T : BaseAction =>
-        ActionHistory.Count >= stepsBack && ActionHistory[^stepsBack] is T;
+    public bool IsPreviousAction(ActionType action, int stepsBack = 1) =>
+        ActionHistory.Count >= stepsBack && ActionHistory[^stepsBack] == action;
 
-    public int CountPreviousAction<T>() where T : BaseAction =>
-        ActionHistory.Count(x => x is T);
+    public int CountPreviousAction(ActionType action) =>
+        ActionHistory.Count(a => a == action);
 
     public bool RollSuccessRaw(float successRate) =>
         successRate >= Random.NextSingle();

@@ -2,11 +2,9 @@ namespace Craftimizer.Simulator.Actions;
 
 internal class BasicSynthesis : BaseAction
 {
-    public BasicSynthesis(Simulation simulation) : base(simulation) { }
-
     public override ActionCategory Category => ActionCategory.Synthesis;
     public override int Level => 1;
-    public override int ActionId => 100001;
+    public override uint ActionId => 100001;
 
     public override int CPCost => 0;
     // Basic Synthesis Mastery Trait

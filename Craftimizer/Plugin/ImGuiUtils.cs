@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 
-namespace Craftimizer;
+namespace Craftimizer.Plugin;
 
 internal class ImGuiUtils
 {
@@ -58,7 +58,7 @@ internal class ImGuiUtils
 
         ImGui.SameLine(0, 0);
         ImGui.Dummy(new Vector2(frameHeight * 0.5f, 0));
-        ImGui.Dummy(new Vector2(0f, (frameHeight * 0.5f) - itemSpacing.Y));
+        ImGui.Dummy(new Vector2(0f, frameHeight * 0.5f - itemSpacing.Y));
 
         ImGui.EndGroup();
 

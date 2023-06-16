@@ -2,11 +2,9 @@ namespace Craftimizer.Simulator.Actions;
 
 internal class TrainedEye : BaseAction
 {
-    public TrainedEye(Simulation simulation) : base(simulation) { }
-
     public override ActionCategory Category => ActionCategory.FirstTurn;
     public override int Level => 80;
-    public override int ActionId => 100283;
+    public override uint ActionId => 100283;
 
     public override int CPCost => 250;
     public override bool IncreasesQuality => true;

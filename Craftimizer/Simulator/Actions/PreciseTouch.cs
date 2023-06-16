@@ -2,11 +2,9 @@ namespace Craftimizer.Simulator.Actions;
 
 internal class PreciseTouch : BaseAction
 {
-    public PreciseTouch(Simulation simulation) : base(simulation) { }
-
     public override ActionCategory Category => ActionCategory.Quality;
     public override int Level => 53;
-    public override int ActionId => 100128;
+    public override uint ActionId => 100128;
 
     public override int CPCost => 18;
     public override float Efficiency => 1.50f;
