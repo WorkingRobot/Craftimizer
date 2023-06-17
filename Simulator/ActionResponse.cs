@@ -7,8 +7,5 @@ public enum ActionResponse
     NotEnoughCP,
     NoDurability,
     CannotUseAction,
-
     UsedAction,
-    ProgressComplete,
-    NoMoreDurability,
 }

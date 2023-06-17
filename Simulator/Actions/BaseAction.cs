@@ -4,10 +4,10 @@ using System.Threading;
 
 namespace Craftimizer.Simulator.Actions;
 
-internal abstract class BaseAction
+public abstract class BaseAction
 {
-    internal static readonly ThreadLocal<SimulationState?> TLSSimulation = new(false);
-    protected static SimulationState Simulation => TLSSimulation.Value ?? throw new NullReferenceException();
+    internal static readonly ThreadLocal<Simulator?> TLSSimulation = new(false);
+    protected static Simulator Simulation => TLSSimulation.Value ?? throw new NullReferenceException();
 
     public BaseAction() { }
 

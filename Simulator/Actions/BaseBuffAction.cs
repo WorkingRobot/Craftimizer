@@ -1,4 +1,3 @@
-using System;
 using System.Text;
 
 namespace Craftimizer.Simulator.Actions;
@@ -21,7 +20,7 @@ internal abstract class BaseBuffAction : BaseAction
     public override string GetTooltip(bool addUsability)
     {
         var builder = new StringBuilder(base.GetTooltip(addUsability));
-        builder.AppendLine($"Effect: {Effect.Tooltip}");
+        builder.AppendLine($"{Effect.Duration} Steps");
         return builder.ToString();
     }
 }

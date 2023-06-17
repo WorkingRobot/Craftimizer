@@ -1,58 +1,76 @@
 using Craftimizer.Simulator.Actions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Craftimizer.Simulator;
 
-public record struct SimulationState
+public class Simulator
 {
-    public readonly SimulationInput Input { get; }
-
-    public bool IsComplete { get; private set; }
+    public SimulationInput Input { get; private set; }
     public int StepCount { get; private set; }
     public int Progress { get; private set; }
     public int Quality { get; private set; }
     public int Durability { get; private set; }
     public int CP { get; private set; }
     public Condition Condition { get; private set; }
-    public List<Effect> ActiveEffects { get; }
-    public List<ActionType> ActionHistory { get; }
-
-    // https://github.com/ffxiv-teamcraft/simulator/blob/0682dfa76043ff4ccb38832c184d046ceaff0733/src/model/tables.ts#L2
-    private static readonly int[] HQPercentTable = {
-        1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8,
-        9, 9, 9, 10, 10, 10, 11, 11, 11, 12, 12, 12, 13, 13, 13, 14, 14, 14, 15, 15, 15, 16, 16, 17, 17,
-        17, 18, 18, 18, 19, 19, 20, 20, 21, 22, 23, 24, 26, 28, 31, 34, 38, 42, 47, 52, 58, 64, 68, 71,
-        74, 76, 78, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 94, 96, 98, 100
-    };
-    public int HQPercent => HQPercentTable[(int)Math.Clamp((float)Quality / Input.MaxQuality * 100, 0, 100)];
+    public List<Effect> ActiveEffects { get; private set; }
+    public List<ActionType> ActionHistory { get; private set; }
 
     public bool IsFirstStep => StepCount == 0;
 
-    public SimulationState(SimulationInput input)
+    public CompletionState CompletionState
     {
-        Input = input;
+        get
+        {
+            if (Progress >= Input.Recipe.MaxProgress)
+                return CompletionState.ProgressComplete;
+            if (Durability <= 0)
+                return CompletionState.NoMoreDurability;
+            return CompletionState.Incomplete;
+        }
+    }
+    public virtual bool IsComplete => CompletionState != CompletionState.Incomplete;
 
-        IsComplete = false;
-        StepCount = 0;
-        Progress = 0;
-        Quality = 0;
-        Durability = Input.MaxDurability;
-        CP = Input.Stats.CP;
-        Condition = Condition.Normal;
-        ActiveEffects = new();
-        ActionHistory = new();
+    public IEnumerable<ActionType> AvailableActions => ActionUtils.AvailableActions(this);
+
+#pragma warning disable CS8618 // Emplace sets all the fields already
+    public Simulator(SimulationState state)
+#pragma warning restore CS8618
+    {
+        Emplace(state);
     }
 
-    public (ActionResponse Response, SimulationState NewState) Execute(ActionType action)
+    private void Emplace(SimulationState state)
     {
-        var newState = this;
-        var response = newState.ExecuteSelf(action);
-        return (response, newState);
+        Input = state.Input;
+        StepCount = state.StepCount;
+        Progress = state.Progress;
+        Quality = state.Quality;
+        Durability = state.Durability;
+        CP = state.CP;
+        Condition = state.Condition;
+        ActiveEffects = new(state.ActiveEffects);
+        ActionHistory = new(state.ActionHistory);
     }
 
-    public ActionResponse ExecuteSelf(ActionType action)
+    private SimulationState Displace() => new()
+        {
+            Input = Input,
+            StepCount = StepCount,
+            Progress = Progress,
+            Quality = Quality,
+            Durability = Durability,
+            CP = CP,
+            Condition = Condition,
+            ActiveEffects = ActiveEffects!,
+            ActionHistory = ActionHistory!,
+        };
+
+    public (ActionResponse Response, SimulationState NewState) Execute(SimulationState state, ActionType action)
+    {
+        Emplace(state);
+        return (Execute(action), Displace());
+    }
+
+    private ActionResponse Execute(ActionType action)
     {
         if (IsComplete)
             return ActionResponse.SimulationComplete;
@@ -68,35 +86,31 @@ public record struct SimulationState
         }
 
         baseAction.Use();
-        ActionHistory.Add(action);
+        ActionHistory!.Add(action);
 
-        for (var i = 0; i < ActiveEffects.Count; ++i)
+        for (var i = 0; i < ActiveEffects!.Count; ++i)
         {
-            var effect = ActiveEffects[i];
-            effect.Duration--;
+            var effect = ActiveEffects[i].DecrementDuration();
             if (effect.Duration == 0)
             {
                 ActiveEffects.RemoveAt(i);
                 --i;
             }
-        }
-
-        if (Progress >= Input.MaxProgress)
-        {
-            IsComplete = true;
-            return ActionResponse.ProgressComplete;
-        }
-        if (Durability <= 0)
-        {
-            IsComplete = true;
-            return ActionResponse.NoMoreDurability;
+            else
+                ActiveEffects[i] = effect;
         }
 
         return ActionResponse.UsedAction;
     }
 
-    public Effect? GetEffect(EffectType effect) =>
-        ActiveEffects.FirstOrDefault(e => e.Type == effect);
+    private int GetEffectIdx(EffectType effect) =>
+        ActiveEffects!.FindIndex(e => e.Type == effect);
+
+    public Effect? GetEffect(EffectType effect)
+    {
+        var idx = GetEffectIdx(effect);
+        return idx == -1 ? null : ActiveEffects![idx];
+    }
 
     public void AddEffect(EffectType effect, int? duration = null, int? strength = null)
     {
@@ -107,14 +121,13 @@ public record struct SimulationState
         if (duration != null)
             duration++;
 
-        var currentEffect = GetEffect(effect);
-        if (currentEffect != null)
-        {
-            currentEffect.Duration = duration;
-            currentEffect.Strength = strength;
-        }
+        var newEffect = new Effect { Type = effect, Duration = duration, Strength = strength };
+
+        var effectIdx = GetEffectIdx(effect);
+        if (effectIdx != -1)
+            ActiveEffects![effectIdx] = newEffect;
         else
-            ActiveEffects.Add(new Effect { Type = effect, Duration = duration, Strength = strength });
+            ActiveEffects!.Add(newEffect);
     }
 
     public void StrengthenEffect(EffectType effect, int? duration = null)
@@ -122,29 +135,29 @@ public record struct SimulationState
         if (duration != null)
             duration += 1;
 
-        var currentEffect = GetEffect(effect);
-        if (currentEffect != null)
+        var effectIdx = GetEffectIdx(effect);
+        if (effectIdx != -1)
         {
-            if (effect.Status().MaxStacks > currentEffect.Strength)
-                currentEffect.Strength++;
+            if (effect == EffectType.InnerQuiet && ActiveEffects![effectIdx].Strength < 10)
+                ActiveEffects[effectIdx] = ActiveEffects[effectIdx].IncrementStrength();
         }
         else
-            AddEffect(effect, duration, 1);
+            ActiveEffects!.Add(new Effect { Type = effect, Duration = duration, Strength = 1 });
     }
 
     public void RemoveEffect(EffectType effect) =>
-        ActiveEffects.RemoveAll(e => e.Type == effect);
+        ActiveEffects!.RemoveAll(e => e.Type == effect);
 
     public bool HasEffect(EffectType effect) =>
-        ActiveEffects.Any(e => e.Type == effect);
+        ActiveEffects!.Any(e => e.Type == effect);
 
     public bool IsPreviousAction(ActionType action, int stepsBack = 1) =>
-        ActionHistory.Count >= stepsBack && ActionHistory[^stepsBack] == action;
+        ActionHistory!.Count >= stepsBack && ActionHistory[^stepsBack] == action;
 
     public int CountPreviousAction(ActionType action) =>
-        ActionHistory.Count(a => a == action);
+        ActionHistory!.Count(a => a == action);
 
-    public bool RollSuccessRaw(float successRate) =>
+    public virtual bool RollSuccessRaw(float successRate) =>
         successRate >= Input.Random.NextSingle();
 
     public bool RollSuccess(float successRate) =>
@@ -181,7 +194,7 @@ public record struct SimulationState
         return Condition.Normal;
     }
 
-    public void StepCondition()
+    public virtual void StepCondition()
     {
         Condition = Condition switch
         {
@@ -197,8 +210,8 @@ public record struct SimulationState
     {
         Durability += amount;
 
-        if (Durability > Input.MaxDurability)
-            Durability = Input.MaxDurability;
+        if (Durability > Input.Recipe.MaxDurability)
+            Durability = Input.Recipe.MaxDurability;
     }
 
     public void RestoreCP(int amount)
@@ -253,9 +266,9 @@ public record struct SimulationState
         };
 
         // https://github.com/NotRanged/NotRanged.github.io/blob/0f4aee074f969fb05aad34feaba605057c08ffd1/app/js/ffxivcraftmodel.js#L88
-        var baseIncrease = (Input.Stats.Craftsmanship * 10f / Input.RecipeTable.ProgressDivider) + 2;
-        if (Input.Stats.CLvl <= Input.RLvl)
-            baseIncrease *= Input.RecipeTable.ProgressModifier / 100f;
+        var baseIncrease = (Input.Stats.Craftsmanship * 10f / Input.Recipe.ProgressDivider) + 2;
+        if (Input.Stats.CLvl <= Input.Recipe.RLvl)
+            baseIncrease *= Input.Recipe.ProgressModifier / 100f;
         baseIncrease = MathF.Floor(baseIncrease);
 
         var progressGain = (int)(baseIncrease * efficiency * conditionModifier * buffModifier);
@@ -284,9 +297,9 @@ public record struct SimulationState
             _ => 1.00f,
         };
 
-        var baseIncrease = (Input.Stats.Control * 10f / Input.RecipeTable.QualityDivider) + 35;
-        if (Input.Stats.CLvl <= Input.RLvl)
-            baseIncrease *= Input.RecipeTable.QualityModifier / 100f;
+        var baseIncrease = (Input.Stats.Control * 10f / Input.Recipe.QualityDivider) + 35;
+        if (Input.Stats.CLvl <= Input.Recipe.RLvl)
+            baseIncrease *= Input.Recipe.QualityModifier / 100f;
         baseIncrease = MathF.Floor(baseIncrease);
 
         var qualityGain = (int)(baseIncrease * efficiency * conditionModifier * buffModifier);
@@ -303,9 +316,9 @@ public record struct SimulationState
     {
         Progress += progressGain;
 
-        if (HasEffect(EffectType.FinalAppraisal) && Progress >= Input.MaxProgress)
+        if (HasEffect(EffectType.FinalAppraisal) && Progress >= Input.Recipe.MaxProgress)
         {
-            Progress = Input.MaxProgress - 1;
+            Progress = Input.Recipe.MaxProgress - 1;
             RemoveEffect(EffectType.FinalAppraisal);
         }
     }

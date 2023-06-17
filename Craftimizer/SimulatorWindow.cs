@@ -3,15 +3,18 @@ using Craftimizer.Simulator.Actions;
 using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
+using Lumina.Excel.GeneratedSheets;
 using System;
 using System.Linq;
 using System.Numerics;
+using ClassJob = Craftimizer.Simulator.ClassJob;
 
 namespace Craftimizer.Plugin;
 
 public class SimulatorWindow : Window
 {
-    public SimulationState Simulation { get; }
+    public Simulator.Simulator Simulation { get; }
+    private SimulationState State { get; set; }
 
     private bool showOnlyGuaranteedActions = true;
 
@@ -23,12 +26,36 @@ public class SimulatorWindow : Window
             MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
         };
 
-        Simulation = new(new()
+        State = new(new()
         {
-            Stats = new CharacterStats { Craftsmanship = 4041, Control = 3905, CP = 609, Level = 90 },
-            Recipe = LuminaSheets.RecipeSheet.GetRow(35499)!
+            Stats = new CharacterStats { Craftsmanship = 4041, Control = 3905, CP = 609, Level = 90, CLvl = CalculateCLvl(90) },
+            Recipe = CreateRecipeInfo(LuminaSheets.RecipeSheet.GetRow(35499)!)
         });
+        Simulation = new(State);
     }
+
+    private static RecipeInfo CreateRecipeInfo(Recipe recipe)
+    {
+        var recipeTable = recipe.RecipeLevelTable.Value!;
+        return new() {
+            IsExpert = recipe.IsExpert,
+            ClassJobLevel = recipeTable.ClassJobLevel,
+            RLvl = (int)recipeTable.RowId,
+            ConditionsFlag = recipeTable.ConditionsFlag,
+            MaxDurability = recipeTable.Durability * recipe.DurabilityFactor / 100,
+            MaxQuality = (int)recipeTable.Quality * recipe.QualityFactor / 100,
+            MaxProgress = recipeTable.Difficulty * recipe.DifficultyFactor / 100,
+            QualityModifier = recipeTable.QualityModifier,
+            QualityDivider = recipeTable.QualityDivider,
+            ProgressModifier = recipeTable.ProgressModifier,
+            ProgressDivider = recipeTable.ProgressDivider,
+        };
+    }
+
+    private static int CalculateCLvl(int characterLevel) =>
+        characterLevel <= 80
+        ? LuminaSheets.ParamGrowSheet.GetRow((uint)characterLevel)!.CraftingLevel
+        : (int)LuminaSheets.RecipeLevelTableSheet.First(r => r.ClassJobLevel == characterLevel).RowId;
 
     public override void Draw()
     {
@@ -38,7 +65,7 @@ public class SimulatorWindow : Window
         ImGui.BeginChild("CraftimizerActions", Vector2.Zero, true, ImGuiWindowFlags.NoDecoration);
         ImGui.Checkbox("Show only guaranteed actions", ref showOnlyGuaranteedActions);
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
-        foreach(var category in Enum.GetValues<ActionType>().GroupBy(a => a.Category()))
+        foreach (var category in Enum.GetValues<ActionType>().GroupBy(a => a.Category()))
         {
             var i = 0;
             ImGuiUtils.BeginGroupPanel(category.Key.GetDisplayName());
@@ -48,9 +75,9 @@ public class SimulatorWindow : Window
                 if (showOnlyGuaranteedActions && !baseAction.IsGuaranteedAction)
                     continue;
 
-                ImGui.BeginDisabled(!baseAction.CanUse);
+                ImGui.BeginDisabled(!baseAction.CanUse || Simulation.IsComplete);
                 if (ImGui.ImageButton(action.GetIcon(ClassJob.Carpenter).ImGuiHandle, new Vector2(ImGui.GetFontSize() * 2)))
-                    Simulation.Execute(action);
+                    (_, State) = Simulation.Execute(State, action);
                 if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
                     ImGui.SetTooltip($"{action.GetName(ClassJob.Carpenter)}\n{baseAction.GetTooltip(true)}");
                 ImGui.EndDisabled();
@@ -63,38 +90,38 @@ public class SimulatorWindow : Window
         ImGui.EndChild();
         ImGui.TableNextColumn();
         ImGui.BeginChild("CraftimizerSimulator", Vector2.Zero, true, ImGuiWindowFlags.NoDecoration);
-        ImGui.Text($"Step {Simulation.StepCount + 1}");
-        ImGui.Text(Simulation.Condition.Name());
+        ImGui.Text($"Step {State.StepCount + 1}");
+        ImGui.Text(State.Condition.Name());
         if (ImGui.IsItemHovered())
-            ImGui.SetTooltip(Simulation.Condition.Description(Simulation.Input.Stats.HasRelic));
-        ImGui.Text($"{Simulation.HQPercent}%% HQ");
+            ImGui.SetTooltip(State.Condition.Description(State.Input.Stats.HasRelic));
+        ImGui.Text($"{State.HQPercent}%% HQ");
         ImGui.PushStyleColor(ImGuiCol.PlotHistogram, new Vector4(.2f, 1f, .2f, 1f));
-        ImGui.ProgressBar(Math.Min((float)Simulation.Progress / Simulation.Input.MaxProgress, 1f), new Vector2(200, 20), $"{Simulation.Progress} / {Simulation.Input.MaxProgress}");
+        ImGui.ProgressBar(Math.Min((float)State.Progress / State.Input.Recipe.MaxProgress, 1f), new Vector2(200, 20), $"{State.Progress} / {State.Input.Recipe.MaxProgress}");
         ImGui.PopStyleColor();
         ImGui.PushStyleColor(ImGuiCol.PlotHistogram, new Vector4(.2f, .2f, 1f, 1f));
-        ImGui.ProgressBar(Math.Min((float)Simulation.Quality / Simulation.Input.MaxQuality, 1f), new Vector2(200, 20), $"{Simulation.Quality} / {Simulation.Input.MaxQuality}");
+        ImGui.ProgressBar(Math.Min((float)State.Quality / State.Input.Recipe.MaxQuality, 1f), new Vector2(200, 20), $"{State.Quality} / {State.Input.Recipe.MaxQuality}");
         ImGui.PopStyleColor();
         ImGui.PushStyleColor(ImGuiCol.PlotHistogram, new Vector4(1f, 1f, .2f, 1f));
-        ImGui.ProgressBar(Math.Clamp((float)Simulation.Durability / Simulation.Input.MaxDurability, 0f, 1f), new Vector2(200, 20), $"{Simulation.Durability} / {Simulation.Input.MaxDurability}");
+        ImGui.ProgressBar(Math.Clamp((float)State.Durability / State.Input.Recipe.MaxDurability, 0f, 1f), new Vector2(200, 20), $"{State.Durability} / {State.Input.Recipe.MaxDurability}");
         ImGui.PopStyleColor();
         ImGui.PushStyleColor(ImGuiCol.PlotHistogram, new Vector4(1f, .2f, 1f, 1f));
-        ImGui.ProgressBar(Math.Clamp((float)Simulation.CP / Simulation.Input.Stats.CP, 0f, 1f), new Vector2(200, 20), $"{Simulation.CP} / {Simulation.Input.Stats.CP}");
+        ImGui.ProgressBar(Math.Clamp((float)State.CP / State.Input.Stats.CP, 0f, 1f), new Vector2(200, 20), $"{State.CP} / {State.Input.Stats.CP}");
         ImGui.PopStyleColor();
         ImGuiHelpers.ScaledDummy(5);
         ImGui.Text($"Effects:");
-        foreach (var effect in Simulation.ActiveEffects)
+        foreach (var effect in State.ActiveEffects)
         {
-            var icon = effect.Icon;
+            var icon = effect.GetIcon();
             var h = ImGui.GetFontSize() * 1.25f;
             var w = icon.Width * h / icon.Height;
             ImGui.Image(icon.ImGuiHandle, new Vector2(w, h));
             ImGui.SameLine();
-            ImGui.Text(effect.Tooltip);
+            ImGui.Text(effect.GetTooltip());
         }
         ImGuiHelpers.ScaledDummy(5);
         {
             var i = 0;
-            foreach (var action in Simulation.ActionHistory)
+            foreach (var action in State.ActionHistory)
             {
                 var baseAction = action.With(Simulation);
                 ImGui.Image(action.GetIcon(ClassJob.Carpenter).ImGuiHandle, new Vector2(ImGui.GetFontSize() * 2f));

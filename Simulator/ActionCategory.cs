@@ -10,7 +10,7 @@ public enum ActionCategory
     Other
 }
 
-internal static class ActionCategoryUtils
+public static class ActionCategoryUtils
 {
     public static string GetDisplayName(this ActionCategory category) =>
         category switch

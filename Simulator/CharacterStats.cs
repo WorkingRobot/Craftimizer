@@ -1,6 +1,3 @@
-using System.Linq;
-using Craftimizer.Plugin;
-
 namespace Craftimizer.Simulator;
 
 public record CharacterStats
@@ -11,8 +8,5 @@ public record CharacterStats
     public int Level { get; init; }
     public bool HasRelic { get; init; }
     public bool IsSpecialist { get; init; }
-
-    public int CLvl => Level <= 80
-            ? LuminaSheets.ParamGrowSheet.GetRow((uint)Level)!.CraftingLevel
-            : (int)LuminaSheets.RecipeLevelTableSheet.First(r => r.ClassJobLevel == Level).RowId;
+    public int CLvl { get; init; }
 }
