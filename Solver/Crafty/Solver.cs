@@ -56,8 +56,9 @@ public class Solver
             if (node.IsComplete)
                 return (currentIndex, node.CompletionState);
 
-            if (!node.AvailableActions.Remove(action))
+            if (!node.AvailableActions.HasFlag(action))
                 return (currentIndex, CompletionState.InvalidAction);
+            node.AvailableActions.ClearFlag(action);
 
             currentIndex = Tree.Insert(currentIndex, Execute(node.State, action, strict));
         }
@@ -104,7 +105,7 @@ public class Solver
         {
             var selectedNode = Tree.Get(selectedIndex);
 
-            var expandable = selectedNode.State.AvailableActions.Count != 0;
+            var expandable = !selectedNode.State.AvailableActions.IsEmpty;
             var likelyTerminal = selectedNode.Children.Count == 0;
             if (expandable || likelyTerminal) {
                 break;
@@ -123,8 +124,9 @@ public class Solver
         if (initialNode.IsComplete)
             return (initialIndex, initialNode.CompletionState, initialNode.CalculateScore() ?? 0);
 
-        var randomAction = initialNode.AvailableActions.ElementAt(0);
-        initialNode.AvailableActions.RemoveAt(0);
+        var randomIdx = random.Next(initialNode.AvailableActions.ActionCount);
+        var randomAction = initialNode.AvailableActions.ActionAt(randomIdx);
+        initialNode.AvailableActions.ClearFlag(randomAction);
         var expandedState = Execute(initialNode.State, randomAction, true);
         var expandedIndex = Tree.Insert(initialIndex, expandedState);
 
@@ -135,7 +137,8 @@ public class Solver
         {
             if (currentState.IsComplete)
                 break;
-            randomAction = currentState.AvailableActions.ElementAt(0);
+            randomIdx = random.Next(currentState.AvailableActions.ActionCount);
+            randomAction = currentState.AvailableActions.ActionAt(randomIdx);
             currentState = Execute(currentState.State, randomAction, true);
         }
 
