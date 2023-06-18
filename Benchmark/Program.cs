@@ -27,6 +27,14 @@ internal class Program
         };
 
         var actions = new List<ActionType>();
-        (actions, _) = Solver.Crafty.Solver.SearchStepwise(input, actions, a => Console.WriteLine(a));
+        if (true)
+            (actions, _) = Solver.Crafty.Solver.SearchStepwise(input, actions, a => Console.WriteLine(a));
+        else
+        {
+            (actions, _) = Solver.Crafty.Solver.SearchOneshot(input, actions);
+            foreach (var action in actions)
+                Console.Write($">{action.IntName()}");
+            Console.WriteLine();
+        }
     }
 }

@@ -4,7 +4,8 @@ namespace Craftimizer.Simulator.Actions;
 
 internal abstract class BaseBuffAction : BaseAction
 {
-    public abstract Effect Effect { get; }
+    public abstract EffectType Effect { get; }
+    public virtual byte Duration => 1;
     public virtual EffectType[] ConflictingEffects => Array.Empty<EffectType>();
 
     public override int DurabilityCost => 0;
@@ -14,13 +15,13 @@ internal abstract class BaseBuffAction : BaseAction
         if (ConflictingEffects.Length != 0)
             foreach(var effect in ConflictingEffects)
                 Simulation.RemoveEffect(effect);
-        Simulation.AddEffect(Effect.Type, Effect.Duration, Effect.Strength);
+        Simulation.AddEffect(Effect, Duration);
     }
 
     public override string GetTooltip(bool addUsability)
     {
         var builder = new StringBuilder(base.GetTooltip(addUsability));
-        builder.AppendLine($"{Effect.Duration} Steps");
+        builder.AppendLine($"{Duration} Steps");
         return builder.ToString();
     }
 }

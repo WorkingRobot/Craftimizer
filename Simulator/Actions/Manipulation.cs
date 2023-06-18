@@ -8,5 +8,19 @@ internal class Manipulation : BaseBuffAction
 
     public override int CPCost => 96;
 
-    public override Effect Effect => new() { Type = EffectType.Manipulation, Duration = 8 };
+    public override EffectType Effect => EffectType.Manipulation;
+    public override byte Duration => 8;
+
+    public override void Use()
+    {
+        if (Simulation.HasEffect(EffectType.Manipulation))
+            Simulation.RestoreDurability(5);
+
+        Simulation.ReduceCP(CPCost);
+        Simulation.ReduceDurability(DurabilityCost);
+
+        UseSuccess();
+
+        Simulation.IncreaseStepCount();
+    }
 }

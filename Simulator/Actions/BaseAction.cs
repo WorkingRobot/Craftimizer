@@ -32,14 +32,17 @@ public abstract class BaseAction
 
     public virtual void Use()
     {
+        if (Simulation.RollSuccess(SuccessRate))
+            UseSuccess();
+
         Simulation.ReduceCP(CPCost);
         Simulation.ReduceDurability(DurabilityCost);
 
-        if (Simulation.HasEffect(EffectType.Manipulation))
-            Simulation.RestoreDurability(5);
-
-        if (Simulation.RollSuccess(SuccessRate))
-            UseSuccess();
+        if (Simulation.Durability > 0)
+        {
+            if (Simulation.HasEffect(EffectType.Manipulation))
+                Simulation.RestoreDurability(5);
+        }
 
         if (IncreasesStepCount)
             Simulation.IncreaseStepCount();

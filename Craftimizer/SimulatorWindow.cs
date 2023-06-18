@@ -109,14 +109,16 @@ public class SimulatorWindow : Window
         ImGui.PopStyleColor();
         ImGuiHelpers.ScaledDummy(5);
         ImGui.Text($"Effects:");
-        foreach (var effect in State.ActiveEffects)
+        foreach (var effect in Enum.GetValues<EffectType>())
         {
-            var icon = effect.GetIcon();
+            var strength = Simulation.GetEffectStrength(effect);
+            var duration = Simulation.GetEffectDuration(effect);
+            var icon = effect.GetIcon(strength);
             var h = ImGui.GetFontSize() * 1.25f;
             var w = icon.Width * h / icon.Height;
             ImGui.Image(icon.ImGuiHandle, new Vector2(w, h));
             ImGui.SameLine();
-            ImGui.Text(effect.GetTooltip());
+            ImGui.Text(effect.GetTooltip(strength, duration));
         }
         ImGuiHelpers.ScaledDummy(5);
         {

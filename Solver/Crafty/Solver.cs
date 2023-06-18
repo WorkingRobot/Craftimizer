@@ -11,22 +11,11 @@ public class Solver
 
     //public Random Random => Simulator.Input.Random;
 
-    public const int Iterations = 100000;
+    public const int Iterations = 1000;
     public const float ScoreStorageThreshold = 1f;
     public const float MaxScoreWeightingConstant = 0.1f;
     public const float ExplorationConstant = 4f;
     public const int MaxStepCount = 25;
-
-    public static void Write(string data)
-    {
-        if (false)
-            Console.Write(data);
-    }
-    public static void WriteLine(string data)
-    {
-        if (false)
-            Console.WriteLine(data);
-    }
 
     public Solver(SimulationState state, bool strict)
     {
@@ -88,9 +77,6 @@ public class Solver
         var exploitation = ((1f - w) * average_score) + (w * node.MaxScore);
         var exploration = MathF.Sqrt(c * MathF.Log(parent.Visits) / visits);
 
-        WriteLine($"a {node.ScoreSum} {node.MaxScore}");
-        WriteLine($"b {exploitation} {exploration}");
-
         return exploitation + exploration;
     }
 
@@ -143,36 +129,27 @@ public class Solver
 
             var expandable = selectedNode.State.AvailableActions.Count != 0;
             var likelyTerminal = selectedNode.Children.Count == 0;
-            WriteLine("select:");
-            WriteLine($"{expandable} {likelyTerminal}".ToLower());
             if (expandable || likelyTerminal) {
                 break;
             }
 
             // select the node with the highest score
             selectedIndex = RustMaxBy(selectedNode.Children, n => Eval(Tree.Get(n).State.Scores, selectedNode.State.Scores));
-            WriteLine($"{selectedIndex}");
         }
         return selectedIndex;
     }
 
     public (int Index, CompletionState State, float Score) ExpandAndRollout(int initialIndex)
     {
-        WriteLine("expand_and_rollout");
-        WriteLine($"{initialIndex}");
         // expand once
         var initialNode = Tree.Get(initialIndex).State;
         if (initialNode.IsComplete)
-        {
-            WriteLine($"ret {initialIndex} {initialNode.CompletionState}");
             return (initialIndex, initialNode.CompletionState, initialNode.CalculateScore() ?? 0);
-        }
+
         var randomAction = initialNode.AvailableActions.ElementAt(0);
-        initialNode.AvailableActions.Remove(randomAction);
-        WriteLine($"pick {randomAction.IntName()}");
+        initialNode.AvailableActions.RemoveAt(0);
         var expandedState = Execute(initialNode.State, randomAction, true);
         var expandedIndex = Tree.Insert(initialIndex, expandedState);
-        WriteLine($"ins {expandedIndex}");
 
         // playout to a terminal state
         var currentState = Tree.Get(expandedIndex).State;
@@ -189,14 +166,8 @@ public class Solver
         var score = currentState.CalculateScore() ?? 0;
         if (currentState.CompletionState == CompletionState.ProgressComplete)
         {
-            WriteLine($"calc: {score:0.00000}");
             if (score >= ScoreStorageThreshold && score >= Tree.Get(0).State.Scores.MaxScore)
             {
-                WriteLine("exp_a");
-                foreach (var action in currentState.State.ActionHistory.Skip(preCount))
-                    Write($">{action.IntName()}");
-                WriteLine("");
-
                 (var terminalIndex, _) = ExecuteActions(expandedIndex, currentState.State.ActionHistory.Skip(preCount).ToList(), true);
                 return (terminalIndex, currentState.CompletionState, score);
             }
@@ -206,7 +177,6 @@ public class Solver
 
     public void Backpropagate(int startIndex, int targetIndex, float score)
     {
-        WriteLine($"back {startIndex}->{targetIndex} {score}");
         var currentIndex = startIndex;
         while (true)
         {
@@ -215,7 +185,6 @@ public class Solver
             currentScores.Visits++;
             currentScores.ScoreSum += score;
             currentScores.MaxScore = Math.Max(currentScores.MaxScore, score);
-            WriteLine($"bak {currentIndex} {currentScores.Visits} {currentScores.ScoreSum} {currentScores.MaxScore}");
 
             if (currentIndex == targetIndex)
                 break;
@@ -228,27 +197,22 @@ public class Solver
     {
         for (var i = 0; i < Iterations; i++)
         {
-            WriteLine($"search {i}");
             var selectedIndex = Select(startIndex);
-            var (endIndex, state, score) = ExpandAndRollout(selectedIndex);
+            var (endIndex, _, score) = ExpandAndRollout(selectedIndex);
 
-            WriteLine($"backp {endIndex} {score}");
             Backpropagate(endIndex, startIndex, score);
         }
     }
 
     public (List<ActionType> Actions, SimulationNode Node) Solution()
     {
-        WriteLine("sol");
         var actions = new List<ActionType>();
         var node = Tree.Get(0);
         while (node.Children.Count != 0) {
             var next_index = RustMaxBy(node.Children, n => Tree.Get(n).State.Scores.MaxScore);
-            WriteLine($"next: {next_index}");
             node = Tree.Get(next_index);
             if (node.State.Action != null)
             {
-                WriteLine($"act: {node.State.Action.Value.IntName()}");
                 actions.Add(node.State.Action.Value);
             }
         }

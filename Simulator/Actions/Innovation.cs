@@ -8,5 +8,6 @@ internal class Innovation : BaseBuffAction
 
     public override int CPCost => 18;
 
-    public override Effect Effect => new() { Type = EffectType.Innovation, Duration = 4 };
+    public override EffectType Effect => EffectType.Innovation;
+    public override byte Duration => 4;
 }

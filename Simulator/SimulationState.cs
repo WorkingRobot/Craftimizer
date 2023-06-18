@@ -1,6 +1,4 @@
 using Craftimizer.Simulator.Actions;
-using System;
-using System.Collections.Generic;
 
 namespace Craftimizer.Simulator;
 
@@ -16,7 +14,7 @@ public readonly record struct SimulationState
     public int Durability { get; init; }
     public int CP { get; init; }
     public Condition Condition { get; init; }
-    public List<Effect> ActiveEffects { get; init; }
+    public Effects ActiveEffects { get; init; }
     public List<ActionType> ActionHistory { get; init; }
 
     // https://github.com/ffxiv-teamcraft/simulator/blob/0682dfa76043ff4ccb38832c184d046ceaff0733/src/model/tables.ts#L2

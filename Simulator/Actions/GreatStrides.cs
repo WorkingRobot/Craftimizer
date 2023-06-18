@@ -8,5 +8,6 @@ internal class GreatStrides : BaseBuffAction
 
     public override int CPCost => 32;
 
-    public override Effect Effect => new() { Type = EffectType.GreatStrides, Duration = 3 };
+    public override EffectType Effect => EffectType.GreatStrides;
+    public override byte Duration => 3;
 }

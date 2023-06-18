@@ -7,7 +7,7 @@ namespace Craftimizer.Solver.Crafty;
 public class Simulator : Sim
 {
     public new CompletionState CompletionState =>
-        ActionHistory.Count >= Solver.MaxStepCount ?
+        (ActionHistory.Count + 1) >= Solver.MaxStepCount ?
         CompletionState.MaxActionCountReached :
         (CompletionState)base.CompletionState;
     public override bool IsComplete => CompletionState != CompletionState.Incomplete;
@@ -63,6 +63,12 @@ public class Simulator : Sim
             if (!baseAction.CanUse)
                 return false;
 
+            if (action == ActionType.StandardTouch && CP < 32)
+                return false;
+
+            if (action == ActionType.AdvancedTouch && CP < 46)
+                return false;
+
             if (CalculateSuccessRate(baseAction.SuccessRate) != 1)
                 return false;
 
@@ -75,7 +81,7 @@ public class Simulator : Sim
                 return false;
 
             if (action == ActionType.Groundwork &&
-                Durability < baseAction.DurabilityCost)
+                Durability < CalculateDurabilityCost(baseAction.DurabilityCost))
                 return false;
 
             if (action == ActionType.FinalAppraisal)
@@ -127,7 +133,7 @@ public class Simulator : Sim
                 }
 
                 if (action == ActionType.ByregotsBlessing &&
-                    GetEffect(EffectType.InnerQuiet)?.Strength <= 1)
+                    GetEffectStrength(EffectType.InnerQuiet) <= 1)
                     return false;
 
                 if ((action == ActionType.WasteNot || action == ActionType.WasteNot2) &&
@@ -151,7 +157,7 @@ public class Simulator : Sim
                     return false;
 
                 if ((action == ActionType.Veneration || action == ActionType.Innovation) &&
-                    (GetEffect(EffectType.Veneration)?.Duration > 1 || GetEffect(EffectType.Innovation)?.Duration > 1))
+                    (GetEffectDuration(EffectType.Veneration) > 1 || GetEffectDuration(EffectType.Innovation) > 1))
                     return false;
             }
 

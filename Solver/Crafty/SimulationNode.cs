@@ -59,8 +59,6 @@ public readonly record struct SimulationNode
         var fewerStepsScore =
             fewerStepsBonus * (1f - ((float)(State.ActionCount + 1) / Solver.MaxStepCount));
 
-        Solver.WriteLine($"score: {progressScore:0.00000} {qualityScore:0.00000} {durabilityScore:0.00000} {cpScore:0.00000} {fewerStepsScore:0.00000}");
-
         return progressScore + qualityScore + durabilityScore + cpScore + fewerStepsScore;
     }
 }

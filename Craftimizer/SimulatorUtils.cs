@@ -138,27 +138,27 @@ internal static class EffectExtensions
     public static Status Status(this EffectType me) =>
         LuminaSheets.StatusSheet.GetRow(me.StatusId())!;
 
-    public static ushort GetIconId(this Effect me)
+    public static ushort GetIconId(this EffectType me, int strength)
     {
-        var status = me.Type.Status();
+        var status = me.Status();
         uint iconId = status.Icon;
-        if (status.MaxStacks != 0 && me.Strength != null)
-            iconId += (uint)Math.Clamp(me.Strength!.Value, 1, status.MaxStacks) - 1;
+        if (status.MaxStacks != 0)
+            iconId += (uint)Math.Clamp(strength, 1, status.MaxStacks) - 1;
         return (ushort)iconId;
     }
 
-    public static TextureWrap GetIcon(this Effect me) =>
-        Icons.GetIconFromId(me.GetIconId());
+    public static TextureWrap GetIcon(this EffectType me, int strength) =>
+        Icons.GetIconFromId(me.GetIconId(strength));
 
-    public static string GetTooltip(this Effect me)
+    public static string GetTooltip(this EffectType me, int strength, int duration)
     {
-        var status = me.Type.Status();
+        var status = me.Status();
         var name = new StringBuilder();
         name.Append(status.Name.ToDalamudString().TextValue);
-        if (status.MaxStacks != 0 && me.Strength != null)
-            name.Append($" {me.Strength}");
-        if (!status.IsPermanent && me.Duration != null)
-            name.Append($" > {me.Duration}");
+        if (status.MaxStacks != 0)
+            name.Append($" {strength}");
+        if (!status.IsPermanent)
+            name.Append($" > {duration}");
         return name.ToString();
     }
 }

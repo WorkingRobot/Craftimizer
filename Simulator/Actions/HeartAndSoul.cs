@@ -9,7 +9,7 @@ internal class HeartAndSoul : BaseBuffAction
     public override int CPCost => 0;
     public override bool IncreasesStepCount => false;
 
-    public override Effect Effect => new() { Type = EffectType.HeartAndSoul };
+    public override EffectType Effect => EffectType.HeartAndSoul;
 
     public override bool CanUse => Simulation.Input.Stats.IsSpecialist && Simulation.CountPreviousAction(ActionType.HeartAndSoul) == 0;
 }

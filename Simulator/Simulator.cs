@@ -11,7 +11,7 @@ public class Simulator
     public int Durability { get; private set; }
     public int CP { get; private set; }
     public Condition Condition { get; private set; }
-    public List<Effect> ActiveEffects { get; private set; }
+    public Effects ActiveEffects;
     public List<ActionType> ActionHistory { get; private set; }
 
     public bool IsFirstStep => StepCount == 0;
@@ -47,7 +47,7 @@ public class Simulator
         Durability = state.Durability;
         CP = state.CP;
         Condition = state.Condition;
-        ActiveEffects = new(state.ActiveEffects);
+        ActiveEffects = state.ActiveEffects;
         ActionHistory = new(state.ActionHistory);
     }
 
@@ -60,7 +60,7 @@ public class Simulator
             Durability = Durability,
             CP = CP,
             Condition = Condition,
-            ActiveEffects = ActiveEffects!,
+            ActiveEffects = ActiveEffects,
             ActionHistory = ActionHistory!,
         };
 
@@ -88,68 +88,36 @@ public class Simulator
         baseAction.Use();
         ActionHistory!.Add(action);
 
-        for (var i = 0; i < ActiveEffects!.Count; ++i)
-        {
-            var effect = ActiveEffects[i].DecrementDuration();
-            if (effect.Duration == 0)
-            {
-                ActiveEffects.RemoveAt(i);
-                --i;
-            }
-            else
-                ActiveEffects[i] = effect;
-        }
+        ActiveEffects.DecrementDuration();
 
         return ActionResponse.UsedAction;
     }
 
-    private int GetEffectIdx(EffectType effect) =>
-        ActiveEffects!.FindIndex(e => e.Type == effect);
+    public int GetEffectStrength(EffectType effect) =>
+        ActiveEffects.GetStrength(effect);
 
-    public Effect? GetEffect(EffectType effect)
-    {
-        var idx = GetEffectIdx(effect);
-        return idx == -1 ? null : ActiveEffects![idx];
-    }
+    public int GetEffectDuration(EffectType effect) =>
+        ActiveEffects.GetDuration(effect);
 
-    public void AddEffect(EffectType effect, int? duration = null, int? strength = null)
+    public void AddEffect(EffectType effect, int duration)
     {
-        if (Condition == Condition.Primed && duration != null)
+        if (Condition == Condition.Primed)
             duration += 2;
 
         // Duration will be decreased in the next step, so we need to add 1
-        if (duration != null)
-            duration++;
+        duration++;
 
-        var newEffect = new Effect { Type = effect, Duration = duration, Strength = strength };
-
-        var effectIdx = GetEffectIdx(effect);
-        if (effectIdx != -1)
-            ActiveEffects![effectIdx] = newEffect;
-        else
-            ActiveEffects!.Add(newEffect);
+        ActiveEffects.SetDuration(effect, (byte)duration);
     }
 
-    public void StrengthenEffect(EffectType effect, int? duration = null)
-    {
-        if (duration != null)
-            duration += 1;
-
-        var effectIdx = GetEffectIdx(effect);
-        if (effectIdx != -1)
-        {
-            if (effect == EffectType.InnerQuiet && ActiveEffects![effectIdx].Strength < 10)
-                ActiveEffects[effectIdx] = ActiveEffects[effectIdx].IncrementStrength();
-        }
-        else
-            ActiveEffects!.Add(new Effect { Type = effect, Duration = duration, Strength = 1 });
-    }
+    public void StrengthenEffect(EffectType effect) =>
+        ActiveEffects.Strengthen(effect);
 
     public void RemoveEffect(EffectType effect) =>
-        ActiveEffects!.RemoveAll(e => e.Type == effect);
+        ActiveEffects.SetDuration(effect, 0);
 
     public bool HasEffect(EffectType effect) =>
-        ActiveEffects!.Any(e => e.Type == effect);
+        ActiveEffects.HasEffect(effect);
 
     public bool IsPreviousAction(ActionType action, int stepsBack = 1) =>
         ActionHistory!.Count >= stepsBack && ActionHistory[^stepsBack] == action;
@@ -287,7 +255,7 @@ public class Simulator
         if (HasEffect(EffectType.Innovation))
             buffModifier += 0.50f;
 
-        buffModifier *= 1 + ((GetEffect(EffectType.InnerQuiet)?.Strength ?? 0) * 0.10f);
+        buffModifier *= 1 + (GetEffectStrength(EffectType.InnerQuiet) * 0.10f);
 
         var conditionModifier = Condition switch
         {

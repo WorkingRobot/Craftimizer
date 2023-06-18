@@ -8,6 +8,7 @@ internal class WasteNot2 : BaseBuffAction
 
     public override int CPCost => 98;
 
-    public override Effect Effect => new() { Type = EffectType.WasteNot2, Duration = 8 };
+    public override EffectType Effect => EffectType.WasteNot2;
+    public override byte Duration => 8;
     public override EffectType[] ConflictingEffects => new[] { EffectType.WasteNot };
 }

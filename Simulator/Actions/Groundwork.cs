@@ -13,8 +13,7 @@ internal class Groundwork : BaseAction
         get
         {
             var ret = Simulation.Input.Stats.Level >= 86 ? 3.60f : 3.00f;
-            // TODO: does not account for waste not
-            return Simulation.Durability < DurabilityCost ? ret / 2 : ret;
+            return Simulation.Durability < Simulation.CalculateDurabilityCost(DurabilityCost) ? ret / 2 : ret;
         }
     }
     public override bool IncreasesProgress => true;
