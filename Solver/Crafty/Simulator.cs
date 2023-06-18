@@ -63,12 +63,6 @@ public class Simulator : Sim
             if (!baseAction.CanUse)
                 return false;
 
-            if (action == ActionType.StandardTouch && CP < 32)
-                return false;
-
-            if (action == ActionType.AdvancedTouch && CP < 46)
-                return false;
-
             if (CalculateSuccessRate(baseAction.SuccessRate) != 1)
                 return false;
 
@@ -78,10 +72,6 @@ public class Simulator : Sim
 
             if (action == ActionType.Observe &&
                 IsPreviousAction(ActionType.Observe))
-                return false;
-
-            if (action == ActionType.Groundwork &&
-                Durability < CalculateDurabilityCost(baseAction.DurabilityCost))
                 return false;
 
             if (action == ActionType.FinalAppraisal)
