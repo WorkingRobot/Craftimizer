@@ -52,7 +52,7 @@ public static class ActionUtils
     }
 
     public static void SetSimulation(Simulator simulation) =>
-        BaseAction.TLSSimulation.Value = simulation;
+        BaseAction.TLSSimulation = simulation;
 
     public static BaseAction WithUnsafe(this ActionType me) => Actions[(int)me];
 

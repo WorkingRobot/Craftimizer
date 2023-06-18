@@ -1,13 +1,12 @@
-using System;
 using System.Text;
-using System.Threading;
 
 namespace Craftimizer.Simulator.Actions;
 
 public abstract class BaseAction
 {
-    internal static readonly ThreadLocal<Simulator?> TLSSimulation = new(false);
-    protected static Simulator Simulation => TLSSimulation.Value ?? throw new NullReferenceException();
+    [ThreadStatic]
+    internal static Simulator? TLSSimulation;
+    protected static Simulator Simulation => TLSSimulation ?? throw new NullReferenceException();
 
     public BaseAction() { }
 
