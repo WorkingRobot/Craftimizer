@@ -79,45 +79,22 @@ public class Solver
 
         return exploitation + exploration;
     }
-
-    private enum Ordering
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int RustMaxBy(List<int> source, Func<int, float> into)
     {
-        Less,
-        Equal,
-        Greater
-    }
-
-    private static V? RustMaxBy<V, T>(List<V> source, Func<V, T> into)
-    {
-        static Func<V, V, Ordering> compare_into(Func<T, T, Ordering> compare, Func<V, T> into) =>
-            (a, b) => compare(into(a), into(b));
-
-        static Func<T, T, Ordering> compare(IComparer<T> comparer) =>
-            (x, y) => comparer.Compare(x, y) switch
-            {
-                < 0 => Ordering.Less,
-                0 => Ordering.Equal,
-                > 0 => Ordering.Greater,
-            };
-
-        static Func<V, V, V> max_by_fold(Func<V, V, Ordering> compare) =>
-            (x, y) => compare(x, y) switch
-            {
-                Ordering.Less or Ordering.Equal => y,
-                Ordering.Greater => x,
-                _ => x
-            };
-
-        static V? reduce(List<V> d, Func<V, V, V> f)
+        var max = 0;
+        var maxV = into(source[0]);
+        for (var i = 1; i < source.Count; ++i)
         {
-            V? accum = default!;
-            for (var i = 0; i < d.Count; ++i)
-                accum = i == 0 ? d[i] : f(accum, d[i]);
-            return accum;
+            var nextV = into(source[i]);
+            if (maxV <= nextV)
+            {
+                max = i;
+                maxV = nextV;
+            }
         }
-
-        var comparer = compare_into(compare(Comparer<T>.Default), into);
-        return reduce(source, max_by_fold(comparer));
+        return source[max];
     }
 
     public int Select(int currentIndex)
