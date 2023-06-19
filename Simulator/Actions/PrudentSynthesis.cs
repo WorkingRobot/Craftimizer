@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class PrudentSynthesis : BaseAction
+internal sealed class PrudentSynthesis : BaseAction
 {
     public override ActionCategory Category => ActionCategory.Synthesis;
     public override int Level => 88;

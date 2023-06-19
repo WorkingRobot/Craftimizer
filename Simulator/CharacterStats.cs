@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator;
 
-public record CharacterStats
+public sealed record CharacterStats
 {
     public int Craftsmanship { get; init; }
     public int Control { get; init; }

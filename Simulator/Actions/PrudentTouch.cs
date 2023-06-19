@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class PrudentTouch : BaseAction
+internal sealed class PrudentTouch : BaseAction
 {
     public override ActionCategory Category => ActionCategory.Quality;
     public override int Level => 66;

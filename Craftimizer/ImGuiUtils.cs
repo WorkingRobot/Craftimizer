@@ -5,7 +5,7 @@ using System.Numerics;
 
 namespace Craftimizer.Plugin;
 
-internal class ImGuiUtils
+internal static class ImGuiUtils
 {
     private static readonly Stack<(Vector2 Min, Vector2 Max)> GroupPanelLabelStack = new();
 

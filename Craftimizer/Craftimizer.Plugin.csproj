@@ -30,7 +30,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DalamudPackager" Version="2.1.10" />
+    <PackageReference Include="DalamudPackager" Version="2.1.11" />
+    <PackageReference Include="Meziantou.Analyzer" Version="2.0.61">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <ProjectReference Include="..\Simulator\Craftimizer.Simulator.csproj" />
     <Reference Include="FFXIVClientStructs">
       <HintPath>$(DalamudLibPath)FFXIVClientStructs.dll</HintPath>

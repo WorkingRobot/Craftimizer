@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class TrainedFinesse : BaseAction
+internal sealed class TrainedFinesse : BaseAction
 {
     public override ActionCategory Category => ActionCategory.Quality;
     public override int Level => 90;

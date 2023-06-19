@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class Reflect : BaseAction
+internal sealed class Reflect : BaseAction
 {
     public override ActionCategory Category => ActionCategory.FirstTurn;
     public override int Level => 69;

@@ -1,8 +1,8 @@
 namespace Craftimizer.Solver.Crafty;
 
-public class NodeScores
+public sealed class NodeScores
 {
-    public float ScoreSum { get; set; } = 0;
-    public float MaxScore { get; set; } = 0;
-    public float Visits { get; set; } = 0;
+    public float ScoreSum { get; set; }
+    public float MaxScore { get; set; }
+    public float Visits { get; set; }
 }

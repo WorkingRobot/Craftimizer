@@ -1,5 +1,6 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace Craftimizer.Solver.Crafty;
@@ -213,6 +214,7 @@ public class Solver
             return (actions, state);
         }
 
+        Debugger.Break();
         var solver = new Solver(state, true);
         while (!solver.Simulator.IsComplete)
         {
@@ -232,6 +234,7 @@ public class Solver
 
             solver = new Solver(state, true);
         }
+        Debugger.Break();
 
         return (actions, state);
     }

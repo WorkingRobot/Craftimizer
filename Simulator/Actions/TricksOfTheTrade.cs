@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class TricksOfTheTrade : BaseAction
+internal sealed class TricksOfTheTrade : BaseAction
 {
     public override ActionCategory Category => ActionCategory.Other;
     public override int Level => 13;

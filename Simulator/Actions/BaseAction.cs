@@ -6,9 +6,7 @@ public abstract class BaseAction
 {
     [ThreadStatic]
     internal static Simulator? TLSSimulation;
-    protected static Simulator Simulation => TLSSimulation ?? throw new NullReferenceException();
-
-    public BaseAction() { }
+    protected static Simulator Simulation => TLSSimulation!;
 
     // Non-instanced properties
     public abstract ActionCategory Category { get; }

@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class Innovation : BaseBuffAction
+internal sealed class Innovation : BaseBuffAction
 {
     public override ActionCategory Category => ActionCategory.Buffs;
     public override int Level => 26;

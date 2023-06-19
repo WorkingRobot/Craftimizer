@@ -7,7 +7,7 @@ namespace Craftimizer.Solver.Crafty;
 
 public sealed class ActionSet
 {
-    private uint Bits { get; set; } = 0;
+    private uint Bits { get; set; }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int NthBitSet(uint value, int n)

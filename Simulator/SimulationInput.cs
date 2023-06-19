@@ -1,5 +1,3 @@
-using System;
-
 namespace Craftimizer.Simulator;
 
 public readonly record struct SimulationInput

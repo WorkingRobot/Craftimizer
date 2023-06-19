@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class CarefulSynthesis : BaseAction
+internal sealed class CarefulSynthesis : BaseAction
 {
     public override ActionCategory Category => ActionCategory.Synthesis;
     public override int Level => 62;

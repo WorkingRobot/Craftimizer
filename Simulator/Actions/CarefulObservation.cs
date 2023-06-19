@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class CarefulObservation : BaseAction
+internal sealed class CarefulObservation : BaseAction
 {
     public override ActionCategory Category => ActionCategory.Other;
     public override int Level => 55;

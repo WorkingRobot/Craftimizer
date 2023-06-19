@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class BasicSynthesis : BaseAction
+internal sealed class BasicSynthesis : BaseAction
 {
     public override ActionCategory Category => ActionCategory.Synthesis;
     public override int Level => 1;

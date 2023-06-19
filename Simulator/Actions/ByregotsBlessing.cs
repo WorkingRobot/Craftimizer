@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class ByregotsBlessing : BaseAction
+internal sealed class ByregotsBlessing : BaseAction
 {
     public override ActionCategory Category => ActionCategory.Quality;
     public override int Level => 50;

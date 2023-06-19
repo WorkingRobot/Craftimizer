@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class HeartAndSoul : BaseBuffAction
+internal sealed class HeartAndSoul : BaseBuffAction
 {
     public override ActionCategory Category => ActionCategory.Other;
     public override int Level => 86;

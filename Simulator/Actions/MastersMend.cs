@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class MastersMend : BaseAction
+internal sealed class MastersMend : BaseAction
 {
     public override ActionCategory Category => ActionCategory.Durability;
     public override int Level => 7;

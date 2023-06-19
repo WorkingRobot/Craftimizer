@@ -8,6 +8,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Meziantou.Analyzer" Version="2.0.61">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="ObjectLayoutInspector" Version="0.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Simulator\Craftimizer.Simulator.csproj" />
     <ProjectReference Include="..\Solver\Craftimizer.Solver.csproj" />
   </ItemGroup>

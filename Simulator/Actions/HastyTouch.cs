@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class HastyTouch : BaseAction
+internal sealed class HastyTouch : BaseAction
 {
     public override ActionCategory Category => ActionCategory.Quality;
     public override int Level => 9;

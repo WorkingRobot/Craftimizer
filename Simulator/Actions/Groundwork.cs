@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class Groundwork : BaseAction
+internal sealed class Groundwork : BaseAction
 {
     public override ActionCategory Category => ActionCategory.Synthesis;
     public override int Level => 72;

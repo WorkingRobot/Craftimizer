@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class GreatStrides : BaseBuffAction
+internal sealed class GreatStrides : BaseBuffAction
 {
     public override ActionCategory Category => ActionCategory.Buffs;
     public override int Level => 21;

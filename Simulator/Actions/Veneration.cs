@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class Veneration : BaseBuffAction
+internal sealed class Veneration : BaseBuffAction
 {
     public override ActionCategory Category => ActionCategory.Buffs;
     public override int Level => 15;

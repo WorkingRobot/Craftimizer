@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class StandardTouch : BaseAction
+internal sealed class StandardTouch : BaseAction
 {
     public override ActionCategory Category => ActionCategory.Quality;
     public override int Level => 18;

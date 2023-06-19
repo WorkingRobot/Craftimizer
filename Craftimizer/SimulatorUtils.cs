@@ -52,7 +52,7 @@ internal static class ActionUtils
         var (craftAction, action) = GetActionRow(me, classJob);
         if (craftAction != null)
             return craftAction.Name.ToDalamudString().TextValue;
-        else if (action != null)
+        if (action != null)
             return action.Name.ToDalamudString().TextValue;
         return "Unknown";
     }
@@ -62,7 +62,7 @@ internal static class ActionUtils
         var (craftAction, action) = GetActionRow(me, classJob);
         if (craftAction != null)
             return Icons.GetIconFromId(craftAction.Icon);
-        else if (action != null)
+        if (action != null)
             return Icons.GetIconFromId(action.Icon);
         // Old "Steady Hand" action icon
         return Icons.GetIconFromId(1953);

@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class FinalAppraisal : BaseBuffAction
+internal sealed class FinalAppraisal : BaseBuffAction
 {
     public override ActionCategory Category => ActionCategory.Synthesis;
     public override int Level => 42;

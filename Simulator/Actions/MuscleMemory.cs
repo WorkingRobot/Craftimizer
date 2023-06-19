@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class MuscleMemory : BaseAction
+internal sealed class MuscleMemory : BaseAction
 {
     public override ActionCategory Category => ActionCategory.FirstTurn;
     public override int Level => 54;

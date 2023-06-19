@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class WasteNot2 : BaseBuffAction
+internal sealed class WasteNot2 : BaseBuffAction
 {
     public override ActionCategory Category => ActionCategory.Durability;
     public override int Level => 47;

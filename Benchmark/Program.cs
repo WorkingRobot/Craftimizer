@@ -1,12 +1,17 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
+using Craftimizer.Solver.Crafty;
+using ObjectLayoutInspector;
 
 namespace Craftimizer.Benchmark;
 
-internal class Program
+internal static class Program
 {
-    private static void Main(string[] args)
+    private static void Main()
     {
+        //TypeLayout.PrintLayout<Solver.Crafty.SimulationNode>(true);
+        //return;
+
         var input = new SimulationInput()
         {
             Stats = new CharacterStats { Craftsmanship = 4041, Control = 3905, CP = 609, Level = 90 },

@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal class Manipulation : BaseBuffAction
+internal sealed class Manipulation : BaseBuffAction
 {
     public override ActionCategory Category => ActionCategory.Durability;
     public override int Level => 65;
