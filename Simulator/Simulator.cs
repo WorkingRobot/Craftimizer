@@ -29,6 +29,8 @@ public class Simulator
     }
     public virtual bool IsComplete => CompletionState != CompletionState.Incomplete;
 
+    public IEnumerable<ActionType> AvailableActions => ActionUtils.AvailableActions(this);
+
 #pragma warning disable CS8618 // Emplace sets all the fields already
     public Simulator(SimulationState state)
 #pragma warning restore CS8618

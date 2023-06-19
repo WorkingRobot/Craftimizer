@@ -1,5 +1,5 @@
 using Craftimizer.Simulator.Actions;
-using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics.X86;
@@ -9,15 +9,38 @@ namespace Craftimizer.Simulator;
 public record ActionSet
 {
     public ulong Bits { get; set; }
+    public List<ActionType> SavedActions { get; set; } = new();
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool HasFlag(ActionType action) => (Bits & (1ul << ((int)action + 1))) != 0;
+    private bool HasFlagA(ActionType action) => (Bits & (1ul << ((int)action + 1))) != 0;
+    private bool HasFlagB(ActionType action) => SavedActions.Contains(action);
+    public bool HasFlag(ActionType action)
+    {
+        var a = HasFlagA(action);
+        var b = HasFlagB(action);
+        if (a != b)
+            throw new Exception($"Action {action} has different flags: {a} vs {b}");
+        return a;
+    }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetFlag(ActionType action) => Bits |= 1ul << ((int)action + 1);
+    private void SetFlagA(ActionType action) => Bits |= 1ul << ((int)action + 1);
+    private void SetFlagB(ActionType action)
+    {
+        if (!SavedActions.Contains(action))
+            SavedActions.Add(action);
+    }
+    public void SetFlag(ActionType action)
+    {
+        SetFlagA(action);
+        SetFlagB(action);
+    }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ClearFlag(ActionType action) => Bits &= ~(1ul << ((int)action + 1));
+    private void ClearFlagA(ActionType action) => Bits &= ~(1ul << ((int)action + 1));
+    private void ClearFlagB(ActionType action) => SavedActions.RemoveAll(a => a == action);
+    public void ClearFlag(ActionType action)
+    {
+        ClearFlagA(action);
+        ClearFlagB(action);
+    }
 
     public IEnumerable<ActionType> Actions => GetActions();
 
@@ -60,10 +83,45 @@ public record ActionSet
         return _base;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ActionType ActionAt(int index) => (ActionType)(NthBitSet(Bits, index) - 1);
+    private ActionType ActionAtA(int index) => Actions.ElementAt(index);//(ActionType)(NthBitSet(Bits, index) - 1);
+    private ActionType ActionAtB(int index) => SavedActions.ElementAt(index);
+    public ActionType ActionAt(int index)
+    {
+        return ActionAtB(index);
+        var a = ActionAtA(index);
+        var a2 = (ActionType)(NthBitSet(Bits, index) - 1);
+        var b = ActionAtB(index);
+        if (a != a2)
+            throw new Exception($"A2: Action {index} has different flags: {a} vs {a2}");
+        if (a != b)
+            throw new Exception($"Action {index} has different flags: {a} vs {b}");
+        return a;
+    }
 
-    public int ActionCount => BitOperations.PopCount(Bits);
+    private int ActionCountA => BitOperations.PopCount(Bits);
+    private int ActionCountB => SavedActions.Count;
+    public int ActionCount { get
+        {
+            return ActionCountB;
+            var a = ActionCountA;
+            var b = ActionCountB;
+            if (a != b)
+                throw new Exception($"Action count has different flags: {a} vs {b}");
+            return a;
+        } }
 
-    public bool IsEmpty => Bits == 0;
+    private bool IsEmptyA => Bits == 0;
+    private bool IsEmptyB => SavedActions.Count == 0;
+    public bool IsEmpty
+    {
+        get
+        {
+            return IsEmptyB;
+            var a = IsEmptyA;
+            var b = IsEmptyB;
+            if (a != b)
+                throw new Exception($"IsEmpty has different flags: {a} vs {b}");
+            return a;
+        }
+    }
 }

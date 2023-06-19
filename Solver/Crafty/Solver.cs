@@ -1,5 +1,6 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
+using System.Runtime.CompilerServices;
 
 namespace Craftimizer.Solver.Crafty;
 
@@ -80,7 +81,7 @@ public class Solver
 
         return exploitation + exploration;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int RustMaxBy(List<int> source, Func<int, float> into)
     {
@@ -107,7 +108,8 @@ public class Solver
 
             var expandable = !selectedNode.State.AvailableActions.IsEmpty;
             var likelyTerminal = selectedNode.Children.Count == 0;
-            if (expandable || likelyTerminal) {
+            if (expandable || likelyTerminal)
+            {
                 break;
             }
 
@@ -124,7 +126,7 @@ public class Solver
         if (initialNode.IsComplete)
             return (initialIndex, initialNode.CompletionState, initialNode.CalculateScore() ?? 0);
 
-        var randomIdx = random.Next(initialNode.AvailableActions.ActionCount);
+        var randomIdx = 0;// random.Next(initialNode.AvailableActions.ActionCount);
         var randomAction = initialNode.AvailableActions.ActionAt(randomIdx);
         initialNode.AvailableActions.ClearFlag(randomAction);
         var expandedState = Execute(initialNode.State, randomAction, true);
@@ -137,7 +139,7 @@ public class Solver
         {
             if (currentState.IsComplete)
                 break;
-            randomIdx = random.Next(currentState.AvailableActions.ActionCount);
+            randomIdx = 0;// random.Next(currentState.AvailableActions.ActionCount);
             randomAction = currentState.AvailableActions.ActionAt(randomIdx);
             currentState = Execute(currentState.State, randomAction, true);
         }
@@ -188,7 +190,8 @@ public class Solver
     {
         var actions = new List<ActionType>();
         var node = Tree.Get(0);
-        while (node.Children.Count != 0) {
+        while (node.Children.Count != 0)
+        {
             var next_index = RustMaxBy(node.Children, n => Tree.Get(n).State.Scores.MaxScore);
             node = Tree.Get(next_index);
             if (node.State.Action != null)
@@ -210,7 +213,8 @@ public class Solver
     public static (List<ActionType> Actions, SimulationState State) SearchStepwise(SimulationInput input, List<ActionType> actions, Action<ActionType>? actionCallback)
     {
         var (state, result) = Simulate(input, actions);
-        if (result != CompletionState.Incomplete) {
+        if (result != CompletionState.Incomplete)
+        {
             return (actions, state);
         }
 
@@ -220,7 +224,8 @@ public class Solver
             solver.Search(0);
             var (solution_actions, solution_node) = solver.Solution();
 
-            if (solution_node.Scores.MaxScore >= 1.0) {
+            if (solution_node.Scores.MaxScore >= 1.0)
+            {
                 actions.AddRange(solution_actions);
                 return (actions, solution_node.State);
             }
