@@ -10,7 +10,7 @@ public readonly record struct SimulationNode
     public ActionSet AvailableActions { get; init; }
     public CompletionState SimulationCompletionState { get; init; }
     public CompletionState CompletionState =>
-        AvailableActions.IsEmpty && SimulationCompletionState == CompletionState.Incomplete ?
+        AvailableActions.Count == 0 && SimulationCompletionState == CompletionState.Incomplete ?
         CompletionState.NoMoreActions :
         SimulationCompletionState;
 
