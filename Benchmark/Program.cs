@@ -2,6 +2,7 @@ using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Craftimizer.Solver.Crafty;
 using ObjectLayoutInspector;
+using System.Diagnostics;
 
 namespace Craftimizer.Benchmark;
 
@@ -32,6 +33,7 @@ internal static class Program
         };
 
         var actions = new List<ActionType>();
+        var s = Stopwatch.StartNew();
         if (true)
             (actions, _) = Solver.Crafty.Solver.SearchStepwise(input, actions, a => Console.WriteLine(a));
         else
@@ -41,5 +43,7 @@ internal static class Program
                 Console.Write($">{action.IntName()}");
             Console.WriteLine();
         }
+        s.Stop();
+        Console.WriteLine($"{s.Elapsed.TotalMilliseconds:0.00}");
     }
 }

@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace Craftimizer.Solver.Crafty;
 
 public class Arena<T> where T : struct
@@ -10,20 +12,22 @@ public class Arena<T> where T : struct
         public T State { get; init; }
     }
 
-    public List<Node> Nodes { get; } = new();
+    private readonly List<Node> nodes = new();
 
     public Arena(T initialState = default)
     {
-        Nodes.Add(new() { Parent = null, Index = 0, Children = new(), State = initialState });
+        nodes.Add(new() { Parent = null, Index = 0, Children = new(), State = initialState });
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Insert(int parentIndex, T state)
     {
-        var index = Nodes.Count;
-        Nodes.Add(new() { Parent = parentIndex, Index = index, Children = new(), State = state });
-        Nodes[parentIndex].Children.Add(index);
+        var index = nodes.Count;
+        nodes.Add(new() { Parent = parentIndex, Index = index, Children = new(), State = state });
+        nodes[parentIndex].Children.Add(index);
         return index;
     }
 
-    public Node Get(int index) => Nodes[index];
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Node Get(int index) => nodes[index];
 }
