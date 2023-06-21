@@ -2,7 +2,7 @@ using CompState = Craftimizer.Simulator.CompletionState;
 
 namespace Craftimizer.Solver.Crafty;
 
-public enum CompletionState
+public enum CompletionState : byte
 {
     Incomplete,
     ProgressComplete,

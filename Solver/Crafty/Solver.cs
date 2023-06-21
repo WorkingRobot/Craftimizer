@@ -70,20 +70,6 @@ public class Solver
         return (currentIndex, currentNode.CompletionState);
     }
 
-    public static float Eval(NodeScores node, NodeScores parent)
-    {
-        var w = MaxScoreWeightingConstant;
-        var c = ExplorationConstant;
-
-        var visits = node.Visits;
-        var average_score = node.ScoreSum / visits;
-
-        var exploitation = ((1f - w) * average_score) + (w * node.MaxScore);
-        var exploration = MathF.Sqrt(c * MathF.Log(parent.Visits) / visits);
-
-        return exploitation + exploration;
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int RustMaxBy(List<int> source, Func<int, float> into)
     {
@@ -111,52 +97,6 @@ public class Solver
 
     private static int AlignToVectorLength(int length) =>
         (length + (Vector<float>.Count - 1)) & ~(Vector<float>.Count - 1);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    // Requires a multiple of Vector<float>.Count
-    private static void EvalBestChildMultiple(float parentVisits, ReadOnlySpan<float> scoreSums, ReadOnlySpan<float> visits, ReadOnlySpan<float> maxScores, Span<float> evalScores)
-    {
-        var C = ExplorationConstant * MathF.Log(parentVisits);
-        var w = MaxScoreWeightingConstant;
-        var W = 1f - w;
-        var CVector = new Vector<float>(C);
-
-        var length = scoreSums.Length;
-        for (var i = 0; i < length; i += Vector<float>.Count)
-        {
-            var scoreSumsVector = new Vector<float>(scoreSums[i..(i + Vector<float>.Count)]);
-            var visitsVector = new Vector<float>(visits[i..(i + Vector<float>.Count)]);
-            var maxScoresVector = new Vector<float>(maxScores[i..(i + Vector<float>.Count)]);
-            var evalVector = EvalBestChildVectorized(w, W, CVector, scoreSumsVector, visitsVector, maxScoresVector);
-            evalVector.CopyTo(evalScores[i..(i + Vector<float>.Count)]);
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int EvalBestChildAlternative(float parentVisits, List<int> children)
-    {
-        var length = children.Count;
-        var alignedLength = AlignToVectorLength(length);
-        Span<float> scoreSums = stackalloc float[alignedLength];
-        Span<float> visits = stackalloc float[alignedLength];
-        Span<float> maxScores = stackalloc float[alignedLength];
-        Span<float> evalScores = stackalloc float[alignedLength];
-
-        for (var i = 0; i < length; ++i)
-        {
-            var node = Tree.Get(children[i]).State.Scores;
-            scoreSums[i] = node.ScoreSum;
-            visits[i] = node.Visits;
-            maxScores[i] = node.MaxScore;
-        }
-
-        EvalBestChildMultiple(parentVisits, scoreSums, visits, maxScores, evalScores);
-        var max = 0;
-        for (var i = 1; i < length; ++i)
-            if (evalScores[i] >= evalScores[max])
-                max = i;
-        return children[max];
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int EvalBestChild(float parentVisits, List<int> children)

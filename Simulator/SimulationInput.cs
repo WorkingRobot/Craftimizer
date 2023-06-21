@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator;
 
-public readonly record struct SimulationInput
+public record SimulationInput
 {
     public CharacterStats Stats { get; }
     public RecipeInfo Recipe { get; }
