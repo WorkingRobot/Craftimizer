@@ -6,21 +6,21 @@ internal sealed class Manipulation : BaseBuffAction
     public override int Level => 65;
     public override uint ActionId => 4574;
 
-    public override int CPCost => 96;
-
     public override EffectType Effect => EffectType.Manipulation;
     public override byte Duration => 8;
 
-    public override void Use()
+    public override int CPCost(Simulator s) => 96;
+
+    public override void Use(Simulator s)
     {
-        if (Simulation.HasEffect(EffectType.Manipulation))
-            Simulation.RestoreDurability(5);
+        if (s.HasEffect(EffectType.Manipulation))
+            s.RestoreDurability(5);
 
-        Simulation.ReduceCP(CPCost);
-        Simulation.ReduceDurability(DurabilityCost);
+        s.ReduceCP(CPCost(s));
+        s.ReduceDurability(DurabilityCost);
 
-        UseSuccess();
+        UseSuccess(s);
 
-        Simulation.IncreaseStepCount();
+        s.IncreaseStepCount();
     }
 }

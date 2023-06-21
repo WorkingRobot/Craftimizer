@@ -6,6 +6,7 @@ internal sealed class Observe : BaseAction
     public override int Level => 13;
     public override uint ActionId => 100010;
 
-    public override int CPCost => 7;
     public override int DurabilityCost => 0;
+
+    public override int CPCost(Simulator s) => 7;
 }

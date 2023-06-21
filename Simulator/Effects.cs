@@ -1,3 +1,5 @@
+using System.Diagnostics.Contracts;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Craftimizer.Simulator;
@@ -16,6 +18,7 @@ public struct Effects
     public byte Manipulation;
     public bool HeartAndSoul;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetDuration(EffectType effect, byte duration)
     {
         switch (effect)
@@ -54,12 +57,15 @@ public struct Effects
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Strengthen(EffectType effect)
     {
         if (effect == EffectType.InnerQuiet && InnerQuiet < 10)
             InnerQuiet++;
     }
 
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly byte GetDuration(EffectType effect) =>
         effect switch
         {
@@ -76,13 +82,18 @@ public struct Effects
             _ => 0
         };
 
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly byte GetStrength(EffectType effect) =>
         effect == EffectType.InnerQuiet ? InnerQuiet :
         (byte)(GetDuration(effect) != 0 ? 1 : 0);
-
+    
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool HasEffect(EffectType effect) =>
         GetDuration(effect) != 0;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void DecrementDuration()
     {
         if (WasteNot > 0)

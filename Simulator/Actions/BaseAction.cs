@@ -4,79 +4,78 @@ namespace Craftimizer.Simulator.Actions;
 
 public abstract class BaseAction
 {
-    [ThreadStatic]
-    internal static Simulator? TLSSimulation;
-    protected static Simulator Simulation => TLSSimulation!;
-
     // Non-instanced properties
+
+    // Metadata
     public abstract ActionCategory Category { get; }
     public abstract int Level { get; }
     // Doesn't matter from which class, we'll use the sheet to extrapolate the rest
     public abstract uint ActionId { get; }
 
-    // Instanced properties
-    public abstract int CPCost { get; }
-    public virtual float Efficiency => 0f;
+    // Action properties
     public virtual bool IncreasesProgress => false;
     public virtual bool IncreasesQuality => false;
-    public virtual float SuccessRate => 1f;
     public virtual int DurabilityCost => 10;
     public virtual bool IncreasesStepCount => true;
-    public virtual bool IsGuaranteedAction => SuccessRate == 1f;
 
-    public virtual bool CanUse =>
-        Simulation.Input.Stats.Level >= Level && Simulation.CP >= CPCost;
+    // Instanced properties
+    public abstract int CPCost(Simulator s);
+    public virtual float Efficiency(Simulator s) => 0f;
+    public virtual float SuccessRate(Simulator s) => 1f;
 
-    public virtual void Use()
+    public virtual bool CanUse(Simulator s) =>
+        s.Input.Stats.Level >= Level && s.CP >= CPCost(s);
+
+    public virtual void Use(Simulator s)
     {
-        if (Simulation.RollSuccess(SuccessRate))
-            UseSuccess();
+        if (s.RollSuccess(SuccessRate(s)))
+            UseSuccess(s);
 
-        Simulation.ReduceCP(CPCost);
-        Simulation.ReduceDurability(DurabilityCost);
+        s.ReduceCP(CPCost(s));
+        s.ReduceDurability(DurabilityCost);
 
-        if (Simulation.Durability > 0)
+        if (s.Durability > 0)
         {
-            if (Simulation.HasEffect(EffectType.Manipulation))
-                Simulation.RestoreDurability(5);
+            if (s.HasEffect(EffectType.Manipulation))
+                s.RestoreDurability(5);
         }
 
         if (IncreasesStepCount)
-            Simulation.IncreaseStepCount();
+            s.IncreaseStepCount();
     }
 
-    public virtual void UseSuccess()
+    public virtual void UseSuccess(Simulator s)
     {
-        if (Efficiency != 0f)
+        if (Efficiency(s) != 0f)
         {
             if (IncreasesProgress)
-                Simulation.IncreaseProgress(Efficiency);
+                s.IncreaseProgress(Efficiency(s));
             if (IncreasesQuality)
-                Simulation.IncreaseQuality(Efficiency);
+                s.IncreaseQuality(Efficiency(s));
         }
     }
 
-    public virtual string GetTooltip(bool addUsability)
+    public virtual string GetTooltip(Simulator s, bool addUsability)
     {
         var builder = new StringBuilder();
-        if (addUsability && !CanUse)
+        if (addUsability && !CanUse(s))
             builder.AppendLine($"Cannot Use");
         builder.AppendLine($"Level {Level}");
-        if (CPCost != 0)
-            builder.AppendLine($"-{Simulation.CalculateCPCost(CPCost)} CP");
+        if (CPCost(s) != 0)
+            builder.AppendLine($"-{s.CalculateCPCost(CPCost(s))} CP");
         if (DurabilityCost != 0)
-            builder.AppendLine($"-{Simulation.CalculateDurabilityCost(DurabilityCost)} Durability");
-        if (Efficiency != 0)
+            builder.AppendLine($"-{s.CalculateDurabilityCost(DurabilityCost)} Durability");
+        if (Efficiency(s) != 0)
         {
             if (IncreasesProgress)
-                builder.AppendLine($"+{Simulation.CalculateProgressGain(Efficiency)} Progress");
+                builder.AppendLine($"+{s.CalculateProgressGain(Efficiency(s))} Progress");
             if (IncreasesQuality)
-                builder.AppendLine($"+{Simulation.CalculateQualityGain(Efficiency)} Quality");
+                builder.AppendLine($"+{s.CalculateQualityGain(Efficiency(s))} Quality");
         }
         if (!IncreasesStepCount)
             builder.AppendLine($"Does Not Increase Step Count");
-        if (SuccessRate != 1f)
-            builder.AppendLine($"{Simulation.CalculateSuccessRate(SuccessRate) * 100}%% Success Rate");
+        if (SuccessRate(s) != 1f)
+            builder.AppendLine($"{s.CalculateSuccessRate(SuccessRate(s)) * 100}%% Success Rate");
         return builder.ToString();
     }
 }

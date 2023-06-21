@@ -18,7 +18,7 @@ internal static class ActionUtils
 {
     private static (CraftAction? CraftAction, Action? Action) GetActionRow(this ActionType me, ClassJob classJob)
     {
-        var actionId = me.WithUnsafe().ActionId;
+        var actionId = me.Base().ActionId;
         if (LuminaSheets.CraftActionSheet.GetRow(actionId) is CraftAction baseCraftAction)
         {
             return (classJob switch

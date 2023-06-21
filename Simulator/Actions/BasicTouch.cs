@@ -6,7 +6,8 @@ internal sealed class BasicTouch : BaseAction
     public override int Level => 5;
     public override uint ActionId => 100002;
 
-    public override int CPCost => 18;
-    public override float Efficiency => 1.00f;
     public override bool IncreasesQuality => true;
+
+    public override int CPCost(Simulator s) => 18;
+    public override float Efficiency(Simulator s) => 1.00f;
 }

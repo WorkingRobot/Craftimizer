@@ -6,9 +6,10 @@ internal sealed class MastersMend : BaseAction
     public override int Level => 7;
     public override uint ActionId => 100003;
 
-    public override int CPCost => 88;
     public override int DurabilityCost => 0;
 
-    public override void UseSuccess() =>
-        Simulation.RestoreDurability(30);
+    public override int CPCost(Simulator s) => 88;
+
+    public override void UseSuccess(Simulator s) =>
+        s.RestoreDurability(30);
 }

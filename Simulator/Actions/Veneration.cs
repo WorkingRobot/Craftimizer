@@ -6,9 +6,8 @@ internal sealed class Veneration : BaseBuffAction
     public override int Level => 15;
     public override uint ActionId => 19297;
 
-    public override int CPCost => 18;
-    public override int DurabilityCost => 0;
-
     public override EffectType Effect => EffectType.Veneration;
     public override byte Duration => 4;
+
+    public override int CPCost(Simulator s) => 18;
 }

@@ -6,8 +6,9 @@ internal sealed class DelicateSynthesis : BaseAction
     public override int Level => 76;
     public override uint ActionId => 100323;
 
-    public override int CPCost => 32;
-    public override float Efficiency => 1.00f;
     public override bool IncreasesProgress => true;
     public override bool IncreasesQuality => true;
+
+    public override int CPCost(Simulator s) => 32;
+    public override float Efficiency(Simulator s) => 1.00f;
 }

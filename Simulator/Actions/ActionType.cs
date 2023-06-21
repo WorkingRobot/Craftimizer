@@ -51,32 +51,19 @@ public static class ActionUtils
             .ToArray();
     }
 
-    public static void SetSimulation(Simulator simulation) =>
-        BaseAction.TLSSimulation = simulation;
+    public static BaseAction Base(this ActionType me) => Actions[(int)me];
 
-    public static BaseAction WithUnsafe(this ActionType me) => Actions[(int)me];
-
-    public static BaseAction With(this ActionType me, Simulator simulation)
-    {
-        SetSimulation(simulation);
-        return WithUnsafe(me);
-    }
-
-    public static IEnumerable<ActionType> AvailableActions(Simulator simulation)
-    {
-        if (simulation.IsComplete)
-            return Enumerable.Empty<ActionType>();
-
-        SetSimulation(simulation);
-        return Enum.GetValues<ActionType>()
-            .Where(a => WithUnsafe(a).CanUse);
-    }
+    public static IEnumerable<ActionType> AvailableActions(Simulator simulation) =>
+        simulation.IsComplete
+            ? Enumerable.Empty<ActionType>()
+            : Enum.GetValues<ActionType>()
+                .Where(a => a.Base().CanUse(simulation));
 
     public static int Level(this ActionType me) =>
-        WithUnsafe(me).Level;
+        me.Base().Level;
 
     public static ActionCategory Category(this ActionType me) =>
-        WithUnsafe(me).Category;
+        me.Base().Category;
 
     public static string IntName(this ActionType me) =>
         me switch

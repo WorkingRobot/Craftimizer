@@ -71,15 +71,15 @@ public class SimulatorWindow : Window
             ImGuiUtils.BeginGroupPanel(category.Key.GetDisplayName());
             foreach (var action in category.OrderBy(a => a.Level()))
             {
-                var baseAction = action.With(Simulation);
-                if (showOnlyGuaranteedActions && !baseAction.IsGuaranteedAction)
+                var baseAction = action.Base();
+                if (showOnlyGuaranteedActions && baseAction.SuccessRate(Simulation) != 1)
                     continue;
 
-                ImGui.BeginDisabled(!baseAction.CanUse || Simulation.IsComplete);
+                ImGui.BeginDisabled(!baseAction.CanUse(Simulation) || Simulation.IsComplete);
                 if (ImGui.ImageButton(action.GetIcon(ClassJob.Carpenter).ImGuiHandle, new Vector2(ImGui.GetFontSize() * 2)))
                     (_, State) = Simulation.Execute(State, action);
                 if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-                    ImGui.SetTooltip($"{action.GetName(ClassJob.Carpenter)}\n{baseAction.GetTooltip(true)}");
+                    ImGui.SetTooltip($"{action.GetName(ClassJob.Carpenter)}\n{baseAction.GetTooltip(Simulation, true)}");
                 ImGui.EndDisabled();
                 if (++i % 5 != 0)
                     ImGui.SameLine();

@@ -6,8 +6,9 @@ internal sealed class BasicSynthesis : BaseAction
     public override int Level => 1;
     public override uint ActionId => 100001;
 
-    public override int CPCost => 0;
-    // Basic Synthesis Mastery Trait
-    public override float Efficiency => Simulation.Input.Stats.Level >= 31 ? 1.20f : 1.00f;
     public override bool IncreasesProgress => true;
+
+    public override int CPCost(Simulator s) => 0;
+    // Basic Synthesis Mastery Trait
+    public override float Efficiency(Simulator s) => s.Input.Stats.Level >= 31 ? 1.20f : 1.00f;
 }

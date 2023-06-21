@@ -6,15 +6,16 @@ internal sealed class MuscleMemory : BaseAction
     public override int Level => 54;
     public override uint ActionId => 100379;
 
-    public override int CPCost => 6;
-    public override float Efficiency => 3.00f;
     public override bool IncreasesProgress => true;
 
-    public override bool CanUse => Simulation.IsFirstStep && base.CanUse;
+    public override int CPCost(Simulator s) => 6;
+    public override float Efficiency(Simulator s) => 3.00f;
 
-    public override void UseSuccess()
+    public override bool CanUse(Simulator s) => s.IsFirstStep && base.CanUse(s);
+
+    public override void UseSuccess(Simulator s)
     {
-        base.UseSuccess();
-        Simulation.AddEffect(EffectType.MuscleMemory, 5);
+        base.UseSuccess(s);
+        s.AddEffect(EffectType.MuscleMemory, 5);
     }
 }

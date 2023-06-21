@@ -6,19 +6,19 @@ internal sealed class IntensiveSynthesis : BaseAction
     public override int Level => 78;
     public override uint ActionId => 100315;
 
-    public override int CPCost => 6;
-    public override float Efficiency => 4.00f;
     public override bool IncreasesProgress => true;
-    public override bool IsGuaranteedAction => false;
 
-    public override bool CanUse =>
-        (Simulation.Condition == Condition.Good || Simulation.Condition == Condition.Excellent || Simulation.HasEffect(EffectType.HeartAndSoul))
-        && base.CanUse;
+    public override int CPCost(Simulator s) => 6;
+    public override float Efficiency(Simulator s) => 4.00f;
 
-    public override void UseSuccess()
+    public override bool CanUse(Simulator s) =>
+        (s.Condition == Condition.Good || s.Condition == Condition.Excellent || s.HasEffect(EffectType.HeartAndSoul))
+        && base.CanUse(s);
+
+    public override void UseSuccess(Simulator s)
     {
-        base.UseSuccess();
-        if (Simulation.Condition != Condition.Good && Simulation.Condition != Condition.Excellent)
-            Simulation.RemoveEffect(EffectType.HeartAndSoul);
+        base.UseSuccess(s);
+        if (s.Condition != Condition.Good && s.Condition != Condition.Excellent)
+            s.RemoveEffect(EffectType.HeartAndSoul);
     }
 }

@@ -1,10 +1,12 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
+using System.Diagnostics.Contracts;
+using System.Runtime.CompilerServices;
 using Sim = Craftimizer.Simulator.Simulator;
 
 namespace Craftimizer.Solver.Crafty;
 
-public class Simulator : Sim
+public sealed class Simulator : Sim
 {
     private readonly int maxStepCount;
 
@@ -52,12 +54,26 @@ public class Simulator : Sim
         ActionType.BasicTouch,
     };
 
-    // https://github.com/alostsock/crafty/blob/cffbd0cad8bab3cef9f52a3e3d5da4f5e3781842/crafty/src/craft_state.rs#L146
-    private bool CanUseAction(ActionType action, bool strict)
-    {
-        var baseAction = action.WithUnsafe();
+    public static readonly int[] AcceptedActionsLUT;
 
-        if (CalculateSuccessRate(baseAction.SuccessRate) != 1)
+    static Simulator()
+    {
+        AcceptedActionsLUT = new int[Enum.GetValues<ActionType>().Length];
+        for (var i = 0; i < AcceptedActions.Length; i++)
+            AcceptedActionsLUT[(byte)AcceptedActions[i]] = i;
+    }
+
+    // https://github.com/alostsock/crafty/blob/cffbd0cad8bab3cef9f52a3e3d5da4f5e3781842/crafty/src/craft_state.rs#L146
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    // It's just a bunch of if statements, I would assume this is actually quite simple to follow
+#pragma warning disable MA0051 // Method is too long
+    private bool CanUseAction(ActionType action, bool strict)
+#pragma warning restore MA0051 // Method is too long
+    {
+        var baseAction = action.Base();
+
+        if (CalculateSuccessRate(baseAction.SuccessRate(this)) != 1)
             return false;
 
         // don't allow quality moves at max quality
@@ -72,7 +88,7 @@ public class Simulator : Sim
         {
             // always used Trained Eye if it's available
             if (action == ActionType.TrainedEye)
-                return baseAction.CanUse;
+                return baseAction.CanUse(this);
 
             // only allow Focused moves after Observe
             if (ActionStates.Observed &&
@@ -94,7 +110,7 @@ public class Simulator : Sim
 
             if (baseAction.IncreasesProgress)
             {
-                var progressIncrease = CalculateProgressGain(baseAction.Efficiency);
+                var progressIncrease = CalculateProgressGain(baseAction.Efficiency(this));
                 var wouldFinish = Progress + progressIncrease >= Input.Recipe.MaxProgress;
 
                 if (wouldFinish)
@@ -142,7 +158,7 @@ public class Simulator : Sim
                 return false;
         }
 
-        return baseAction.CanUse;
+        return baseAction.CanUse(this);
     }
 
     // https://github.com/alostsock/crafty/blob/cffbd0cad8bab3cef9f52a3e3d5da4f5e3781842/crafty/src/craft_state.rs#L137
@@ -151,7 +167,6 @@ public class Simulator : Sim
         if (IsComplete)
             return new();
 
-        ActionUtils.SetSimulation(this);
         var ret = new ActionSet();
         foreach (var action in AcceptedActions)
             if (CanUseAction(action, strict))

@@ -6,8 +6,9 @@ internal sealed class FocusedTouch : BaseAction
     public override int Level => 68;
     public override uint ActionId => 100243;
 
-    public override int CPCost => 18;
-    public override float Efficiency => 1.50f;
     public override bool IncreasesQuality => true;
-    public override float SuccessRate => Simulation.ActionStates.Observed ? 1.00f : 0.50f;
+
+    public override int CPCost(Simulator s) => 18;
+    public override float Efficiency(Simulator s) => 1.50f;
+    public override float SuccessRate(Simulator s) => s.ActionStates.Observed ? 1.00f : 0.50f;
 }

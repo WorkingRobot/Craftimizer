@@ -6,15 +6,16 @@ internal sealed class Reflect : BaseAction
     public override int Level => 69;
     public override uint ActionId => 100387;
 
-    public override int CPCost => 6;
-    public override float Efficiency => 1.00f;
     public override bool IncreasesQuality => true;
 
-    public override bool CanUse => Simulation.IsFirstStep && base.CanUse;
+    public override int CPCost(Simulator s) => 6;
+    public override float Efficiency(Simulator s) => 1.00f;
 
-    public override void UseSuccess()
+    public override bool CanUse(Simulator s) => s.IsFirstStep && base.CanUse(s);
+
+    public override void UseSuccess(Simulator s)
     {
-        base.UseSuccess();
-        Simulation.StrengthenEffect(EffectType.InnerQuiet);
+        base.UseSuccess(s);
+        s.StrengthenEffect(EffectType.InnerQuiet);
     }
 }

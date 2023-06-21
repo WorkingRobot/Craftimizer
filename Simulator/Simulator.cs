@@ -50,17 +50,17 @@ public class Simulator
         if (IsComplete)
             return ActionResponse.SimulationComplete;
 
-        var baseAction = action.With(this);
-        if (!baseAction.CanUse)
+        var baseAction = action.Base();
+        if (!baseAction.CanUse(this))
         {
             if (baseAction.Level > Input.Stats.Level)
                 return ActionResponse.ActionNotUnlocked;
-            if (baseAction.CPCost > CP)
+            if (baseAction.CPCost(this) > CP)
                 return ActionResponse.NotEnoughCP;
             return ActionResponse.CannotUseAction;
         }
 
-        baseAction.Use();
+        baseAction.Use(this);
         ActionStates.MutateState(action);
         ActionCount++;
 

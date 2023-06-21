@@ -6,15 +6,16 @@ internal sealed class ByregotsBlessing : BaseAction
     public override int Level => 50;
     public override uint ActionId => 100339;
 
-    public override int CPCost => 24;
-    public override float Efficiency => 1.00f + (0.20f * Simulation.GetEffectStrength(EffectType.InnerQuiet));
     public override bool IncreasesQuality => true;
 
-    public override bool CanUse => Simulation.HasEffect(EffectType.InnerQuiet) && base.CanUse;
+    public override int CPCost(Simulator s) => 24;
+    public override float Efficiency(Simulator s) => 1.00f + (0.20f * s.GetEffectStrength(EffectType.InnerQuiet));
 
-    public override void UseSuccess()
+    public override bool CanUse(Simulator s) => s.HasEffect(EffectType.InnerQuiet) && base.CanUse(s);
+
+    public override void UseSuccess(Simulator s)
     {
-        base.UseSuccess();
-        Simulation.RemoveEffect(EffectType.InnerQuiet);
+        base.UseSuccess(s);
+        s.RemoveEffect(EffectType.InnerQuiet);
     }
 }

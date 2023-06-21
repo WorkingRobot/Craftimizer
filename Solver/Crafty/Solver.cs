@@ -1,5 +1,6 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
+using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -32,20 +33,14 @@ public class Solver
     {
     }
 
-    private (SimulationState NewState, CompletionState SimulatorCompletionState, ActionSet AvailableActions) ExecuteSimple(SimulationState state, ActionType action, bool strict)
-    {
-        (_, var newState) = Simulator.Execute(state, action);
-        return (newState, Simulator.CompletionState, Simulator.AvailableActionsHeuristic(strict));
-    }
-
     private SimulationNode Execute(SimulationState state, ActionType action, bool strict)
     {
-        (var newState, var completionState, var newActions) = ExecuteSimple(state, action, strict);
+        (_, var newState) = Simulator.Execute(state, action);
         return new(
             newState,
             action,
-            completionState,
-            newActions
+            Simulator.CompletionState,
+            Simulator.AvailableActionsHeuristic(strict)
         );
     }
 
@@ -177,11 +172,12 @@ public class Solver
                 break;
             randomAction = currentActions.SelectRandom(Random);
             actions[actionCount++] = randomAction;
-            (currentState, currentCompletionState, currentActions) = ExecuteSimple(currentState, randomAction, true);
+            (_, currentState) = Simulator.Execute(currentState, randomAction);
+            currentCompletionState = Simulator.CompletionState;
+            currentActions = Simulator.AvailableActionsHeuristic(true);
         }
 
         // store the result if a max score was reached
-        currentCompletionState = SimulationNode.GetCompletionState(currentCompletionState, currentActions);
         var score = SimulationNode.CalculateScoreForState(currentState, currentCompletionState, Config.MaxStepCount) ?? 0;
         if (currentCompletionState == CompletionState.ProgressComplete)
         {

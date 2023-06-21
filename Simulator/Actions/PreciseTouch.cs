@@ -6,20 +6,20 @@ internal sealed class PreciseTouch : BaseAction
     public override int Level => 53;
     public override uint ActionId => 100128;
 
-    public override int CPCost => 18;
-    public override float Efficiency => 1.50f;
     public override bool IncreasesQuality => true;
-    public override bool IsGuaranteedAction => false;
 
-    public override bool CanUse =>
-        (Simulation.Condition == Condition.Good || Simulation.Condition == Condition.Excellent || Simulation.HasEffect(EffectType.HeartAndSoul))
-        && base.CanUse;
+    public override int CPCost(Simulator s) => 18;
+    public override float Efficiency(Simulator s) => 1.50f;
 
-    public override void UseSuccess()
+    public override bool CanUse(Simulator s) =>
+        (s.Condition == Condition.Good || s.Condition == Condition.Excellent || s.HasEffect(EffectType.HeartAndSoul))
+        && base.CanUse(s);
+
+    public override void UseSuccess(Simulator s)
     {
-        base.UseSuccess();
-        Simulation.StrengthenEffect(EffectType.InnerQuiet);
-        if (Simulation.Condition != Condition.Good && Simulation.Condition != Condition.Excellent)
-            Simulation.RemoveEffect(EffectType.HeartAndSoul);
+        base.UseSuccess(s);
+        s.StrengthenEffect(EffectType.InnerQuiet);
+        if (s.Condition != Condition.Good && s.Condition != Condition.Excellent)
+            s.RemoveEffect(EffectType.HeartAndSoul);
     }
 }

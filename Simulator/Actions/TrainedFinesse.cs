@@ -6,12 +6,13 @@ internal sealed class TrainedFinesse : BaseAction
     public override int Level => 90;
     public override uint ActionId => 100435;
 
-    public override int CPCost => 32;
-    public override float Efficiency => 1.00f;
     public override bool IncreasesQuality => true;
     public override int DurabilityCost => 0;
 
-    public override bool CanUse =>
-        Simulation.GetEffectStrength(EffectType.InnerQuiet) == 10
-        && base.CanUse;
+    public override int CPCost(Simulator s) => 32;
+    public override float Efficiency(Simulator s) => 1.00f;
+
+    public override bool CanUse(Simulator s) =>
+        s.GetEffectStrength(EffectType.InnerQuiet) == 10
+        && base.CanUse(s);
 }
