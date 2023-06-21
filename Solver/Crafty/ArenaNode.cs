@@ -4,7 +4,7 @@ namespace Craftimizer.Solver.Crafty;
 
 public class ArenaNode<T> where T : struct
 {
-    public readonly T State;
+    public T State;
     public readonly List<ArenaNode<T>> Children;
     public readonly ArenaNode<T>? Parent;
 

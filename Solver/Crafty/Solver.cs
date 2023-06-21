@@ -28,7 +28,7 @@ public class Solver
             state,
             null,
             Simulator.CompletionState,
-            new() { AvailableActions = Simulator.AvailableActionsHeuristic(strict) }
+            Simulator.AvailableActionsHeuristic(strict)
         ));
     }
 
@@ -49,7 +49,7 @@ public class Solver
             newState,
             action,
             completionState,
-            new() { AvailableActions = newActions }
+            newActions
         );
     }
 
@@ -61,9 +61,9 @@ public class Solver
             if (state.IsComplete)
                 return (startNode, state.CompletionState);
 
-            if (!state.Data.AvailableActions.HasAction(action))
+            if (!state.AvailableActions.HasAction(action))
                 return (startNode, CompletionState.InvalidAction);
-            state.Data.AvailableActions.RemoveAction(action);
+            state.AvailableActions.RemoveAction(action);
 
             startNode = startNode.Add(Execute(state.State, action, strict));
         }
@@ -123,7 +123,7 @@ public class Solver
 
             for (var j = 0; j < iterCount; ++j)
             {
-                var node = children[i + j].State.Data.Scores;
+                var node = children[i + j].State.Scores;
                 scoreSums[j] = node.ScoreSum;
                 visits[j] = node.Visits;
                 maxScores[j] = node.MaxScore;
@@ -147,31 +147,31 @@ public class Solver
     {
         while (true)
         {
-            var expandable = selectedNode.State.Data.AvailableActions.Count != 0;
+            var expandable = selectedNode.State.AvailableActions.Count != 0;
             var likelyTerminal = selectedNode.Children.Count == 0;
             if (expandable || likelyTerminal)
                 return selectedNode;
 
             // select the node with the highest score
-            selectedNode = EvalBestChild(selectedNode.State.Data.Scores.Visits, CollectionsMarshal.AsSpan(selectedNode.Children));
+            selectedNode = EvalBestChild(selectedNode.State.Scores.Visits, CollectionsMarshal.AsSpan(selectedNode.Children));
         }
     }
 
     public (Node ExpandedNode, CompletionState State, float Score) ExpandAndRollout(Node initialNode)
     {
-        var initialState = initialNode.State;
+        ref var initialState = ref initialNode.State;
         // expand once
         if (initialState.IsComplete)
             return (initialNode, initialState.CompletionState, initialState.CalculateScore() ?? 0);
 
-        var randomAction = initialState.Data.AvailableActions.First();
-        initialState.Data.AvailableActions.RemoveAction(randomAction);
+        var randomAction = initialState.AvailableActions.First();
+        initialState.AvailableActions.RemoveAction(randomAction);
         var expandedNode = initialNode.Add(Execute(initialState.State, randomAction, true));
 
         // playout to a terminal state
         var currentState = expandedNode.State.State;
         var currentCompletionState = expandedNode.State.SimulationCompletionState;
-        var currentActions = expandedNode.State.Data.AvailableActions;
+        var currentActions = expandedNode.State.AvailableActions;
 
         byte actionCount = 0;
         Span<ActionType> actions = stackalloc ActionType[MaxStepCount];
@@ -189,7 +189,7 @@ public class Solver
         var score = SimulationNode.CalculateScoreForState(currentState, currentCompletionState) ?? 0;
         if (currentCompletionState == CompletionState.ProgressComplete)
         {
-            if (score >= ScoreStorageThreshold && score >= RootNode.State.Data.Scores.MaxScore)
+            if (score >= ScoreStorageThreshold && score >= RootNode.State.Scores.MaxScore)
             {
                 (var terminalNode, _) = ExecuteActions(expandedNode, actions[..actionCount], true);
                 return (terminalNode, currentCompletionState, score);
@@ -202,7 +202,7 @@ public class Solver
     {
         while (true)
         {
-            startNode.State.Data.Scores.Visit(score);
+            startNode.State.Scores.Visit(score);
 
             if (startNode == targetNode)
                 break;
@@ -228,7 +228,7 @@ public class Solver
         var node = RootNode;
         while (node.Children.Count != 0)
         {
-            node = RustMaxBy<Node>(CollectionsMarshal.AsSpan(node.Children), n => n.State.Data.Scores.MaxScore);
+            node = RustMaxBy<Node>(CollectionsMarshal.AsSpan(node.Children), n => n.State.Scores.MaxScore);
             if (node.State.Action != null)
                 actions.Add(node.State.Action.Value);
         }
@@ -246,7 +246,7 @@ public class Solver
             solver.Search(solver.RootNode);
             var (solution_actions, solution_node) = solver.Solution();
 
-            if (solution_node.Data.Scores.MaxScore >= 1.0)
+            if (solution_node.Scores.MaxScore >= 1.0)
             {
                 actions.AddRange(solution_actions);
                 return (actions, solution_node.State);

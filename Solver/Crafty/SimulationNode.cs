@@ -3,23 +3,25 @@ using Craftimizer.Simulator.Actions;
 
 namespace Craftimizer.Solver.Crafty;
 
-public readonly struct SimulationNode
+public struct SimulationNode
 {
     public readonly SimulationState State;
     public readonly ActionType? Action;
     public readonly CompletionState SimulationCompletionState;
-    public readonly NodeData Data;
 
-    public CompletionState CompletionState => GetCompletionState(SimulationCompletionState, Data.AvailableActions);
+    public ActionSet AvailableActions;
+    public NodeScores Scores;
+
+    public CompletionState CompletionState => GetCompletionState(SimulationCompletionState, AvailableActions);
 
     public bool IsComplete => CompletionState != CompletionState.Incomplete;
 
-    public SimulationNode(SimulationState state, ActionType? action, CompletionState completionState, NodeData data)
+    public SimulationNode(SimulationState state, ActionType? action, CompletionState completionState, ActionSet actions)
     {
         State = state;
         Action = action;
         SimulationCompletionState = completionState;
-        Data = data;
+        AvailableActions = actions;
     }
 
     public static CompletionState GetCompletionState(CompletionState simCompletionState, ActionSet actions) =>
