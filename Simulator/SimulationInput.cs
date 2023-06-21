@@ -9,11 +9,11 @@ public sealed class SimulationInput
     public int BaseProgressGain { get; }
     public int BaseQualityGain { get; }
 
-    public SimulationInput(CharacterStats stats, RecipeInfo recipe, int seed)
+    public SimulationInput(CharacterStats stats, RecipeInfo recipe, int? seed = null)
     {
         Stats = stats;
         Recipe = recipe;
-        Random = new Random(seed);
+        Random = seed == null ? new() : new(seed.Value);
 
         // https://github.com/NotRanged/NotRanged.github.io/blob/0f4aee074f969fb05aad34feaba605057c08ffd1/app/js/ffxivcraftmodel.js#L88
         {

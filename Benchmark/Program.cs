@@ -10,7 +10,7 @@ internal static class Program
 {
     private static void Main()
     {
-        //TypeLayout.PrintLayout<Solver.Crafty.SimulationNode>(true);
+        //TypeLayout.PrintLayout<Arena<SimulationNode>.Node>(true);
         //return;
 
         var input = new SimulationInput(
@@ -28,17 +28,15 @@ internal static class Program
                 QualityDivider = 115,
                 ProgressModifier = 80,
                 ProgressDivider = 130,
-            },
-            0
+            }
         );
 
-        var actions = new List<ActionType>();
         var s = Stopwatch.StartNew();
         if (true)
-            (actions, _) = Solver.Crafty.Solver.SearchStepwise(input, actions, a => Console.WriteLine(a));
+            _ = Solver.Crafty.Solver.SearchStepwise(input, a => Console.WriteLine(a));
         else
         {
-            (actions, _) = Solver.Crafty.Solver.SearchOneshot(input, actions);
+            (var actions, _) = Solver.Crafty.Solver.SearchOneshot(input);
             foreach (var action in actions)
                 Console.Write($">{action.IntName()}");
             Console.WriteLine();

@@ -3,6 +3,7 @@ using Craftimizer.Simulator.Actions;
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Craftimizer.Solver.Crafty;
 
@@ -12,9 +13,9 @@ public class Solver
     public Simulator Simulator;
     public Arena<SimulationNode> Tree;
 
-    //public Random Random => Simulator.Input.Random;
+    public Random Random => Simulator.Input.Random;
 
-    public const int Iterations = 30000;
+    public const int Iterations = 1000000;
     public const float ScoreStorageThreshold = 1f;
     public const float MaxScoreWeightingConstant = 0.1f;
     public const float ExplorationConstant = 4f;
@@ -32,7 +33,7 @@ public class Solver
         });
     }
 
-    public Solver(SimulationInput input) : this(new(input), false)
+    public Solver(SimulationInput input, bool strict) : this(new SimulationState(input), strict)
     {
     }
 
@@ -48,7 +49,7 @@ public class Solver
         };
     }
 
-    public (int Index, CompletionState State) ExecuteActions(int startIndex, List<ActionType> actions, bool strict = false)
+    public (int Index, CompletionState State) ExecuteActions(int startIndex, ReadOnlySpan<ActionType> actions, bool strict = false)
     {
         var currentIndex = startIndex;
         foreach (var action in actions)
@@ -69,11 +70,11 @@ public class Solver
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int RustMaxBy(List<int> source, Func<int, float> into)
+    private static int RustMaxBy(ReadOnlySpan<int> source, Func<int, float> into)
     {
         var max = 0;
         var maxV = into(source[0]);
-        for (var i = 1; i < source.Count; ++i)
+        for (var i = 1; i < source.Length; ++i)
         {
             var nextV = into(source[i]);
             if (maxV <= nextV)
@@ -97,9 +98,9 @@ public class Solver
         (length + (Vector<float>.Count - 1)) & ~(Vector<float>.Count - 1);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int EvalBestChild(float parentVisits, List<int> children)
+    private int EvalBestChild(float parentVisits, ReadOnlySpan<int> children)
     {
-        var length = children.Count;
+        var length = children.Length;
 
         var C = ExplorationConstant * MathF.Log(parentVisits);
         var w = MaxScoreWeightingConstant;
@@ -154,7 +155,7 @@ public class Solver
             }
 
             // select the node with the highest score
-            selectedIndex = EvalBestChild(selectedNode.State.Data.Scores.Visits, selectedNode.Children);
+            selectedIndex = EvalBestChild(selectedNode.State.Data.Scores.Visits, CollectionsMarshal.AsSpan(selectedNode.Children));
         }
     }
 
@@ -165,20 +166,23 @@ public class Solver
         if (initialNode.IsComplete)
             return (initialIndex, initialNode.CompletionState, initialNode.CalculateScore() ?? 0);
 
-        var randomAction = initialNode.Data.AvailableActions.ElementAt(0);
+        var randomIdx = Random.Next(initialNode.Data.AvailableActions.Count);
+        var randomAction = initialNode.Data.AvailableActions.ElementAt(randomIdx);
         initialNode.Data.AvailableActions.RemoveAction(randomAction);
         var expandedState = Execute(initialNode.State, randomAction, true);
         var expandedIndex = Tree.Insert(initialIndex, expandedState);
 
         // playout to a terminal state
         var currentState = Tree.Get(expandedIndex).State;
-        var actions = new List<ActionType>();
+        byte actionCount = 0;
+        Span<ActionType> actions = stackalloc ActionType[MaxStepCount];
         while (true)
         {
             if (currentState.IsComplete)
                 break;
-            randomAction = currentState.Data.AvailableActions.ElementAt(0);
-            actions.Add(randomAction);
+            randomIdx = Random.Next(currentState.Data.AvailableActions.Count);
+            randomAction = currentState.Data.AvailableActions.ElementAt(randomIdx);
+            actions[actionCount++] = randomAction;
             currentState = Execute(currentState.State, randomAction, true);
         }
 
@@ -188,7 +192,8 @@ public class Solver
         {
             if (score >= ScoreStorageThreshold && score >= Tree.Get(0).State.Data.Scores.MaxScore)
             {
-                (var terminalIndex, _) = ExecuteActions(expandedIndex, actions, true);
+                Console.WriteLine("DONE!");
+                (var terminalIndex, _) = ExecuteActions(expandedIndex, actions[..actionCount], true);
                 return (terminalIndex, currentState.CompletionState, score);
             }
         }
@@ -227,7 +232,7 @@ public class Solver
         var node = Tree.Get(0);
         while (node.Children.Count != 0)
         {
-            var next_index = RustMaxBy(node.Children, n => Tree.Get(n).State.Data.Scores.MaxScore);
+            var next_index = RustMaxBy(CollectionsMarshal.AsSpan(node.Children), n => Tree.Get(n).State.Data.Scores.MaxScore);
             node = Tree.Get(next_index);
             if (node.State.Action != null)
                 actions.Add(node.State.Action.Value);
@@ -236,22 +241,11 @@ public class Solver
         return (actions, node.State);
     }
 
-    public static (SimulationState SimState, CompletionState State) Simulate(SimulationInput input, List<ActionType> actions)
+    public static (List<ActionType> Actions, SimulationState State) SearchStepwise(SimulationInput input, Action<ActionType>? actionCallback)
     {
-        var solver = new Solver(input);
-        var (index, result) = solver.ExecuteActions(0, actions);
-        return (solver.Tree.Get(index).State.State, result);
-    }
-
-    public static (List<ActionType> Actions, SimulationState State) SearchStepwise(SimulationInput input, List<ActionType> actions, Action<ActionType>? actionCallback)
-    {
-        var (state, result) = Simulate(input, actions);
-        if (result != CompletionState.Incomplete)
-        {
-            return (actions, state);
-        }
-
+        var state = new SimulationState(input);
         //Debugger.Break();
+        var actions = new List<ActionType>();
         var solver = new Solver(state, true);
         while (!solver.Simulator.IsComplete)
         {
@@ -272,17 +266,16 @@ public class Solver
 
             solver = new Solver(state, true);
         }
-        Debugger.Break();
+        //Debugger.Break();
 
         return (actions, state);
     }
 
-    public static (List<ActionType> Actions, SimulationState State) SearchOneshot(SimulationInput input, List<ActionType> actions)
+    public static (List<ActionType> Actions, SimulationState State) SearchOneshot(SimulationInput input)
     {
-        var solver = new Solver(input);
+        var solver = new Solver(input, false);
         solver.Search(0);
         var (solution_actions, solution_node) = solver.Solution();
-        actions.AddRange(solution_actions);
-        return (actions, solution_node.State);
+        return (solution_actions, solution_node.State);
     }
 }

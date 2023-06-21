@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator.Actions;
 
-public enum ActionType
+public enum ActionType : byte
 {
     AdvancedTouch,
     BasicSynthesis,
