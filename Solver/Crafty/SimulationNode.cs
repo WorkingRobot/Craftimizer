@@ -10,10 +10,7 @@ public readonly struct SimulationNode
     public readonly CompletionState SimulationCompletionState;
     public readonly NodeData Data;
 
-    public CompletionState CompletionState =>
-        Data.AvailableActions.Count == 0 && SimulationCompletionState == CompletionState.Incomplete ?
-        CompletionState.NoMoreActions :
-        SimulationCompletionState;
+    public CompletionState CompletionState => GetCompletionState(SimulationCompletionState, Data.AvailableActions);
 
     public bool IsComplete => CompletionState != CompletionState.Incomplete;
 
@@ -25,9 +22,16 @@ public readonly struct SimulationNode
         Data = data;
     }
 
-    public float? CalculateScore()
+    public static CompletionState GetCompletionState(CompletionState simCompletionState, ActionSet actions) =>
+        actions.Count == 0 && simCompletionState == CompletionState.Incomplete ?
+        CompletionState.NoMoreActions :
+        simCompletionState;
+
+    public float? CalculateScore() => CalculateScoreForState(State, SimulationCompletionState);
+
+    public static float? CalculateScoreForState(SimulationState state, CompletionState completionState)
     {
-        if (CompletionState != CompletionState.ProgressComplete)
+        if (completionState != CompletionState.ProgressComplete)
             return null;
 
         static float Apply(float bonus, float value, float target) =>
@@ -41,30 +45,30 @@ public readonly struct SimulationNode
 
         var progressScore = Apply(
             progressBonus,
-            State.Progress,
-            State.Input.Recipe.MaxProgress
+            state.Progress,
+            state.Input.Recipe.MaxProgress
         );
 
         var qualityScore = Apply(
             qualityBonus,
-            State.Quality,
-            State.Input.Recipe.MaxQuality
+            state.Quality,
+            state.Input.Recipe.MaxQuality
         );
 
         var durabilityScore = Apply(
             durabilityBonus,
-            State.Durability,
-            State.Input.Recipe.MaxDurability
+            state.Durability,
+            state.Input.Recipe.MaxDurability
         );
 
         var cpScore = Apply(
             cpBonus,
-            State.CP,
-            State.Input.Stats.CP
+            state.CP,
+            state.Input.Stats.CP
         );
 
         var fewerStepsScore =
-            fewerStepsBonus * (1f - ((float)(State.ActionCount + 1) / Solver.MaxStepCount));
+            fewerStepsBonus * (1f - ((float)(state.ActionCount + 1) / Solver.MaxStepCount));
 
         return progressScore + qualityScore + durabilityScore + cpScore + fewerStepsScore;
     }

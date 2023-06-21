@@ -36,14 +36,20 @@ public class Solver
     {
     }
 
-    private SimulationNode Execute(SimulationState state, ActionType action, bool strict)
+    private (SimulationState NewState, CompletionState SimulatorCompletionState, ActionSet AvailableActions) ExecuteSimple(SimulationState state, ActionType action, bool strict)
     {
         (_, var newState) = Simulator.Execute(state, action);
+        return (newState, Simulator.CompletionState, Simulator.AvailableActionsHeuristic(strict));
+    }
+
+    private SimulationNode Execute(SimulationState state, ActionType action, bool strict)
+    {
+        (var newState, var completionState, var newActions) = ExecuteSimple(state, action, strict);
         return new(
             newState,
             action,
-            Simulator.CompletionState,
-            new() { AvailableActions = Simulator.AvailableActionsHeuristic(strict) }
+            completionState,
+            new() { AvailableActions = newActions }
         );
     }
 
@@ -158,37 +164,38 @@ public class Solver
         if (initialState.IsComplete)
             return (initialNode, initialState.CompletionState, initialState.CalculateScore() ?? 0);
 
-        var randomIdx = 0;// Random.Next(initialState.Data.AvailableActions.Count);
-        var randomAction = initialState.Data.AvailableActions.ElementAt(randomIdx);
+        var randomAction = initialState.Data.AvailableActions.First();
         initialState.Data.AvailableActions.RemoveAction(randomAction);
-        var expandedState = Execute(initialState.State, randomAction, true);
-        var expandedNode = initialNode.Add(expandedState);
+        var expandedNode = initialNode.Add(Execute(initialState.State, randomAction, true));
 
         // playout to a terminal state
-        var currentState = expandedNode.State;
+        var currentState = expandedNode.State.State;
+        var currentCompletionState = expandedNode.State.SimulationCompletionState;
+        var currentActions = expandedNode.State.Data.AvailableActions;
+
         byte actionCount = 0;
         Span<ActionType> actions = stackalloc ActionType[MaxStepCount];
         while (true)
         {
-            if (currentState.IsComplete)
+            if (SimulationNode.GetCompletionState(currentCompletionState, currentActions) != CompletionState.Incomplete)
                 break;
-            randomIdx = 0;// Random.Next(currentState.Data.AvailableActions.Count);
-            randomAction = currentState.Data.AvailableActions.ElementAt(randomIdx);
+            randomAction = currentActions.First();
             actions[actionCount++] = randomAction;
-            currentState = Execute(currentState.State, randomAction, true);
+            (currentState, currentCompletionState, currentActions) = ExecuteSimple(currentState, randomAction, true);
         }
 
         // store the result if a max score was reached
-        var score = currentState.CalculateScore() ?? 0;
-        if (currentState.CompletionState == CompletionState.ProgressComplete)
+        currentCompletionState = SimulationNode.GetCompletionState(currentCompletionState, currentActions);
+        var score = SimulationNode.CalculateScoreForState(currentState, currentCompletionState) ?? 0;
+        if (currentCompletionState == CompletionState.ProgressComplete)
         {
             if (score >= ScoreStorageThreshold && score >= RootNode.State.Data.Scores.MaxScore)
             {
                 (var terminalNode, _) = ExecuteActions(expandedNode, actions[..actionCount], true);
-                return (terminalNode, currentState.CompletionState, score);
+                return (terminalNode, currentCompletionState, score);
             }
         }
-        return (expandedNode, currentState.CompletionState, score);
+        return (expandedNode, currentCompletionState, score);
     }
 
     public static void Backpropagate(Node startNode, Node targetNode, float score)

@@ -56,4 +56,9 @@ public struct ActionSet
     public readonly ActionType ElementAt(int index) => ToAction(NthBitSet(bits, index) - 1);
 
     public readonly int Count => BitOperations.PopCount(bits);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly ActionType SelectRandom(Random random) => ElementAt(random.Next(Count));
+
+    public readonly ActionType First() => ElementAt(0);
 }
