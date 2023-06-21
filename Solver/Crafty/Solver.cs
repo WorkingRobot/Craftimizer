@@ -14,7 +14,7 @@ public class Solver
     public Simulator Simulator;
     public Node RootNode;
 
-    // public Random Random => Simulator.Input.Random;
+    public Random Random => Simulator.Input.Random;
 
     public Solver(SolverConfig config, SimulationState state, bool strict)
     {
@@ -160,7 +160,7 @@ public class Solver
         if (initialState.IsComplete)
             return (initialNode, initialState.CompletionState, initialState.CalculateScore(Config.MaxStepCount) ?? 0);
 
-        var randomAction = initialState.AvailableActions.First();
+        var randomAction = initialState.AvailableActions.SelectRandom(Random);
         initialState.AvailableActions.RemoveAction(randomAction);
         var expandedNode = initialNode.Add(Execute(initialState.State, randomAction, true));
 
@@ -175,7 +175,7 @@ public class Solver
         {
             if (SimulationNode.GetCompletionState(currentCompletionState, currentActions) != CompletionState.Incomplete)
                 break;
-            randomAction = currentActions.First();
+            randomAction = currentActions.SelectRandom(Random);
             actions[actionCount++] = randomAction;
             (currentState, currentCompletionState, currentActions) = ExecuteSimple(currentState, randomAction, true);
         }

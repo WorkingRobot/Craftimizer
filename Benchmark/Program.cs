@@ -31,12 +31,17 @@ internal static class Program
             }
         );
 
+        var config = new SolverConfig()
+        {
+            Iterations = 1_000_000
+        };
+
         var s = Stopwatch.StartNew();
         if (true)
-            _ = Solver.Crafty.Solver.SearchStepwise(new(), input, a => Console.WriteLine(a));
+            _ = Solver.Crafty.Solver.SearchStepwise(config, input, a => Console.WriteLine(a));
         else
         {
-            (var actions, _) = Solver.Crafty.Solver.SearchOneshot(new(), input);
+            (var actions, _) = Solver.Crafty.Solver.SearchOneshot(config, input);
             foreach (var action in actions)
                 Console.Write($">{action.IntName()}");
             Console.WriteLine();
