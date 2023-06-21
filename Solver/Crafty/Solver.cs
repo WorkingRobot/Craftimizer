@@ -1,6 +1,5 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
-using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -15,7 +14,7 @@ public class Solver
 
     public Random Random => Simulator.Input.Random;
 
-    public const int Iterations = 1000000;
+    public const int Iterations = 50000;
     public const float ScoreStorageThreshold = 1f;
     public const float MaxScoreWeightingConstant = 0.1f;
     public const float ExplorationConstant = 4f;
@@ -244,7 +243,6 @@ public class Solver
     public static (List<ActionType> Actions, SimulationState State) SearchStepwise(SimulationInput input, Action<ActionType>? actionCallback)
     {
         var state = new SimulationState(input);
-        //Debugger.Break();
         var actions = new List<ActionType>();
         var solver = new Solver(state, true);
         while (!solver.Simulator.IsComplete)
@@ -266,7 +264,6 @@ public class Solver
 
             solver = new Solver(state, true);
         }
-        //Debugger.Break();
 
         return (actions, state);
     }

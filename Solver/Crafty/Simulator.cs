@@ -54,9 +54,6 @@ public class Simulator : Sim
     {
         var baseAction = action.WithUnsafe();
 
-        if (!baseAction.CanUse)
-            return false;
-
         if (CalculateSuccessRate(baseAction.SuccessRate) != 1)
             return false;
 
@@ -68,14 +65,11 @@ public class Simulator : Sim
             ActionStates.Observed)
             return false;
 
-        if (action == ActionType.FinalAppraisal)
-            return false;
-
         if (strict)
         {
             // always used Trained Eye if it's available
             if (action == ActionType.TrainedEye)
-                return true;
+                return baseAction.CanUse;
 
             // only allow Focused moves after Observe
             if (ActionStates.Observed &&
@@ -97,10 +91,10 @@ public class Simulator : Sim
 
             if (baseAction.IncreasesProgress)
             {
-                var progress_increase = CalculateProgressGain(baseAction.Efficiency);
-                var would_finish = Progress + progress_increase >= Input.Recipe.MaxProgress;
+                var progressIncrease = CalculateProgressGain(baseAction.Efficiency);
+                var wouldFinish = Progress + progressIncrease >= Input.Recipe.MaxProgress;
 
-                if (would_finish)
+                if (wouldFinish)
                 {
                     // don't allow finishing the craft if there is significant quality remaining
                     if (Quality < (Input.Recipe.MaxQuality / 5))
@@ -145,7 +139,7 @@ public class Simulator : Sim
                 return false;
         }
 
-        return true;
+        return baseAction.CanUse;
     }
 
     // https://github.com/alostsock/crafty/blob/cffbd0cad8bab3cef9f52a3e3d5da4f5e3781842/crafty/src/craft_state.rs#L137
