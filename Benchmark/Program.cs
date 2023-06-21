@@ -33,10 +33,10 @@ internal static class Program
 
         var s = Stopwatch.StartNew();
         if (true)
-            _ = Solver.Crafty.Solver.SearchStepwise(input, a => Console.WriteLine(a));
+            _ = Solver.Crafty.Solver.SearchStepwise(new(), input, a => Console.WriteLine(a));
         else
         {
-            (var actions, _) = Solver.Crafty.Solver.SearchOneshot(input);
+            (var actions, _) = Solver.Crafty.Solver.SearchOneshot(new(), input);
             foreach (var action in actions)
                 Console.Write($">{action.IntName()}");
             Console.WriteLine();

@@ -1,5 +1,8 @@
+using System.Runtime.InteropServices;
+
 namespace Craftimizer.Solver.Crafty;
 
+[StructLayout(LayoutKind.Auto)]
 public struct NodeScores
 {
     public float ScoreSum;

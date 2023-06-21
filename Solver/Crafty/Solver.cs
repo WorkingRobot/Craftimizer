@@ -10,20 +10,16 @@ namespace Craftimizer.Solver.Crafty;
 // https://github.com/alostsock/crafty/blob/cffbd0cad8bab3cef9f52a3e3d5da4f5e3781842/crafty/src/simulator.rs
 public class Solver
 {
+    public SolverConfig Config;
     public Simulator Simulator;
     public Node RootNode;
 
     // public Random Random => Simulator.Input.Random;
 
-    public const int Iterations = 30000;
-    public const float ScoreStorageThreshold = 1f;
-    public const float MaxScoreWeightingConstant = 0.1f;
-    public const float ExplorationConstant = 4f;
-    public const int MaxStepCount = 25;
-
-    public Solver(SimulationState state, bool strict)
+    public Solver(SolverConfig config, SimulationState state, bool strict)
     {
-        Simulator = new(state);
+        Config = config;
+        Simulator = new(state, config.MaxStepCount);
         RootNode = new(new(
             state,
             null,
@@ -32,7 +28,7 @@ public class Solver
         ));
     }
 
-    public Solver(SimulationInput input, bool strict) : this(new SimulationState(input), strict)
+    public Solver(SolverConfig config, SimulationInput input, bool strict) : this(config, new SimulationState(input), strict)
     {
     }
 
@@ -104,8 +100,8 @@ public class Solver
     {
         var length = children.Length;
 
-        var C = ExplorationConstant * MathF.Log(parentVisits);
-        var w = MaxScoreWeightingConstant;
+        var C = Config.ExplorationConstant * MathF.Log(parentVisits);
+        var w = Config.MaxScoreWeightingConstant;
         var W = 1f - w;
         var CVector = new Vector<float>(C);
 
@@ -162,7 +158,7 @@ public class Solver
         ref var initialState = ref initialNode.State;
         // expand once
         if (initialState.IsComplete)
-            return (initialNode, initialState.CompletionState, initialState.CalculateScore() ?? 0);
+            return (initialNode, initialState.CompletionState, initialState.CalculateScore(Config.MaxStepCount) ?? 0);
 
         var randomAction = initialState.AvailableActions.First();
         initialState.AvailableActions.RemoveAction(randomAction);
@@ -174,7 +170,7 @@ public class Solver
         var currentActions = expandedNode.State.AvailableActions;
 
         byte actionCount = 0;
-        Span<ActionType> actions = stackalloc ActionType[MaxStepCount];
+        Span<ActionType> actions = stackalloc ActionType[Config.MaxStepCount];
         while (true)
         {
             if (SimulationNode.GetCompletionState(currentCompletionState, currentActions) != CompletionState.Incomplete)
@@ -186,10 +182,10 @@ public class Solver
 
         // store the result if a max score was reached
         currentCompletionState = SimulationNode.GetCompletionState(currentCompletionState, currentActions);
-        var score = SimulationNode.CalculateScoreForState(currentState, currentCompletionState) ?? 0;
+        var score = SimulationNode.CalculateScoreForState(currentState, currentCompletionState, Config.MaxStepCount) ?? 0;
         if (currentCompletionState == CompletionState.ProgressComplete)
         {
-            if (score >= ScoreStorageThreshold && score >= RootNode.State.Scores.MaxScore)
+            if (score >= Config.ScoreStorageThreshold && score >= RootNode.State.Scores.MaxScore)
             {
                 (var terminalNode, _) = ExecuteActions(expandedNode, actions[..actionCount], true);
                 return (terminalNode, currentCompletionState, score);
@@ -213,7 +209,7 @@ public class Solver
 
     public void Search(Node startNode)
     {
-        for (var i = 0; i < Iterations; i++)
+        for (var i = 0; i < Config.Iterations; i++)
         {
             var selectedNode = Select(startNode);
             var (endNode, _, score) = ExpandAndRollout(selectedNode);
@@ -236,11 +232,11 @@ public class Solver
         return (actions, node.State);
     }
 
-    public static (List<ActionType> Actions, SimulationState State) SearchStepwise(SimulationInput input, Action<ActionType>? actionCallback)
+    public static (List<ActionType> Actions, SimulationState State) SearchStepwise(SolverConfig config, SimulationInput input, Action<ActionType>? actionCallback)
     {
         var state = new SimulationState(input);
         var actions = new List<ActionType>();
-        var solver = new Solver(state, true);
+        var solver = new Solver(config, state, true);
         while (!solver.Simulator.IsComplete)
         {
             solver.Search(solver.RootNode);
@@ -258,15 +254,15 @@ public class Solver
 
             actionCallback?.Invoke(chosen_action);
 
-            solver = new Solver(state, true);
+            solver = new Solver(config, state, true);
         }
 
         return (actions, state);
     }
 
-    public static (List<ActionType> Actions, SimulationState State) SearchOneshot(SimulationInput input)
+    public static (List<ActionType> Actions, SimulationState State) SearchOneshot(SolverConfig config, SimulationInput input)
     {
-        var solver = new Solver(input, false);
+        var solver = new Solver(config, input, false);
         solver.Search(solver.RootNode);
         var (solution_actions, solution_node) = solver.Solution();
         return (solution_actions, solution_node.State);

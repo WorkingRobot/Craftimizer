@@ -1,5 +1,8 @@
+using System.Runtime.InteropServices;
+
 namespace Craftimizer.Simulator;
 
+[StructLayout(LayoutKind.Auto)]
 public struct Effects
 {
     public byte InnerQuiet;

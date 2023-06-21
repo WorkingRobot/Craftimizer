@@ -34,13 +34,13 @@ internal static class ActionUtils
                 _ => baseCraftAction
             }, null);
         }
-        else if (LuminaSheets.ActionSheet.GetRow(actionId) is Action baseAction)
+        if (LuminaSheets.ActionSheet.GetRow(actionId) is Action baseAction)
         {
             return (null,
                 LuminaSheets.ActionSheet.First(r =>
                 r.Icon == baseAction.Icon &&
                 r.ActionCategory.Row == baseAction.ActionCategory.Row &&
-                r.Name.RawString == baseAction.Name.RawString &&
+                r.Name.RawString.Equals(baseAction.Name.RawString, StringComparison.Ordinal) &&
                 (r.ClassJobCategory.Value?.IsClassJob(classJob) ?? false)
             ));
         }

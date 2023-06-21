@@ -6,14 +6,17 @@ namespace Craftimizer.Solver.Crafty;
 
 public class Simulator : Sim
 {
+    private readonly int maxStepCount;
+
     public new CompletionState CompletionState =>
-        (ActionCount + 1) >= Solver.MaxStepCount ?
+        (ActionCount + 1) >= maxStepCount ?
         CompletionState.MaxActionCountReached :
         (CompletionState)base.CompletionState;
     public override bool IsComplete => CompletionState != CompletionState.Incomplete;
 
-    public Simulator(SimulationState state) : base(state)
+    public Simulator(SimulationState state, int maxStepCount) : base(state)
     {
+        this.maxStepCount = maxStepCount;
     }
 
     // Disable randomization

@@ -1,7 +1,9 @@
 using Craftimizer.Simulator.Actions;
+using System.Runtime.InteropServices;
 
 namespace Craftimizer.Simulator;
 
+[StructLayout(LayoutKind.Auto)]
 public struct ActionStates
 {
     public byte TouchComboIdx;

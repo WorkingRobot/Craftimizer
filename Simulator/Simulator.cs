@@ -4,18 +4,20 @@ namespace Craftimizer.Simulator;
 
 public class Simulator
 {
-    public SimulationInput Input { get; private set; }
-    public int ActionCount { get; private set; }
-    public int StepCount { get; private set; }
-    public int Progress { get; private set; }
-    public int Quality { get; private set; }
-    public int Durability { get; private set; }
-    public int CP { get; private set; }
-    public Condition Condition { get; private set; }
-    public Effects ActiveEffects;
-    public ActionStates ActionStates;
+    protected SimulationState State;
 
-    public bool IsFirstStep => StepCount == 0;
+    public SimulationInput Input => State.Input;
+    public ref int ActionCount => ref State.ActionCount;
+    public ref int StepCount => ref State.StepCount;
+    public ref int Progress => ref State.Progress;
+    public ref int Quality => ref State.Quality;
+    public ref int Durability => ref State.Durability;
+    public ref int CP => ref State.CP;
+    public ref Condition Condition => ref State.Condition;
+    public ref Effects ActiveEffects => ref State.ActiveEffects;
+    public ref ActionStates ActionStates => ref State.ActionStates;
+
+    public bool IsFirstStep => State.StepCount == 0;
 
     public CompletionState CompletionState
     {
@@ -32,45 +34,15 @@ public class Simulator
 
     public IEnumerable<ActionType> AvailableActions => ActionUtils.AvailableActions(this);
 
-#pragma warning disable CS8618 // Emplace sets all the fields already
     public Simulator(SimulationState state)
-#pragma warning restore CS8618
     {
-        Emplace(state);
+        State = state;
     }
-
-    private void Emplace(SimulationState state)
-    {
-        Input = state.Input;
-        ActionCount = state.ActionCount;
-        StepCount = state.StepCount;
-        Progress = state.Progress;
-        Quality = state.Quality;
-        Durability = state.Durability;
-        CP = state.CP;
-        Condition = state.Condition;
-        ActiveEffects = state.ActiveEffects;
-        ActionStates = state.ActionStates;
-    }
-
-    private SimulationState Displace() => new()
-        {
-            Input = Input,
-            ActionCount = ActionCount,
-            StepCount = StepCount,
-            Progress = Progress,
-            Quality = Quality,
-            Durability = Durability,
-            CP = CP,
-            Condition = Condition,
-            ActiveEffects = ActiveEffects,
-            ActionStates = ActionStates,
-        };
 
     public (ActionResponse Response, SimulationState NewState) Execute(SimulationState state, ActionType action)
     {
-        Emplace(state);
-        return (Execute(action), Displace());
+        State = state;
+        return (Execute(action), State);
     }
 
     private ActionResponse Execute(ActionType action)

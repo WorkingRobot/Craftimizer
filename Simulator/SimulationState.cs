@@ -1,18 +1,21 @@
+using System.Runtime.InteropServices;
+
 namespace Craftimizer.Simulator;
 
-public readonly struct SimulationState
+[StructLayout(LayoutKind.Auto)]
+public struct SimulationState
 {
-    public SimulationInput Input { get; init; }
+    public readonly SimulationInput Input;
 
-    public int ActionCount { get; init; }
-    public int StepCount { get; init; }
-    public int Progress { get; init; }
-    public int Quality { get; init; }
-    public int Durability { get; init; }
-    public int CP { get; init; }
-    public Condition Condition { get; init; }
-    public Effects ActiveEffects { get; init; }
-    public ActionStates ActionStates { get; init; }
+    public int ActionCount;
+    public int StepCount;
+    public int Progress;
+    public int Quality;
+    public int Durability;
+    public int CP;
+    public Condition Condition;
+    public Effects ActiveEffects;
+    public ActionStates ActionStates;
 
     // https://github.com/ffxiv-teamcraft/simulator/blob/0682dfa76043ff4ccb38832c184d046ceaff0733/src/model/tables.ts#L2
     private static readonly int[] HQPercentTable = {
@@ -21,9 +24,9 @@ public readonly struct SimulationState
         17, 18, 18, 18, 19, 19, 20, 20, 21, 22, 23, 24, 26, 28, 31, 34, 38, 42, 47, 52, 58, 64, 68, 71,
         74, 76, 78, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 94, 96, 98, 100
     };
-    public int HQPercent => HQPercentTable[(int)Math.Clamp((float)Quality / Input.Recipe.MaxQuality * 100, 0, 100)];
+    public readonly int HQPercent => HQPercentTable[(int)Math.Clamp((float)Quality / Input.Recipe.MaxQuality * 100, 0, 100)];
 
-    public bool IsFirstStep => StepCount == 0;
+    public readonly bool IsFirstStep => StepCount == 0;
 
     public SimulationState(SimulationInput input)
     {

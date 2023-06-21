@@ -46,7 +46,7 @@ public static class ActionUtils
         var types = typeof(BaseAction).Assembly.GetTypes()
             .Where(t => t.IsAssignableTo(typeof(BaseAction)) && !t.IsAbstract);
         Actions = Enum.GetNames<ActionType>()
-            .Select(a => types.First(t => t.Name == a))
+            .Select(a => types.First(t => t.Name.Equals(a, StringComparison.Ordinal)))
             .Select(t => (Activator.CreateInstance(t) as BaseAction)!)
             .ToArray();
     }

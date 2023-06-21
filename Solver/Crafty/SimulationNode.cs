@@ -1,8 +1,10 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
+using System.Runtime.InteropServices;
 
 namespace Craftimizer.Solver.Crafty;
 
+[StructLayout(LayoutKind.Auto)]
 public struct SimulationNode
 {
     public readonly SimulationState State;
@@ -12,9 +14,9 @@ public struct SimulationNode
     public ActionSet AvailableActions;
     public NodeScores Scores;
 
-    public CompletionState CompletionState => GetCompletionState(SimulationCompletionState, AvailableActions);
+    public readonly CompletionState CompletionState => GetCompletionState(SimulationCompletionState, AvailableActions);
 
-    public bool IsComplete => CompletionState != CompletionState.Incomplete;
+    public readonly bool IsComplete => CompletionState != CompletionState.Incomplete;
 
     public SimulationNode(SimulationState state, ActionType? action, CompletionState completionState, ActionSet actions)
     {
@@ -29,9 +31,9 @@ public struct SimulationNode
         CompletionState.NoMoreActions :
         simCompletionState;
 
-    public float? CalculateScore() => CalculateScoreForState(State, SimulationCompletionState);
+    public readonly float? CalculateScore(int maxStepCount) => CalculateScoreForState(State, SimulationCompletionState, maxStepCount);
 
-    public static float? CalculateScoreForState(SimulationState state, CompletionState completionState)
+    public static float? CalculateScoreForState(SimulationState state, CompletionState completionState, int maxStepCount)
     {
         if (completionState != CompletionState.ProgressComplete)
             return null;
@@ -70,7 +72,7 @@ public struct SimulationNode
         );
 
         var fewerStepsScore =
-            fewerStepsBonus * (1f - ((float)(state.ActionCount + 1) / Solver.MaxStepCount));
+            fewerStepsBonus * (1f - ((float)(state.ActionCount + 1) / maxStepCount));
 
         return progressScore + qualityScore + durabilityScore + cpScore + fewerStepsScore;
     }
