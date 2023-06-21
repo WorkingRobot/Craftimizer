@@ -1,8 +1,6 @@
-using Craftimizer.Simulator.Actions;
-
 namespace Craftimizer.Simulator;
 
-public readonly record struct SimulationState
+public readonly struct SimulationState
 {
     public SimulationInput Input { get; init; }
 

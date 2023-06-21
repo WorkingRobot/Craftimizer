@@ -1,6 +1,6 @@
 namespace Craftimizer.Simulator;
 
-public record SimulationInput
+public sealed class SimulationInput
 {
     public CharacterStats Stats { get; }
     public RecipeInfo Recipe { get; }

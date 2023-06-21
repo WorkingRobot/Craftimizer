@@ -5,9 +5,9 @@ using System.Runtime.Intrinsics.X86;
 
 namespace Craftimizer.Solver.Crafty;
 
-public sealed class ActionSet
+public struct ActionSet
 {
-    private uint Bits { get; set; }
+    private uint bits;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int NthBitSet(uint value, int n)
@@ -47,13 +47,13 @@ public sealed class ActionSet
     private static ActionType ToAction(int index) => Simulator.AcceptedActions[index];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool HasAction(ActionType action) => (Bits & (1u << (FromAction(action) + 1))) != 0;
+    public readonly bool HasAction(ActionType action) => (bits & (1u << (FromAction(action) + 1))) != 0;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void AddAction(ActionType action) => Bits |= 1u << (FromAction(action) + 1);
+    public void AddAction(ActionType action) => bits |= 1u << (FromAction(action) + 1);
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void RemoveAction(ActionType action) => Bits &= ~(1u << (FromAction(action) + 1));
+    public void RemoveAction(ActionType action) => bits &= ~(1u << (FromAction(action) + 1));
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ActionType ElementAt(int index) => ToAction(NthBitSet(Bits, index) - 1);
+    public readonly ActionType ElementAt(int index) => ToAction(NthBitSet(bits, index) - 1);
 
-    public int Count => BitOperations.PopCount(Bits);
+    public readonly int Count => BitOperations.PopCount(bits);
 }

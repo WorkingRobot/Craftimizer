@@ -3,18 +3,17 @@ using Craftimizer.Simulator.Actions;
 
 namespace Craftimizer.Solver.Crafty;
 
-public readonly record struct SimulationNode
+public readonly struct SimulationNode
 {
     public SimulationState State { get; init; }
     public ActionType? Action { get; init; }
-    public ActionSet AvailableActions { get; init; }
     public CompletionState SimulationCompletionState { get; init; }
     public CompletionState CompletionState =>
-        AvailableActions.Count == 0 && SimulationCompletionState == CompletionState.Incomplete ?
+        Data.AvailableActions.Count == 0 && SimulationCompletionState == CompletionState.Incomplete ?
         CompletionState.NoMoreActions :
         SimulationCompletionState;
 
-    public NodeScores Scores { get; init; }
+    public NodeData Data { get; init; }
 
     public bool IsComplete => CompletionState != CompletionState.Incomplete;
 

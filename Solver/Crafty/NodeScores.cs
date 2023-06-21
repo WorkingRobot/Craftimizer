@@ -1,8 +1,15 @@
 namespace Craftimizer.Solver.Crafty;
 
-public sealed class NodeScores
+public struct NodeScores
 {
-    public float ScoreSum { get; set; }
-    public float MaxScore { get; set; }
-    public float Visits { get; set; }
+    public float ScoreSum;
+    public float MaxScore;
+    public float Visits;
+
+    public void Visit(float score)
+    {
+        ScoreSum += score;
+        MaxScore = Math.Max(MaxScore, score);
+        Visits++;
+    }
 }

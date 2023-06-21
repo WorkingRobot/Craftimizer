@@ -1,17 +1,17 @@
 namespace Craftimizer.Simulator;
 
-public record struct Effects
+public struct Effects
 {
-    public byte InnerQuiet { get; set; }
-    public byte WasteNot { get; set; }
-    public byte Veneration { get; set; }
-    public byte GreatStrides { get; set; }
-    public byte Innovation { get; set; }
-    public byte FinalAppraisal { get; set; }
-    public byte WasteNot2 { get; set; }
-    public byte MuscleMemory { get; set; }
-    public byte Manipulation { get; set; }
-    public bool HeartAndSoul { get; set; }
+    public byte InnerQuiet;
+    public byte WasteNot;
+    public byte Veneration;
+    public byte GreatStrides;
+    public byte Innovation;
+    public byte FinalAppraisal;
+    public byte WasteNot2;
+    public byte MuscleMemory;
+    public byte Manipulation;
+    public bool HeartAndSoul;
 
     public void SetDuration(EffectType effect, byte duration)
     {
@@ -57,7 +57,7 @@ public record struct Effects
             InnerQuiet++;
     }
 
-    public byte GetDuration(EffectType effect) =>
+    public readonly byte GetDuration(EffectType effect) =>
         effect switch
         {
             EffectType.InnerQuiet => (byte)(InnerQuiet != 0 ? 1 : 0),
@@ -73,11 +73,11 @@ public record struct Effects
             _ => 0
         };
 
-    public byte GetStrength(EffectType effect) =>
+    public readonly byte GetStrength(EffectType effect) =>
         effect == EffectType.InnerQuiet ? InnerQuiet :
         (byte)(GetDuration(effect) != 0 ? 1 : 0);
 
-    public bool HasEffect(EffectType effect) =>
+    public readonly bool HasEffect(EffectType effect) =>
         GetDuration(effect) != 0;
 
     public void DecrementDuration()

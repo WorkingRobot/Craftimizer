@@ -2,12 +2,12 @@ using Craftimizer.Simulator.Actions;
 
 namespace Craftimizer.Simulator;
 
-public record struct ActionStates
+public struct ActionStates
 {
-    public byte TouchComboIdx { get; set; }
-    public byte CarefulObservationCount { get; set; }
-    public bool UsedHeartAndSoul { get; set; }
-    public bool Observed { get; set; }
+    public byte TouchComboIdx;
+    public byte CarefulObservationCount;
+    public bool UsedHeartAndSoul;
+    public bool Observed;
 
     public void MutateState(ActionType action)
     {
