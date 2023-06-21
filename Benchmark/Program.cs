@@ -10,7 +10,7 @@ internal static class Program
 {
     private static void Main()
     {
-        //TypeLayout.PrintLayout<Arena<SimulationNode>.Node>(true);
+        //TypeLayout.PrintLayout<ArenaNode<SimulationNode>>(true);
         //return;
 
         var input = new SimulationInput(

@@ -5,17 +5,25 @@ namespace Craftimizer.Solver.Crafty;
 
 public readonly struct SimulationNode
 {
-    public SimulationState State { get; init; }
-    public ActionType? Action { get; init; }
-    public CompletionState SimulationCompletionState { get; init; }
+    public readonly SimulationState State;
+    public readonly ActionType? Action;
+    public readonly CompletionState SimulationCompletionState;
+    public readonly NodeData Data;
+
     public CompletionState CompletionState =>
         Data.AvailableActions.Count == 0 && SimulationCompletionState == CompletionState.Incomplete ?
         CompletionState.NoMoreActions :
         SimulationCompletionState;
 
-    public NodeData Data { get; init; }
-
     public bool IsComplete => CompletionState != CompletionState.Incomplete;
+
+    public SimulationNode(SimulationState state, ActionType? action, CompletionState completionState, NodeData data)
+    {
+        State = state;
+        Action = action;
+        SimulationCompletionState = completionState;
+        Data = data;
+    }
 
     public float? CalculateScore()
     {
