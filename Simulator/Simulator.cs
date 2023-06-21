@@ -5,6 +5,7 @@ namespace Craftimizer.Simulator;
 public class Simulator
 {
     public SimulationInput Input { get; private set; }
+    public int ActionCount { get; private set; }
     public int StepCount { get; private set; }
     public int Progress { get; private set; }
     public int Quality { get; private set; }
@@ -12,7 +13,7 @@ public class Simulator
     public int CP { get; private set; }
     public Condition Condition { get; private set; }
     public Effects ActiveEffects;
-    public List<ActionType> ActionHistory { get; private set; }
+    public ActionStates ActionStates;
 
     public bool IsFirstStep => StepCount == 0;
 
@@ -41,6 +42,7 @@ public class Simulator
     private void Emplace(SimulationState state)
     {
         Input = state.Input;
+        ActionCount = state.ActionCount;
         StepCount = state.StepCount;
         Progress = state.Progress;
         Quality = state.Quality;
@@ -48,12 +50,13 @@ public class Simulator
         CP = state.CP;
         Condition = state.Condition;
         ActiveEffects = state.ActiveEffects;
-        ActionHistory = new(state.ActionHistory);
+        ActionStates = state.ActionStates;
     }
 
     private SimulationState Displace() => new()
         {
             Input = Input,
+            ActionCount = ActionCount,
             StepCount = StepCount,
             Progress = Progress,
             Quality = Quality,
@@ -61,7 +64,7 @@ public class Simulator
             CP = CP,
             Condition = Condition,
             ActiveEffects = ActiveEffects,
-            ActionHistory = ActionHistory!,
+            ActionStates = ActionStates,
         };
 
     public (ActionResponse Response, SimulationState NewState) Execute(SimulationState state, ActionType action)
@@ -86,7 +89,8 @@ public class Simulator
         }
 
         baseAction.Use();
-        ActionHistory!.Add(action);
+        ActionStates.MutateState(action);
+        ActionCount++;
 
         ActiveEffects.DecrementDuration();
 
@@ -118,12 +122,6 @@ public class Simulator
 
     public bool HasEffect(EffectType effect) =>
         ActiveEffects.HasEffect(effect);
-
-    public bool IsPreviousAction(ActionType action, int stepsBack = 1) =>
-        ActionHistory!.Count >= stepsBack && ActionHistory[^stepsBack] == action;
-
-    public int CountPreviousAction(ActionType action) =>
-        ActionHistory!.Count(a => a == action);
 
     public virtual bool RollSuccessRaw(float successRate) =>
         successRate >= Input.Random.NextSingle();

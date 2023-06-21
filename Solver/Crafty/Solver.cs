@@ -242,12 +242,13 @@ public class Solver
 
         // playout to a terminal state
         var currentState = Tree.Get(expandedIndex).State;
-        var preCount = currentState.State.ActionCount;
+        var actions = new List<ActionType>();
         while (true)
         {
             if (currentState.IsComplete)
                 break;
             randomAction = currentState.AvailableActions.ElementAt(0);
+            actions.Add(randomAction);
             currentState = Execute(currentState.State, randomAction, true);
         }
 
@@ -257,7 +258,7 @@ public class Solver
         {
             if (score >= ScoreStorageThreshold && score >= Tree.Get(0).State.Scores.MaxScore)
             {
-                (var terminalIndex, _) = ExecuteActions(expandedIndex, currentState.State.ActionHistory.Skip(preCount).ToList(), true);
+                (var terminalIndex, _) = ExecuteActions(expandedIndex, actions, true);
                 return (terminalIndex, currentState.CompletionState, score);
             }
         }
@@ -298,13 +299,12 @@ public class Solver
     {
         var actions = new List<ActionType>();
         var node = Tree.Get(0);
-        while (node.Children.Count != 0) {
+        while (node.Children.Count != 0)
+        {
             var next_index = RustMaxBy(node.Children, n => Tree.Get(n).State.Scores.MaxScore);
             node = Tree.Get(next_index);
             if (node.State.Action != null)
-            {
                 actions.Add(node.State.Action.Value);
-            }
         }
 
         return (actions, node.State);

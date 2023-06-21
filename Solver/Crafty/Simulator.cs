@@ -7,7 +7,7 @@ namespace Craftimizer.Solver.Crafty;
 public class Simulator : Sim
 {
     public new CompletionState CompletionState =>
-        (ActionHistory.Count + 1) >= Solver.MaxStepCount ?
+        (ActionCount + 1) >= Solver.MaxStepCount ?
         CompletionState.MaxActionCountReached :
         (CompletionState)base.CompletionState;
     public override bool IsComplete => CompletionState != CompletionState.Incomplete;
@@ -65,7 +65,7 @@ public class Simulator : Sim
             return false;
 
         if (action == ActionType.Observe &&
-            IsPreviousAction(ActionType.Observe))
+            ActionStates.Observed)
             return false;
 
         if (action == ActionType.FinalAppraisal)
@@ -78,7 +78,7 @@ public class Simulator : Sim
                 return true;
 
             // only allow Focused moves after Observe
-            if (IsPreviousAction(ActionType.Observe) &&
+            if (ActionStates.Observed &&
                 action != ActionType.FocusedSynthesis &&
                 action != ActionType.FocusedTouch)
                 return false;

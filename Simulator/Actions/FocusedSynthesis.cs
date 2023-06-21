@@ -9,5 +9,5 @@ internal sealed class FocusedSynthesis : BaseAction
     public override int CPCost => 5;
     public override float Efficiency => 2.00f;
     public override bool IncreasesProgress => true;
-    public override float SuccessRate => Simulation.IsPreviousAction(ActionType.Observe) ? 1.00f : 0.50f;
+    public override float SuccessRate => Simulation.ActionStates.Observed ? 1.00f : 0.50f;
 }

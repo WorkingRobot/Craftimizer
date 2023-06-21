@@ -11,5 +11,5 @@ internal sealed class HeartAndSoul : BaseBuffAction
 
     public override EffectType Effect => EffectType.HeartAndSoul;
 
-    public override bool CanUse => Simulation.Input.Stats.IsSpecialist && Simulation.CountPreviousAction(ActionType.HeartAndSoul) == 0;
+    public override bool CanUse => Simulation.Input.Stats.IsSpecialist && !Simulation.ActionStates.UsedHeartAndSoul;
 }

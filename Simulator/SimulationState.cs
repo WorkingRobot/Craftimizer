@@ -6,8 +6,7 @@ public readonly record struct SimulationState
 {
     public SimulationInput Input { get; init; }
 
-    public int ActionCount => ActionHistory.Count;
-
+    public int ActionCount { get; init; }
     public int StepCount { get; init; }
     public int Progress { get; init; }
     public int Quality { get; init; }
@@ -15,7 +14,7 @@ public readonly record struct SimulationState
     public int CP { get; init; }
     public Condition Condition { get; init; }
     public Effects ActiveEffects { get; init; }
-    public List<ActionType> ActionHistory { get; init; }
+    public ActionStates ActionStates { get; init; }
 
     // https://github.com/ffxiv-teamcraft/simulator/blob/0682dfa76043ff4ccb38832c184d046ceaff0733/src/model/tables.ts#L2
     private static readonly int[] HQPercentTable = {
@@ -39,6 +38,7 @@ public readonly record struct SimulationState
         CP = Input.Stats.CP;
         Condition = Condition.Normal;
         ActiveEffects = new();
-        ActionHistory = new();
+        ActionCount = 0;
+        ActionStates = new();
     }
 }
