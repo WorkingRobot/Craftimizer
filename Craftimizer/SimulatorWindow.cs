@@ -26,11 +26,11 @@ public class SimulatorWindow : Window
             MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
         };
 
-        State = new(new()
-        {
-            Stats = new CharacterStats { Craftsmanship = 4041, Control = 3905, CP = 609, Level = 90, CLvl = CalculateCLvl(90) },
-            Recipe = CreateRecipeInfo(LuminaSheets.RecipeSheet.GetRow(35499)!)
-        });
+        State = new(new(
+            new CharacterStats { Craftsmanship = 4041, Control = 3905, CP = 609, Level = 90, CLvl = CalculateCLvl(90) },
+            CreateRecipeInfo(LuminaSheets.RecipeSheet.GetRow(35499)!),
+            0
+        ));
         Simulation = new(State);
     }
 

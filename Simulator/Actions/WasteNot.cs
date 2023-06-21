@@ -10,5 +10,10 @@ internal sealed class WasteNot : BaseBuffAction
 
     public override EffectType Effect => EffectType.WasteNot;
     public override byte Duration => 4;
-    public override EffectType[] ConflictingEffects => new[] { EffectType.WasteNot2 };
+
+    public override void UseSuccess()
+    {
+        base.UseSuccess();
+        Simulation.RemoveEffect(EffectType.WasteNot2);
+    }
 }

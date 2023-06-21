@@ -13,10 +13,9 @@ internal static class Program
         //TypeLayout.PrintLayout<Solver.Crafty.SimulationNode>(true);
         //return;
 
-        var input = new SimulationInput()
-        {
-            Stats = new CharacterStats { Craftsmanship = 4041, Control = 3905, CP = 609, Level = 90 },
-            Recipe = new RecipeInfo()
+        var input = new SimulationInput(
+            new CharacterStats { Craftsmanship = 4041, Control = 3905, CP = 609, Level = 90 },
+            new RecipeInfo()
             {
                 IsExpert = false,
                 ClassJobLevel = 90,
@@ -29,8 +28,9 @@ internal static class Program
                 QualityDivider = 115,
                 ProgressModifier = 80,
                 ProgressDivider = 130,
-            }
-        };
+            },
+            0
+        );
 
         var actions = new List<ActionType>();
         var s = Stopwatch.StartNew();

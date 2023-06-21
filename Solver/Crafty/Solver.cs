@@ -324,7 +324,7 @@ public class Solver
             return (actions, state);
         }
 
-        Debugger.Break();
+        //Debugger.Break();
         var solver = new Solver(state, true);
         while (!solver.Simulator.IsComplete)
         {
@@ -344,7 +344,7 @@ public class Solver
 
             solver = new Solver(state, true);
         }
-        Debugger.Break();
+        //Debugger.Break();
 
         return (actions, state);
     }

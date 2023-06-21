@@ -6,17 +6,11 @@ internal abstract class BaseBuffAction : BaseAction
 {
     public abstract EffectType Effect { get; }
     public virtual byte Duration => 1;
-    public virtual EffectType[] ConflictingEffects => Array.Empty<EffectType>();
 
     public override int DurabilityCost => 0;
 
-    public override void UseSuccess()
-    {
-        if (ConflictingEffects.Length != 0)
-            foreach(var effect in ConflictingEffects)
-                Simulation.RemoveEffect(effect);
+    public override void UseSuccess() =>
         Simulation.AddEffect(Effect, Duration);
-    }
 
     public override string GetTooltip(bool addUsability)
     {

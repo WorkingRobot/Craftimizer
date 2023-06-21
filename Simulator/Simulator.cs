@@ -233,13 +233,7 @@ public class Simulator
             _ => 1.00f
         };
 
-        // https://github.com/NotRanged/NotRanged.github.io/blob/0f4aee074f969fb05aad34feaba605057c08ffd1/app/js/ffxivcraftmodel.js#L88
-        var baseIncrease = (Input.Stats.Craftsmanship * 10f / Input.Recipe.ProgressDivider) + 2;
-        if (Input.Stats.CLvl <= Input.Recipe.RLvl)
-            baseIncrease *= Input.Recipe.ProgressModifier / 100f;
-        baseIncrease = MathF.Floor(baseIncrease);
-
-        var progressGain = (int)(baseIncrease * efficiency * conditionModifier * buffModifier);
+        var progressGain = (int)(Input.BaseProgressGain * efficiency * conditionModifier * buffModifier);
         return progressGain;
     }
 
@@ -265,12 +259,7 @@ public class Simulator
             _ => 1.00f,
         };
 
-        var baseIncrease = (Input.Stats.Control * 10f / Input.Recipe.QualityDivider) + 35;
-        if (Input.Stats.CLvl <= Input.Recipe.RLvl)
-            baseIncrease *= Input.Recipe.QualityModifier / 100f;
-        baseIncrease = MathF.Floor(baseIncrease);
-
-        var qualityGain = (int)(baseIncrease * efficiency * conditionModifier * buffModifier);
+        var qualityGain = (int)(Input.BaseQualityGain * efficiency * conditionModifier * buffModifier);
         return qualityGain;
     }
 
