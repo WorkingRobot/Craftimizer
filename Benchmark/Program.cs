@@ -1,3 +1,4 @@
+using BenchmarkDotNet.Running;
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Craftimizer.Solver.Crafty;
@@ -10,6 +11,9 @@ internal static class Program
 {
     private static void Main()
     {
+        //var summary = BenchmarkRunner.Run<Bench>();
+        //return;
+
         //TypeLayout.PrintLayout<ArenaNode<SimulationNode>>(true);
         //return;
 
@@ -33,7 +37,7 @@ internal static class Program
 
         var config = new SolverConfig()
         {
-            Iterations = 1_000_000
+            Iterations = 30_000,//1_000_000
         };
 
         var s = Stopwatch.StartNew();
