@@ -1,3 +1,4 @@
+using Craftimizer.Plugin.Windows;
 using Dalamud.Game.Command;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
@@ -12,6 +13,7 @@ public sealed class Plugin : IDalamudPlugin
     public Configuration Configuration { get; }
     public WindowSystem WindowSystem { get; } = new("Craftimizer");
     public SimulatorWindow SimulatorWindow { get; }
+    public CraftingLog RecipeNoteWindow { get; }
 
     public Plugin(
         [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface)
@@ -20,8 +22,10 @@ public sealed class Plugin : IDalamudPlugin
 
         Configuration = pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
-        SimulatorWindow = new SimulatorWindow();
+        SimulatorWindow = new();
         WindowSystem.AddWindow(SimulatorWindow);
+        RecipeNoteWindow = new();
+        WindowSystem.AddWindow(RecipeNoteWindow);
 
         Service.CommandManager.AddHandler("/craft", new CommandInfo(OnCommand)
         {

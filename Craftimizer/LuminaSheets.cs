@@ -12,4 +12,8 @@ public static class LuminaSheets
     public static readonly ExcelSheet<CraftAction> CraftActionSheet = Service.DataManager.GetExcelSheet<CraftAction>()!;
     public static readonly ExcelSheet<Status> StatusSheet = Service.DataManager.GetExcelSheet<Status>()!;
     public static readonly ExcelSheet<Addon> AddonSheet = Service.DataManager.GetExcelSheet<Addon>()!;
+    public static readonly ExcelSheet<ClassJob> ClassJobSheet = Service.DataManager.GetExcelSheet<ClassJob>()!;
+    public static readonly ExcelSheet<Item> ItemSheet = Service.DataManager.GetExcelSheet<Item>()!;
+    public static readonly ExcelSheet<Materia> MateriaSheet = Service.DataManager.GetExcelSheet<Materia>()!;
+    public static readonly ExcelSheet<BaseParam> BaseParamSheet = Service.DataManager.GetExcelSheet<BaseParam>()!;
 }

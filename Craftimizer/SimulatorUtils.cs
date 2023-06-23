@@ -11,6 +11,7 @@ using Condition = Craftimizer.Simulator.Condition;
 using Craftimizer.Simulator;
 using System.Text;
 using System.Runtime.CompilerServices;
+using System.Numerics;
 
 namespace Craftimizer.Plugin;
 
@@ -88,7 +89,7 @@ internal static class ClassJobExtensions
 
 internal static class ConditionUtils
 {
-    public static (uint Name, uint Description) AddonIds(this Condition me) =>
+    private static (uint Name, uint Description) AddonIds(this Condition me) =>
         me switch
         {
             Condition.Poor => (229, 14203),
@@ -102,6 +103,22 @@ internal static class ConditionUtils
             Condition.Primed => (13454, 14207),
             Condition.GoodOmen => (14214, 14215),
             _ => (226, 14200) // Unknown
+        };
+
+    private static Vector3 AddRGB(this Condition me) =>
+        me switch
+        {
+            Condition.Poor => Vector3.Zero, // Unsure
+            Condition.Normal => new(32, 48, 64),
+            Condition.Good => new(80, -80, 0),
+            Condition.Excellent => Vector3.Zero, // Unsure
+            Condition.Centered => new(200, 200, 0),
+            Condition.Sturdy => new(-100, 45, 155),
+            Condition.Pliant => new(0, 250, 0),
+            Condition.Malleable => new(-80, -40, 180),
+            Condition.Primed => new(30, -155, 200),
+            Condition.GoodOmen => new(100, 20, 0),
+            _ => Vector3.Zero // Unknown
         };
 
     public static string Name(this Condition me) =>
