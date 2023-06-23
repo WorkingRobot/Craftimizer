@@ -11,6 +11,7 @@ using Condition = Craftimizer.Simulator.Condition;
 using Craftimizer.Simulator;
 using System.Text;
 using System.Numerics;
+using System.Globalization;
 
 namespace Craftimizer.Plugin;
 
@@ -94,6 +95,12 @@ internal static class ClassJobUtils
             ClassJob.Culinarian => 15,
             _ => 0
         };
+
+    public static string GetName(this ClassJob classJob)
+    {
+        var job = LuminaSheets.ClassJobSheet.GetRow(classJob.GetClassJobIndex())!;
+        return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(job.Name.ToDalamudString().TextValue);
+    }
 
     // Index in the actual ClassJob sheet
     public static bool IsClassJob(byte classJobIdx, ClassJob classJob)
