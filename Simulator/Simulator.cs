@@ -224,7 +224,7 @@ public class Simulator
         var conditionModifier = Condition switch
         {
             Condition.Poor => 0.50f,
-            Condition.Good => Input.Stats.HasRelic ? 1.75f : 1.50f,
+            Condition.Good => Input.Stats.HasSplendorousBuff ? 1.75f : 1.50f,
             Condition.Excellent => 4.00f,
             _ => 1.00f,
         };

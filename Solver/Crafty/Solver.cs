@@ -1,7 +1,5 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
-using System;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;

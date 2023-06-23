@@ -93,7 +93,7 @@ public class SimulatorWindow : Window
         ImGui.Text($"Step {State.StepCount + 1}");
         ImGui.Text(State.Condition.Name());
         if (ImGui.IsItemHovered())
-            ImGui.SetTooltip(State.Condition.Description(State.Input.Stats.HasRelic));
+            ImGui.SetTooltip(State.Condition.Description(State.Input.Stats.HasSplendorousBuff));
         ImGui.Text($"{State.HQPercent}%% HQ");
         ImGui.PushStyleColor(ImGuiCol.PlotHistogram, new Vector4(.2f, 1f, .2f, 1f));
         ImGui.ProgressBar(Math.Min((float)State.Progress / State.Input.Recipe.MaxProgress, 1f), new Vector2(200, 20), $"{State.Progress} / {State.Input.Recipe.MaxProgress}");
@@ -123,16 +123,6 @@ public class SimulatorWindow : Window
         ImGuiHelpers.ScaledDummy(5);
         {
             ImGui.Text("TODO: Action History");
-            //var i = 0;
-            //foreach (var action in State.ActionHistory)
-            //{
-            //    var baseAction = action.With(Simulation);
-            //    ImGui.Image(action.GetIcon(ClassJob.Carpenter).ImGuiHandle, new Vector2(ImGui.GetFontSize() * 2f));
-            //    if (ImGui.IsItemHovered())
-            //        ImGui.SetTooltip($"{action.GetName(ClassJob.Carpenter)}\n{baseAction.GetTooltip(false)}");
-            //    if (++i % 5 != 0)
-            //        ImGui.SameLine();
-            //}
         }
         ImGui.EndChild();
         ImGui.EndTable();
