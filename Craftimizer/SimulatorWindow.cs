@@ -1,3 +1,4 @@
+using Craftimizer.Plugin.Utils;
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Dalamud.Interface;
@@ -27,14 +28,14 @@ public class SimulatorWindow : Window
         };
 
         State = new(new(
-            new CharacterStats { Craftsmanship = 4041, Control = 3905, CP = 609, Level = 90, CLvl = CalculateCLvl(90) },
+            new CharacterStats { Craftsmanship = 4041, Control = 3905, CP = 609, Level = 90, CLvl = Gearsets.CalculateCLvl(90) },
             CreateRecipeInfo(LuminaSheets.RecipeSheet.GetRow(35499)!),
             0
         ));
         Simulation = new(State);
     }
 
-    private static RecipeInfo CreateRecipeInfo(Recipe recipe)
+    public static RecipeInfo CreateRecipeInfo(Recipe recipe)
     {
         var recipeTable = recipe.RecipeLevelTable.Value!;
         return new() {
@@ -51,11 +52,6 @@ public class SimulatorWindow : Window
             ProgressDivider = recipeTable.ProgressDivider,
         };
     }
-
-    private static int CalculateCLvl(int characterLevel) =>
-        characterLevel <= 80
-        ? LuminaSheets.ParamGrowSheet.GetRow((uint)characterLevel)!.CraftingLevel
-        : (int)LuminaSheets.RecipeLevelTableSheet.First(r => r.ClassJobLevel == characterLevel).RowId;
 
     public override void Draw()
     {

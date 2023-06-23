@@ -10,7 +10,6 @@ using ClassJob = Craftimizer.Simulator.ClassJob;
 using Condition = Craftimizer.Simulator.Condition;
 using Craftimizer.Simulator;
 using System.Text;
-using System.Runtime.CompilerServices;
 using System.Numerics;
 
 namespace Craftimizer.Plugin;
@@ -48,6 +47,16 @@ internal static class ActionUtils
         return (null, null);
     }
 
+    public static uint GetId(this ActionType me, ClassJob classJob)
+    {
+        var (craftAction, action) = GetActionRow(me, classJob);
+        if (craftAction != null)
+            return craftAction.RowId;
+        if (action != null)
+            return action.RowId;
+        return 0;
+    }
+
     public static string GetName(this ActionType me, ClassJob classJob)
     {
         var (craftAction, action) = GetActionRow(me, classJob);
@@ -70,8 +79,31 @@ internal static class ActionUtils
     }
 }
 
-internal static class ClassJobExtensions
+internal static class ClassJobUtils
 {
+    public static byte GetClassJobIndex(this ClassJob me) =>
+        me switch
+        {
+            ClassJob.Carpenter => 8,
+            ClassJob.Blacksmith => 9,
+            ClassJob.Armorer => 10,
+            ClassJob.Goldsmith => 11,
+            ClassJob.Leatherworker => 12,
+            ClassJob.Weaver => 13,
+            ClassJob.Alchemist => 14,
+            ClassJob.Culinarian => 15,
+            _ => 0
+        };
+
+    // Index in the actual ClassJob sheet
+    public static bool IsClassJob(byte classJobIdx, ClassJob classJob)
+    {
+        var job = LuminaSheets.ClassJobSheet.GetRow(classJobIdx)!;
+        if (job.ClassJobCategory.Row != 33) // DoH
+            return false;
+        return (ClassJob)job.DohDolJobIndex == classJob;
+    }
+
     public static bool IsClassJob(this ClassJobCategory me, ClassJob classJob) =>
         classJob switch
         {
@@ -134,7 +166,7 @@ internal static class ConditionUtils
     }
 }
 
-internal static class EffectExtensions
+internal static class EffectUtils
 {
     public static uint StatusId(this EffectType me) =>
         me switch
