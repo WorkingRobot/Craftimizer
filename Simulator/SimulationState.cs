@@ -34,7 +34,7 @@ public struct SimulationState
 
         StepCount = 0;
         Progress = 0;
-        Quality = 0;
+        Quality = input.StartingQuality;
         Durability = Input.Recipe.MaxDurability;
         CP = Input.Stats.CP;
         Condition = Condition.Normal;

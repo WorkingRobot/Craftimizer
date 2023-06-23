@@ -18,7 +18,16 @@ internal static class Program
         //return;
 
         var input = new SimulationInput(
-            new CharacterStats { Craftsmanship = 4041, Control = 3905, CP = 609, Level = 90 },
+            new CharacterStats {
+                Craftsmanship = 4041,
+                Control = 3905,
+                CP = 609,
+                Level = 90,
+                CanUseManipulation = true,
+                HasSplendorousBuff = true,
+                IsSpecialist = true,
+                CLvl = 560,
+            },
             new RecipeInfo()
             {
                 IsExpert = false,
@@ -32,7 +41,8 @@ internal static class Program
                 QualityDivider = 115,
                 ProgressModifier = 80,
                 ProgressDivider = 130,
-            }
+            },
+            0
         );
 
         var config = new SolverConfig()
