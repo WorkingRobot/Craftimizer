@@ -55,6 +55,8 @@ public class Simulator
         {
             if (baseAction.Level > Input.Stats.Level)
                 return ActionResponse.ActionNotUnlocked;
+            if (action == ActionType.Manipulation && !Input.Stats.CanUseManipulation)
+                return ActionResponse.ActionNotUnlocked;
             if (baseAction.CPCost(this) > CP)
                 return ActionResponse.NotEnoughCP;
             return ActionResponse.CannotUseAction;

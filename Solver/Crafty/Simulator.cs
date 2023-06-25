@@ -2,11 +2,10 @@ using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
-using Sim = Craftimizer.Simulator.Simulator;
 
 namespace Craftimizer.Solver.Crafty;
 
-public sealed class Simulator : Sim
+public sealed class Simulator : SimulatorNoRandom
 {
     private readonly int maxStepCount;
 
@@ -20,10 +19,6 @@ public sealed class Simulator : Sim
     {
         this.maxStepCount = maxStepCount;
     }
-
-    // Disable randomization
-    public override bool RollSuccessRaw(float successRate) => successRate == 1;
-    public override void StepCondition() { }
 
     public static readonly ActionType[] AcceptedActions = new[]
     {
