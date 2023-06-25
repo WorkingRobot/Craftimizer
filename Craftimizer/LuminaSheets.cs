@@ -18,4 +18,5 @@ public static class LuminaSheets
     public static readonly ExcelSheet<Item> ItemSheetEnglish = Service.DataManager.GetExcelSheet<Item>(ClientLanguage.English)!;
     public static readonly ExcelSheet<Materia> MateriaSheet = Service.DataManager.GetExcelSheet<Materia>()!;
     public static readonly ExcelSheet<BaseParam> BaseParamSheet = Service.DataManager.GetExcelSheet<BaseParam>()!;
+    public static readonly ExcelSheet<ItemFood> ItemFoodSheet = Service.DataManager.GetExcelSheet<ItemFood>()!;
 }

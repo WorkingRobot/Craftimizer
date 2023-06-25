@@ -7,6 +7,7 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.Command;
+using Dalamud.Interface.Windowing;
 
 namespace Craftimizer.Plugin;
 
@@ -22,5 +23,10 @@ public sealed class Service
     [PluginService] public static DataManager DataManager { get; private set; }
     [PluginService] public static TargetManager TargetManager { get; private set; }
     [PluginService] public static Condition Condition { get; private set; }
+
+    public static Plugin Plugin { get; internal set; }
+    public static Configuration Configuration { get; internal set; }
+    public static WindowSystem WindowSystem => Plugin.WindowSystem;
 #pragma warning restore CS8618
+
 }

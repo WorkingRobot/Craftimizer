@@ -17,36 +17,49 @@ namespace Craftimizer.Plugin;
 
 internal static class ActionUtils
 {
-    private static (CraftAction? CraftAction, Action? Action) GetActionRow(this ActionType me, ClassJob classJob)
+    private static (CraftAction? CraftAction, Action? Action)[,] ActionRows;
+
+    static ActionUtils()
     {
-        var actionId = me.Base().ActionId;
-        if (LuminaSheets.CraftActionSheet.GetRow(actionId) is CraftAction baseCraftAction)
+        var actionTypes = Enum.GetValues<ActionType>();
+        var classJobs = Enum.GetValues<ClassJob>();
+        ActionRows = new (CraftAction? CraftAction, Action? Action)[actionTypes.Length, classJobs.Length];
+        foreach (var actionType in actionTypes)
         {
-            return (classJob switch
+            var actionId = actionType.Base().ActionId;
+            if (LuminaSheets.CraftActionSheet.GetRow(actionId) is CraftAction baseCraftAction)
             {
-                ClassJob.Carpenter => baseCraftAction.CRP.Value!,
-                ClassJob.Blacksmith => baseCraftAction.BSM.Value!,
-                ClassJob.Armorer => baseCraftAction.ARM.Value!,
-                ClassJob.Goldsmith => baseCraftAction.GSM.Value!,
-                ClassJob.Leatherworker => baseCraftAction.LTW.Value!,
-                ClassJob.Weaver => baseCraftAction.WVR.Value!,
-                ClassJob.Alchemist => baseCraftAction.ALC.Value!,
-                ClassJob.Culinarian => baseCraftAction.CUL.Value!,
-                _ => baseCraftAction
-            }, null);
+                foreach(var classJob in classJobs)
+                {
+                    ActionRows[(int)actionType, (int)classJob] = (classJob switch
+                    {
+                        ClassJob.Carpenter => baseCraftAction.CRP.Value!,
+                        ClassJob.Blacksmith => baseCraftAction.BSM.Value!,
+                        ClassJob.Armorer => baseCraftAction.ARM.Value!,
+                        ClassJob.Goldsmith => baseCraftAction.GSM.Value!,
+                        ClassJob.Leatherworker => baseCraftAction.LTW.Value!,
+                        ClassJob.Weaver => baseCraftAction.WVR.Value!,
+                        ClassJob.Alchemist => baseCraftAction.ALC.Value!,
+                        ClassJob.Culinarian => baseCraftAction.CUL.Value!,
+                        _ => baseCraftAction
+                    }, null);
+                }
+            }
+            if (LuminaSheets.ActionSheet.GetRow(actionId) is Action baseAction)
+            {
+                var possibleActions = LuminaSheets.ActionSheet.Where(r =>
+                        r.Icon == baseAction.Icon &&
+                        r.ActionCategory.Row == baseAction.ActionCategory.Row &&
+                        r.Name.RawString.Equals(baseAction.Name.RawString, StringComparison.Ordinal)).ToArray();
+
+                foreach (var classJob in classJobs)
+                    ActionRows[(int)actionType, (int)classJob] = (null, possibleActions.First(r => r.ClassJobCategory.Value?.IsClassJob(classJob) ?? false));
+            }
         }
-        if (LuminaSheets.ActionSheet.GetRow(actionId) is Action baseAction)
-        {
-            return (null,
-                LuminaSheets.ActionSheet.First(r =>
-                r.Icon == baseAction.Icon &&
-                r.ActionCategory.Row == baseAction.ActionCategory.Row &&
-                r.Name.RawString.Equals(baseAction.Name.RawString, StringComparison.Ordinal) &&
-                (r.ClassJobCategory.Value?.IsClassJob(classJob) ?? false)
-            ));
-        }
-        return (null, null);
     }
+
+    public static (CraftAction? CraftAction, Action? Action) GetActionRow(this ActionType me, ClassJob classJob) =>
+        ActionRows[(int)me, (int)classJob];
 
     public static uint GetId(this ActionType me, ClassJob classJob)
     {

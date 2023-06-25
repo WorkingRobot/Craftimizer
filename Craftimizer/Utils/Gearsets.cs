@@ -9,91 +9,42 @@ using System.Linq;
 namespace Craftimizer.Plugin.Utils;
 internal static unsafe class Gearsets
 {
-    private static readonly (int CP, int Craftsmanship, int Control, bool HasSplendorous, bool HasSpecialist) BaseStats = (180, 0, 0, false, false);
+    public record struct GearsetStats(int CP, int Craftsmanship, int Control);
+    public record struct GearsetMateria(ushort Type, ushort Grade);
+    public record struct GearsetItem(uint itemId, bool isHq, GearsetMateria[] materia);
 
-    private const int ParamCP = 11;
-    private const int ParamCraftsmanship = 70;
-    private const int ParamControl = 71;
+    private static readonly GearsetStats BaseStats = new(180, 0, 0);
 
-    public static CharacterStats CalculateCharacterStats(InventoryContainer* container, int characterLevel, bool canUseManipulation)
+    public const int ParamCP = 11;
+    public const int ParamCraftsmanship = 70;
+    public const int ParamControl = 71;
+
+    public static GearsetItem[] GetGearsetItems(InventoryContainer* container)
     {
-        var stats = CalculateGearsetStats(container);
-        return new CharacterStats
-        {
-            CP = stats.CP,
-            Craftsmanship = stats.Craftsmanship,
-            Control = stats.Control,
-            Level = characterLevel,
-            CanUseManipulation = canUseManipulation,
-            HasSplendorousBuff = stats.HasSplendorous,
-            IsSpecialist = stats.HasSpecialist,
-            CLvl = CalculateCLvl(characterLevel),
-        };
-    }
-
-    public static CharacterStats CalculateCharacterStats(RaptureGearsetModule.GearsetEntry* entry, int characterLevel, bool canUseManipulation)
-    {
-        var stats = CalculateGearsetStats(entry);
-        return new CharacterStats
-        {
-            CP = stats.CP,
-            Craftsmanship = stats.Craftsmanship,
-            Control = stats.Control,
-            Level = characterLevel,
-            CanUseManipulation = canUseManipulation,
-            HasSplendorousBuff = stats.HasSplendorous,
-            IsSpecialist = stats.HasSpecialist,
-            CLvl = CalculateCLvl(characterLevel),
-        };
-    }
-
-    private static (int CP, int Craftsmanship, int Control, bool HasSplendorous, bool HasSpecialist) CalculateGearsetStats(InventoryContainer* container)
-    {
-        var stats = BaseStats;
+        var items = new GearsetItem[(int)container->Size];
         for (var i = 0; i < container->Size; ++i)
         {
-            var itemStats = CalculateGearsetItemStats(container->Items[i]);
-            stats.CP += itemStats.CP;
-            stats.Craftsmanship += itemStats.Craftsmanship;
-            stats.Control += itemStats.Control;
-            stats.HasSplendorous = stats.HasSplendorous || itemStats.HasSplendorous;
-            stats.HasSpecialist = stats.HasSpecialist || itemStats.HasSpecialist;
+            var item = container->Items[i];
+            items[i] = new(item.ItemID, item.Flags.HasFlag(InventoryItem.ItemFlags.HQ), GetMaterias(item.Materia, item.MateriaGrade));
         }
-        return stats;
+        return items;
     }
 
-    private static (int CP, int Craftsmanship, int Control, bool HasSplendorous, bool HasSpecialist) CalculateGearsetStats(RaptureGearsetModule.GearsetEntry* entry)
+    public static GearsetItem[] GetGearsetItems(RaptureGearsetModule.GearsetEntry* entry)
     {
-        var stats = new[]
+        var gearsetItems = new Span<RaptureGearsetModule.GearsetItem>(entry->ItemsData, 14);
+        var items = new GearsetItem[14];
+        for (var i = 0; i < 14; ++i)
         {
-            BaseStats,
-            CalculateGearsetItemStats(entry->MainHand),
-            CalculateGearsetItemStats(entry->OffHand),
-            CalculateGearsetItemStats(entry->Head),
-            CalculateGearsetItemStats(entry->Body),
-            CalculateGearsetItemStats(entry->Hands),
-            // CalculateGearsetItemStats(entry->Belt),
-            CalculateGearsetItemStats(entry->Legs),
-            CalculateGearsetItemStats(entry->Feet),
-            CalculateGearsetItemStats(entry->Ears),
-            CalculateGearsetItemStats(entry->Neck),
-            CalculateGearsetItemStats(entry->Wrists),
-            CalculateGearsetItemStats(entry->RingRight),
-            CalculateGearsetItemStats(entry->RightLeft),
-            CalculateGearsetItemStats(entry->SoulStone),
-        };
-        return stats.Aggregate((a, b) => (a.CP + b.CP, a.Craftsmanship + b.Craftsmanship, a.Control + b.Control, a.HasSplendorous || b.HasSplendorous, a.HasSpecialist || b.HasSpecialist));
+            var item = gearsetItems[i];
+            items[i] = new(item.ItemID % 1000000, item.ItemID > 1000000, GetMaterias(item.Materia, item.MateriaGrade));
+        }
+        return items;
     }
 
-    private static (int CP, int Craftsmanship, int Control, bool HasSplendorous, bool HasSpecialist) CalculateGearsetItemStats(InventoryItem item) =>
-        CalculateGearsetItemStats(item.ItemID, item.Flags.HasFlag(InventoryItem.ItemFlags.HQ), item.Materia, item.MateriaGrade);
-
-    private static (int CP, int Craftsmanship, int Control, bool HasSplendorous, bool HasSpecialist) CalculateGearsetItemStats(RaptureGearsetModule.GearsetItem item) =>
-        CalculateGearsetItemStats(item.ItemID % 1000000, item.ItemID > 1000000, item.Materia, item.MateriaGrade);
-
-    private static (int CP, int Craftsmanship, int Control, bool HasSplendorous, bool HasSpecialist) CalculateGearsetItemStats(uint itemId, bool isHq, ushort* materiaTypes, byte* materiaGrades)
+    public static GearsetStats CalculateGearsetItemStats(GearsetItem gearsetItem)
     {
-        var item = LuminaSheets.ItemSheet.GetRow(itemId)!;
+        var item = LuminaSheets.ItemSheet.GetRow(gearsetItem.itemId)!;
 
         int cp = 0, craftsmanship = 0, control = 0;
 
@@ -109,27 +60,62 @@ internal static unsafe class Gearsets
 
         foreach (var statIncrease in item.UnkData59)
             IncreaseStat(statIncrease.BaseParam, statIncrease.BaseParamValue);
-
-        if (isHq)
-        {
+        if (gearsetItem.isHq)
             foreach (var statIncrease in item.UnkData73)
                 IncreaseStat(statIncrease.BaseParamSpecial, statIncrease.BaseParamValueSpecial);
-        }
-        for (var i = 0; i < 5; ++i)
-        {
-            if (materiaTypes[i] == 0)
-                continue;
-            var materia = LuminaSheets.MateriaSheet.GetRow(materiaTypes[i])!;
 
-            IncreaseStat((int)materia.BaseParam.Row, materia.Value[materiaGrades[i]]);
+        foreach(var gearsetMateria in gearsetItem.materia)
+        {
+            if (gearsetMateria.Type == 0)
+                continue;
+
+            var materia = LuminaSheets.MateriaSheet.GetRow(gearsetMateria.Type)!;
+            IncreaseStat((int)materia.BaseParam.Row, materia.Value[gearsetMateria.Grade]);
         }
 
         cp = Math.Min(cp, CalculateParamCap(item, ParamCP));
         craftsmanship = Math.Min(craftsmanship, CalculateParamCap(item, ParamCraftsmanship));
         control = Math.Min(control, CalculateParamCap(item, ParamControl));
 
-        return (cp, craftsmanship, control, IsSpecialistSoulCrystal(item), IsSplendorousTool(itemId));
+        return new(cp, craftsmanship, control);
     }
+
+    public static GearsetStats CalculateGearsetStats(GearsetItem[] gearsetItems) =>
+        gearsetItems.Select(CalculateGearsetItemStats).Aggregate(BaseStats, (a, b) => new(a.CP + b.CP, a.Craftsmanship + b.Craftsmanship, a.Control + b.Control));
+
+    public static CharacterStats CalculateCharacterStats(GearsetItem[] gearsetItems, int characterLevel, bool canUseManipulation)
+    {
+        var stats = CalculateGearsetStats(gearsetItems);
+        return new CharacterStats
+        {
+            CP = stats.CP,
+            Craftsmanship = stats.Craftsmanship,
+            Control = stats.Control,
+            Level = characterLevel,
+            CanUseManipulation = canUseManipulation,
+            HasSplendorousBuff = gearsetItems.Any(IsSplendorousTool),
+            IsSpecialist = gearsetItems.Any(IsSpecialistSoulCrystal),
+            CLvl = CalculateCLvl(characterLevel),
+        };
+    }
+
+    public static bool IsItem(GearsetItem item, uint itemId) =>
+        item.itemId == itemId;
+
+    public static bool IsSpecialistSoulCrystal(GearsetItem item)
+    {
+        var luminaItem = LuminaSheets.ItemSheet.GetRow(item.itemId)!;
+        //      Soul Crystal ItemUICategory                                         DoH Category
+        return luminaItem.ItemUICategory.Row != 62 && luminaItem.ClassJobUse.Value!.ClassJobCategory.Row == 33;
+    }
+
+    public static bool IsSplendorousTool(GearsetItem item) =>
+        LuminaSheets.ItemSheetEnglish.GetRow(item.itemId)!.Description.ToDalamudString().TextValue.Contains("Increases to quality are 1.75 times higher than normal when material condition is Good.", StringComparison.Ordinal);
+
+    public static int CalculateCLvl(int characterLevel) =>
+        characterLevel <= 80
+        ? LuminaSheets.ParamGrowSheet.GetRow((uint)characterLevel)!.CraftingLevel
+        : (int)LuminaSheets.RecipeLevelTableSheet.First(r => r.ClassJobLevel == characterLevel).RowId;
 
     // https://github.com/ffxiv-teamcraft/ffxiv-teamcraft/blob/24d0db2d9676f264edf53651b21005305267c84c/apps/client/src/app/modules/gearsets/materia.service.ts#L265
     private static int CalculateParamCap(Item item, int paramId)
@@ -176,16 +162,11 @@ internal static unsafe class Gearsets
         return cap == 0 ? int.MaxValue : cap;
     }
 
-    private static bool IsSpecialistSoulCrystal(Item item) =>
-        // Soul Crystal ItemUICategory                     DoH Category
-        item.ItemUICategory.Row != 62 && item.ClassJobUse.Value!.ClassJobCategory.Row == 33;
-
-    private static bool IsSplendorousTool(uint itemId) =>
-        LuminaSheets.ItemSheetEnglish.GetRow(itemId)!.Description.ToDalamudString().TextValue.Contains("Increases to quality are 1.75 times higher than normal when material condition is Good.", StringComparison.Ordinal);
-        // 38737 <= itemId && itemId <= 38744;
-
-    public static int CalculateCLvl(int characterLevel) =>
-        characterLevel <= 80
-        ? LuminaSheets.ParamGrowSheet.GetRow((uint)characterLevel)!.CraftingLevel
-        : (int)LuminaSheets.RecipeLevelTableSheet.First(r => r.ClassJobLevel == characterLevel).RowId;
+    private static GearsetMateria[] GetMaterias(ushort* types, byte* grades)
+    {
+        var materia = new GearsetMateria[5];
+        for (var i = 0; i < 5; ++i)
+            materia[i] = new(types[i], grades[i]);
+        return materia;
+    }
 }
