@@ -10,7 +10,35 @@ internal static class ImGuiUtils
     private static readonly Stack<(Vector2 Min, Vector2 Max)> GroupPanelLabelStack = new();
 
     // Adapted from https://github.com/ocornut/imgui/issues/1496#issuecomment-655048353
-    public static void BeginGroupPanel(string name, float width = -1)
+    public static void BeginGroupPanel(float width = -1, bool addPadding = true)
+    {
+        ImGui.BeginGroup();
+
+        var itemSpacing = ImGui.GetStyle().ItemSpacing;
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Vector2.Zero);
+        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
+
+        var frameHeight = ImGui.GetFrameHeight();
+
+        ImGui.BeginGroup();
+        ImGui.Dummy(new Vector2(width < 0 ? ImGui.GetContentRegionAvail().X : width, 0));
+        ImGui.Dummy(new Vector2(frameHeight * 0.5f, 0));
+        ImGui.SameLine(0, 0);
+
+        ImGui.BeginGroup();
+        ImGui.Dummy(new Vector2(frameHeight * 0.5f, 0));
+        GroupPanelLabelStack.Push((ImGui.GetItemRectMin(), ImGui.GetItemRectMax()));
+        ImGui.SameLine(0, 0);
+        ImGui.Dummy(new Vector2(0f, frameHeight * (addPadding ? 1 : .5f) + itemSpacing.Y));
+
+        ImGui.BeginGroup();
+
+        ImGui.PopStyleVar(2);
+
+        ImGui.PushItemWidth(MathF.Max(0, ImGui.CalcItemWidth() - frameHeight));
+    }
+
+    public static void BeginGroupPanel(string name, float width = -1, bool addPadding = true)
     {
         ImGui.BeginGroup();
 
@@ -31,14 +59,13 @@ internal static class ImGuiUtils
         ImGui.TextUnformatted(name);
         GroupPanelLabelStack.Push((ImGui.GetItemRectMin(), ImGui.GetItemRectMax()));
         ImGui.SameLine(0, 0);
-        ImGui.Dummy(new Vector2(0f, frameHeight + itemSpacing.Y));
+        ImGui.Dummy(new Vector2(0f, frameHeight * (addPadding ? 1 : .5f) + itemSpacing.Y));
 
         ImGui.BeginGroup();
 
         ImGui.PopStyleVar(2);
 
         ImGui.PushItemWidth(MathF.Max(0, ImGui.CalcItemWidth() - frameHeight));
-
     }
 
     public static void EndGroupPanel()

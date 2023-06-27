@@ -40,14 +40,14 @@ public sealed class Plugin : IDalamudPlugin
         Service.PluginInterface.UiBuilder.OpenConfigUi += () => SettingsWindow.IsOpen = true;
     }
 
-    public void OpenSimulatorWindow(Item item, SimulationInput input, ClassJob classJob, List<ActionType> actions)
+    public void OpenSimulatorWindow(Item item, bool isExpert, SimulationInput input, ClassJob classJob, List<ActionType> actions)
     {
         if (SimulatorWindow != null)
         {
             SimulatorWindow.IsOpen = false;
             WindowSystem.RemoveWindow(SimulatorWindow);
         }
-        SimulatorWindow = new(item, input, classJob, actions);
+        SimulatorWindow = new(item, isExpert, input, classJob, actions);
     }
 
     public void Dispose()

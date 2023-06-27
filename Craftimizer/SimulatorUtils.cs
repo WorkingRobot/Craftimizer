@@ -160,10 +160,10 @@ internal static class ConditionUtils
     private static Vector3 AddRGB(this Condition me) =>
         me switch
         {
-            Condition.Poor => Vector3.Zero, // Unsure
+            Condition.Poor => new(-50, -50, -50),
             Condition.Normal => new(32, 48, 64),
             Condition.Good => new(80, -80, 0),
-            Condition.Excellent => Vector3.Zero, // Unsure
+            Condition.Excellent => Vector3.Zero, // All the other conditions are just a single lerp, this one is different
             Condition.Centered => new(200, 200, 0),
             Condition.Sturdy => new(-100, 45, 155),
             Condition.Pliant => new(0, 250, 0),
@@ -172,6 +172,65 @@ internal static class ConditionUtils
             Condition.GoodOmen => new(100, 20, 0),
             _ => Vector3.Zero // Unknown
         };
+
+    private const float ConditionCyclePeriod = 19/30f;
+    // The real period of all condition color cycles are 0.633... (19/30) seconds
+    // Interp accepts 0-1
+    public static Vector4 GetColor(this Condition me, float interp)
+    {
+        //var baseColor = new Vector3(0.85f, 0.85f, 0.85f); // Middle-ish pixels of synthesis2_hr1.tex's condition circle
+
+        Vector3 addRgb;
+        // Excellent has 6 lerps and 1 ending constant
+        if (me == Condition.Excellent)
+        {
+            addRgb = interp switch
+            {
+                < 0.155f => Vector3.Lerp(new(128,0,0), new(128,80,0), (interp - 0) / 0.155f),
+                < 0.315f => Vector3.Lerp(new(128, 80, 0), new(128, 128, 0), (interp - 0.155f) / 0.16f),
+                < 0.475f => Vector3.Lerp(new(128, 128, 0), new(0, 64, 0), (interp - 0.315f) / 0.16f),
+                < 0.630f => Vector3.Lerp(new(0, 64, 0), new(0, 128, 128), (interp - 0.475f) / 0.155f),
+                < 0.790f => Vector3.Lerp(new(0, 128, 128), new(0, 0, 128), (interp - 0.630f) / 0.16f),
+                < 0.945f => Vector3.Lerp(new(0, 0, 128), new(64, 0, 64), (interp - 0.790f) / 0.155f),
+                _ => new(64, 0, 64)
+            };
+        }
+        // Period is twice as fast so we oscillate at twice that speed
+        else if (me == Condition.Malleable)
+        {
+            if (interp > .5f)
+                interp -= .5f;
+            if (interp > .25f)
+                interp = .25f - (interp - .25f);
+            interp *= 4;
+            addRgb = Vector3.Lerp(new(-80, -40, 180), new(-41, -1, 254), interp);
+        }
+        else
+        {
+            if (interp > .5f)
+                interp = .5f - (interp - .5f);
+            interp *= 2;
+            addRgb = me switch
+            {
+                Condition.Poor => Vector3.Lerp(new(-50, -50, -50), new(-1, -1, -1), interp),
+                Condition.Normal => Vector3.Lerp(new(32, 48, 64), new(63, 95, 127), interp),
+                Condition.Good => Vector3.Lerp(new(80, -80, 0), new(159, -1, 0), interp),
+                Condition.Centered => Vector3.Lerp(new(199, 199, 0), new(100, 100, 0), interp),
+                Condition.Sturdy => Vector3.Lerp(new(-100, 45, 155), new(-51, 89, 254), interp),
+                Condition.Pliant => Vector3.Lerp(new(0, 150, 0), new(0, 249, 0), interp),
+                Condition.Primed => Vector3.Lerp(new(-30, -255, 50), new(29, -156, 199), interp),
+                Condition.GoodOmen => Vector3.Lerp(new(100, 20, 0), new(100, 99, 99), interp),
+                _ => default
+            };
+        }
+
+        return new(addRgb / 255, 1);
+    }
+
+    public static Vector4 GetColor(this Condition me, TimeSpan time)
+    {
+        return me.GetColor((float)(time.TotalSeconds % ConditionCyclePeriod / ConditionCyclePeriod));
+    }
 
     public static string Name(this Condition me) =>
         LuminaSheets.AddonSheet.GetRow(me.AddonIds().Name)!.Text.ToDalamudString().TextValue;

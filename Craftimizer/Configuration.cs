@@ -20,6 +20,7 @@ public class Configuration : IPluginConfiguration
     public int Version { get; set; } = 1;
 
     public bool OverrideUncraftability { get; set; } = true;
+    public bool HideUnlearnedActions { get; set; } = true;
     public List<Macro> Macros { get; set; } = new();
     public string SimulatorType { get; set; } = typeof(Simulator.Simulator).AssemblyQualifiedName!;
 

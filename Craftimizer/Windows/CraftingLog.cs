@@ -294,7 +294,7 @@ public unsafe class CraftingLog : Window
 
         if (ImGui.Button("Open Simulator", size))
         {
-            Service.Plugin.OpenSimulatorWindow(Recipe.ItemResult.Value!, CharacterSimulationInput, RecipeClassJob, new());
+            Service.Plugin.OpenSimulatorWindow(Recipe.ItemResult.Value!, Recipe.IsExpert, CharacterSimulationInput, RecipeClassJob, new());
         }
         ImGui.SameLine();
         ImGui.Button("Generate a new macro", size);
