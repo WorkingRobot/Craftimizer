@@ -33,11 +33,6 @@ public class SimulatorWindow : Window
     private static readonly Vector2 ProgressBarSizeOld = new(200, 20);
     private static readonly Vector2 TooltipProgressBarSize = new(100, 5);
 
-    private static readonly Vector4 ProgressColorOld   = new(.2f, 1f, .2f, 1f);
-    private static readonly Vector4 QualityColorOld    = new(.2f, .2f, 1f, 1f);
-    private static readonly Vector4 DurabilityColorOld = new(1f, 1f, .2f, 1f);
-    private static readonly Vector4 CPColorOld         = new(1f, .2f, 1f, 1f);
-
     private static readonly Vector4 ProgressColor   = new(0.44f, 0.65f, 0.18f, 1f);
     private static readonly Vector4 QualityColor    = new(0.26f, 0.71f, 0.69f, 1f);
     private static readonly Vector4 DurabilityColor = new(0.13f, 0.52f, 0.93f, 1f);
@@ -185,6 +180,24 @@ public class SimulatorWindow : Window
         DrawSimulationActions();
     }
 
+    private (float leftColumn, float leftText, float rightColumn, float rightText, float totalWidth) CalculateSimulationSynthWidths()
+    {
+        var sidePadding = ImGui.GetFrameHeight() / 2;
+        var separatorTextWidth = ImGui.CalcTextSize(" / ").X;
+        var itemSpacing = ImGui.GetStyle().ItemSpacing.X * 2;
+
+        var leftDigits = (int)MathF.Floor(MathF.Log10(Input.Recipe.MaxDurability) + 1);
+        var leftTextWidth = ImGui.CalcTextSize(new string('0', leftDigits)).X;
+        var leftWidth = DurabilityBarSize.X + sidePadding + itemSpacing + separatorTextWidth + leftTextWidth * 2;
+
+
+        var rightDigits = (int)MathF.Floor(MathF.Log10(Math.Max(Math.Max(Input.Recipe.MaxProgress, Input.Recipe.MaxQuality), Input.Stats.CP)) + 1);
+        var rightTextWidth = ImGui.CalcTextSize(new string('0', rightDigits)).X;
+        var rightWidth = ProgressBarSize.X + sidePadding + itemSpacing + separatorTextWidth + rightTextWidth * 2;
+
+        return (leftWidth, leftTextWidth, rightWidth, rightTextWidth, leftWidth + rightWidth + itemSpacing / 2);
+    }
+
     private void DrawSimulationSynth()
     {
         var state = LatestState;
@@ -197,13 +210,13 @@ public class SimulatorWindow : Window
             ImGui.TextUnformatted(Item.Name.ToDalamudString().ToString());
             if (Item.IsCollectable)
             {
-                ImGui.SameLine(0, 5);
+                ImGui.SameLine(0, ImGui.GetStyle().ItemInnerSpacing.X);
                 ImGui.SetCursorPosY(ImGui.GetCursorPosY() + ImGui.GetFontSize() * .5f);
                 ImGui.TextColored(new(0.98f, 0.98f, 0.61f, 1), "(Collectible)");
             }
             if (IsExpert)
             {
-                ImGui.SameLine(0, 5);
+                ImGui.SameLine(0, ImGui.GetStyle().ItemInnerSpacing.X);
                 ImGui.SetCursorPosY(ImGui.GetCursorPosY() + ImGui.GetFontSize() * .5f);
                 ImGui.TextColored(new(0.941f, 0.557f, 0.216f, 1), "(Expert)");
             }
@@ -218,18 +231,7 @@ public class SimulatorWindow : Window
 
         ImGui.BeginTable("simSynth", 2);
 
-        var sidePadding = ImGui.GetFrameHeight() / 2;
-        var separatorTextWidth = ImGui.CalcTextSize(" / ").X;
-        var itemSpacing = ImGui.GetStyle().ItemSpacing.X * 2;
-
-        var leftDigits = (int)MathF.Floor(MathF.Log10(Input.Recipe.MaxDurability) + 1);
-        var leftTextWidth = ImGui.CalcTextSize(new string('0', leftDigits)).X;
-        var leftWidth = DurabilityBarSize.X + sidePadding + itemSpacing + separatorTextWidth + leftTextWidth * 2;
-
-
-        var rightDigits = (int)MathF.Floor(MathF.Log10(Math.Max(Math.Max(Input.Recipe.MaxProgress, Input.Recipe.MaxQuality), Input.Stats.CP)) + 1);
-        var rightTextWidth = ImGui.CalcTextSize(new string('0', rightDigits)).X;
-        var rightWidth = ProgressBarSize.X + sidePadding + itemSpacing + separatorTextWidth + rightTextWidth * 2;
+        var (leftWidth, leftTextWidth, rightWidth, rightTextWidth, _) = CalculateSimulationSynthWidths();
 
         ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, leftWidth);
         ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, rightWidth);
@@ -331,28 +333,17 @@ public class SimulatorWindow : Window
         ImGuiUtils.EndGroupPanel();
     }
 
-    private void DrawSimulationSynthOld()
-    {
-        var state = LatestState;
-
-        ImGui.Text($"Step {state.StepCount + 1}");
-        ImGui.Text(state.Condition.Name());
-        if (ImGui.IsItemHovered())
-            ImGui.SetTooltip(state.Condition.Description(state.Input.Stats.HasSplendorousBuff));
-        ImGui.Text($"{state.HQPercent}%% HQ");
-        DrawProgressBarOld(state.Progress, Input.Recipe.MaxProgress, ProgressColorOld);
-        DrawProgressBarOld(state.Quality, Input.Recipe.MaxQuality, QualityColorOld);
-        DrawProgressBarOld(state.Durability, Input.Recipe.MaxDurability, DurabilityColorOld);
-        DrawProgressBarOld(state.CP, Input.Stats.CP, CPColorOld);
-    }
-
     private void DrawSimulationEffects()
     {
-        ImGui.Text($"Effects:");
-        
+        var (_, _, _, _, totalWidth) = CalculateSimulationSynthWidths();
+
+        ImGuiUtils.BeginGroupPanel("Effects", totalWidth);
+
         var effectHeight = ImGui.GetFontSize() * 2f;
         Vector2 GetEffectSize(TextureWrap icon) => new(icon.Width * effectHeight / icon.Height, effectHeight);
 
+        ImGui.Dummy(new(0, effectHeight));
+        ImGui.SameLine(0, 0);
         foreach (var effect in Enum.GetValues<EffectType>())
         {
             var duration = Simulator.GetEffectDuration(effect);
@@ -361,23 +352,36 @@ public class SimulatorWindow : Window
 
             var strength = Simulator.GetEffectStrength(effect);
             var icon = effect.GetIcon(strength);
+            var iconSize = GetEffectSize(icon);
 
-            ImGui.Image(icon.ImGuiHandle, GetEffectSize(icon));
+            ImGui.Image(icon.ImGuiHandle, iconSize);
             if (ImGui.IsItemHovered())
                 ImGui.SetTooltip(effect.GetTooltip(strength, duration));
+            if (duration != 0)
+            {
+                ImGui.SameLine(0, ImGui.GetStyle().ItemInnerSpacing.X);
+                ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (effectHeight - ImGui.GetFontSize()) / 2f);
+                ImGui.Text($"{duration}");
+            }
             ImGui.SameLine();
         }
         ImGui.Dummy(Vector2.Zero);
+
+        ImGuiUtils.EndGroupPanel();
     }
 
     private void DrawSimulationActions()
     {
-        ImGui.Text($"Actions:");
+        var (_, _, _, _, totalWidth) = CalculateSimulationSynthWidths();
 
-        var actionSize = new Vector2(ImGui.GetFontSize() * 2f);
+        ImGuiUtils.BeginGroupPanel("Actions", totalWidth);
+
         ImGui.PushStyleColor(ImGuiCol.Button, Vector4.Zero);
         ImGui.PushStyleColor(ImGuiCol.ButtonActive, Vector4.Zero);
         ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Vector4.Zero);
+        var actionSize = new Vector2((totalWidth / 10) - ImGui.GetStyle().ItemSpacing.X * (11f/10));
+        ImGui.Dummy(new(0, actionSize.Y));
+        ImGui.SameLine(0, 0);
         for (var i = 0; i < Actions.Count; ++i)
         {
             var (action, tooltip, response, state) = Actions[i];
@@ -386,7 +390,6 @@ public class SimulatorWindow : Window
                 RemoveAction(i);
             if (ImGui.BeginDragDropSource())
             {
-                unsafe { ImGui.SetDragDropPayload("simulationAction", (nint)(void*)&i, sizeof(int)); }
                 unsafe { ImGui.SetDragDropPayload("simulationAction", (nint)(&i), sizeof(int)); }
                 ImGui.ImageButton(Actions[i].Action.GetIcon(ClassJob).ImGuiHandle, actionSize);
                 ImGui.EndDragDropSource();
@@ -429,9 +432,12 @@ public class SimulatorWindow : Window
                 ImGui.EndTooltip();
             }
             ImGui.PopID();
-            ImGui.SameLine();
+            if (i % 10 != 9)
+                ImGui.SameLine();
         }
         ImGui.PopStyleColor(3);
+
+        ImGuiUtils.EndGroupPanel();
     }
 
     private void AppendAction(ActionType action)
@@ -477,15 +483,8 @@ public class SimulatorWindow : Window
             AppendAction(succeededAction);
     }
 
-    private static void DrawProgressBarTooltip(int progress, int maxProgress, Vector4 color)
-    {
-        ImGui.PushStyleColor(ImGuiCol.PlotHistogram, color);
-        ImGui.ProgressBar(Math.Clamp((float)progress / maxProgress, 0f, 1f), TooltipProgressBarSize);
-        ImGui.PopStyleColor();
-    }
-
-    private static void DrawProgressBarOld(int progress, int maxProgress, Vector4 color) =>
-        DrawProgressBar(progress, maxProgress, ProgressBarSizeOld, color, $"{progress} / {maxProgress}");
+    private static void DrawProgressBarTooltip(int progress, int maxProgress, Vector4 color) =>
+        DrawProgressBar(progress, maxProgress, TooltipProgressBarSize, color);
 
     private static void DrawProgressBar(int progress, int maxProgress, Vector2 size, Vector4 color, string overlay = "")
     {
