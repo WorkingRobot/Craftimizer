@@ -6,7 +6,6 @@ using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Lumina.Excel.GeneratedSheets;
-using System.Collections.Generic;
 using ClassJob = Craftimizer.Simulator.ClassJob;
 
 namespace Craftimizer.Plugin;
@@ -31,11 +30,6 @@ public sealed class Plugin : IDalamudPlugin
         RecipeNoteWindow = new();
         SettingsWindow = new();
 
-        Service.CommandManager.AddHandler("/craft", new CommandInfo(OnCommand)
-        {
-            HelpMessage = "A useful message to display in /xlhelp"
-        });
-
         Service.PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
         Service.PluginInterface.UiBuilder.OpenConfigUi += OpenSettingsWindow;
     }
@@ -58,15 +52,6 @@ public sealed class Plugin : IDalamudPlugin
 
     public void Dispose()
     {
-        Service.CommandManager.RemoveHandler("/craft");
         SimulatorWindow?.Dispose();
-    }
-
-    private void OnCommand(string command, string args)
-    {
-        if (command != "/craft")
-            return;
-
-        OpenSettingsWindow();
     }
 }
