@@ -37,7 +37,7 @@ public sealed class Plugin : IDalamudPlugin
         });
 
         Service.PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
-        Service.PluginInterface.UiBuilder.OpenConfigUi += () => SettingsWindow.IsOpen = true;
+        Service.PluginInterface.UiBuilder.OpenConfigUi += OpenSettingsWindow;
     }
 
     public void OpenSimulatorWindow(Item item, bool isExpert, SimulationInput input, ClassJob classJob, Macro? macro)
@@ -48,6 +48,12 @@ public sealed class Plugin : IDalamudPlugin
             WindowSystem.RemoveWindow(SimulatorWindow);
         }
         SimulatorWindow = new(item, isExpert, input, classJob, macro);
+    }
+
+    public void OpenSettingsWindow()
+    {
+        SettingsWindow.IsOpen = true;
+        SettingsWindow.BringToFront();
     }
 
     public void Dispose()
@@ -61,6 +67,6 @@ public sealed class Plugin : IDalamudPlugin
         if (command != "/craft")
             return;
 
-        SettingsWindow.IsOpen = true;
+        OpenSettingsWindow();
     }
 }

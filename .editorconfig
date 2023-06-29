@@ -148,6 +148,7 @@ csharp_indent_labels = flush_left
 dotnet_diagnostic.MA0049.severity = silent
 dotnet_diagnostic.MA0007.severity = silent
 dotnet_diagnostic.MA0048.severity = silent
+dotnet_diagnostic.MA0051.severity = silent
 dotnet_diagnostic.MA0006.severity = suggestion
 dotnet_diagnostic.MA0016.severity = suggestion
 dotnet_diagnostic.MA0008.severity = suggestion

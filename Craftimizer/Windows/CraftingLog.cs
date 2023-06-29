@@ -135,7 +135,7 @@ public unsafe class CraftingLog : Window
         Random = new();
     }
 
-    public CraftingLog() : base("RecipeNoteHelper", WindowFlags, true)
+    public CraftingLog() : base("Craftimizer RecipeNoteHelper", WindowFlags, true)
     {
         Service.WindowSystem.AddWindow(this);
 
@@ -286,7 +286,6 @@ public unsafe class CraftingLog : Window
     private void DrawMacros()
     {
         var padding = ImGui.GetStyle().FramePadding;
-        var itemPadding = ImGui.GetStyle().ItemInnerSpacing;
 
         var fontSize = ImGui.GetFontSize();
         var height = fontSize + (padding.Y * 2);

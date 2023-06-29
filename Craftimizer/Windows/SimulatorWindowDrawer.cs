@@ -328,7 +328,8 @@ public sealed partial class SimulatorWindow : Window, IDisposable
         var cogWidth = ImGui.CalcTextSize(FontAwesomeIcon.Cog.ToIconString()).X;
         ImGui.PopFont();
         ImGui.SameLine(0, totalWidth - ImGui.GetStyle().ItemSpacing.X - checkboxWidth - cogWidth);
-        ImGuiComponents.IconButton("simSettingsButton", FontAwesomeIcon.Cog);
+        if (ImGuiComponents.IconButton("simSettingsButton", FontAwesomeIcon.Cog))
+            Service.Plugin.OpenSettingsWindow();
 
         //
 

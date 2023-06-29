@@ -1,6 +1,7 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Dalamud.Interface.Windowing;
+using Dalamud.Utility;
 using ImGuiNET;
 using Lumina.Excel.GeneratedSheets;
 using System;
@@ -29,7 +30,7 @@ public sealed partial class SimulatorWindow : Window, IDisposable
 
     // Simulator is set by ResetSimulator()
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    public SimulatorWindow(Item item, bool isExpert, SimulationInput input, ClassJob classJob, Macro? macro) : base("Simulator", WindowFlags)
+    public SimulatorWindow(Item item, bool isExpert, SimulationInput input, ClassJob classJob, Macro? macro) : base("Craftimizer Simulator", WindowFlags)
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     {
         Service.WindowSystem.AddWindow(this);
