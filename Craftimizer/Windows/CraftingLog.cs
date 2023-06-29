@@ -1,5 +1,6 @@
 using Craftimizer.Plugin.Utils;
 using Craftimizer.Simulator;
+using Craftimizer.Simulator.Actions;
 using Dalamud;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
@@ -289,37 +290,94 @@ public unsafe class CraftingLog : Window
 
         var fontSize = ImGui.GetFontSize();
         var height = fontSize + (padding.Y * 2);
-        var width = (ImGui.GetContentRegionAvail().X / 2) - itemPadding.X;
+        var width = ImGui.GetContentRegionAvail().X;
         var size = new Vector2(width, height);
+        var infoColWidth = SimulatorWindow.TooltipProgressBarSize.X;
+        var infoButtonCount = 3;
+        var infoButtonWidth = (infoColWidth - ImGui.GetStyle().ItemSpacing.X * (infoButtonCount - 1)) / infoButtonCount;
+        var infoButtonSize = new Vector2(infoButtonWidth, height);
+        var actionColWidth = width - infoColWidth - ImGui.GetStyle().FramePadding.X * 2;
+        var actionCount = 6;
+        var actionSize = new Vector2((actionColWidth - (ImGui.GetStyle().ItemSpacing.X * (actionCount - 1))) / actionCount);
 
         if (ImGui.Button("Open Simulator", size))
-        {
-            Service.Plugin.OpenSimulatorWindow(Recipe.ItemResult.Value!, Recipe.IsExpert, CharacterSimulationInput, RecipeClassJob, new());
-        }
+            OpenSimulatorWindow(null);
         ImGui.SameLine();
         ImGui.Button("Generate a new macro", size);
 
-        ImGui.BeginTable("macrotable", 3, ImGuiTableFlags.BordersInner);
-        ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, width);
-        foreach(var macro in Service.Configuration.Macros)
+        ImGui.BeginTable("macrotable", 2, ImGuiTableFlags.BordersInner);
+        ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, infoColWidth);
+        ImGui.TableSetupColumn("");
+        var simulation = new SimulatorNoRandom(new(CharacterSimulationInput));
+        for (var i = 0; i < Service.Configuration.Macros.Count; ++i)
         {
+            var macro = Service.Configuration.Macros[i];
+            ImGui.PushID(i);
             ImGui.TableNextRow();
 
-            ImGui.TableNextColumn();
-            ImGui.TextUnformatted(macro.Name);
+            SimulationState? state = null;
+            if (CharacterCannotCraftReason == CannotCraftReason.OK) {
+                state = new(CharacterSimulationInput);
+                foreach (var action in macro.Actions)
+                    (_, state) = simulation.Execute(state.Value, action);
+            }
 
             ImGui.TableNextColumn();
+            ImGui.TextWrapped(macro.Name);
+            if (state.HasValue)
+                SimulatorWindow.DrawAllProgressTooltips(state!.Value);
+
+            if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Copy, infoButtonSize))
+                CopyMacroToClipboard(macro);
+            if (ImGui.IsItemHovered())
+                ImGui.SetTooltip("Copy macro to clipboard\nHold Shift to exclude wait modifiers");
+            ImGui.SameLine();
+            if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.ShareSquare, infoButtonSize))
+                OpenSimulatorWindow(macro);
+            if (ImGui.IsItemHovered())
+                ImGui.SetTooltip("Open macro in simulator");
+            ImGui.SameLine();
+            if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Trash, infoButtonSize))
+                Service.Configuration.Macros.RemoveAt(i);
+            if (ImGui.IsItemHovered())
+                ImGui.SetTooltip("Delete macro");
+
+            ImGui.TableNextColumn();
+            var j = 0;
             foreach (var action in macro.Actions)
             {
-                ImGui.Image(action.GetIcon(RecipeClassJob).ImGuiHandle, new(fontSize * 2));
-                ImGui.SameLine();
+                ImGui.Image(action.GetIcon(RecipeClassJob).ImGuiHandle, actionSize);
+                if (j++ % actionCount != actionCount - 1)
+                    ImGui.SameLine();
+                if (j == actionCount * 2)
+                    break;
             }
             ImGui.Dummy(Vector2.Zero);
-
-            ImGui.TableNextColumn();
-            ImGui.Text("Sim Results Here!");
+            ImGui.PopID();
         }
         ImGui.EndTable();
+    }
+
+    private void OpenSimulatorWindow(Macro? macro)
+    {
+        Service.Plugin.OpenSimulatorWindow(Recipe.ItemResult.Value!, Recipe.IsExpert, CharacterSimulationInput, RecipeClassJob, macro);
+    }
+
+    private void CopyMacroToClipboard(Macro macro)
+    {
+        var s = new StringBuilder();
+        if (ImGui.IsKeyDown(ImGuiKey.ModShift))
+        {
+            foreach (var action in macro.Actions)
+                s.AppendLine($"/ac \"{action.GetName(RecipeClassJob)}\"");
+        }
+        else
+        {
+            foreach (var action in macro.Actions)
+                s.AppendLine($"/ac \"{action.GetName(RecipeClassJob)}\" <wait.{action.Base().MacroWaitTime}>");
+            s.AppendLine($"/echo Macro Complete! <se.1>");
+        }
+        ImGui.SetClipboardText(s.ToString());
     }
 
     private void DrawGearsets()

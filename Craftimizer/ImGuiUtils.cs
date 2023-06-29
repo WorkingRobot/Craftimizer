@@ -1,3 +1,4 @@
+using Dalamud.Interface;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
@@ -121,5 +122,13 @@ internal static class ImGuiUtils
         ImGui.Dummy(Vector2.Zero);
 
         ImGui.EndGroup();
+    }
+
+    public static bool IconButtonSized(FontAwesomeIcon icon, Vector2 size)
+    {
+        ImGui.PushFont(UiBuilder.IconFont);
+        var ret = ImGui.Button(icon.ToIconString(), size);
+        ImGui.PopFont();
+        return ret;
     }
 }
