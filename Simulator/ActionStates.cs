@@ -28,4 +28,7 @@ public struct ActionStates
 
         Observed = action == ActionType.Observe;
     }
+
+    public override readonly string ToString() =>
+        $"ActionStates {{ TouchComboIdx = {TouchComboIdx}, CarefulObservationCount = {CarefulObservationCount}, UsedHeartAndSoul = {UsedHeartAndSoul}, Observed = {Observed} }}";
 }

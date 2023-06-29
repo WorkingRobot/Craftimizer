@@ -39,6 +39,11 @@ public class Simulator
         State = state;
     }
 
+    public void SetState(SimulationState state)
+    {
+        State = state;
+    }
+
     public (ActionResponse Response, SimulationState NewState) Execute(SimulationState state, ActionType action)
     {
         State = state;

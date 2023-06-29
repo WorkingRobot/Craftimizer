@@ -38,4 +38,7 @@ public sealed class SimulationInput
     }
 
     public Condition[] AvailableConditions => ConditionUtils.GetPossibleConditions(Recipe.ConditionsFlag);
+
+    public override string ToString() =>
+        $"SimulationInput {{ Stats = {Stats}, Recipe = {Recipe}, Random = {Random}, StartingQuality = {StartingQuality}, BaseProgressGain = {BaseProgressGain}, BaseQualityGain = {BaseQualityGain} }}";
 }

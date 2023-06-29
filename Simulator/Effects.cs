@@ -113,4 +113,7 @@ public struct Effects
         if (Manipulation > 0)
             Manipulation--;
     }
+
+    public override readonly string ToString() =>
+        $"Effects {{ InnerQuiet = {InnerQuiet}, WasteNot = {WasteNot}, Veneration = {Veneration}, GreatStrides = {GreatStrides}, Innovation = {Innovation}, FinalAppraisal = {FinalAppraisal}, WasteNot2 = {WasteNot2}, MuscleMemory = {MuscleMemory}, Manipulation = {Manipulation}, HeartAndSoul = {HeartAndSoul} }}";
 }
