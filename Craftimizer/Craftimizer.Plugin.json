@@ -1,12 +1,26 @@
 {
-    "Author": "WorkingRobot",
+    "Author": "Asriel Camora",
     "Name": "Craftimizer",
-    "Punchline": "Craft stuff xd",
-    "Description": "In-game craftiming optimizer",
+    "Punchline": "Simulate crafts and create computer-assisted macros from the comfort of your own game",
+    "Description": "Allows you to generate macros and simulate all sorts of crafts without having to open another app. Open your crafting log to get started.",
+    "RepoUrl": "https://git.camora.dev/asriel/craftimizer.git",
     "InternalName": "craftimizer",
     "ApplicableVersion": "any",
+    "DalamudApiLevel": 8,
     "Tags": [
         "crafting",
+        "doh",
+        "craft",
+        "macro",
+        "solver",
+        "generator",
+        "generate",
+        "simulate",
+        "sim",
         "simulator"
-    ]
+    ],
+    "CategoryTags": [
+        "Jobs"
+    ],
+    "IconUrl": "https://git.camora.dev/asriel/craftimizer/raw/branch/main/icon.png"
 }
