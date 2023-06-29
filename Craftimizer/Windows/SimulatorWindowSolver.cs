@@ -16,6 +16,8 @@ public sealed partial class SimulatorWindow : Window, IDisposable
     private int SolverInitialActionCount { get; set; }
     private bool SolverActionsChanged { get; set; } = true;
 
+    private bool CanModifyActions => SolverTask.IsCompleted;
+
     private void OnActionsChanged()
     {
         SolverActionsChanged = true;

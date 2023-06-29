@@ -1,3 +1,4 @@
+using Craftimizer.Simulator;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using System;
@@ -115,6 +116,22 @@ public sealed partial class SimulatorWindow : Window, IDisposable
         ImGui.PopStyleVar();
 
         ImGuiUtils.EndGroupPanel();
+    }
+
+    public static void DrawAllProgressTooltips(SimulationState state)
+    {
+        DrawProgressBarTooltip(state.Progress, state.Input.Recipe.MaxProgress, ProgressColor);
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip($"Progress: {state.Progress} / {state.Input.Recipe.MaxProgress}");
+        DrawProgressBarTooltip(state.Quality, state.Input.Recipe.MaxQuality, QualityColor);
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip($"Quality: {state.Quality} / {state.Input.Recipe.MaxQuality}");
+        DrawProgressBarTooltip(state.Durability, state.Input.Recipe.MaxDurability, DurabilityColor);
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip($"Durability: {state.Durability} / {state.Input.Recipe.MaxDurability}");
+        DrawProgressBarTooltip(state.CP, state.Input.Stats.CP, CPColor);
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip($"CP: {state.CP} / {state.Input.Stats.CP}");
     }
 
     private static void DrawProgressBarTooltip(int progress, int maxProgress, Vector4 color) =>

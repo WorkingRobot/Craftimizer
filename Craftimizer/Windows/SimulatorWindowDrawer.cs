@@ -21,7 +21,7 @@ public sealed partial class SimulatorWindow : Window, IDisposable
     private static readonly Vector2 DurabilityBarSize = new(100, 20);
     private static readonly Vector2 ConditionBarSize = new(20, 20);
     private static readonly Vector2 ProgressBarSizeOld = new(200, 20);
-    private static readonly Vector2 TooltipProgressBarSize = new(100, 5);
+    public static readonly Vector2 TooltipProgressBarSize = new(100, 5);
 
     private static readonly Vector4 ProgressColor = new(0.44f, 0.65f, 0.18f, 1f);
     private static readonly Vector4 QualityColor = new(0.26f, 0.71f, 0.69f, 1f);
@@ -46,13 +46,12 @@ public sealed partial class SimulatorWindow : Window, IDisposable
         while (SolverActionQueue.TryDequeue(out var poppedAction))
             AppendGeneratedAction(poppedAction);
 
-        ImGui.TextUnformatted($"{FrameTime.TotalMilliseconds:0.00}ms");
-
         ImGui.BeginTable("simulatorWindow", 2, ImGuiTableFlags.BordersInnerV);
         ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, ActionColumnSize);
         ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthStretch);
         ImGui.TableNextColumn();
         DrawActions();
+        ImGui.TextUnformatted($"{FrameTime.TotalMilliseconds:0.00}ms");
         ImGui.TableNextColumn();
         DrawSimulation();
         ImGui.EndTable();
@@ -73,6 +72,7 @@ public sealed partial class SimulatorWindow : Window, IDisposable
         ImGui.PushStyleColor(ImGuiCol.Button, Vector4.Zero);
         ImGui.PushStyleColor(ImGuiCol.ButtonActive, Vector4.Zero);
         ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Vector4.Zero);
+        ImGui.BeginDisabled(!CanModifyActions);
 
         foreach (var (category, actions) in SortedActions)
         {
@@ -105,6 +105,8 @@ public sealed partial class SimulatorWindow : Window, IDisposable
                 ImGui.Dummy(actionSize);
             ImGuiUtils.EndGroupPanel();
         }
+
+        ImGui.EndDisabled();
         ImGui.PopStyleColor(3);
     }
 
@@ -119,8 +121,7 @@ public sealed partial class SimulatorWindow : Window, IDisposable
         ImGuiHelpers.ScaledDummy(5);
         DrawSimulationActions(drawParams);
         var bottom = ImGui.GetContentRegionAvail().Y - ImGui.GetStyle().FramePadding.Y * 2;
-        var textHeight = ImGui.CalcTextSize("A").Y;
-        var buttonHeight = ImGui.GetStyle().FramePadding.Y * 2 + textHeight;
+        var buttonHeight = ImGui.GetFrameHeightWithSpacing() * 2 + ImGui.GetFrameHeight();
         ImGuiHelpers.ScaledDummy(bottom - buttonHeight);
         DrawSimulationButtons(drawParams);
     }
@@ -245,27 +246,31 @@ public sealed partial class SimulatorWindow : Window, IDisposable
             var (action, tooltip, response, state) = Actions[i];
             ImGui.PushID(i);
             if (ImGui.ImageButton(action.GetIcon(ClassJob).ImGuiHandle, actionSize, Vector2.Zero, Vector2.One, 0, default, response != ActionResponse.UsedAction ? BadActionImageTint : Vector4.One))
-                RemoveAction(i);
-            if (ImGui.BeginDragDropSource())
+                if (CanModifyActions)
+                    RemoveAction(i);
+            if (CanModifyActions)
             {
-                unsafe { ImGui.SetDragDropPayload("simulationAction", (nint)(&i), sizeof(int)); }
-                ImGui.ImageButton(Actions[i].Action.GetIcon(ClassJob).ImGuiHandle, actionSize);
-                ImGui.EndDragDropSource();
-            }
-            if (ImGui.BeginDragDropTarget())
-            {
-                var payload = ImGui.AcceptDragDropPayload("simulationAction");
-                bool isValidPayload;
-                unsafe { isValidPayload = payload.NativePtr != null; }
-                if (isValidPayload)
+                if (ImGui.BeginDragDropSource())
                 {
-                    int draggedIdx;
-                    unsafe { draggedIdx = *(int*)payload.Data; }
-                    var draggedAction = Actions[draggedIdx].Action;
-                    RemoveAction(draggedIdx);
-                    InsertAction(i, draggedAction);
+                    unsafe { ImGui.SetDragDropPayload("simulationAction", (nint)(&i), sizeof(int)); }
+                    ImGui.ImageButton(Actions[i].Action.GetIcon(ClassJob).ImGuiHandle, actionSize);
+                    ImGui.EndDragDropSource();
                 }
-                ImGui.EndDragDropTarget();
+                if (ImGui.BeginDragDropTarget())
+                {
+                    var payload = ImGui.AcceptDragDropPayload("simulationAction");
+                    bool isValidPayload;
+                    unsafe { isValidPayload = payload.NativePtr != null; }
+                    if (isValidPayload)
+                    {
+                        int draggedIdx;
+                        unsafe { draggedIdx = *(int*)payload.Data; }
+                        var draggedAction = Actions[draggedIdx].Action;
+                        RemoveAction(draggedIdx);
+                        InsertAction(i, draggedAction);
+                    }
+                    ImGui.EndDragDropTarget();
+                }
             }
             if (ImGui.IsItemHovered())
             {
@@ -282,11 +287,9 @@ public sealed partial class SimulatorWindow : Window, IDisposable
                 if (response != ActionResponse.UsedAction)
                     ImGui.TextColored(BadActionTextColor, responseText);
                 ImGui.Text($"{action.GetName(ClassJob)}\n{tooltip}");
-                DrawProgressBarTooltip(state.Progress, Input.Recipe.MaxProgress, ProgressColor);
-                DrawProgressBarTooltip(state.Quality, Input.Recipe.MaxQuality, QualityColor);
-                DrawProgressBarTooltip(state.Durability, Input.Recipe.MaxDurability, DurabilityColor);
-                DrawProgressBarTooltip(state.CP, Input.Stats.CP, CPColor);
-                ImGui.Text("Click to Remove\nDrag to Move");
+                DrawAllProgressTooltips(state);
+                if (CanModifyActions)
+                    ImGui.Text("Click to Remove\nDrag to Move");
                 ImGui.EndTooltip();
             }
             ImGui.PopID();
@@ -300,11 +303,72 @@ public sealed partial class SimulatorWindow : Window, IDisposable
 
     private void DrawSimulationButtons(SynthDrawParams drawParams)
     {
-        ImGui.Button("Save");
+        var totalWidth = drawParams.Total;
+        var halfWidth = (totalWidth - ImGui.GetStyle().ItemSpacing.X) / 2f;
+        var quarterWidth = (halfWidth - ImGui.GetStyle().ItemSpacing.X) / 2f;
+        var halfButtonSize = new Vector2(halfWidth, ImGui.CalcTextSize("A").Y + ImGui.GetStyle().FramePadding.Y * 2);
+        var quarterButtonSize = new Vector2(quarterWidth, ImGui.CalcTextSize("A").Y + ImGui.GetStyle().FramePadding.Y * 2);
+
+        var conditionRandomnessText = "Condition Randomness";
+        var conditionRandomness = Configuration.ConditionRandomness;
+        ImGui.BeginDisabled(!CanModifyActions);
+        if (ImGui.Checkbox(conditionRandomnessText, ref conditionRandomness))
+        {
+            Configuration.ConditionRandomness = conditionRandomness;
+            Configuration.Save();
+            ResetSimulator();
+        }
+        ImGui.EndDisabled();
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+            ImGui.SetTooltip("Allows the condition to fluctuate randomly like a real craft.\nTurns off when generating a macro.");
+
+        var labelSize = ImGui.CalcTextSize(conditionRandomnessText);
+        var checkboxWidth = ImGui.GetFrameHeight() + (labelSize.X > 0 ? ImGui.GetStyle().ItemInnerSpacing.X + labelSize.X : 0);
+        ImGui.PushFont(UiBuilder.IconFont);
+        var cogWidth = ImGui.CalcTextSize(FontAwesomeIcon.Cog.ToIconString()).X;
+        ImGui.PopFont();
+        ImGui.SameLine(0, totalWidth - ImGui.GetStyle().ItemSpacing.X - checkboxWidth - cogWidth);
+        ImGuiComponents.IconButton("simSettingsButton", FontAwesomeIcon.Cog);
+
+        //
+
+        var macroName = MacroName;
+        ImGui.SetNextItemWidth(halfWidth);
+        if (ImGui.InputTextWithHint("", "Macro Name", ref macroName, 64))
+            MacroName = macroName;
+
         ImGui.SameLine();
-        if (ImGui.Button("Reset"))
+
+        ImGui.SetNextItemWidth(halfWidth);
+        DrawSimulationGenerateButton(halfButtonSize);
+
+        //
+
+        ImGui.BeginDisabled(!CanModifyActions);
+        if (Macro != null)
+        {
+            if (ImGui.Button("Save", quarterButtonSize))
+            {
+                Macro.Name = MacroName;
+                Macro.Actions = Actions.Select(a => a.Action).ToList();
+                Configuration.Save();
+            }
+            ImGui.SameLine();
+        }
+        if (ImGui.Button("Save New", Macro == null ? halfButtonSize : quarterButtonSize))
+        {
+            Macro = new() { Name = MacroName, Actions = Actions.Select(a => a.Action).ToList() };
+            Configuration.Macros.Add(Macro);
+            Configuration.Save();
+        }
+        ImGui.SameLine();
+        if (ImGui.Button("Reset", halfButtonSize))
             ClearAllActions();
-        ImGui.SameLine();
+        ImGui.EndDisabled();
+    }
+
+    private void DrawSimulationGenerateButton(Vector2 buttonSize)
+    {
         var state = GenerateSolverState();
         string buttonText;
         string tooltipText;
@@ -342,7 +406,7 @@ public sealed partial class SimulatorWindow : Window, IDisposable
             }
         }
         ImGui.BeginDisabled(!isEnabled);
-        if (ImGui.Button(buttonText))
+        if (ImGui.Button(buttonText, buttonSize))
         {
             if (!SolverTask.IsCompleted)
             {
@@ -370,17 +434,5 @@ public sealed partial class SimulatorWindow : Window, IDisposable
         ImGui.EndDisabled();
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
             ImGui.SetTooltip(tooltipText);
-        ImGui.SameLine();
-        ImGuiComponents.IconButton(FontAwesomeIcon.Cog);
-        ImGui.SameLine();
-        var conditionRandomness = Configuration.ConditionRandomness;
-        if (ImGui.Checkbox("Condition Randomness", ref conditionRandomness))
-        {
-            Configuration.ConditionRandomness = conditionRandomness;
-            Configuration.Save();
-            ResetSimulator();
-        }
-        if (ImGui.IsItemHovered())
-            ImGui.SetTooltip("Allows the condition to fluctuate randomly like a real craft.\nTurns off when generating a macro.");
     }
 }

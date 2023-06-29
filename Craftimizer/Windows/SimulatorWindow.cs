@@ -19,6 +19,8 @@ public sealed partial class SimulatorWindow : Window, IDisposable
     private bool IsExpert { get; }
     private SimulationInput Input { get; }
     private ClassJob ClassJob { get; }
+    private Macro? Macro { get; set; }
+    private string MacroName { get; set; }
     // State is the state of the simulation *after* its corresponding action is executed.
     private List<(ActionType Action, string Tooltip, ActionResponse Response, SimulationState State)> Actions { get; }
     private Simulator.Simulator Simulator { get; set; }
@@ -27,7 +29,7 @@ public sealed partial class SimulatorWindow : Window, IDisposable
 
     // Simulator is set by ResetSimulator()
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    public SimulatorWindow(Item item, bool isExpert, SimulationInput input, ClassJob classJob, List<ActionType> actions) : base("Simulator", WindowFlags)
+    public SimulatorWindow(Item item, bool isExpert, SimulationInput input, ClassJob classJob, Macro? macro) : base("Simulator", WindowFlags)
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     {
         Service.WindowSystem.AddWindow(this);
@@ -36,6 +38,8 @@ public sealed partial class SimulatorWindow : Window, IDisposable
         IsExpert = isExpert;
         Input = input;
         ClassJob = classJob;
+        Macro = macro;
+        MacroName = Macro?.Name ?? $"Macro {Configuration.Macros.Count + 1}";
         Actions = new();
         ResetSimulator();
 
@@ -47,8 +51,9 @@ public sealed partial class SimulatorWindow : Window, IDisposable
         SizeCondition = ImGuiCond.Appearing;
         Size = SizeConstraints?.MinimumSize ?? new(10);
 
-        foreach (var action in actions)
-            AppendAction(action);
+        if (Macro != null)
+            foreach (var action in Macro.Actions)
+                AppendAction(action);
     }
 
     private void ResetSimulator()
