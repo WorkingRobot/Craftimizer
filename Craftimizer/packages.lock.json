@@ -16,6 +16,12 @@
       },
       "craftimizer.simulator": {
         "type": "Project"
+      },
+      "craftimizer.solver": {
+        "type": "Project",
+        "dependencies": {
+          "Craftimizer.Simulator": "[1.0.0, )"
+        }
       }
     }
   }

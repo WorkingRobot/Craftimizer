@@ -1,5 +1,6 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
+using Craftimizer.Solver.Crafty;
 using Dalamud.Configuration;
 using Dalamud.Logging;
 using System;
@@ -22,22 +23,13 @@ public class Configuration : IPluginConfiguration
     public bool OverrideUncraftability { get; set; } = true;
     public bool HideUnlearnedActions { get; set; } = true;
     public List<Macro> Macros { get; set; } = new();
-    public string SimulatorType { get; set; } = typeof(Simulator.Simulator).AssemblyQualifiedName!;
+    public SolverConfig SolverConfig { get; set; } = new();
+    public bool ConditionRandomness { get; set; } = true;
 
-    public Simulator.Simulator CreateSimulator(SimulationState state)
-    {
-        var type = Type.GetType(SimulatorType);
-        if (type == null)
-            PluginLog.LogError($"Failed to resolve simulator type ({SimulatorType})");
-        else
-        {
-            if (Activator.CreateInstance(type, state) is Simulator.Simulator sim)
-                return sim;
-
-            PluginLog.LogError($"Failed to create simulator ({SimulatorType})");
-        }
-        return new Simulator.Simulator(state);
-    }
+    public Simulator.Simulator CreateSimulator(SimulationState state) =>
+        ConditionRandomness ?
+            new Simulator.Simulator(state) :
+            new SimulatorNoRandom(state);
 
     public void Save() =>
         Service.PluginInterface.SavePluginConfig(this);

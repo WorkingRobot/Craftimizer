@@ -53,6 +53,7 @@ public sealed class Plugin : IDalamudPlugin
     public void Dispose()
     {
         Service.CommandManager.RemoveHandler("/craft");
+        SimulatorWindow?.Dispose();
     }
 
     private void OnCommand(string command, string args)
