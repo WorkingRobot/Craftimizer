@@ -7,6 +7,7 @@ internal abstract class BaseBuffAction : BaseAction
     // Non-instanced properties
     public abstract EffectType Effect { get; }
     public virtual byte Duration => 1;
+    public override int MacroWaitTime => 2;
 
     public sealed override int DurabilityCost => 0;
 

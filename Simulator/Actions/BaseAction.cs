@@ -11,6 +11,8 @@ public abstract class BaseAction
     public abstract int Level { get; }
     // Doesn't matter from which class, we'll use the sheet to extrapolate the rest
     public abstract uint ActionId { get; }
+    // Seconds
+    public virtual int MacroWaitTime => 3;
 
     // Action properties
     public virtual bool IncreasesProgress => false;
@@ -75,7 +77,7 @@ public abstract class BaseAction
         if (!IncreasesStepCount)
             builder.AppendLine($"Does Not Increase Step Count");
         if (SuccessRate(s) != 1f)
-            builder.AppendLine($"{s.CalculateSuccessRate(SuccessRate(s)) * 100}%% Success Rate");
+            builder.AppendLine($"{s.CalculateSuccessRate(SuccessRate(s)) * 100:##}%% Success Rate");
         return builder.ToString();
     }
 }
