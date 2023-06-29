@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Craftimizer.Plugin", "Craftimizer\Craftimizer.Plugin.csproj", "{13C812E9-0D42-4B95-8646-40EEBF30636F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Craftimizer", "Craftimizer\Craftimizer.csproj", "{13C812E9-0D42-4B95-8646-40EEBF30636F}"
 	ProjectSection(ProjectDependencies) = postProject
 		{2B0EA452-6DFC-48DB-9049-EA782E600C21} = {2B0EA452-6DFC-48DB-9049-EA782E600C21}
 	EndProjectSection

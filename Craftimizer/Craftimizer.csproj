@@ -2,11 +2,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Authors>Asriel Camora</Authors>
-    <Company></Company>
     <Version>1.0.0.0</Version>
-    <Description>Simulate crafts and create computer-assisted macros from the comfort of your own game</Description>
-    <Copyright></Copyright>
-    <PackageProjectUrl>https://git.camora.dev/asriel/craftimizer.gitn</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/WorkingRobot/craftimizer.git</PackageProjectUrl>
   </PropertyGroup>
 
   <PropertyGroup>
