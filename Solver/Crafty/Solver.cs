@@ -4,8 +4,6 @@ using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
 using Node = Craftimizer.Solver.Crafty.ArenaNode<Craftimizer.Solver.Crafty.SimulationNode>;
 
 namespace Craftimizer.Solver.Crafty;
@@ -14,39 +12,39 @@ namespace Craftimizer.Solver.Crafty;
 public class Solver
 {
     public SolverConfig Config;
-    public Simulator Simulator;
     public Node RootNode;
 
-    public Random Random => Simulator.Input.Random;
+    public Random Random;
 
     public Solver(SolverConfig config, SimulationState state, bool strict)
     {
         Config = config;
-        Simulator = new(state, config.MaxStepCount);
+        Simulator sim = new(state, config.MaxStepCount);
         RootNode = new(new(
             state,
             null,
-            Simulator.CompletionState,
-            Simulator.AvailableActionsHeuristic(strict)
+            sim.CompletionState,
+            sim.AvailableActionsHeuristic(strict)
         ));
+        Random = state.Input.Random;
     }
 
     public Solver(SolverConfig config, SimulationInput input, bool strict) : this(config, new SimulationState(input), strict)
     {
     }
 
-    private SimulationNode Execute(SimulationState state, ActionType action, bool strict)
+    private static SimulationNode Execute(Simulator simulator, SimulationState state, ActionType action, bool strict)
     {
-        (_, var newState) = Simulator.Execute(state, action);
+        (_, var newState) = simulator.Execute(state, action);
         return new(
             newState,
             action,
-            Simulator.CompletionState,
-            Simulator.AvailableActionsHeuristic(strict)
+            simulator.CompletionState,
+            simulator.AvailableActionsHeuristic(strict)
         );
     }
 
-    public (Node EndNode, CompletionState State) ExecuteActions(Node startNode, ReadOnlySpan<ActionType> actions, bool strict = false)
+    public static (Node EndNode, CompletionState State) ExecuteActions(Simulator simulator, Node startNode, ReadOnlySpan<ActionType> actions, bool strict = false)
     {
         foreach (var action in actions)
         {
@@ -58,7 +56,7 @@ public class Solver
                 return (startNode, CompletionState.InvalidAction);
             state.AvailableActions.RemoveAction(action);
 
-            startNode = startNode.Add(Execute(state.State, action, strict));
+            startNode = startNode.Add(Execute(simulator, state.State, action, strict));
         }
 
         return (startNode, startNode.State.CompletionState);
@@ -160,7 +158,7 @@ public class Solver
         }
     }
 
-    public (Node ExpandedNode, CompletionState State, float Score) ExpandAndRollout(Node initialNode)
+    public (Node ExpandedNode, CompletionState State, float Score) ExpandAndRollout(Simulator simulator, Node initialNode)
     {
         ref var initialState = ref initialNode.State;
         // expand once
@@ -169,7 +167,7 @@ public class Solver
 
         var randomAction = initialState.AvailableActions.SelectRandom(Random);
         initialState.AvailableActions.RemoveAction(randomAction);
-        var expandedNode = initialNode.Add(Execute(initialState.State, randomAction, true));
+        var expandedNode = initialNode.Add(Execute(simulator, initialState.State, randomAction, true));
 
         // playout to a terminal state
         var currentState = expandedNode.State.State;
@@ -184,9 +182,9 @@ public class Solver
                 break;
             randomAction = currentActions.SelectRandom(Random);
             actions[actionCount++] = randomAction;
-            (_, currentState) = Simulator.Execute(currentState, randomAction);
-            currentCompletionState = Simulator.CompletionState;
-            currentActions = Simulator.AvailableActionsHeuristic(true);
+            (_, currentState) = simulator.Execute(currentState, randomAction);
+            currentCompletionState = simulator.CompletionState;
+            currentActions = simulator.AvailableActionsHeuristic(true);
         }
 
         // store the result if a max score was reached
@@ -195,7 +193,7 @@ public class Solver
         {
             if (score >= Config.ScoreStorageThreshold && score >= RootNode.State.Scores.MaxScore)
             {
-                (var terminalNode, _) = ExecuteActions(expandedNode, actions[..actionCount], true);
+                (var terminalNode, _) = ExecuteActions(simulator, expandedNode, actions[..actionCount], true);
                 return (terminalNode, currentCompletionState, score);
             }
         }
@@ -217,13 +215,14 @@ public class Solver
 
     public void Search(CancellationToken token)
     {
+        Simulator simulator = new(RootNode.State.State, Config.MaxStepCount);
         for (var i = 0; i < Config.Iterations; i++)
         {
             if (token.IsCancellationRequested)
                 break;
 
             var selectedNode = Select();
-            var (endNode, _, score) = ExpandAndRollout(selectedNode);
+            var (endNode, _, score) = ExpandAndRollout(simulator, selectedNode);
 
             Backpropagate(endNode, score);
         }
@@ -251,8 +250,9 @@ public class Solver
     public static (List<ActionType> Actions, SimulationState State) SearchStepwise(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback, CancellationToken token = default)
     {
         var actions = new List<ActionType>();
+        Simulator sim = new(state, config.MaxStepCount);
         var solver = new Solver(config, state, true);
-        while (!solver.Simulator.IsComplete)
+        while (!sim.IsComplete)
         {
             if (token.IsCancellationRequested)
                 break;
@@ -267,7 +267,7 @@ public class Solver
             }
 
             var chosen_action = solution_actions[0];
-            (_, state) = solver.Simulator.Execute(state, chosen_action);
+            (_, state) = sim.Execute(state, chosen_action);
             actions.Add(chosen_action);
 
             actionCallback?.Invoke(chosen_action);

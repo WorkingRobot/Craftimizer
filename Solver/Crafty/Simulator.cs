@@ -9,10 +9,7 @@ public sealed class Simulator : SimulatorNoRandom
 {
     private readonly int maxStepCount;
 
-    public new CompletionState CompletionState =>
-        (ActionCount + 1) >= maxStepCount ?
-        CompletionState.MaxActionCountReached :
-        (CompletionState)base.CompletionState;
+    public new CompletionState CompletionState => CalculateCompletionState(State, maxStepCount);
     public override bool IsComplete => CompletionState != CompletionState.Incomplete;
 
     public Simulator(SimulationState state, int maxStepCount) : base(state)
@@ -168,4 +165,9 @@ public sealed class Simulator : SimulatorNoRandom
                 ret.AddAction(action);
         return ret;
     }
+
+    public static CompletionState CalculateCompletionState(SimulationState state, int maxStepCount) =>
+        (state.ActionCount + 1) >= maxStepCount ?
+        CompletionState.MaxActionCountReached :
+        (CompletionState)CalculateCompletionState(state);
 }

@@ -19,17 +19,7 @@ public class Simulator
 
     public bool IsFirstStep => State.StepCount == 0;
 
-    public CompletionState CompletionState
-    {
-        get
-        {
-            if (Progress >= Input.Recipe.MaxProgress)
-                return CompletionState.ProgressComplete;
-            if (Durability <= 0)
-                return CompletionState.NoMoreDurability;
-            return CompletionState.Incomplete;
-        }
-    }
+    public CompletionState CompletionState => CalculateCompletionState(State);
     public virtual bool IsComplete => CompletionState != CompletionState.Incomplete;
 
     public IEnumerable<ActionType> AvailableActions => ActionUtils.AvailableActions(this);
@@ -276,4 +266,13 @@ public class Simulator
 
     public void IncreaseQuality(float efficiency) =>
         IncreaseQualityRaw(CalculateQualityGain(efficiency, false));
+
+    public static CompletionState CalculateCompletionState(SimulationState state)
+    {
+        if (state.Progress >= state.Input.Recipe.MaxProgress)
+            return CompletionState.ProgressComplete;
+        if (state.Durability <= 0)
+            return CompletionState.NoMoreDurability;
+        return CompletionState.Incomplete;
+    }
 }
