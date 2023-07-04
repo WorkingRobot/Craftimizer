@@ -1,4 +1,5 @@
 using Craftimizer.Simulator.Actions;
+using System;
 using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -53,6 +54,54 @@ public struct ActionSet
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     //public readonly ActionType SelectRandom(Random random) => ElementAt(random.Next(Count));
     public readonly ActionType SelectRandom(Random random) => First();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ActionType? PopRandom(Random random) => PopFirst();
+    /*public ActionType? PopRandom(Random random)
+    {
+        uint snapshot;
+        uint newValue;
+        ActionType action;
+        do
+        {
+            snapshot = bits;
+            if (snapshot == 0)
+                return null;
+
+            var count = BitOperations.PopCount(snapshot);
+            var index = random.Next(count);
+
+            action = ToAction(Intrinsics.NthBitSet(snapshot, index) - 1);
+            newValue = snapshot & ~ToMask(action);
+        }
+        while (Interlocked.CompareExchange(ref bits, newValue, snapshot) != snapshot);
+        return action;
+    }*/
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ActionType? PopFirst()
+    {
+        uint snapshot;
+        uint newValue;
+        ActionType action;
+        int i = 0;
+        do
+        {
+            ++i;
+            snapshot = bits;
+            if (snapshot == 0)
+                return null;
+
+            var index = 0;
+
+            action = ToAction(Intrinsics.NthBitSet(snapshot, index) - 1);
+            newValue = snapshot & ~ToMask(action);
+        }
+        while (Interlocked.CompareExchange(ref bits, newValue, snapshot) != snapshot);
+        //if (i != 1)
+            //Console.WriteLine($"Retried {i-1} times");
+        return action;
+    }
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

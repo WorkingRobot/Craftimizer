@@ -45,10 +45,11 @@ internal static class Program
             0
         );
 
+        var threads = 1;
         var config = new SolverConfig()
         {
-            Iterations = 30_000 / 1,
-            ThreadCount = 1,
+            Iterations = 30_000 / threads,
+            ThreadCount = threads,
         };
 
         Debugger.Break();
