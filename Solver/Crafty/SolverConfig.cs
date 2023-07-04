@@ -10,6 +10,7 @@ public readonly record struct SolverConfig
     public float MaxScoreWeightingConstant { get; init; }
     public float ExplorationConstant { get; init; }
     public int MaxStepCount { get; init; }
+    public int ThreadCount { get; init; }
 
     public SolverConfig()
     {
@@ -18,5 +19,6 @@ public readonly record struct SolverConfig
         MaxScoreWeightingConstant = 0.1f;
         ExplorationConstant = 4f;
         MaxStepCount = 25;
+        ThreadCount = Environment.ProcessorCount;
     }
 }

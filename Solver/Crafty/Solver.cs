@@ -213,7 +213,7 @@ public class Solver
         }
     }
 
-    public void Search(CancellationToken token)
+    public void SearchThread(CancellationToken token)
     {
         Simulator simulator = new(RootNode.State.State, Config.MaxStepCount);
         for (var i = 0; i < Config.Iterations; i++)
@@ -226,6 +226,16 @@ public class Solver
 
             Backpropagate(endNode, score);
         }
+    }
+
+    public void Search(CancellationToken token)
+    {
+        var tasks = new Task[Config.ThreadCount];
+        for (var i = 0; i < Config.ThreadCount; ++i)
+        {
+            tasks[i] = Task.Run(() => SearchThread(token), token);
+        }
+        Task.WaitAll(tasks, token);
     }
 
     [Pure]
