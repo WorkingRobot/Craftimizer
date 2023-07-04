@@ -27,7 +27,7 @@ public struct SimulationNode
     }
 
     public static CompletionState GetCompletionState(CompletionState simCompletionState, ActionSet actions) =>
-        actions.Count == 0 && simCompletionState == CompletionState.Incomplete ?
+        actions.IsEmpty && simCompletionState == CompletionState.Incomplete ?
         CompletionState.NoMoreActions :
         simCompletionState;
 

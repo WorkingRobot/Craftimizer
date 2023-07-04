@@ -9,25 +9,46 @@ public struct ActionSet
 {
     private uint bits;
 
+    [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int FromAction(ActionType action) => Simulator.AcceptedActionsLUT[(byte)action];
+    [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ActionType ToAction(int index) => Simulator.AcceptedActions[index];
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static uint ToMask(ActionType action) => 1u << (FromAction(action) + 1);
 
+    // Return true if action was newly added and not there before.
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void AddAction(ActionType action) => bits |= 1u << (FromAction(action) + 1);
+    public bool AddAction(ActionType action)
+    {
+        var mask = ToMask(action);
+        var old = Interlocked.Or(ref bits, mask);
+        return (old & mask) == 0;
+    }
+
+    // Return true if action was newly removed and not already gone.
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void RemoveAction(ActionType action) => bits &= ~(1u << (FromAction(action) + 1));
+    public bool RemoveAction(ActionType action)
+    {
+        var mask = ToMask(action);
+        var old = Interlocked.And(ref bits, ~mask);
+        return (old & mask) != 0;
+    }
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool HasAction(ActionType action) => (bits & (1u << (FromAction(action) + 1))) != 0;
+    public readonly bool HasAction(ActionType action) => (bits & ToMask(action)) != 0;
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly ActionType ElementAt(int index) => ToAction(Intrinsics.NthBitSet(bits, index) - 1);
 
     [Pure]
     public readonly int Count => BitOperations.PopCount(bits);
+
+    [Pure]
+    public readonly bool IsEmpty => bits == 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     //public readonly ActionType SelectRandom(Random random) => ElementAt(random.Next(Count));
