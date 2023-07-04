@@ -47,10 +47,11 @@ internal static class Program
 
         var config = new SolverConfig()
         {
-            Iterations = 30_000 / 8,//1_000_000
-            ThreadCount = 8,
+            Iterations = 30_000 / 1,
+            ThreadCount = 1,
         };
 
+        Debugger.Break();
         var s = Stopwatch.StartNew();
         if (true)
             _ = Solver.Crafty.Solver.SearchStepwise(config, input, a => Console.WriteLine(a));
@@ -63,5 +64,6 @@ internal static class Program
         }
         s.Stop();
         Console.WriteLine($"{s.Elapsed.TotalMilliseconds:0.00}");
+        Debugger.Break();
     }
 }

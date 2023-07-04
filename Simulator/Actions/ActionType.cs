@@ -1,3 +1,6 @@
+using System.Diagnostics.Contracts;
+using System.Runtime.CompilerServices;
+
 namespace Craftimizer.Simulator.Actions;
 
 public enum ActionType : byte
@@ -51,6 +54,8 @@ public static class ActionUtils
             .ToArray();
     }
 
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static BaseAction Base(this ActionType me) => Actions[(int)me];
 
     public static IEnumerable<ActionType> AvailableActions(Simulator simulation) =>
