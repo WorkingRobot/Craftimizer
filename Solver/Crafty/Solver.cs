@@ -129,6 +129,7 @@ public class Solver
             var s = new Vector<float>(scoreSums);
             var m = new Vector<float>(maxScores);
             var v = new Vector<float>(visits);
+            v = Vector.Max(v, Vector<float>.One);
             var exploitation = (W * (s / v)) + (w * m);
             var exploration = CVector * Intrinsics.ReciprocalSqrt(v);
             var evalScores = exploitation + exploration;
@@ -151,13 +152,17 @@ public class Solver
         var node = RootNode;
         while (true)
         {
+            if (!Monitor.TryEnter(node, 5))
+                return Select();
             var expandable = node.State.AvailableActions.Count != 0;
             var likelyTerminal = node.Children.Count == 0;
             if (expandable || likelyTerminal)
                 return node;
 
             // select the node with the highest score
-            node = EvalBestChild(node.State.Scores.Visits, CollectionsMarshal.AsSpan(node.Children));
+            var n = EvalBestChild(node.State.Scores.Visits, CollectionsMarshal.AsSpan(node.Children));
+            Monitor.Exit(node);
+            node = n;
         }
     }
 
@@ -226,6 +231,7 @@ public class Solver
 
             var selectedNode = Select();
             var (endNode, _, score) = ExpandAndRollout(simulator, selectedNode);
+            Monitor.Exit(selectedNode);
 
             Backpropagate(endNode, score);
         }
@@ -235,9 +241,7 @@ public class Solver
     {
         var tasks = new Task[Config.ThreadCount];
         for (var i = 0; i < Config.ThreadCount; ++i)
-        {
             tasks[i] = Task.Run(() => SearchThread(token), token);
-        }
         Task.WaitAll(tasks, token);
     }
 

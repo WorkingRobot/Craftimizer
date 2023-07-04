@@ -47,8 +47,8 @@ internal static class Program
 
         var config = new SolverConfig()
         {
-            Iterations = 30_000,//1_000_000
-            ThreadCount = 2,
+            Iterations = 30_000 / 8,//1_000_000
+            ThreadCount = 8,
         };
 
         var s = Stopwatch.StartNew();
