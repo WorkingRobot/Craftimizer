@@ -110,6 +110,21 @@ internal static class Intrinsics
             NthBitSetScalar(value, n);
     }
 
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector<float> ReciprocalSqrt(Vector<float> data)
+    {
+        if (Avx.IsSupported && Vector<float>.Count >= Vector256<float>.Count)
+            return Avx.ReciprocalSqrt(data.AsVector256()).AsVector();
+
+        if (Sse.IsSupported && Vector<float>.Count >= Vector128<float>.Count)
+            return Sse.ReciprocalSqrt(data.AsVector128()).AsVector();
+
+        Span<float> result = stackalloc float[Vector<float>.Count];
+        for (var i = 0; i < Vector<float>.Count; ++i)
+            result[i] = MathF.ReciprocalSqrtEstimate(data[i]);
+        return new(result);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CASMax(ref float location, float newValue)

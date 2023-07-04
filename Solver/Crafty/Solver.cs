@@ -101,7 +101,7 @@ public class Solver
         var length = children.Length;
         var vecLength = Vector<float>.Count;
 
-        var C = Config.ExplorationConstant * MathF.Log(parentVisits);
+        var C = MathF.Sqrt(Config.ExplorationConstant * MathF.Log(parentVisits));
         var w = Config.MaxScoreWeightingConstant;
         var W = 1f - w;
         var CVector = new Vector<float>(C);
@@ -126,8 +126,11 @@ public class Solver
                 maxScores[j] = node.MaxScore;
             }
 
-            var exploitation = (W * (new Vector<float>(scoreSums) / new Vector<float>(visits))) + (w * new Vector<float>(maxScores));
-            var exploration = Vector.SquareRoot(CVector / new Vector<float>(visits));
+            var s = new Vector<float>(scoreSums);
+            var m = new Vector<float>(maxScores);
+            var v = new Vector<float>(visits);
+            var exploitation = (W * (s / v)) + (w * m);
+            var exploration = CVector * Intrinsics.ReciprocalSqrt(v);
             var evalScores = exploitation + exploration;
 
             var idx = Intrinsics.HMaxIndex(evalScores, iterCount);
