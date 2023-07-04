@@ -61,4 +61,77 @@ internal static class Intrinsics
         Avx2.IsSupported ?
         HMaxIndexAVX2(v, len) :
         HMaxIndexScalar(v, len);
+
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int NthBitSetScalar(uint value, int n)
+    {
+        var mask = 0x0000FFFFu;
+        var size = 16;
+        var _base = 0;
+
+        if (n++ >= BitOperations.PopCount(value))
+            return 32;
+
+        while (size > 0)
+        {
+            var count = BitOperations.PopCount(value & mask);
+            if (n > count)
+            {
+                _base += size;
+                size >>= 1;
+                mask |= mask << size;
+            }
+            else
+            {
+                size >>= 1;
+                mask >>= size;
+            }
+        }
+
+        return _base;
+    }
+
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int NthBitSetBMI2(uint value, int n) =>
+        BitOperations.TrailingZeroCount(Bmi2.ParallelBitDeposit(1u << n, value));
+
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int NthBitSet(uint value, int n)
+    {
+        // TODO: debug
+        if (n >= BitOperations.PopCount(value))
+            throw new ArgumentException(null, nameof(value));
+
+        return Bmi2.IsSupported ?
+            NthBitSetBMI2(value, n) :
+            NthBitSetScalar(value, n);
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void CASMax(ref float location, float newValue)
+    {
+        float snapshot;
+        do
+        {
+            snapshot = location;
+            if (snapshot >= newValue) return;
+        } while (Interlocked.CompareExchange(ref location, newValue, snapshot) != snapshot);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void CASAdd(ref float location, float value)
+    {
+        float snapshot;
+        float newValue;
+        do
+        {
+            snapshot = location;
+            newValue = snapshot + value;
+        }
+        while (Interlocked.CompareExchange(ref location, newValue, snapshot) != snapshot);
+    }
 }
