@@ -45,7 +45,7 @@ internal static class Program
             0
         );
 
-        var threads = 1;
+        var threads = 8;
         var config = new SolverConfig()
         {
             Iterations = 30_000 / threads,

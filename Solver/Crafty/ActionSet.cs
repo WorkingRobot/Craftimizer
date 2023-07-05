@@ -56,8 +56,8 @@ public struct ActionSet
     public readonly ActionType SelectRandom(Random random) => First();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ActionType? PopRandom(Random random) => PopFirst();
-    /*public ActionType? PopRandom(Random random)
+    //public ActionType? PopRandom(Random random) => PopFirst();
+    public ActionType? PopRandom(Random random)
     {
         uint snapshot;
         uint newValue;
@@ -76,7 +76,7 @@ public struct ActionSet
         }
         while (Interlocked.CompareExchange(ref bits, newValue, snapshot) != snapshot);
         return action;
-    }*/
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ActionType? PopFirst()
