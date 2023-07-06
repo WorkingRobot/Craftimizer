@@ -96,7 +96,7 @@ public sealed class Solver
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private Node? EvalBestChild(float parentVisits, ref Node.ChildBuffer children)
+    private Node? EvalBestChild(int parentVisits, ref Node.ChildBuffer children)
     {
         if (parentVisits == 0)
             return null;
@@ -110,7 +110,7 @@ public sealed class Solver
         var CVector = new Vector<float>(C);
 
         Span<float> scoreSums = stackalloc float[vecLength];
-        Span<float> visits = stackalloc float[vecLength];
+        Span<int> visits = stackalloc int[vecLength];
         Span<float> maxScores = stackalloc float[vecLength];
 
         var max = (0, 0);
@@ -130,8 +130,9 @@ public sealed class Solver
 
             var s = new Vector<float>(scoreSums);
             var m = new Vector<float>(maxScores);
-            var v = new Vector<float>(visits);
-            v = Vector.Max(v, Vector<float>.One);
+            var vInt = new Vector<int>(visits);
+            vInt = Vector.Max(vInt, Vector<int>.One);
+            var v = Vector.ConvertToSingle(vInt);
             var exploitation = (W * (s / v)) + (w * m);
             var exploration = CVector * Intrinsics.ReciprocalSqrt(v);
             var evalScores = exploitation + exploration;

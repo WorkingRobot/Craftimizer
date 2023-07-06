@@ -7,12 +7,12 @@ public struct NodeScores
 {
     public float ScoreSum;
     public float MaxScore;
-    public float Visits;
+    public int Visits;
 
     public void Visit(float score)
     {
-        ScoreSum += score;
-        MaxScore = Math.Max(MaxScore, score);
-        Visits++;
+        Intrinsics.CASAdd(ref ScoreSum, score);
+        Intrinsics.CASMax(ref MaxScore, score);
+        Interlocked.Increment(ref Visits);
     }
 }

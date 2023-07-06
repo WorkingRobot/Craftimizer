@@ -30,9 +30,9 @@ public sealed class ArenaNode<T> where T : struct
             if (Data == null)
                 Interlocked.CompareExchange(ref Data, new ArenaNode<T>[BatchCount][], null);
 
-            var index = Interlocked.Increment(ref this.index) - 1;
+            var idx = Interlocked.Increment(ref this.index) - 1;
 
-            var (arrayIdx, subIdx) = GetArrayIndex(index);
+            var (arrayIdx, subIdx) = GetArrayIndex(idx);
 
             if (Data[arrayIdx] == null)
                 Interlocked.CompareExchange(ref Data[arrayIdx], new ArenaNode<T>[BatchSize], null);
