@@ -94,6 +94,13 @@ public sealed class Simulator : SimulatorNoRandom
                 baseAction.IncreasesQuality)
                 return false;
 
+            // use First Turn actions if it's available and the craft is difficult
+            if (baseAction.Category != ActionCategory.FirstTurn &&
+                Input.Recipe.ClassJobLevel == 90 &&
+                StepCount == 1 &&
+                CP > 10)
+                return false;
+
             // don't allow pure quality moves under Veneration
             if (HasEffect(EffectType.Veneration) &&
                 !baseAction.IncreasesProgress &&
@@ -130,7 +137,7 @@ public sealed class Simulator : SimulatorNoRandom
                 return false;
 
             if (action == ActionType.Observe &&
-                CP < 5)
+                CP < 12)
                 return false;
 
             if (action == ActionType.MastersMend &&

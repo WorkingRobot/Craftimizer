@@ -18,9 +18,9 @@ public readonly record struct SolverConfig
         Iterations = 300000;
         ScoreStorageThreshold = 1f;
         MaxScoreWeightingConstant = 0.1f;
-        ExplorationConstant = 2;
+        ExplorationConstant = 4;
         MaxStepCount = 25;
-        MaxRolloutStepCount = 99;
+        MaxRolloutStepCount = MaxStepCount;
         ThreadCount = Environment.ProcessorCount;
     }
 }
