@@ -124,28 +124,4 @@ internal static class Intrinsics
             result[i] = MathF.ReciprocalSqrtEstimate(data[i]);
         return new(result);
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CASMax(ref float location, float newValue)
-    {
-        float snapshot;
-        do
-        {
-            snapshot = location;
-            if (snapshot >= newValue) return;
-        } while (Interlocked.CompareExchange(ref location, newValue, snapshot) != snapshot);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CASAdd(ref float location, float value)
-    {
-        float snapshot;
-        float newValue;
-        do
-        {
-            snapshot = location;
-            newValue = snapshot + value;
-        }
-        while (Interlocked.CompareExchange(ref location, newValue, snapshot) != snapshot);
-    }
 }

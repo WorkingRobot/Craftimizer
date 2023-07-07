@@ -24,15 +24,6 @@ public sealed class ArenaNode<T> where T : struct
         Children.Data?[at.arrayIdx]?[at.subIdx];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ArenaNode<T> AddConcurrent(T state)
-    {
-        var node = new ArenaNode<T>(state, this);
-        ChildScores.AddConcurrent();
-        Children.AddConcurrent(node);
-        return node;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ArenaNode<T> Add(T state)
     {
         var node = new ArenaNode<T>(state, this);
