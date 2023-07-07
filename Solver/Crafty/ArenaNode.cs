@@ -20,17 +20,17 @@ public sealed class ArenaNode<T> where T : struct
         private static int BatchCount = MaxSize / BatchSize;
 
         public ArenaNode<T>[][] Data;
-        private int index;
+        private int index; // Unused in single threaded workload
         private int count;
 
         public readonly int Count => count;
 
-        public void Add(ArenaNode<T> node)
+        public void AddConcurrent(ArenaNode<T> node)
         {
             if (Data == null)
                 Interlocked.CompareExchange(ref Data, new ArenaNode<T>[BatchCount][], null);
 
-            var idx = Interlocked.Increment(ref this.index) - 1;
+            var idx = Interlocked.Increment(ref index) - 1;
 
             var (arrayIdx, subIdx) = GetArrayIndex(idx);
 
@@ -40,6 +40,19 @@ public sealed class ArenaNode<T> where T : struct
             Data[arrayIdx][subIdx] = node;
 
             Interlocked.Increment(ref count);
+        }
+
+        public void Add(ArenaNode<T> node)
+        {
+            Data ??= new ArenaNode<T>[BatchCount][];
+
+            var idx = count++;
+
+            var (arrayIdx, subIdx) = GetArrayIndex(idx);
+
+            Data[arrayIdx] ??= new ArenaNode<T>[BatchSize];
+
+            Data[arrayIdx][subIdx] = node;
         }
 
         [Pure]
@@ -57,6 +70,14 @@ public sealed class ArenaNode<T> where T : struct
         State = state;
         Children = new();
         Parent = parent;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ArenaNode<T> AddConcurrent(T state)
+    {
+        var node = new ArenaNode<T>(state, this);
+        Children.AddConcurrent(node);
+        return node;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

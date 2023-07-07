@@ -9,10 +9,17 @@ public struct NodeScores
     public float MaxScore;
     public int Visits;
 
-    public void Visit(float score)
+    public void VisitConcurrent(float score)
     {
         Intrinsics.CASAdd(ref ScoreSum, score);
         Intrinsics.CASMax(ref MaxScore, score);
         Interlocked.Increment(ref Visits);
+    }
+
+    public void Visit(float score)
+    {
+        ScoreSum += score;
+        MaxScore = Math.Max(MaxScore, score);
+        Visits++;
     }
 }

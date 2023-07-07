@@ -55,10 +55,10 @@ internal static class Program
         Debugger.Break();
         var s = Stopwatch.StartNew();
         if (true)
-            _ = Solver.Crafty.Solver.SearchStepwise(config, input, a => Console.WriteLine(a));
+            _ = SolverUtils.SearchStepwise<SolverSingle>(config, input, a => Console.WriteLine(a));
         else
         {
-            (var actions, _) = Solver.Crafty.Solver.SearchOneshot(config, input);
+            (var actions, _) = SolverUtils.SearchOneshot<SolverConcurrent>(config, input);
             foreach (var action in actions)
                 Console.Write($">{action.IntName()}");
             Console.WriteLine();
