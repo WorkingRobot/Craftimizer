@@ -101,9 +101,8 @@ internal static class Intrinsics
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int NthBitSet(uint value, int n)
     {
-        // TODO: debug
         if (n >= BitOperations.PopCount(value))
-            throw new ArgumentException(null, nameof(value));
+            return 32;
 
         return Bmi2.IsSupported ?
             NthBitSetBMI2(value, n) :

@@ -12,7 +12,6 @@ public struct SimulationNode
     public readonly CompletionState SimulationCompletionState;
 
     public ActionSet AvailableActions;
-    public NodeScores Scores;
 
     public readonly CompletionState CompletionState => GetCompletionState(SimulationCompletionState, AvailableActions);
 

@@ -5,21 +5,30 @@ namespace Craftimizer.Solver.Crafty;
 public sealed class ArenaNode<T> where T : struct
 {
     public T State;
-    public ArenaBuffer<ArenaNode<T>> Children;
+    public ArenaBuffer<T> Children;
+    public NodeScoresBuffer ChildScores;
+    public (int arrayIdx, int subIdx) ChildIdx;
     public readonly ArenaNode<T>? Parent;
+
+    public NodeScoresBuffer? ParentScores => Parent?.ChildScores;
 
     public ArenaNode(T state, ArenaNode<T>? parent = null)
     {
         State = state;
         Children = new();
+        ChildScores = new();
         Parent = parent;
     }
+
+    public ArenaNode<T> ChildAt((int arrayIdx, int subIdx) at) =>
+        Children.Data[at.arrayIdx][at.subIdx];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ArenaNode<T> AddConcurrent(T state)
     {
         var node = new ArenaNode<T>(state, this);
         Children.AddConcurrent(node);
+        ChildScores.AddConcurrent();
         return node;
     }
 
@@ -28,6 +37,7 @@ public sealed class ArenaNode<T> where T : struct
     {
         var node = new ArenaNode<T>(state, this);
         Children.Add(node);
+        ChildScores.Add();
         return node;
     }
 }

@@ -4,9 +4,7 @@ namespace Craftimizer.Solver.Crafty;
 
 public interface ISolver
 {
-    abstract static void LoadChildData(Span<float> scoreSums, Span<int> visits, Span<float> maxScores, ref Node[] chunk, int iterCount);
+    abstract static bool SearchIter(ref SolverConfig config, RootScores rootScores, Node rootNode, Random random, Simulator simulator);
 
-    abstract static bool SearchIter(ref SolverConfig config, Node rootNode, Random random, Simulator simulator);
-
-    abstract static void Search(ref SolverConfig config, Node rootNode, CancellationToken token);
+    abstract static void Search(ref SolverConfig config, RootScores rootScores, Node rootNode, CancellationToken token);
 }
