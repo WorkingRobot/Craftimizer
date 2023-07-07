@@ -21,7 +21,7 @@ public sealed class SolverSingle : ISolver
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Node EvalBestChild(ref SolverConfig config, int parentVisits, ref Node.ChildBuffer children) =>
+    public static Node EvalBestChild(ref SolverConfig config, int parentVisits, ref ArenaBuffer<Node> children) =>
         SolverUtils.EvalBestChild<SolverSingle>(ref config, parentVisits, ref children);
 
     [Pure]

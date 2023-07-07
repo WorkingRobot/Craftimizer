@@ -39,7 +39,7 @@ public static class SolverUtils
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Node ChildMaxScore(ref Node.ChildBuffer children)
+    public static Node ChildMaxScore(ref ArenaBuffer<Node> children)
     {
         var length = children.Count;
         var vecLength = Vector<float>.Count;
@@ -87,7 +87,7 @@ public static class SolverUtils
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public static Node EvalBestChild<S>(ref SolverConfig config, int parentVisits, ref Node.ChildBuffer children) where S : ISolver
+    public static Node EvalBestChild<S>(ref SolverConfig config, int parentVisits, ref ArenaBuffer<Node> children) where S : ISolver
     {
         var length = children.Count;
         var vecLength = Vector<float>.Count;

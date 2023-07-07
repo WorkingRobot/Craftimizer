@@ -21,7 +21,7 @@ public sealed class SolverConcurrent : ISolver
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Node? EvalBestChild(ref SolverConfig config, int parentVisits, ref Node.ChildBuffer children) =>
+    public static Node? EvalBestChild(ref SolverConfig config, int parentVisits, ref ArenaBuffer<Node> children) =>
         parentVisits == 0 ?
             null :
             SolverUtils.EvalBestChild<SolverConcurrent>(ref config, parentVisits, ref children);
