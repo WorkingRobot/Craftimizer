@@ -53,7 +53,7 @@ public sealed class SolverConcurrent : ISolver
         var poppedAction = initialState.AvailableActions.PopRandomConcurrent(random);
         if (!poppedAction.HasValue)
             return null;
-        var expandedNode = initialNode.Add(SolverUtils.Execute(simulator, initialState.State, poppedAction.Value, true));
+        var expandedNode = initialNode.AddConcurrent(SolverUtils.Execute(simulator, initialState.State, poppedAction.Value, true));
 
         return SolverUtils.Rollout(ref config, rootNode, expandedNode, random, simulator);
     }
@@ -84,7 +84,7 @@ public sealed class SolverConcurrent : ISolver
     }
 
     public static void SearchThread(SolverConfig config, Node rootNode, CancellationToken token) =>
-        SolverUtils.Search<SolverConcurrent>(ref config, rootNode, token);
+        SolverUtils.Search<SolverConcurrent>(ref config, config.Iterations / config.ThreadCount, rootNode, token);
 
     public static void Search(ref SolverConfig config, Node rootNode, CancellationToken token)
     {

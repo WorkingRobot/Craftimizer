@@ -71,7 +71,7 @@ public struct ActionSet
     public readonly bool IsEmpty => bits == 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ActionType SelectRandom(Random random) => ElementAt(0);// random.Next(Count));
+    public readonly ActionType SelectRandom(Random random) => ElementAt(random.Next(Count));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ActionType? PopRandomConcurrent(Random random)
@@ -117,7 +117,6 @@ public struct ActionSet
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ActionType PopRandom(Random random)
     {
-        return PopFirst();
         var action = ElementAt(random.Next(Count));
         RemoveAction(action);
         return action;

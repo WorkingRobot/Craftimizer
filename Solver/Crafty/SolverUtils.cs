@@ -29,7 +29,7 @@ public static class SolverUtils
 
             if (!state.AvailableActions.HasAction(action))
                 return (startNode, CompletionState.InvalidAction);
-            state.AvailableActions.RemoveActionConcurrent(action);
+            state.AvailableActions.RemoveAction(action);
 
             startNode = startNode.Add(Execute(simulator, state.State, action, strict));
         }
@@ -167,11 +167,11 @@ public static class SolverUtils
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Search<S>(ref SolverConfig config, Node rootNode, CancellationToken token) where S : ISolver
+    public static void Search<S>(ref SolverConfig config, int iterations, Node rootNode, CancellationToken token) where S : ISolver
     {
         Simulator simulator = new(rootNode.State.State, config.MaxStepCount);
         var random = rootNode.State.State.Input.Random;
-        for (var i = 0; i < config.Iterations; i++)
+        for (var i = 0; i < iterations; i++)
         {
             if (token.IsCancellationRequested)
                 break;

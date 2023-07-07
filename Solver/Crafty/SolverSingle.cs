@@ -75,5 +75,5 @@ public sealed class SolverSingle : ISolver
     }
 
     public static void Search(ref SolverConfig config, Node rootNode, CancellationToken token) =>
-        SolverUtils.Search<SolverSingle>(ref config, rootNode, token);
+        SolverUtils.Search<SolverSingle>(ref config, config.Iterations, rootNode, token);
 }

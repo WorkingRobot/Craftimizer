@@ -41,15 +41,13 @@ internal static class Program
                 QualityDivider = 115,
                 ProgressModifier = 80,
                 ProgressDivider = 130,
-            },
-            0
+            }
         );
 
-        var threads = 8;
         var config = new SolverConfig()
         {
-            Iterations = 30_000 / threads,
-            ThreadCount = threads,
+            Iterations = 1_000_000,
+            ThreadCount = 8,
         };
 
         Debugger.Break();
