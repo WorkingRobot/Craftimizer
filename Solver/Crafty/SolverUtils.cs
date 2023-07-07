@@ -94,10 +94,6 @@ public static class SolverUtils
         var W = 1f - w;
         var CVector = new Vector<float>(C);
 
-        Span<float> scoreSums = stackalloc float[vecLength];
-        Span<int> visits = stackalloc int[vecLength];
-        Span<float> maxScores = stackalloc float[vecLength];
-
         var max = (0, 0);
         var maxScore = 0f;
         for (var i = 0; length > 0; ++i)
