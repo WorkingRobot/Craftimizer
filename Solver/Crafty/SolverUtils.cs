@@ -1,9 +1,9 @@
-using Craftimizer.Simulator.Actions;
 using Craftimizer.Simulator;
-using Node = Craftimizer.Solver.Crafty.ArenaNode<Craftimizer.Solver.Crafty.SimulationNode>;
+using Craftimizer.Simulator.Actions;
 using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using Node = Craftimizer.Solver.Crafty.ArenaNode<Craftimizer.Solver.Crafty.SimulationNode>;
 
 namespace Craftimizer.Solver.Crafty;
 public static class SolverUtils
@@ -73,7 +73,7 @@ public static class SolverUtils
         var actions = new List<ActionType>();
         while (node.Children.Count != 0)
         {
-            node = node.ChildAt(ChildMaxScore(ref node.ChildScores));
+            node = node.ChildAt(ChildMaxScore(ref node.ChildScores))!;
 
             if (node.State.Action != null)
                 actions.Add(node.State.Action.Value);
@@ -81,6 +81,23 @@ public static class SolverUtils
 
         return (actions, node.State);
     }
+
+    // Calculates the best child node to explore next
+    // Exploitation: ((1 - w) * (s / v)) + (w * m)
+    // Exploration: sqrt(c * ln(V) / v)
+    // w = maxScoreWeightingConstant
+    // s = score sum
+    // m = max score
+    // v = visits
+    // V = parentVisits
+    // c = explorationConstant
+
+    // Somewhat based off of https://en.wikipedia.org/wiki/Monte_Carlo_tree_search#Exploration_and_exploitation
+    // Here, w_i = (1-w)*score sum
+    // n_i = visits
+    // max score is tacked onto it
+    // N_i = parent visits
+    // c = exploration constant (but crafty places it inside the sqrt..?)
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -135,8 +152,8 @@ public static class SolverUtils
         var currentActions = expandedNode.State.AvailableActions;
 
         byte actionCount = 0;
-        Span<ActionType> actions = stackalloc ActionType[config.MaxStepCount - currentState.ActionCount];
-        while (true)
+        Span<ActionType> actions = stackalloc ActionType[Math.Min(config.MaxStepCount - currentState.ActionCount, config.MaxRolloutStepCount)];
+        while (actionCount < actions.Length)
         {
             if (SimulationNode.GetCompletionState(currentCompletionState, currentActions) != CompletionState.Incomplete)
                 break;
@@ -195,6 +212,50 @@ public static class SolverUtils
             sim.CompletionState,
             sim.AvailableActionsHeuristic(strict)
         ));
+    }
+
+    public static (List<ActionType> Actions, SimulationState State) SearchStepwiseForked<S>(SolverConfig config, int forkCount, SimulationInput input, Action<ActionType>? actionCallback, CancellationToken token = default) where S : ISolver =>
+        SearchStepwiseForked<S>(config, forkCount, new SimulationState(input), actionCallback, token);
+
+    public static (List<ActionType> Actions, SimulationState State) SearchStepwiseForked<S>(SolverConfig config, int forkCount, SimulationState state, Action<ActionType>? actionCallback, CancellationToken token = default) where S : ISolver
+    {
+        var actions = new List<ActionType>();
+        var sim = new Simulator(state, config.MaxStepCount);
+        while (!sim.IsComplete)
+        {
+            if (token.IsCancellationRequested)
+                break;
+
+            var tasks = new Task<(float score, List<ActionType> actions, SimulationState state)>[forkCount];
+            for (var i = 0; i < forkCount; ++i)
+                tasks[i] = Task.Run(() =>
+                {
+                    var rootNode = CreateRootNode(config, state, true);
+                    RootScores rootScores = new();
+
+                    S.Search(ref config, rootScores, rootNode, token);
+                    var (solution_actions, solution_node) = Solution(rootNode);
+
+                    return (rootScores.MaxScore, solution_actions, solution_node.State);
+                }, token);
+            Task.WaitAll(tasks, CancellationToken.None);
+
+            var (score, solution_actions, solution_state) = tasks.Select(t => t.Result).MaxBy(r => r.score);
+
+            if (score >= 1.0)
+            {
+                actions.AddRange(solution_actions);
+                return (actions, solution_state);
+            }
+
+            var chosen_action = solution_actions[0];
+            (_, state) = sim.Execute(state, chosen_action);
+            actions.Add(chosen_action);
+
+            actionCallback?.Invoke(chosen_action);
+        }
+
+        return (actions, state);
     }
 
     public static (List<ActionType> Actions, SimulationState State) SearchStepwise<S>(SolverConfig config, SimulationInput input, Action<ActionType>? actionCallback, CancellationToken token = default) where S : ISolver =>

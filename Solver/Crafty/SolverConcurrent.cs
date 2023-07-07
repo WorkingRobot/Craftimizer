@@ -33,6 +33,11 @@ public sealed class SolverConcurrent : ISolver
             {
                 nodeVisits = node.ChildScores.GetVisits(at.Value);
                 node = node.ChildAt(at.Value);
+                if (node == null)
+                {
+                    node = rootNode;
+                    nodeVisits = rootNodeVisits;
+                }
             }
             else
             {

@@ -20,15 +20,15 @@ public sealed class ArenaNode<T> where T : struct
         Parent = parent;
     }
 
-    public ArenaNode<T> ChildAt((int arrayIdx, int subIdx) at) =>
-        Children.Data[at.arrayIdx][at.subIdx];
+    public ArenaNode<T>? ChildAt((int arrayIdx, int subIdx) at) =>
+        Children.Data?[at.arrayIdx]?[at.subIdx];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ArenaNode<T> AddConcurrent(T state)
     {
         var node = new ArenaNode<T>(state, this);
-        Children.AddConcurrent(node);
         ChildScores.AddConcurrent();
+        Children.AddConcurrent(node);
         return node;
     }
 
@@ -36,8 +36,8 @@ public sealed class ArenaNode<T> where T : struct
     public ArenaNode<T> Add(T state)
     {
         var node = new ArenaNode<T>(state, this);
-        Children.Add(node);
         ChildScores.Add();
+        Children.Add(node);
         return node;
     }
 }

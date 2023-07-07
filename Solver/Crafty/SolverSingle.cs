@@ -25,7 +25,7 @@ public sealed class SolverSingle : ISolver
             // select the node with the highest score
             var at = EvalBestChild(ref config, nodeVisits, ref node.ChildScores);
             nodeVisits = node.ChildScores.GetVisits(at);
-            node = node.ChildAt(at);
+            node = node.ChildAt(at)!;
         }
     }
 

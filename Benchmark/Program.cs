@@ -46,14 +46,16 @@ internal static class Program
 
         var config = new SolverConfig()
         {
-            Iterations = 1_000_000,
+            Iterations = 100_000,
             ThreadCount = 8,
         };
 
         Debugger.Break();
         var s = Stopwatch.StartNew();
-        if (true)
-            _ = SolverUtils.SearchStepwise<SolverSingle>(config, input, a => Console.WriteLine(a));
+        if (true) {
+            (_, var state) = SolverUtils.SearchStepwise<SolverSingle>(config, input, a => Console.WriteLine(a));
+            Console.WriteLine($"Qual: {state.Quality}/{state.Input.Recipe.MaxQuality}");
+        }
         else
         {
             (var actions, _) = SolverUtils.SearchOneshot<SolverConcurrent>(config, input);
