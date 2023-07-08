@@ -11,7 +11,8 @@ public readonly record struct SolverConfig
     public float ExplorationConstant { get; init; }
     public int MaxStepCount { get; init; }
     public int MaxRolloutStepCount { get; init; }
-    public int ThreadCount { get; init; }
+    public int ForkCount { get; init; }
+    public bool StrictActions { get; init; }
 
     public SolverConfig()
     {
@@ -21,6 +22,7 @@ public readonly record struct SolverConfig
         ExplorationConstant = 4;
         MaxStepCount = 25;
         MaxRolloutStepCount = MaxStepCount;
-        ThreadCount = Environment.ProcessorCount;
+        ForkCount = Environment.ProcessorCount;
+        StrictActions = true;
     }
 }

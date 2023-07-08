@@ -46,22 +46,22 @@ internal static class Program
 
         var config = new SolverConfig()
         {
-            Iterations = 30_000,
-            ThreadCount = 8,
+            Iterations = 300_000,
+            ForkCount = 8,
         };
 
         Debugger.Break();
         var s = Stopwatch.StartNew();
         if (true) {
-            (_, var state) = Solver.Crafty.Solver.SearchStepwise(config, input, a => Console.WriteLine(a));
+            (_, var state) = Solver.Crafty.Solver.SearchStepwiseForked(config, input, a => Console.WriteLine(a));
             Console.WriteLine($"Qual: {state.Quality}/{state.Input.Recipe.MaxQuality}");
         }
         else
         {
-            //(var actions, _) = SolverUtils.SearchOneshot<SolverConcurrent>(config, input);
-            //foreach (var action in actions)
-            //    Console.Write($">{action.IntName()}");
-            //Console.WriteLine();
+            var (actions, state) = Solver.Crafty.Solver.SearchOneshotForked(config, input);
+            foreach (var action in actions)
+                Console.WriteLine(action);
+            Console.WriteLine($"Qual: {state.Quality}/{state.Input.Recipe.MaxQuality}");
         }
         s.Stop();
         Console.WriteLine($"{s.Elapsed.TotalMilliseconds:0.00}");

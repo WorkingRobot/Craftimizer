@@ -95,9 +95,9 @@ public sealed class Simulator : SimulatorNoRandom
                 return false;
 
             // use First Turn actions if it's available and the craft is difficult
-            if (baseAction.Category != ActionCategory.FirstTurn &&
+            if (IsFirstStep &&
                 Input.Recipe.ClassJobLevel == 90 &&
-                StepCount == 1 &&
+                baseAction.Category != ActionCategory.FirstTurn &&
                 CP > 10)
                 return false;
 
@@ -105,6 +105,11 @@ public sealed class Simulator : SimulatorNoRandom
             if (HasEffect(EffectType.Veneration) &&
                 !baseAction.IncreasesProgress &&
                 baseAction.IncreasesQuality)
+                return false;
+
+            // don't allow pure quality moves when it won't be able to finish the craft
+            if (baseAction.IncreasesQuality &&
+                CalculateDurabilityCost(baseAction.DurabilityCost) > Durability)
                 return false;
 
             if (baseAction.IncreasesProgress)
