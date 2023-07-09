@@ -12,6 +12,7 @@ public readonly record struct SolverConfig
     public int MaxStepCount { get; init; }
     public int MaxRolloutStepCount { get; init; }
     public int ForkCount { get; init; }
+    public int FurcatedActionCount { get; init; }
     public bool StrictActions { get; init; }
 
     public SolverConfig()
@@ -23,6 +24,7 @@ public readonly record struct SolverConfig
         MaxStepCount = 25;
         MaxRolloutStepCount = MaxStepCount;
         ForkCount = Environment.ProcessorCount;
+        FurcatedActionCount = ForkCount / 2;
         StrictActions = true;
     }
 }

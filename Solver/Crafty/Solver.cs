@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Node = Craftimizer.Solver.Crafty.ArenaNode<Craftimizer.Solver.Crafty.SimulationNode>;
 
 namespace Craftimizer.Solver.Crafty;
@@ -267,10 +268,80 @@ public sealed class Solver
         }
     }
 
-    public static (List<ActionType> Actions, SimulationState State) SearchStepwiseForked(SolverConfig config, SimulationInput input, Action<ActionType>? actionCallback, CancellationToken token = default) =>
+    public static (List<ActionType> Actions, SimulationState State) SearchStepwiseFurcated(SolverConfig config, SimulationInput input, CancellationToken token = default) =>
+        SearchStepwiseFurcated(config, new SimulationState(input), token);
+
+    public static (List<ActionType> Actions, SimulationState State) SearchStepwiseFurcated(SolverConfig config, SimulationState state, CancellationToken token = default)
+    {
+        var bestSims = new List<(float Score, (List<ActionType> Actions, SimulationState State) Result)>();
+
+        var sim = new Simulator(state, config.MaxStepCount);
+
+        var activeStates = new List<(List<ActionType> Actions, SimulationState State)>() { (new(), state) };
+
+        while (activeStates.Count != 0)
+        {
+            if (token.IsCancellationRequested)
+                break;
+
+            var s = Stopwatch.StartNew();
+            var tasks = new List<Task<(float MaxScore, int FurcatedActionIdx, (List<ActionType> Actions, SimulationNode Node) Solution)>>(config.ForkCount);
+            for (var i = 0; i < config.ForkCount; i++)
+            {
+                var stateIdx = (int)((float)i / config.ForkCount * activeStates.Count);
+                var st = activeStates[stateIdx];
+                tasks.Add(
+                    Task.Run(() =>
+                    {
+                        var solver = new Solver(config, activeStates[stateIdx].State);
+                        solver.Search(token, config.Iterations / config.ForkCount);
+                        return (solver.MaxScore, stateIdx, solver.Solution());
+                    }, token)
+                );
+            }
+            Task.WaitAll(tasks.ToArray(), CancellationToken.None);
+            s.Stop();
+
+            var bestActions = tasks.Select(t => t.Result).OrderByDescending(r => r.MaxScore).Take(config.FurcatedActionCount).ToArray();
+
+            var bestAction = bestActions[0];
+            if (bestAction.MaxScore >= config.ScoreStorageThreshold)
+            {
+                var (maxScore, furcatedActionIdx, (solutionActions, solutionNode)) = bestAction;
+                var (activeActions, activeState) = activeStates[furcatedActionIdx];
+
+                activeActions.AddRange(solutionActions);
+                return (activeActions, solutionNode.State);
+            }
+
+            var newStates = new List<(List<ActionType> Actions, SimulationState State)>(config.FurcatedActionCount);
+            for (var i = 0; i < bestActions.Length; ++i)
+            {
+                var (maxScore, furcatedActionIdx, (solutionActions, solutionNode)) = bestActions[i];
+                var (activeActions, activeState) = activeStates[furcatedActionIdx];
+
+                var chosenAction = solutionActions[0];
+
+                var newActions = new List<ActionType>(activeActions) { chosenAction };
+                var newState = sim.Execute(activeState, chosenAction).NewState;
+                if (sim.IsComplete)
+                    bestSims.Add((maxScore, (newActions, newState)));
+                else
+                    newStates.Add((newActions, newState));
+            }
+
+            activeStates = newStates;
+
+            Console.WriteLine($"{s.Elapsed.TotalMilliseconds:0.00}ms {config.Iterations / config.ForkCount / s.Elapsed.TotalSeconds / 1000:0.00} kI/s/t");
+        }
+
+        return bestSims.MaxBy(s => s.Score).Result;
+    }
+
+    public static (List<ActionType> Actions, SimulationState State) SearchStepwiseForked(SolverConfig config, SimulationInput input, Action<ActionType>? actionCallback = null, CancellationToken token = default) =>
         SearchStepwiseForked(config, new SimulationState(input), actionCallback, token);
 
-    public static (List<ActionType> Actions, SimulationState State) SearchStepwiseForked(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback, CancellationToken token = default)
+    public static (List<ActionType> Actions, SimulationState State) SearchStepwiseForked(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
     {
         var actions = new List<ActionType>();
         var sim = new Simulator(state, config.MaxStepCount);
@@ -305,7 +376,7 @@ public sealed class Solver
 
             var chosen_action = solutionActions[0];
             actionCallback?.Invoke(chosen_action);
-            Console.WriteLine($"{s.Elapsed.TotalMilliseconds:0.00}ms {config.Iterations / s.Elapsed.TotalSeconds / 1000:0.00} kI/s");
+            Console.WriteLine($"{s.Elapsed.TotalMilliseconds:0.00}ms {config.Iterations / config.ForkCount / s.Elapsed.TotalSeconds / 1000:0.00} kI/s/t");
 
             (_, state) = sim.Execute(state, chosen_action);
             actions.Add(chosen_action);
@@ -314,10 +385,10 @@ public sealed class Solver
         return (actions, state);
     }
 
-    public static (List<ActionType> Actions, SimulationState State) SearchStepwise(SolverConfig config, SimulationInput input, Action<ActionType>? actionCallback, CancellationToken token = default) =>
+    public static (List<ActionType> Actions, SimulationState State) SearchStepwise(SolverConfig config, SimulationInput input, Action<ActionType>? actionCallback = null, CancellationToken token = default) =>
         SearchStepwise(config, new SimulationState(input), actionCallback, token);
 
-    public static (List<ActionType> Actions, SimulationState State) SearchStepwise(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback, CancellationToken token = default)
+    public static (List<ActionType> Actions, SimulationState State) SearchStepwise(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
     {
         var actions = new List<ActionType>();
         var sim = new Simulator(state, config.MaxStepCount);

@@ -32,6 +32,24 @@ public struct SimulationNode
 
     public readonly float? CalculateScore(int maxStepCount) => CalculateScoreForState(State, SimulationCompletionState, maxStepCount);
 
+    private static bool CanByregot(SimulationState state)
+    {
+        if (state.ActiveEffects.InnerQuiet == 0)
+            return false;
+
+        var wasteNot = Math.Max(state.ActiveEffects.WasteNot, state.ActiveEffects.WasteNot2);
+        var manipulation = state.ActiveEffects.Manipulation;
+        var durability = state.Durability;
+        durability -= wasteNot-- > 0 ? 5 : 10;
+        if (durability <= 0)
+            return false;
+        if (manipulation-- > 0)
+            durability += 5;
+        durability -= wasteNot-- > 0 ? 5 : 10;
+
+        return durability >= 0;
+    }
+
     public static float? CalculateScoreForState(SimulationState state, CompletionState completionState, int maxStepCount)
     {
         if (completionState != CompletionState.ProgressComplete)
@@ -52,9 +70,11 @@ public struct SimulationNode
             state.Input.Recipe.MaxProgress
         );
 
+        var byregotBonus = CanByregot(state) ? (state.ActiveEffects.InnerQuiet * .2f + 1) * state.Input.BaseQualityGain : 0;
+        var quality = Math.Clamp(state.Quality + byregotBonus, 0, state.Input.Recipe.MaxQuality);
         var qualityScore = Apply(
             qualityBonus,
-            state.Quality,
+            quality,
             state.Input.Recipe.MaxQuality
         );
 
