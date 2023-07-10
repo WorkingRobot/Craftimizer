@@ -45,8 +45,18 @@ internal static class Program
         var config = new SolverConfig()
         {
             Iterations = 100_000,
-            ForkCount = 8,
+            ForkCount = 32,
+            FurcatedActionCount = 16,
+            MaxStepCount = 30,
         };
+
+        var sim = new SimulatorNoRandom(new(input));
+        (_, var state) = sim.Execute(new(input), ActionType.MuscleMemory);
+        Console.WriteLine($"{state.Quality} {state.CP} {state.Progress}");
+        //return;
+        var (_, s) = Solver.Crafty.Solver.SearchStepwiseFurcated(config, state, a => Console.WriteLine(a));
+        Console.WriteLine($"Qual: {s.Quality}/{s.Input.Recipe.MaxQuality}");
+        return;
 
         for (var i = 0; i < 7; ++i)
         {

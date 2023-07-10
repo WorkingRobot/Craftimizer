@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading.Tasks;
 using Node = Craftimizer.Solver.Crafty.ArenaNode<Craftimizer.Solver.Crafty.SimulationNode>;
 
@@ -251,28 +252,93 @@ public sealed class Solver
         }
     }
 
+    private void ShowAllNodes()
+    {
+        static void ShowNodes(StringBuilder b, Node node, Stack<Node> path)
+        {
+            path.Push(node);
+            b.AppendLine($"{new string(' ', path.Count)}{node.State.Action}");
+            {
+                for (var i = 0; i < node.Children.Count; ++i)
+                {
+                    var n = node.ChildAt((i >> 3, i & 7))!;
+                    ShowNodes(b, n, path);
+                }
+                path.Pop();
+            }
+        }
+        var b = new StringBuilder();
+        ShowNodes(b, rootNode, new());
+        Console.WriteLine(b.ToString());
+    }
+
+    private bool AllNodesComplete()
+    {
+        static bool NodesIncomplete(Node node, Stack<Node> path)
+        {
+            path.Push(node);
+            if (node.Children.Count == 0)
+            {
+                if (!node.State.AvailableActions.IsEmpty)
+                    return true;
+            }
+            else
+            {
+                for(var i = 0; i < node.Children.Count; ++i)
+                {
+                    var n = node.ChildAt((i >> 3, i & 7))!;
+                    if (NodesIncomplete(n, path))
+                        return true;
+                }
+                path.Pop();
+            }
+            return false;
+        }
+        return !NodesIncomplete(rootNode, new());
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void Search(CancellationToken token, int iterations)
     {
         Simulator simulator = new(rootNode.State.State, config.MaxStepCount);
         var random = rootNode.State.State.Input.Random;
-        for (var i = 0; i < iterations; i++)
+        var n = 0;
+        for (var i = 0; i < iterations || MaxScore == 0; i++)
         {
             if (token.IsCancellationRequested)
                 break;
 
             var selectedNode = Select();
             var (endNode, score) = ExpandAndRollout(random, simulator, selectedNode);
+            if (MaxScore == 0)
+            {
+                if (endNode == selectedNode)
+                {
+                    if (n++ > 5000)
+                    {
+                        n = 0;
+                        if (AllNodesComplete())
+                        {
+                            //Console.WriteLine("All nodes solved for. Can't find a valid solution.");
+                            //ShowAllNodes();
+                            return;
+                        }
+                    }
+                }
+                else
+                    n = 0;
+            }
 
             Backpropagate(endNode, score);
         }
     }
 
-    public static (List<ActionType> Actions, SimulationState State) SearchStepwiseFurcated(SolverConfig config, SimulationInput input, CancellationToken token = default) =>
-        SearchStepwiseFurcated(config, new SimulationState(input), token);
+    public static (List<ActionType> Actions, SimulationState State) SearchStepwiseFurcated(SolverConfig config, SimulationInput input, Action<ActionType>? actionCallback = null, CancellationToken token = default) =>
+        SearchStepwiseFurcated(config, new SimulationState(input), actionCallback, token);
 
-    public static (List<ActionType> Actions, SimulationState State) SearchStepwiseFurcated(SolverConfig config, SimulationState state, CancellationToken token = default)
+    public static (List<ActionType> Actions, SimulationState State) SearchStepwiseFurcated(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
     {
+        var definiteActionCount = 0;
         var bestSims = new List<(float Score, (List<ActionType> Actions, SimulationState State) Result)>();
 
         var sim = new Simulator(state, config.MaxStepCount);
@@ -330,12 +396,47 @@ public sealed class Solver
                     newStates.Add((newActions, newState));
             }
 
+            if (bestSims.Count == 0 && newStates.Count != 0)
+            {
+                var definiteCount = definiteActionCount;
+                var equalCount = int.MaxValue;
+                var refActions = newStates[0].Actions;
+                for(var i = 1; i < newStates.Count; ++i)
+                {
+                    var cmpActions = newStates[i].Actions;
+                    var possibleCount = Math.Min(Math.Min(refActions.Count, cmpActions.Count), equalCount);
+                    var completelyEqual = true;
+                    for (var j = definiteCount; j < possibleCount; ++j)
+                    {
+                        if (refActions[j] != cmpActions[j])
+                        {
+                            equalCount = j;
+                            completelyEqual = false;
+                            break;
+                        }
+                    }
+                    if (completelyEqual)
+                        equalCount = possibleCount;
+                }
+                if (definiteCount != equalCount)
+                {
+                    for (var i = definiteCount; i < equalCount; ++i)
+                        actionCallback?.Invoke(refActions[i]);
+
+                    definiteActionCount = equalCount;
+                }
+            }
+
             activeStates = newStates;
 
             Console.WriteLine($"{s.Elapsed.TotalMilliseconds:0.00}ms {config.Iterations / config.ForkCount / s.Elapsed.TotalSeconds / 1000:0.00} kI/s/t");
         }
 
-        return bestSims.MaxBy(s => s.Score).Result;
+        var result = bestSims.MaxBy(s => s.Score).Result;
+        for (var i = definiteActionCount; i < result.Actions.Count; ++i)
+            actionCallback?.Invoke(result.Actions[i]);
+
+        return result;
     }
 
     public static (List<ActionType> Actions, SimulationState State) SearchStepwiseForked(SolverConfig config, SimulationInput input, Action<ActionType>? actionCallback = null, CancellationToken token = default) =>
