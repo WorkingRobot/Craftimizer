@@ -57,13 +57,18 @@ public class Simulator
             return ActionResponse.CannotUseAction;
         }
 
+        ExecuteForced(action, baseAction);
+
+        return ActionResponse.UsedAction;
+    }
+
+    public void ExecuteForced(ActionType action, BaseAction baseAction)
+    {
         baseAction.Use(this);
         ActionStates.MutateState(action);
         ActionCount++;
 
         ActiveEffects.DecrementDuration();
-
-        return ActionResponse.UsedAction;
     }
 
     public int GetEffectStrength(EffectType effect) =>

@@ -19,6 +19,10 @@ public sealed class Simulator : SimulatorNoRandom
 
     public static readonly ActionType[] AcceptedActions = new[]
     {
+        ActionType.StandardTouchCombo,
+        ActionType.AdvancedTouchCombo,
+        ActionType.FocusedTouchCombo,
+        ActionType.FocusedSynthesisCombo,
         ActionType.TrainedFinesse,
         ActionType.PrudentSynthesis,
         ActionType.Groundwork,
@@ -99,6 +103,11 @@ public sealed class Simulator : SimulatorNoRandom
                 Input.Recipe.ClassJobLevel == 90 &&
                 baseAction.Category != ActionCategory.FirstTurn &&
                 CP > 10)
+                return false;
+
+            // don't allow combo actions if the combo is already in progress
+            if (ActionStates.TouchComboIdx != 0 &&
+                (action == ActionType.StandardTouchCombo || action == ActionType.AdvancedTouchCombo))
                 return false;
 
             // don't allow pure quality moves under Veneration

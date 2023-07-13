@@ -7,6 +7,7 @@ public enum ActionCategory
     Quality,
     Durability,
     Buffs,
+    Combo,
     Other
 }
 

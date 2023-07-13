@@ -38,7 +38,11 @@ public sealed partial class SimulatorWindow : Window, IDisposable
 
     static SimulatorWindow()
     {
-        SortedActions = Enum.GetValues<ActionType>().GroupBy(a => a.Category()).Select(g => (g.Key, g.OrderBy(a => a.Level()).ToArray())).ToArray();
+        SortedActions = Enum.GetValues<ActionType>()
+            .Where(a => a.Category() != ActionCategory.Combo)
+            .GroupBy(a => a.Category())
+            .Select(g => (g.Key, g.OrderBy(a => a.Level()).ToArray()))
+            .ToArray();
     }
 
     public override void Draw()

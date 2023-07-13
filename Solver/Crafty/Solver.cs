@@ -298,7 +298,7 @@ public sealed class Solver
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void Search(CancellationToken token, int iterations)
+    private void Search(int iterations, CancellationToken token)
     {
         Simulator simulator = new(rootNode.State.State, config.MaxStepCount);
         var random = rootNode.State.State.Input.Random;
@@ -360,7 +360,7 @@ public sealed class Solver
                     Task.Run(() =>
                     {
                         var solver = new Solver(config, activeStates[stateIdx].State);
-                        solver.Search(token, config.Iterations / config.ForkCount);
+                        solver.Search(config.Iterations / config.ForkCount, token);
                         return (solver.MaxScore, stateIdx, solver.Solution());
                     }, token)
                 );
@@ -461,7 +461,7 @@ public sealed class Solver
                 tasks[i] = Task.Run(() =>
                 {
                     var solver = new Solver(config, state);
-                    solver.Search(token, config.Iterations / config.ForkCount);
+                    solver.Search(config.Iterations / config.ForkCount, token);
                     return (solver.MaxScore, solver.Solution());
                 }, token);
             Task.WaitAll(tasks, CancellationToken.None);
@@ -504,7 +504,7 @@ public sealed class Solver
             var solver = new Solver(config, state);
 
             var s = Stopwatch.StartNew();
-            solver.Search(token, config.Iterations);
+            solver.Search(config.Iterations, token);
             s.Stop();
 
             var (solution_actions, solution_node) = solver.Solution();
@@ -536,7 +536,7 @@ public sealed class Solver
             tasks[i] = Task.Run(() =>
             {
                 var solver = new Solver(config, state);
-                solver.Search(token, config.Iterations / config.ForkCount);
+                solver.Search(config.Iterations / config.ForkCount, token);
                 return (solver.MaxScore, solver.Solution());
             }, token);
         Task.WaitAll(tasks, CancellationToken.None);
@@ -551,7 +551,7 @@ public sealed class Solver
     public static (List<ActionType> Actions, SimulationState State) SearchOneshot(SolverConfig config, SimulationState state, CancellationToken token = default)
     {
         var solver = new Solver(config, state);
-        solver.Search(token, config.Iterations);
+        solver.Search(config.Iterations, token);
         var (solution_actions, solution_node) = solver.Solution();
         return (solution_actions, solution_node.State);
     }

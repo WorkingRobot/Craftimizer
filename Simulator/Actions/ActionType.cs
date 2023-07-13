@@ -38,6 +38,11 @@ public enum ActionType : byte
     Veneration,
     WasteNot,
     WasteNot2,
+    
+    StandardTouchCombo,
+    AdvancedTouchCombo,
+    FocusedSynthesisCombo,
+    FocusedTouchCombo,
 }
 
 public static class ActionUtils
@@ -106,6 +111,10 @@ public static class ActionUtils
             ActionType.Veneration => "Veneration",
             ActionType.WasteNot => "Waste Not",
             ActionType.WasteNot2 => "Waste Not II",
+            ActionType.StandardTouchCombo => "Standard Touch Combo",
+            ActionType.AdvancedTouchCombo => "Advanced Touch Combo",
+            ActionType.FocusedSynthesisCombo => "Focused Synthesis Combo",
+            ActionType.FocusedTouchCombo => "Focused Touch Combo",
             _ => me.ToString(),
         };
 }
