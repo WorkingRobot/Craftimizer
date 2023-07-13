@@ -55,10 +55,13 @@ public struct ActionSet
     public readonly bool IsEmpty => bits == 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ActionType SelectRandom(Random random) =>
-        IsDeterministic ?
-            First() :
-            ElementAt(random.Next(Count));
+    public readonly ActionType SelectRandom(Random random)
+    {
+        if (IsDeterministic)
+            return First();
+
+        return ElementAt(random.Next(Count));
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ActionType PopRandom(Random random)

@@ -61,7 +61,7 @@ public sealed class Solver
     }
 
     [Pure]
-    private (List<ActionType> Actions, SimulationNode Node) Solution()
+    private SolverSolution Solution()
     {
         var actions = new List<ActionType>();
         var node = rootNode;
@@ -80,7 +80,7 @@ public sealed class Solver
         //ref var visits = ref node.ParentScores!.Value.Data[at.arrayIdx].Visits.Span[at.subIdx];
         //Console.WriteLine($"{sum} {max} {visits}");
 
-        return (actions, node.State);
+        return new(actions, node.State.State);
     }
 
     [Pure]
@@ -332,17 +332,17 @@ public sealed class Solver
         }
     }
 
-    public static (List<ActionType> Actions, SimulationState State) SearchStepwiseFurcated(SolverConfig config, SimulationInput input, Action<ActionType>? actionCallback = null, CancellationToken token = default) =>
+    public static SolverSolution SearchStepwiseFurcated(SolverConfig config, SimulationInput input, Action<ActionType>? actionCallback = null, CancellationToken token = default) =>
         SearchStepwiseFurcated(config, new SimulationState(input), actionCallback, token);
 
-    public static (List<ActionType> Actions, SimulationState State) SearchStepwiseFurcated(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
+    public static SolverSolution SearchStepwiseFurcated(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
     {
         var definiteActionCount = 0;
-        var bestSims = new List<(float Score, (List<ActionType> Actions, SimulationState State) Result)>();
+        var bestSims = new List<(float Score, SolverSolution Result)>();
 
         var sim = new Simulator(state, config.MaxStepCount);
 
-        var activeStates = new List<(List<ActionType> Actions, SimulationState State)>() { (new(), state) };
+        var activeStates = new List<SolverSolution>() { new(new(), state) };
 
         while (activeStates.Count != 0)
         {
@@ -350,7 +350,7 @@ public sealed class Solver
                 break;
 
             var s = Stopwatch.StartNew();
-            var tasks = new List<Task<(float MaxScore, int FurcatedActionIdx, (List<ActionType> Actions, SimulationNode Node) Solution)>>(config.ForkCount);
+            var tasks = new List<Task<(float MaxScore, int FurcatedActionIdx, SolverSolution Solution)>>(config.ForkCount);
             for (var i = 0; i < config.ForkCount; i++)
             {
                 var stateIdx = (int)((float)i / config.ForkCount * activeStates.Count);
@@ -372,14 +372,14 @@ public sealed class Solver
             var bestAction = bestActions[0];
             if (bestAction.MaxScore >= config.ScoreStorageThreshold)
             {
-                var (maxScore, furcatedActionIdx, (solutionActions, solutionNode)) = bestAction;
+                var (maxScore, furcatedActionIdx, solution) = bestAction;
                 var (activeActions, activeState) = activeStates[furcatedActionIdx];
 
-                activeActions.AddRange(solutionActions);
-                return (activeActions, solutionNode.State);
+                activeActions.AddRange(solution.Actions);
+                return solution with { Actions = activeActions };
             }
 
-            var newStates = new List<(List<ActionType> Actions, SimulationState State)>(config.FurcatedActionCount);
+            var newStates = new List<SolverSolution>(config.FurcatedActionCount);
             for (var i = 0; i < bestActions.Length; ++i)
             {
                 var (maxScore, furcatedActionIdx, (solutionActions, solutionNode)) = bestActions[i];
@@ -393,9 +393,9 @@ public sealed class Solver
                 var newActions = new List<ActionType>(activeActions) { chosenAction };
                 var newState = sim.Execute(activeState, chosenAction).NewState;
                 if (sim.IsComplete)
-                    bestSims.Add((maxScore, (newActions, newState)));
+                    bestSims.Add((maxScore, new(newActions, newState)));
                 else
-                    newStates.Add((newActions, newState));
+                    newStates.Add(new(newActions, newState));
             }
 
             if (bestSims.Count == 0 && newStates.Count != 0)
@@ -435,7 +435,7 @@ public sealed class Solver
         }
 
         if (bestSims.Count == 0)
-            return (new(), state);
+            return new(new(), state);
 
         var result = bestSims.MaxBy(s => s.Score).Result;
         for (var i = definiteActionCount; i < result.Actions.Count; ++i)
@@ -444,10 +444,10 @@ public sealed class Solver
         return result;
     }
 
-    public static (List<ActionType> Actions, SimulationState State) SearchStepwiseForked(SolverConfig config, SimulationInput input, Action<ActionType>? actionCallback = null, CancellationToken token = default) =>
+    public static SolverSolution SearchStepwiseForked(SolverConfig config, SimulationInput input, Action<ActionType>? actionCallback = null, CancellationToken token = default) =>
         SearchStepwiseForked(config, new SimulationState(input), actionCallback, token);
 
-    public static (List<ActionType> Actions, SimulationState State) SearchStepwiseForked(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
+    public static SolverSolution SearchStepwiseForked(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
     {
         var actions = new List<ActionType>();
         var sim = new Simulator(state, config.MaxStepCount);
@@ -461,7 +461,7 @@ public sealed class Solver
 
 
             var s = Stopwatch.StartNew();
-            var tasks = new Task<(float MaxScore, (List<ActionType> Actions, SimulationNode Node) Solution)>[config.ForkCount];
+            var tasks = new Task<(float MaxScore, SolverSolution Solution)>[config.ForkCount];
             for (var i = 0; i < config.ForkCount; ++i)
                 tasks[i] = Task.Run(() =>
                 {
@@ -472,29 +472,29 @@ public sealed class Solver
             Task.WaitAll(tasks, CancellationToken.None);
             s.Stop();
 
-            var (maxScore, (solutionActions, solutionNode)) = tasks.Select(t => t.Result).MaxBy(r => r.MaxScore);
+            var (maxScore, solution) = tasks.Select(t => t.Result).MaxBy(r => r.MaxScore);
 
             if (maxScore >= config.ScoreStorageThreshold)
             {
-                actions.AddRange(solutionActions);
-                return (actions, solutionNode.State);
+                actions.AddRange(solution.Actions);
+                return solution with { Actions = actions };
             }
 
-            var chosen_action = solutionActions[0];
-            actionCallback?.Invoke(chosen_action);
+            var chosenAction = solution.Actions[0];
+            actionCallback?.Invoke(chosenAction);
             Console.WriteLine($"{s.Elapsed.TotalMilliseconds:0.00}ms {config.Iterations / config.ForkCount / s.Elapsed.TotalSeconds / 1000:0.00} kI/s/t");
 
-            (_, state) = sim.Execute(state, chosen_action);
-            actions.Add(chosen_action);
+            (_, state) = sim.Execute(state, chosenAction);
+            actions.Add(chosenAction);
         }
 
-        return (actions, state);
+        return new(actions, state);
     }
 
-    public static (List<ActionType> Actions, SimulationState State) SearchStepwise(SolverConfig config, SimulationInput input, Action<ActionType>? actionCallback = null, CancellationToken token = default) =>
+    public static SolverSolution SearchStepwise(SolverConfig config, SimulationInput input, Action<ActionType>? actionCallback = null, CancellationToken token = default) =>
         SearchStepwise(config, new SimulationState(input), actionCallback, token);
 
-    public static (List<ActionType> Actions, SimulationState State) SearchStepwise(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
+    public static SolverSolution SearchStepwise(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
     {
         var actions = new List<ActionType>();
         var sim = new Simulator(state, config.MaxStepCount);
@@ -512,31 +512,31 @@ public sealed class Solver
             solver.Search(config.Iterations, token);
             s.Stop();
 
-            var (solution_actions, solution_node) = solver.Solution();
+            var solution = solver.Solution();
 
             if (solver.MaxScore >= config.ScoreStorageThreshold)
             {
-                actions.AddRange(solution_actions);
-                return (actions, solution_node.State);
+                actions.AddRange(solution.Actions);
+                return solution with { Actions = actions };
             }
 
-            var chosen_action = solution_actions[0];
-            actionCallback?.Invoke(chosen_action);
+            var chosenAction = solution.Actions[0];
+            actionCallback?.Invoke(chosenAction);
             Console.WriteLine($"{s.Elapsed.TotalMilliseconds:0.00}ms {config.Iterations / s.Elapsed.TotalSeconds / 1000:0.00} kI/s");
 
-            (_, state) = sim.Execute(state, chosen_action);
-            actions.Add(chosen_action);
+            (_, state) = sim.Execute(state, chosenAction);
+            actions.Add(chosenAction);
         }
 
-        return (actions, state);
+        return new(actions, state);
     }
 
-    public static (List<ActionType> Actions, SimulationState State) SearchOneshotForked(SolverConfig config, SimulationInput input, CancellationToken token = default) =>
-        SearchOneshotForked(config, new SimulationState(input), token);
+    public static SolverSolution SearchOneshotForked(SolverConfig config, SimulationInput input, Action<ActionType>? actionCallback = null, CancellationToken token = default) =>
+        SearchOneshotForked(config, new SimulationState(input), actionCallback, token);
 
-    public static (List<ActionType> Actions, SimulationState State) SearchOneshotForked(SolverConfig config, SimulationState state, CancellationToken token = default)
+    public static SolverSolution SearchOneshotForked(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
     {
-        var tasks = new Task<(float MaxScore, (List<ActionType> Actions, SimulationNode Node) Solution)>[config.ForkCount];
+        var tasks = new Task<(float MaxScore, SolverSolution Solution)>[config.ForkCount];
         for (var i = 0; i < config.ForkCount; ++i)
             tasks[i] = Task.Run(() =>
             {
@@ -546,18 +546,24 @@ public sealed class Solver
             }, token);
         Task.WaitAll(tasks, CancellationToken.None);
 
-        var (solutionActions, solutionNode) = tasks.Select(t => t.Result).MaxBy(r => r.MaxScore).Solution;
-        return (solutionActions, solutionNode.State);
+        var solution = tasks.Select(t => t.Result).MaxBy(r => r.MaxScore).Solution;
+        foreach (var action in solution.Actions)
+            actionCallback?.Invoke(action);
+
+        return solution;
     }
 
-    public static (List<ActionType> Actions, SimulationState State) SearchOneshot(SolverConfig config, SimulationInput input, CancellationToken token = default) =>
-        SearchOneshot(config, new SimulationState(input), token);
+    public static SolverSolution SearchOneshot(SolverConfig config, SimulationInput input, Action<ActionType>? actionCallback = null, CancellationToken token = default) =>
+        SearchOneshot(config, new SimulationState(input), actionCallback, token);
 
-    public static (List<ActionType> Actions, SimulationState State) SearchOneshot(SolverConfig config, SimulationState state, CancellationToken token = default)
+    public static SolverSolution SearchOneshot(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
     {
         var solver = new Solver(config, state);
         solver.Search(config.Iterations, token);
-        var (solution_actions, solution_node) = solver.Solution();
-        return (solution_actions, solution_node.State);
+        var solution = solver.Solution();
+        foreach (var action in solution.Actions)
+            actionCallback?.Invoke(action);
+
+        return solution;
     }
 }
