@@ -12,7 +12,6 @@ public struct SimulationNode
     public readonly CompletionState SimulationCompletionState;
 
     public ActionSet AvailableActions;
-    public NodeScores Scores;
 
     public readonly CompletionState CompletionState => GetCompletionState(SimulationCompletionState, AvailableActions);
 
@@ -31,9 +30,18 @@ public struct SimulationNode
         CompletionState.NoMoreActions :
         simCompletionState;
 
-    public readonly float? CalculateScore(int maxStepCount) => CalculateScoreForState(State, SimulationCompletionState, maxStepCount);
+    public readonly float? CalculateScore(SolverConfig config) =>
+        CalculateScoreForState(State, SimulationCompletionState, config);
 
-    public static float? CalculateScoreForState(SimulationState state, CompletionState completionState, int maxStepCount)
+    private static bool CanByregot(SimulationState state)
+    {
+        if (state.ActiveEffects.InnerQuiet == 0)
+            return false;
+
+        return BaseAction.VerifyDurability2(state, 10);
+    }
+
+    public static float? CalculateScoreForState(SimulationState state, CompletionState completionState, SolverConfig config)
     {
         if (completionState != CompletionState.ProgressComplete)
             return null;
@@ -41,38 +49,33 @@ public struct SimulationNode
         static float Apply(float bonus, float value, float target) =>
             bonus * Math.Min(1f, value / target);
 
-        var progressBonus = 0.20f;
-        var qualityBonus = 0.65f;
-        var durabilityBonus = 0.05f;
-        var cpBonus = 0.05f;
-        var fewerStepsBonus = 0.05f;
-
         var progressScore = Apply(
-            progressBonus,
+            config.ScoreProgressBonus,
             state.Progress,
             state.Input.Recipe.MaxProgress
         );
 
+        var byregotBonus = CanByregot(state) ? (state.ActiveEffects.InnerQuiet * .2f + 1) * state.Input.BaseQualityGain : 0;
         var qualityScore = Apply(
-            qualityBonus,
-            state.Quality,
+            config.ScoreQualityBonus,
+            state.Quality + byregotBonus,
             state.Input.Recipe.MaxQuality
         );
 
         var durabilityScore = Apply(
-            durabilityBonus,
+            config.ScoreDurabilityBonus,
             state.Durability,
             state.Input.Recipe.MaxDurability
         );
 
         var cpScore = Apply(
-            cpBonus,
+            config.ScoreCPBonus,
             state.CP,
             state.Input.Stats.CP
         );
 
         var fewerStepsScore =
-            fewerStepsBonus * (1f - ((float)(state.ActionCount + 1) / maxStepCount));
+            config.ScoreFewerStepsBonus * (1f - ((float)(state.ActionCount + 1) / config.MaxStepCount));
 
         return progressScore + qualityScore + durabilityScore + cpScore + fewerStepsScore;
     }

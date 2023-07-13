@@ -101,9 +101,8 @@ internal static class Intrinsics
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int NthBitSet(uint value, int n)
     {
-        // TODO: debug
         if (n >= BitOperations.PopCount(value))
-            throw new ArgumentException(null, nameof(value));
+            return 32;
 
         return Bmi2.IsSupported ?
             NthBitSetBMI2(value, n) :
@@ -124,29 +123,5 @@ internal static class Intrinsics
         for (var i = 0; i < Vector<float>.Count; ++i)
             result[i] = MathF.ReciprocalSqrtEstimate(data[i]);
         return new(result);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CASMax(ref float location, float newValue)
-    {
-        float snapshot;
-        do
-        {
-            snapshot = location;
-            if (snapshot >= newValue) return;
-        } while (Interlocked.CompareExchange(ref location, newValue, snapshot) != snapshot);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CASAdd(ref float location, float value)
-    {
-        float snapshot;
-        float newValue;
-        do
-        {
-            snapshot = location;
-            newValue = snapshot + value;
-        }
-        while (Interlocked.CompareExchange(ref location, newValue, snapshot) != snapshot);
     }
 }

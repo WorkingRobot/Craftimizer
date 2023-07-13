@@ -19,6 +19,10 @@ public sealed class Simulator : SimulatorNoRandom
 
     public static readonly ActionType[] AcceptedActions = new[]
     {
+        ActionType.StandardTouchCombo,
+        ActionType.AdvancedTouchCombo,
+        ActionType.FocusedTouchCombo,
+        ActionType.FocusedSynthesisCombo,
         ActionType.TrainedFinesse,
         ActionType.PrudentSynthesis,
         ActionType.Groundwork,
@@ -94,10 +98,27 @@ public sealed class Simulator : SimulatorNoRandom
                 baseAction.IncreasesQuality)
                 return false;
 
+            // use First Turn actions if it's available and the craft is difficult
+            if (IsFirstStep &&
+                Input.Recipe.ClassJobLevel == 90 &&
+                baseAction.Category != ActionCategory.FirstTurn &&
+                CP > 10)
+                return false;
+
+            // don't allow combo actions if the combo is already in progress
+            if (ActionStates.TouchComboIdx != 0 &&
+                (action == ActionType.StandardTouchCombo || action == ActionType.AdvancedTouchCombo))
+                return false;
+
             // don't allow pure quality moves under Veneration
             if (HasEffect(EffectType.Veneration) &&
                 !baseAction.IncreasesProgress &&
                 baseAction.IncreasesQuality)
+                return false;
+
+            // don't allow pure quality moves when it won't be able to finish the craft
+            if (baseAction.IncreasesQuality &&
+                CalculateDurabilityCost(baseAction.DurabilityCost) > Durability)
                 return false;
 
             if (baseAction.IncreasesProgress)
@@ -130,7 +151,7 @@ public sealed class Simulator : SimulatorNoRandom
                 return false;
 
             if (action == ActionType.Observe &&
-                CP < 5)
+                CP < 12)
                 return false;
 
             if (action == ActionType.MastersMend &&

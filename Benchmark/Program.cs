@@ -1,8 +1,6 @@
-using BenchmarkDotNet.Running;
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Craftimizer.Solver.Crafty;
-using ObjectLayoutInspector;
 using System.Diagnostics;
 
 namespace Craftimizer.Benchmark;
@@ -18,14 +16,15 @@ internal static class Program
         //return;
 
         var input = new SimulationInput(
-            new CharacterStats {
-                Craftsmanship = 4041,
-                Control = 3905,
-                CP = 609,
+            new CharacterStats
+            {
+                Craftsmanship = 4078,
+                Control = 3897,
+                CP = 704,
                 Level = 90,
                 CanUseManipulation = true,
-                HasSplendorousBuff = true,
-                IsSpecialist = true,
+                HasSplendorousBuff = false,
+                IsSpecialist = false,
                 CLvl = 560,
             },
             new RecipeInfo()
@@ -46,23 +45,98 @@ internal static class Program
 
         var config = new SolverConfig()
         {
-            Iterations = 1_000_000,
-            ThreadCount = 8,
+            Iterations = 100_000,
+            ForkCount = 32,
+            FurcatedActionCount = 16,
+            MaxStepCount = 30,
         };
 
-        Debugger.Break();
+        var sim = new SimulatorNoRandom(new(input));
+        (_, var state) = sim.Execute(new(input), ActionType.MuscleMemory);
+        (_, state) = sim.Execute(state, ActionType.PrudentTouch);
+        (_, state) = sim.Execute(state, ActionType.Manipulation);
+        (_, state) = sim.Execute(state, ActionType.Veneration);
+        (_, state) = sim.Execute(state, ActionType.WasteNot);
+        (_, state) = sim.Execute(state, ActionType.Groundwork);
+        (_, state) = sim.Execute(state, ActionType.Groundwork);
+        (_, state) = sim.Execute(state, ActionType.Groundwork);
+        (_, state) = sim.Execute(state, ActionType.Innovation);
+        (_, state) = sim.Execute(state, ActionType.PrudentTouch);
+        (_, state) = sim.Execute(state, ActionType.AdvancedTouchCombo);
+        (_, state) = sim.Execute(state, ActionType.Manipulation);
+        (_, state) = sim.Execute(state, ActionType.Innovation);
+        (_, state) = sim.Execute(state, ActionType.PrudentTouch);
+        (_, state) = sim.Execute(state, ActionType.AdvancedTouchCombo);
+        (_, state) = sim.Execute(state, ActionType.GreatStrides);
+
+        Console.WriteLine($"{state.Quality} {state.CP} {state.Progress} {state.Durability}");
+        //return;
+        var (_, s) = Solver.Crafty.Solver.SearchStepwiseFurcated(config, state, a => Console.WriteLine(a));
+        Console.WriteLine($"Qual: {s.Quality}/{s.Input.Recipe.MaxQuality}");
+        return;
+
+        for (var i = 0; i < 7; ++i)
+        {
+            Console.WriteLine($"{i + 1}");
+            var c = config with { FurcatedActionCount = i + 1 };
+            Benchmark(() => Solver.Crafty.Solver.SearchStepwiseFurcated(c, input).State);
+        }
+    }
+
+    private static void Benchmark(Func<SimulationState> search)
+    {
         var s = Stopwatch.StartNew();
-        if (true)
-            _ = SolverUtils.SearchStepwise<SolverSingle>(config, input, a => Console.WriteLine(a));
+        List<int> q = new();
+        for (var i = 0; i < 60; ++i)
+        {
+            var state = search();
+            //Console.WriteLine($"Qual: {state.Quality}/{state.Input.Recipe.MaxQuality}");
+
+            q.Add(state.Quality);
+        }
+
+        s.Stop();
+        Console.WriteLine($"{s.Elapsed.TotalMilliseconds/60:0.00}ms/cycle");
+        Console.WriteLine(string.Join(',', q));
+        q.Sort();
+        Console.WriteLine($"Min: {Quartile(q, 0)}, Max: {Quartile(q, 4)}, Avg: {Quartile(q, 2)}, Q1: {Quartile(q, 1)}, Q3: {Quartile(q, 3)}");
+    }
+
+    // https://stackoverflow.com/a/31536435
+    private static float Quartile(List<int> input, int quartile)
+    {
+        float dblPercentage = quartile switch
+        {
+            0 => 0,     // Smallest value in the data set
+            1 => 25,    // First quartile (25th percentile)
+            2 => 50,    // Second quartile (50th percentile)
+            3 => 75,    // Third quartile (75th percentile)
+            4 => 100,   // Largest value in the data set
+            _ => 0,
+        };
+        if (dblPercentage >= 100) return input[^1];
+
+        var position = (input.Count + 1) * dblPercentage / 100f;
+        var n = (dblPercentage / 100f * (input.Count - 1)) + 1;
+
+        float leftNumber, rightNumber;
+        if (position >= 1)
+        {
+            leftNumber = input[(int)MathF.Floor(n) - 1];
+            rightNumber = input[(int)MathF.Floor(n)];
+        }
         else
         {
-            (var actions, _) = SolverUtils.SearchOneshot<SolverConcurrent>(config, input);
-            foreach (var action in actions)
-                Console.Write($">{action.IntName()}");
-            Console.WriteLine();
+            leftNumber = input[0]; // first data
+            rightNumber = input[1]; // first data
         }
-        s.Stop();
-        Console.WriteLine($"{s.Elapsed.TotalMilliseconds:0.00}");
-        Debugger.Break();
+
+        if (leftNumber == rightNumber)
+            return leftNumber;
+        else
+        {
+            var part = n - MathF.Floor(n);
+            return leftNumber + (part * (rightNumber - leftNumber));
+        }
     }
 }
