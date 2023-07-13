@@ -4,6 +4,7 @@ using Craftimizer.Solver.Crafty;
 using Dalamud.Interface.Windowing;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -72,7 +73,15 @@ public sealed partial class SimulatorWindow : Window, IDisposable
 
         SolverInitialActionCount = Actions.Count;
         SolverTaskToken = new();
-        SolverTask = Task.Run(() => SolverUtils.SearchStepwise<SolverConcurrent>(Service.Configuration.SolverConfig, solverState, SolverActionQueue.Enqueue, SolverTaskToken.Token));
+        Func<SolverConfig, SimulationState, Action<ActionType>?, CancellationToken, (List<ActionType> Actions, SimulationState State)> solverMethod = Configuration.SolverAlgorithm switch
+        {
+            SolverAlgorithm.Oneshot => Solver.Crafty.Solver.SearchOneshot,
+            SolverAlgorithm.OneshotForked => Solver.Crafty.Solver.SearchOneshotForked,
+            SolverAlgorithm.Stepwise => Solver.Crafty.Solver.SearchStepwise,
+            SolverAlgorithm.StepwiseForked => Solver.Crafty.Solver.SearchStepwiseForked,
+            SolverAlgorithm.StepwiseFurcated or _ => Solver.Crafty.Solver.SearchStepwiseFurcated,
+        };
+        SolverTask = Task.Run(() => solverMethod(Configuration.SolverConfig, solverState, SolverActionQueue.Enqueue, SolverTaskToken.Token));
     }
 
     public void Dispose()

@@ -15,6 +15,15 @@ public class Macro
     public List<ActionType> Actions { get; set; } = new();
 }
 
+public enum SolverAlgorithm
+{
+    Oneshot,
+    OneshotForked,
+    Stepwise,
+    StepwiseForked,
+    StepwiseFurcated,
+}
+
 [Serializable]
 public class Configuration : IPluginConfiguration
 {
@@ -22,8 +31,10 @@ public class Configuration : IPluginConfiguration
 
     public bool OverrideUncraftability { get; set; } = true;
     public bool HideUnlearnedActions { get; set; } = true;
+    public bool HideCombos { get; set; } = true;
     public List<Macro> Macros { get; set; } = new();
     public SolverConfig SolverConfig { get; set; } = new();
+    public SolverAlgorithm SolverAlgorithm { get; set; } = SolverAlgorithm.StepwiseFurcated;
     public bool ConditionRandomness { get; set; } = true;
 
     public Simulator.Simulator CreateSimulator(SimulationState state) =>

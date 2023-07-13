@@ -1,7 +1,6 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Dalamud.Interface.Windowing;
-using Dalamud.Utility;
 using ImGuiNET;
 using Lumina.Excel.GeneratedSheets;
 using System;
@@ -59,7 +58,7 @@ public sealed partial class SimulatorWindow : Window, IDisposable
 
     private void ResetSimulator()
     {
-        Simulator = Service.Configuration.CreateSimulator(LatestState);
+        Simulator = Configuration.CreateSimulator(LatestState);
         ReexecuteAllActions();
     }
 }

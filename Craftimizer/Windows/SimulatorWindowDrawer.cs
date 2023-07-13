@@ -39,7 +39,6 @@ public sealed partial class SimulatorWindow : Window, IDisposable
     static SimulatorWindow()
     {
         SortedActions = Enum.GetValues<ActionType>()
-            .Where(a => a.Category() != ActionCategory.Combo)
             .GroupBy(a => a.Category())
             .Select(g => (g.Key, g.OrderBy(a => a.Level()).ToArray()))
             .ToArray();
@@ -80,6 +79,9 @@ public sealed partial class SimulatorWindow : Window, IDisposable
 
         foreach (var (category, actions) in SortedActions)
         {
+            if (category == ActionCategory.Combo && Configuration.HideCombos)
+                continue;
+
             var i = 0;
             ImGuiUtils.BeginGroupPanel(category.GetDisplayName(), ActionColumnSize);
             foreach (var action in actions)
@@ -87,7 +89,7 @@ public sealed partial class SimulatorWindow : Window, IDisposable
                 var baseAction = action.Base();
 
                 var cannotUse = action.Level() > Input.Stats.Level || (action == ActionType.Manipulation && !Input.Stats.CanUseManipulation);
-                if (cannotUse && Service.Configuration.HideUnlearnedActions)
+                if (cannotUse && Configuration.HideUnlearnedActions)
                     continue;
 
                 var shouldNotUse = !baseAction.CanUse(Simulator) || Simulator.IsComplete;
