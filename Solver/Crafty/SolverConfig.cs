@@ -15,6 +15,12 @@ public readonly record struct SolverConfig
     public int FurcatedActionCount { get; init; }
     public bool StrictActions { get; init; }
 
+    public float ScoreProgressBonus { get; init; }
+    public float ScoreQualityBonus { get; init; }
+    public float ScoreDurabilityBonus { get; init; }
+    public float ScoreCPBonus { get; init; }
+    public float ScoreFewerStepsBonus { get; init; }
+
     public SolverConfig()
     {
         Iterations = 300000;
@@ -26,5 +32,11 @@ public readonly record struct SolverConfig
         ForkCount = Environment.ProcessorCount;
         FurcatedActionCount = ForkCount / 2;
         StrictActions = true;
+
+        ScoreProgressBonus = .20f;
+        ScoreQualityBonus = .65f;
+        ScoreDurabilityBonus = .05f;
+        ScoreCPBonus = .05f;
+        ScoreFewerStepsBonus = .05f;
     }
 }

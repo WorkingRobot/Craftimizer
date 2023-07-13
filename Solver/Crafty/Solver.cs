@@ -199,7 +199,7 @@ public sealed class Solver
         ref var initialState = ref initialNode.State;
         // expand once
         if (initialState.IsComplete)
-            return (initialNode, initialState.CalculateScore(config.MaxStepCount) ?? 0);
+            return (initialNode, initialState.CalculateScore(config) ?? 0);
 
         var poppedAction = initialState.AvailableActions.PopRandom(random);
         var expandedNode = initialNode.Add(Execute(simulator, initialState.State, poppedAction, true));
@@ -225,7 +225,7 @@ public sealed class Solver
         }
 
         // store the result if a max score was reached
-        var score = SimulationNode.CalculateScoreForState(currentState, currentCompletionState, config.MaxStepCount) ?? 0;
+        var score = SimulationNode.CalculateScoreForState(currentState, currentCompletionState, config) ?? 0;
         if (currentCompletionState == CompletionState.ProgressComplete)
         {
             if (score >= config.ScoreStorageThreshold && score >= MaxScore)

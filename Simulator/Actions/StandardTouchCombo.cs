@@ -25,45 +25,4 @@ internal sealed class StandardTouchCombo : BaseAction
 
     public override string GetTooltip(Simulator s, bool addUsability) =>
         $"{ActionA.GetTooltip(s, addUsability)}\n{ActionB.GetTooltip(s, addUsability)}";
-
-    public static bool VerifyDurability2(Simulator s, int durabilityA)
-    {
-        var d = s.Durability;
-        var wasteNots = s.HasEffect(EffectType.WasteNot) || s.HasEffect(EffectType.WasteNot2);
-
-        // -A
-        d -= (int)MathF.Ceiling(durabilityA * (wasteNots ? .5f : 1f));
-        if (d <= 0)
-            return false;
-
-        // If we can do the first action and still have durability left to survive to the next
-        // step (even before the Manipulation modifier), we can certainly do the next action.
-        return true;
-    }
-
-    public static bool VerifyDurability3(Simulator s, int durabilityA, int durabilityB)
-    {
-        var d = s.Durability;
-        var wasteNots = Math.Max(s.GetEffectDuration(EffectType.WasteNot), s.GetEffectDuration(EffectType.WasteNot2));
-        var manips = s.GetEffectDuration(EffectType.Manipulation);
-
-        d -= (int)MathF.Ceiling(durabilityA * wasteNots > 0 ? .5f : 1f);
-        if (d <= 0)
-            return false;
-
-        if (manips > 0)
-            d += 5;
-
-        if (wasteNots > 0)
-            wasteNots--;
-
-        d -= (int)MathF.Ceiling(durabilityB * wasteNots > 0 ? .5f : 1f);
-
-        if (d <= 0)
-            return false;
-
-        // If we can do the second action and still have durability left to survive to the next
-        // step (even before the Manipulation modifier), we can certainly do the next action.
-        return true;
-    }
 }

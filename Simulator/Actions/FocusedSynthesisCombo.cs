@@ -12,8 +12,8 @@ internal sealed class FocusedSynthesisCombo : BaseAction
     public override int CPCost(Simulator s) => 7 + 5;
 
     public override bool CanUse(Simulator s) =>
-        //                                 Observe.DurabilityCost v
-        base.CanUse(s) && StandardTouchCombo.VerifyDurability2(s, 0);
+        //              Observe.DurabilityCost v
+        base.CanUse(s) && VerifyDurability2(s, 0);
 
     private static readonly Observe ActionA = new();
     private static readonly FocusedSynthesis ActionB = new();

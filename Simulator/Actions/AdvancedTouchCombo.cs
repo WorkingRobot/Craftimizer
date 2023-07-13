@@ -12,8 +12,8 @@ internal sealed class AdvancedTouchCombo : BaseAction
     public override int CPCost(Simulator s) => 18 + 18 + 18;
 
     public override bool CanUse(Simulator s) =>
-        //                              BasicTouch.DurabilityCost vv  vv StandardTouch.DurabilityCost
-        base.CanUse(s) && StandardTouchCombo.VerifyDurability3(s, 10, 10);
+        //           BasicTouch.DurabilityCost vv  vv StandardTouch.DurabilityCost
+        base.CanUse(s) && VerifyDurability3(s, 10, 10);
 
     private static readonly BasicTouch ActionA = new();
     private static readonly StandardTouch ActionB = new();
