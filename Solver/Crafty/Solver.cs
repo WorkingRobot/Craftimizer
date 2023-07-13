@@ -5,7 +5,6 @@ using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading.Tasks;
 using Node = Craftimizer.Solver.Crafty.ArenaNode<Craftimizer.Solver.Crafty.SimulationNode>;
 
 namespace Craftimizer.Solver.Crafty;
@@ -75,10 +74,10 @@ public sealed class Solver
                 actions.Add(node.State.Action.Value);
         }
 
-        var at = node.ChildIdx;
-        ref var sum = ref node.ParentScores!.Value.Data[at.arrayIdx].ScoreSum.Span[at.subIdx];
-        ref var max = ref node.ParentScores!.Value.Data[at.arrayIdx].MaxScore.Span[at.subIdx];
-        ref var visits = ref node.ParentScores!.Value.Data[at.arrayIdx].Visits.Span[at.subIdx];
+        //var at = node.ChildIdx;
+        //ref var sum = ref node.ParentScores!.Value.Data[at.arrayIdx].ScoreSum.Span[at.subIdx];
+        //ref var max = ref node.ParentScores!.Value.Data[at.arrayIdx].MaxScore.Span[at.subIdx];
+        //ref var visits = ref node.ParentScores!.Value.Data[at.arrayIdx].Visits.Span[at.subIdx];
         //Console.WriteLine($"{sum} {max} {visits}");
 
         return (actions, node.State);
@@ -384,6 +383,9 @@ public sealed class Solver
             for (var i = 0; i < bestActions.Length; ++i)
             {
                 var (maxScore, furcatedActionIdx, (solutionActions, solutionNode)) = bestActions[i];
+                if (solutionActions.Count == 0)
+                    continue;
+
                 var (activeActions, activeState) = activeStates[furcatedActionIdx];
 
                 var chosenAction = solutionActions[0];
@@ -431,6 +433,9 @@ public sealed class Solver
 
             Console.WriteLine($"{s.Elapsed.TotalMilliseconds:0.00}ms {config.Iterations / config.ForkCount / s.Elapsed.TotalSeconds / 1000:0.00} kI/s/t");
         }
+
+        if (bestSims.Count == 0)
+            return (new(), state);
 
         var result = bestSims.MaxBy(s => s.Score).Result;
         for (var i = definiteActionCount; i < result.Actions.Count; ++i)
