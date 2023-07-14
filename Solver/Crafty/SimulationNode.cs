@@ -38,7 +38,7 @@ public struct SimulationNode
         if (state.ActiveEffects.InnerQuiet == 0)
             return false;
 
-        return BaseAction.VerifyDurability2(state, 10);
+        return BaseComboAction.VerifyDurability2(state, 10);
     }
 
     public static float? CalculateScoreForState(SimulationState state, CompletionState completionState, SolverConfig config)

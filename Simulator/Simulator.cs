@@ -59,19 +59,9 @@ public class Simulator
             return ActionResponse.CannotUseAction;
         }
 
-        ExecuteForced(action, baseAction);
+        baseAction.Use(this);
 
         return ActionResponse.UsedAction;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ExecuteForced(ActionType action, BaseAction baseAction)
-    {
-        baseAction.Use(this);
-        ActionStates.MutateState(action);
-        ActionCount++;
-
-        ActiveEffects.DecrementDuration();
     }
 
     [Pure]

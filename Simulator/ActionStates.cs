@@ -1,4 +1,5 @@
 using Craftimizer.Simulator.Actions;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Craftimizer.Simulator;
@@ -11,22 +12,23 @@ public struct ActionStates
     public bool UsedHeartAndSoul;
     public bool Observed;
 
-    public void MutateState(ActionType action)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void MutateState(BaseAction baseAction)
     {
-        if (action == ActionType.BasicTouch)
+        if (baseAction is BasicTouch)
             TouchComboIdx = 1;
-        else if (TouchComboIdx == 1 && action == ActionType.StandardTouch)
+        else if (TouchComboIdx == 1 && baseAction is StandardTouch)
             TouchComboIdx = 2;
         else
             TouchComboIdx = 0;
 
-        if (action == ActionType.CarefulObservation)
+        if (baseAction is CarefulObservation)
             CarefulObservationCount++;
 
-        if (action == ActionType.HeartAndSoul)
+        if (baseAction is HeartAndSoul)
             UsedHeartAndSoul = true;
 
-        Observed = action == ActionType.Observe;
+        Observed = baseAction is Observe;
     }
 
     public override readonly string ToString() =>
