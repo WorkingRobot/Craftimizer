@@ -1,4 +1,6 @@
 using Craftimizer.Simulator.Actions;
+using System.Diagnostics.Contracts;
+using System.Runtime.CompilerServices;
 
 namespace Craftimizer.Simulator;
 
@@ -62,6 +64,7 @@ public class Simulator
         return ActionResponse.UsedAction;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ExecuteForced(ActionType action, BaseAction baseAction)
     {
         baseAction.Use(this);
@@ -71,9 +74,13 @@ public class Simulator
         ActiveEffects.DecrementDuration();
     }
 
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int GetEffectStrength(EffectType effect) =>
         ActiveEffects.GetStrength(effect);
 
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int GetEffectDuration(EffectType effect) =>
         ActiveEffects.GetDuration(effect);
 
@@ -88,12 +95,16 @@ public class Simulator
         ActiveEffects.SetDuration(effect, (byte)duration);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void StrengthenEffect(EffectType effect) =>
         ActiveEffects.Strengthen(effect);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void RemoveEffect(EffectType effect) =>
         ActiveEffects.SetDuration(effect, 0);
 
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool HasEffect(EffectType effect) =>
         ActiveEffects.HasEffect(effect);
 
@@ -235,9 +246,11 @@ public class Simulator
         return qualityGain;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ReduceDurabilityRaw(int amount) =>
         Durability -= amount;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ReduceCPRaw(int amount) =>
         CP -= amount;
 
@@ -260,15 +273,19 @@ public class Simulator
             StrengthenEffect(EffectType.InnerQuiet);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ReduceDurability(int amount) =>
         ReduceDurabilityRaw(CalculateDurabilityCost(amount));
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ReduceCP(int amount) =>
         ReduceCPRaw(CalculateCPCost(amount));
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void IncreaseProgress(float efficiency) =>
         IncreaseProgressRaw(CalculateProgressGain(efficiency, false));
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void IncreaseQuality(float efficiency) =>
         IncreaseQualityRaw(CalculateQualityGain(efficiency, false));
 

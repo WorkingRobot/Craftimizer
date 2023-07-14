@@ -73,7 +73,7 @@ public sealed partial class SimulatorWindow : Window, IDisposable
 
         SolverInitialActionCount = Actions.Count;
         SolverTaskToken = new();
-        Func<SolverConfig, SimulationState, Action<ActionType>?, CancellationToken, (List<ActionType> Actions, SimulationState State)> solverMethod = Configuration.SolverAlgorithm switch
+        Func<SolverConfig, SimulationState, Action<ActionType>?, CancellationToken, SolverSolution> solverMethod = Configuration.SolverAlgorithm switch
         {
             SolverAlgorithm.Oneshot => Solver.Crafty.Solver.SearchOneshot,
             SolverAlgorithm.OneshotForked => Solver.Crafty.Solver.SearchOneshotForked,
