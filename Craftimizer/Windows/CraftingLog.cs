@@ -362,18 +362,29 @@ public unsafe class CraftingLog : Window
         Service.Plugin.OpenSimulatorWindow(Recipe.ItemResult.Value!, Recipe.IsExpert, CharacterSimulationInput, RecipeClassJob, macro);
     }
 
+    private string GetMacroCommand(ActionType action, bool addWaitTimes)
+    {
+        var actionBase = action.Base();
+        if (actionBase is BaseComboAction comboActionBase)
+            return $"{GetMacroCommand(comboActionBase.ActionTypeA, addWaitTimes)}\n{GetMacroCommand(comboActionBase.ActionTypeB, addWaitTimes)}";
+        if (addWaitTimes)
+            return $"/ac \"{action.GetName(RecipeClassJob)}\" <wait.{actionBase.MacroWaitTime}>";
+        else
+            return $"/ac \"{action.GetName(RecipeClassJob)}\"";
+    }
+
     private void CopyMacroToClipboard(Macro macro)
     {
         var s = new StringBuilder();
         if (ImGui.IsKeyDown(ImGuiKey.ModShift))
         {
             foreach (var action in macro.Actions)
-                s.AppendLine($"/ac \"{action.GetName(RecipeClassJob)}\"");
+                s.AppendLine(GetMacroCommand(action, false));
         }
         else
         {
             foreach (var action in macro.Actions)
-                s.AppendLine($"/ac \"{action.GetName(RecipeClassJob)}\" <wait.{action.Base().MacroWaitTime}>");
+                s.AppendLine(GetMacroCommand(action, true));
             s.AppendLine($"/echo Macro Complete! <se.1>");
         }
         ImGui.SetClipboardText(s.ToString());

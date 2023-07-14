@@ -23,5 +23,5 @@ internal abstract class BaseComboAction<A, B> : BaseComboAction where A : BaseAc
     }
 
     public override string GetTooltip(Simulator s, bool addUsability) =>
-        $"{ActionA.GetTooltip(s, addUsability)}\n{ActionB.GetTooltip(s, addUsability)}";
+        $"{ActionA.GetTooltip(s, addUsability)}\n\n{ActionB.GetTooltip(s, addUsability)}";
 }
