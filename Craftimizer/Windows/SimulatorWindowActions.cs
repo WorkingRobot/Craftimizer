@@ -1,3 +1,4 @@
+using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Dalamud.Interface.Windowing;
 using System;
@@ -15,9 +16,18 @@ public sealed partial class SimulatorWindow : Window, IDisposable
 
     private void AppendGeneratedAction(ActionType action)
     {
-        var tooltip = action.Base().GetTooltip(Simulator, false);
-        var (response, state) = Simulator.Execute(LatestState, action);
-        Actions.Add((action, tooltip, response, state));
+        var actionBase = action.Base();
+        if (actionBase is BaseComboAction comboActionBase)
+        {
+            AppendGeneratedAction(comboActionBase.ActionTypeA);
+            AppendGeneratedAction(comboActionBase.ActionTypeB);
+        }
+        else
+        {
+            var tooltip = actionBase.GetTooltip(Simulator, false);
+            var (response, state) = Simulator.Execute(LatestState, action);
+            Actions.Add((action, tooltip, response, state));
+        }
     }
 
     private void RemoveAction(int actionIndex)

@@ -54,20 +54,26 @@ internal static class Program
         var sim = new SimulatorNoRandom(new(input));
         (_, var state) = sim.Execute(new(input), ActionType.MuscleMemory);
         (_, state) = sim.Execute(state, ActionType.PrudentTouch);
-        (_, state) = sim.Execute(state, ActionType.Manipulation);
-        (_, state) = sim.Execute(state, ActionType.Veneration);
-        (_, state) = sim.Execute(state, ActionType.WasteNot);
-        (_, state) = sim.Execute(state, ActionType.Groundwork);
-        (_, state) = sim.Execute(state, ActionType.Groundwork);
-        (_, state) = sim.Execute(state, ActionType.Groundwork);
-        (_, state) = sim.Execute(state, ActionType.Innovation);
-        (_, state) = sim.Execute(state, ActionType.PrudentTouch);
-        (_, state) = sim.Execute(state, ActionType.AdvancedTouchCombo);
-        (_, state) = sim.Execute(state, ActionType.Manipulation);
-        (_, state) = sim.Execute(state, ActionType.Innovation);
-        (_, state) = sim.Execute(state, ActionType.PrudentTouch);
-        (_, state) = sim.Execute(state, ActionType.AdvancedTouchCombo);
-        (_, state) = sim.Execute(state, ActionType.GreatStrides);
+        //(_, state) = sim.Execute(state, ActionType.Manipulation);
+        //(_, state) = sim.Execute(state, ActionType.Veneration);
+        //(_, state) = sim.Execute(state, ActionType.WasteNot);
+        //(_, state) = sim.Execute(state, ActionType.Groundwork);
+        //(_, state) = sim.Execute(state, ActionType.Groundwork);
+        //(_, state) = sim.Execute(state, ActionType.Groundwork);
+        //(_, state) = sim.Execute(state, ActionType.Innovation);
+        //(_, state) = sim.Execute(state, ActionType.PrudentTouch);
+        //(_, state) = sim.Execute(state, ActionType.AdvancedTouchCombo);
+        //(_, state) = sim.Execute(state, ActionType.Manipulation);
+        //(_, state) = sim.Execute(state, ActionType.Innovation);
+        //(_, state) = sim.Execute(state, ActionType.PrudentTouch);
+        //(_, state) = sim.Execute(state, ActionType.AdvancedTouchCombo);
+        //(_, state) = sim.Execute(state, ActionType.GreatStrides);
+        //(_, state) = sim.Execute(state, ActionType.Innovation);
+        //(_, state) = sim.Execute(state, ActionType.FocusedTouchCombo);
+        //(_, state) = sim.Execute(state, ActionType.GreatStrides);
+        //(_, state) = sim.Execute(state, ActionType.ByregotsBlessing);
+        //(_, state) = sim.Execute(state, ActionType.CarefulSynthesis);
+        //(_, state) = sim.Execute(state, ActionType.CarefulSynthesis);
 
         Console.WriteLine($"{state.Quality} {state.CP} {state.Progress} {state.Durability}");
         //return;
@@ -75,21 +81,17 @@ internal static class Program
         Console.WriteLine($"Qual: {s.Quality}/{s.Input.Recipe.MaxQuality}");
         return;
 
-        for (var i = 0; i < 7; ++i)
-        {
-            Console.WriteLine($"{i + 1}");
-            var c = config with { FurcatedActionCount = i + 1 };
-            Benchmark(() => Solver.Crafty.Solver.SearchStepwiseFurcated(c, input).State);
-        }
+        Solver.Crafty.Solver.SearchStepwiseFurcated(config, input);
+        //Benchmark(() => );
     }
 
-    private static void Benchmark(Func<SimulationState> search)
+    private static void Benchmark(Func<SolverSolution> search)
     {
         var s = Stopwatch.StartNew();
         List<int> q = new();
-        for (var i = 0; i < 60; ++i)
+        for (var i = 0; i < 15; ++i)
         {
-            var state = search();
+            var state = search().State;
             //Console.WriteLine($"Qual: {state.Quality}/{state.Input.Recipe.MaxQuality}");
 
             q.Add(state.Quality);
