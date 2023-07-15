@@ -23,7 +23,7 @@ public readonly record struct SolverConfig
 
     public SolverConfig()
     {
-        Iterations = 300000;
+        Iterations = 100000;
         ScoreStorageThreshold = 1f;
         MaxScoreWeightingConstant = 0.1f;
         ExplorationConstant = 4;

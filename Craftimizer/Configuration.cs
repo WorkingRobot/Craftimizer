@@ -2,7 +2,6 @@ using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Craftimizer.Solver.Crafty;
 using Dalamud.Configuration;
-using Dalamud.Logging;
 using System;
 using System.Collections.Generic;
 

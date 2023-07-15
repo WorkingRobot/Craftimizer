@@ -146,15 +146,13 @@ internal static class ImGuiUtils
     public static unsafe void Hyperlink(string text, string url)
     {
         ImGui.TextUnformatted(text);
+        UnderlineLastItem(*ImGui.GetStyleColorVec4(ImGuiCol.Button));
         if (ImGui.IsItemHovered())
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
             if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
                 Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
-            UnderlineLastItem(*ImGui.GetStyleColorVec4(ImGuiCol.Button));
-            ImGui.SetTooltip("Open in browser");
+            ImGui.SetTooltip("Open in Browser");
         }
-        else
-            UnderlineLastItem(*ImGui.GetStyleColorVec4(ImGuiCol.Text));
     }
 }

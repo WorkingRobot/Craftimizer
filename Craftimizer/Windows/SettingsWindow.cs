@@ -16,10 +16,11 @@ public class SettingsWindow : Window
 
         SizeConstraints = new WindowSizeConstraints()
         {
-            MinimumSize = new Vector2(400, 400),
+            MinimumSize = new Vector2(400, 800),
             MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
         };
         Size = SizeConstraints.Value.MinimumSize;
+        SizeCondition = ImGuiCond.Appearing;
     }
 
     private static void DrawOption(string label, string tooltip, bool val, Action<bool> setter, ref bool isDirty)
@@ -108,7 +109,8 @@ public class SettingsWindow : Window
 
         DrawOption(
             "Condition randomness",
-            "Allows the simulator condition to fluctuate randomly like a real craft.\nTurns off when generating a macro.",
+            "Allows the simulator condition to fluctuate randomly like a real craft.\n" +
+            "Turns off when generating a macro.",
             Config.ConditionRandomness,
             v => Config.ConditionRandomness = v,
             ref isDirty
@@ -143,7 +145,7 @@ public class SettingsWindow : Window
                 "The algorithm to use when solving for a macro. Different\n" +
                 "algorithms provide different pros and cons for using them.\n" +
                 "By far, the Stepwise Furcated algorithm provides the best\n" +
-                "results as soon as possible."
+                "results, especially for very difficult crafts."
             );
 
         var config = Config.SolverConfig;
@@ -233,16 +235,6 @@ public class SettingsWindow : Window
         );
 
         DrawOption(
-            "Strict Actions",
-            "When finding the next possible actions to execute, use a heuristic\n" +
-            "to restrict which actions to attempt taking. This results in a much\n" +
-            "better macro at the cost of not finding an extremely creative one.",
-            config.StrictActions,
-            v => config = config with { StrictActions = v },
-            ref isSolverDirty
-        );
-
-        DrawOption(
             "Max Rollout Step Count",
             "The maximum number of crafting steps every iteration can consider.\n" +
             "Decreasing this value can have unintended side effects. Only change\n" +
@@ -252,10 +244,20 @@ public class SettingsWindow : Window
             ref isSolverDirty
         );
 
+        DrawOption(
+            "Strict Actions",
+            "When finding the next possible actions to execute, use a heuristic\n" +
+            "to restrict which actions to attempt taking. This results in a much\n" +
+            "better macro at the cost of not finding an extremely creative one.",
+            config.StrictActions,
+            v => config = config with { StrictActions = v },
+            ref isSolverDirty
+        );
+
         ImGuiUtils.EndGroupPanel();
 
         ImGuiUtils.BeginGroupPanel("Solver Score Weights (Advanced)");
-        ImGui.TextWrapped("All values must add up to 1. Otherwise, the Score Storage Threshold must be changed.");
+        ImGui.TextWrapped("All values should add up to 1. Otherwise, the Score Storage Threshold must be changed.");
         ImGuiHelpers.ScaledDummy(10);
 
         DrawOption(
@@ -317,11 +319,11 @@ public class SettingsWindow : Window
             isSolverDirty = true;
         }
         if (ImGui.IsItemHovered())
-            ImGui.SetTooltip("Normalize all weights to add up to 1.");
+            ImGui.SetTooltip("Normalize all weights to add up to 1");
 
         ImGuiUtils.EndGroupPanel();
 
-        if (ImGui.Button("Reset solver defaults"))
+        if (ImGui.Button("Reset Solver Settings"))
         {
             config = new();
             isSolverDirty = true;
