@@ -551,9 +551,7 @@ public unsafe class CraftingLog : Window
     private CannotCraftReason CanCraftRecipe(Gearsets.GearsetItem[] items, CharacterStats stats)
     {
         if (!ClassJobUtils.IsClassJob((byte)Service.ClientState.LocalPlayer!.ClassJob.Id, RecipeClassJob))
-        {
             return CannotCraftReason.WrongClassJob;
-        }
 
         if (Recipe.IsSpecializationRequired && !stats.IsSpecialist)
             return CannotCraftReason.SpecialistRequired;
@@ -574,9 +572,7 @@ public unsafe class CraftingLog : Window
             if (Recipe.StatusRequired.Value != null)
             {
                 if (!Service.ClientState.LocalPlayer.StatusList.Any(s => s.StatusId == Recipe.StatusRequired.Row))
-                {
                     return CannotCraftReason.RequiredStatus;
-                }
             }
         }
 

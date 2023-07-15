@@ -2,6 +2,7 @@ using Dalamud.Interface;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Numerics;
 
 namespace Craftimizer.Plugin;
@@ -130,5 +131,31 @@ internal static class ImGuiUtils
         var ret = ImGui.Button(icon.ToIconString(), size);
         ImGui.PopFont();
         return ret;
+    }
+
+    // https://gist.github.com/dougbinks/ef0962ef6ebe2cadae76c4e9f0586c69#file-imguiutils-h-L219
+    private static void UnderlineLastItem(Vector4 color)
+    {
+        var min = ImGui.GetItemRectMin();
+        var max = ImGui.GetItemRectMax();
+        min.Y = max.Y;
+        ImGui.GetWindowDrawList().AddLine(min, max, ImGui.ColorConvertFloat4ToU32(color), 1);
+    }
+
+    // https://gist.github.com/dougbinks/ef0962ef6ebe2cadae76c4e9f0586c69#file-imguiutils-h-L228
+    public static unsafe void Hyperlink(string text, string url)
+    {
+        ImGui.PushStyleColor(ImGuiCol.Text, *ImGui.GetStyleColorVec4(ImGuiCol.ButtonHovered));
+        ImGui.TextUnformatted(text);
+        ImGui.PopStyleColor();
+        if (ImGui.IsItemHovered())
+        {
+            if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
+                Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
+            UnderlineLastItem(*ImGui.GetStyleColorVec4(ImGuiCol.ButtonHovered));
+            ImGui.SetTooltip("Open in browser");
+        }
+        else
+            UnderlineLastItem(*ImGui.GetStyleColorVec4(ImGuiCol.Button));
     }
 }
