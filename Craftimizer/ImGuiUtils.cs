@@ -148,6 +148,7 @@ internal static class ImGuiUtils
         ImGui.TextUnformatted(text);
         if (ImGui.IsItemHovered())
         {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
             if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
                 Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
             UnderlineLastItem(*ImGui.GetStyleColorVec4(ImGuiCol.Button));

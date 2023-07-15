@@ -2,7 +2,6 @@ using Dalamud.Interface.Windowing;
 using Dalamud.Interface;
 using ImGuiNET;
 using System.Numerics;
-using System.Diagnostics;
 using System;
 
 namespace Craftimizer.Plugin.Windows;
@@ -58,6 +57,31 @@ public class SettingsWindow : Window
             ImGui.SetTooltip(tooltip);
     }
 
+    private static string GetAlgorithmName(SolverAlgorithm algorithm) =>
+        algorithm switch
+        {
+            SolverAlgorithm.Oneshot => "Oneshot",
+            SolverAlgorithm.OneshotForked => "Oneshot Forked",
+            SolverAlgorithm.Stepwise => "Stepwise",
+            SolverAlgorithm.StepwiseForked => "Stepwise Forked",
+            SolverAlgorithm.StepwiseFurcated => "Stepwise Furcated",
+            _ => "Unknown",
+        };
+
+    private static string GetAlgorithmTooltip(SolverAlgorithm algorithm) =>
+        algorithm switch
+        {
+            SolverAlgorithm.Oneshot =>          "Run through all iterations and pick the best macro",
+            SolverAlgorithm.OneshotForked =>    "Oneshot, but using multiple solvers simultaneously",
+            SolverAlgorithm.Stepwise =>         "Run through all iterations and pick the next best step,\n" +
+                                                "and repeat using previous steps as a starting point",
+            SolverAlgorithm.StepwiseForked =>   "Stepwise, but using multiple solvers simultaneously",
+            SolverAlgorithm.StepwiseFurcated => "Stepwise Forked, but the top N next best steps are\n" +
+                                                "selected from the solvers, and each one is equally\n" +
+                                                "used as a starting point",
+            _ => "Unknown"
+        };
+
     public override void Draw()
     {
         ImGuiUtils.BeginGroupPanel("General");
@@ -110,6 +134,26 @@ public class SettingsWindow : Window
 
         ImGuiHelpers.ScaledDummy(5);
 
+        ImGui.SetNextItemWidth(200);
+        if (ImGui.BeginCombo("Algorithm", GetAlgorithmName(Config.SolverAlgorithm)))
+        {
+            foreach (var alg in Enum.GetValues<SolverAlgorithm>())
+            {
+                if (ImGui.Selectable(GetAlgorithmName(alg), Config.SolverAlgorithm == alg))
+                    Config.SolverAlgorithm = alg;
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip(GetAlgorithmTooltip(alg));
+            }
+            ImGui.EndCombo();
+        }
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip(
+                "The algorithm to use when solving for a macro. Different\n" +
+                "algorithms provide different pros and cons for using them.\n" +
+                "By far, the Stepwise Furcated algorithm provides the best\n" +
+                "results as soon as possible."
+            );
+
         var config = Config.SolverConfig;
         var isSolverDirty = false;
 
@@ -121,37 +165,6 @@ public class SettingsWindow : Window
             "as necessary to get a more favorable outcome.",
             config.Iterations,
             v => config = config with { Iterations = v },
-            ref isSolverDirty
-        );
-
-        DrawOption(
-            "Score Storage Threshold",
-            "If a craft achieves this certain arbitrary score, the solver will\n" +
-            "throw away all other possible combinations in favor of that one.\n" +
-            "Only change this value if you absolutely know what you're doing.",
-            config.ScoreStorageThreshold,
-            v => config = config with { ScoreStorageThreshold = v },
-            ref isSolverDirty
-        );
-
-        DrawOption(
-            "Score Weighting Constant",
-            "A constant ranging from 0 to 1 that configures how the solver\n" +
-            "scores and picks paths to travel to next. A value of 0 means\n" +
-            "actions will be chosen based on their average outcome, whereas\n" +
-            "1 uses their best outcome achieved so far.",
-            config.MaxScoreWeightingConstant,
-            v => config = config with { MaxScoreWeightingConstant = v },
-            ref isSolverDirty
-        );
-
-        DrawOption(
-            "Exploration Constant",
-            "A constant that decides how often the solver will explore new,\n" +
-            "possibly good paths. If this value is too high,\n" +
-            "moves will mostly be decided at random.",
-            config.ExplorationConstant,
-            v => config = config with { ExplorationConstant = v },
             ref isSolverDirty
         );
 
@@ -168,12 +181,23 @@ public class SettingsWindow : Window
         );
 
         DrawOption(
-            "Max Rollout Step Count",
-            "The maximum number of crafting steps every iteration can consider.\n" +
-            "Decreasing this value can have unintended side effects. Only change\n" +
-            "this value if you absolutely know what you're doing.",
-            config.MaxRolloutStepCount,
-            v => config = config with { MaxRolloutStepCount = v },
+            "Exploration Constant",
+            "A constant that decides how often the solver will explore new,\n" +
+            "possibly good paths. If this value is too high,\n" +
+            "moves will mostly be decided at random.",
+            config.ExplorationConstant,
+            v => config = config with { ExplorationConstant = v },
+            ref isSolverDirty
+        );
+
+        DrawOption(
+            "Score Weighting Constant",
+            "A constant ranging from 0 to 1 that configures how the solver\n" +
+            "scores and picks paths to travel to next. A value of 0 means\n" +
+            "actions will be chosen based on their average outcome, whereas\n" +
+            "1 uses their best outcome achieved so far.",
+            config.MaxScoreWeightingConstant,
+            v => config = config with { MaxScoreWeightingConstant = v },
             ref isSolverDirty
         );
 
@@ -181,10 +205,11 @@ public class SettingsWindow : Window
             "Fork Count",
             "Split the number of iterations across different solvers. In general,\n" +
             "you should increase this value to at least the number of cores in\n" +
-            $"your system (FYI, you have {Environment.ProcessorCount} cores) to\n" +
-            "attain the most speedup. The higher the number, the more chance you\n" +
-            "have of finding a better local maximum; this concept similar but\n" +
-            "not equivalent to the exploration constant.",
+            $"your system (FYI, you have {Environment.ProcessorCount} cores) to attain the most speedup.\n" +
+            "The higher the number, the more chance you have of finding a\n" +
+            "better local maximum; this concept similar but not equivalent\n" +
+            "to the exploration constant.\n" +
+            "(Only used in the Forked and Furcated algorithms)",
             config.ForkCount,
             v => config = config with { ForkCount = v },
             ref isSolverDirty
@@ -194,9 +219,24 @@ public class SettingsWindow : Window
             "Furcated Action Count",
             "On every craft step, pick this many top solutions and use them as\n" +
             "the input for the next craft step. For best results, use Fork Count / 2\n" +
-            "and add about 1 or 2 more if needed.",
+            "and add about 1 or 2 more if needed.\n" +
+            "(Only used in the Stepwise Furcated algorithm)",
             config.FurcatedActionCount,
             v => config = config with { FurcatedActionCount = v },
+            ref isSolverDirty
+        );
+
+        ImGuiUtils.EndGroupPanel();
+
+        ImGuiUtils.BeginGroupPanel("Solver (Advanced)");
+
+        DrawOption(
+            "Score Storage Threshold",
+            "If a craft achieves this certain arbitrary score, the solver will\n" +
+            "throw away all other possible combinations in favor of that one.\n" +
+            "Only change this value if you absolutely know what you're doing.",
+            config.ScoreStorageThreshold,
+            v => config = config with { ScoreStorageThreshold = v },
             ref isSolverDirty
         );
 
@@ -210,7 +250,19 @@ public class SettingsWindow : Window
             ref isSolverDirty
         );
 
-        ImGuiUtils.BeginGroupPanel("Score Weights");
+        DrawOption(
+            "Max Rollout Step Count",
+            "The maximum number of crafting steps every iteration can consider.\n" +
+            "Decreasing this value can have unintended side effects. Only change\n" +
+            "this value if you absolutely know what you're doing.",
+            config.MaxRolloutStepCount,
+            v => config = config with { MaxRolloutStepCount = v },
+            ref isSolverDirty
+        );
+
+        ImGuiUtils.EndGroupPanel();
+
+        ImGuiUtils.BeginGroupPanel("Solver Score Weights (Advanced)");
         ImGui.TextWrapped("All values must add up to 1. Otherwise, the Score Storage Threshold must be changed.");
         ImGuiHelpers.ScaledDummy(10);
 
@@ -255,9 +307,29 @@ public class SettingsWindow : Window
             ref isSolverDirty
         );
 
+        if (ImGui.Button("Normalize Weights"))
+        {
+            var total = config.ScoreProgressBonus +
+                        config.ScoreQualityBonus +
+                        config.ScoreDurabilityBonus +
+                        config.ScoreCPBonus +
+                        config.ScoreFewerStepsBonus;
+            config = config with
+            {
+                ScoreProgressBonus = config.ScoreProgressBonus / total,
+                ScoreQualityBonus = config.ScoreQualityBonus / total,
+                ScoreDurabilityBonus = config.ScoreDurabilityBonus / total,
+                ScoreCPBonus = config.ScoreCPBonus / total,
+                ScoreFewerStepsBonus = config.ScoreFewerStepsBonus / total
+            };
+            isSolverDirty = true;
+        }
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip("Normalize all weights to add up to 1.");
+
         ImGuiUtils.EndGroupPanel();
 
-        if (ImGui.Button("Reset to defaults"))
+        if (ImGui.Button("Reset solver defaults"))
         {
             config = new();
             isSolverDirty = true;
@@ -268,8 +340,6 @@ public class SettingsWindow : Window
             Config.SolverConfig = config;
             isDirty = true;
         }
-
-        ImGuiUtils.EndGroupPanel();
 
         if (isDirty)
             Config.Save();
