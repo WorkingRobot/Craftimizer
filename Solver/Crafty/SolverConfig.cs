@@ -29,7 +29,7 @@ public readonly record struct SolverConfig
         ExplorationConstant = 4;
         MaxStepCount = 25;
         MaxRolloutStepCount = MaxStepCount;
-        ForkCount = Environment.ProcessorCount;
+        ForkCount = Math.Max(Environment.ProcessorCount, 32);
         FurcatedActionCount = ForkCount / 2;
         StrictActions = true;
 

@@ -146,7 +146,7 @@ internal static class ImGuiUtils
     public static unsafe void Hyperlink(string text, string url)
     {
         ImGui.TextUnformatted(text);
-        UnderlineLastItem(*ImGui.GetStyleColorVec4(ImGuiCol.Button));
+        UnderlineLastItem(*ImGui.GetStyleColorVec4(ImGuiCol.Text));
         if (ImGui.IsItemHovered())
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

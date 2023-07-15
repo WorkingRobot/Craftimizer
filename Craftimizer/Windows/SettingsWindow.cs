@@ -16,7 +16,7 @@ public class SettingsWindow : Window
 
         SizeConstraints = new WindowSizeConstraints()
         {
-            MinimumSize = new Vector2(400, 800),
+            MinimumSize = new Vector2(400, 600),
             MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
         };
         Size = SizeConstraints.Value.MinimumSize;
@@ -257,7 +257,7 @@ public class SettingsWindow : Window
         ImGuiUtils.EndGroupPanel();
 
         ImGuiUtils.BeginGroupPanel("Solver Score Weights (Advanced)");
-        ImGui.TextWrapped("All values should add up to 1. Otherwise, the Score Storage Threshold must be changed.");
+        ImGui.TextWrapped("All values should add up to 1. Otherwise, the Score Storage Threshold should be changed.");
         ImGuiHelpers.ScaledDummy(10);
 
         DrawOption(
