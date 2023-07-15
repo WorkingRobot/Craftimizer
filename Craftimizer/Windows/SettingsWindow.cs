@@ -107,14 +107,6 @@ public class SettingsWindow : Window
         );
 
         DrawOption(
-            "Hide combo actions",
-            "Don't show combo actions on the simulator sidebar",
-            Config.HideCombos,
-            v => Config.HideCombos = v,
-            ref isDirty
-        );
-
-        DrawOption(
             "Condition randomness",
             "Allows the simulator condition to fluctuate randomly like a real craft.\nTurns off when generating a macro.",
             Config.ConditionRandomness,

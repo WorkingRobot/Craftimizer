@@ -39,6 +39,7 @@ public sealed partial class SimulatorWindow : Window, IDisposable
     static SimulatorWindow()
     {
         SortedActions = Enum.GetValues<ActionType>()
+            .Where(a => a.Category() != ActionCategory.Combo)
             .GroupBy(a => a.Category())
             .Select(g => (g.Key, g.OrderBy(a => a.Level()).ToArray()))
             .ToArray();
@@ -78,9 +79,6 @@ public sealed partial class SimulatorWindow : Window, IDisposable
 
         foreach (var (category, actions) in SortedActions)
         {
-            if (category == ActionCategory.Combo && Configuration.HideCombos)
-                continue;
-
             var i = 0;
             ImGuiUtils.BeginGroupPanel(category.GetDisplayName(), ActionColumnSize);
             foreach (var action in actions)

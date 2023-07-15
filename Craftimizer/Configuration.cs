@@ -31,7 +31,6 @@ public class Configuration : IPluginConfiguration
 
     public bool OverrideUncraftability { get; set; } = true;
     public bool HideUnlearnedActions { get; set; } = true;
-    public bool HideCombos { get; set; } = true;
     public List<Macro> Macros { get; set; } = new();
     public SolverConfig SolverConfig { get; set; } = new();
     public SolverAlgorithm SolverAlgorithm { get; set; } = SolverAlgorithm.StepwiseFurcated;
