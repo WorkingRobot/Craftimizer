@@ -66,7 +66,8 @@ public class SettingsWindow : Window
 
         DrawOption(
             "Override uncraftability warning",
-            "Allow simulation for crafts that otherwise wouldn't be able to be crafted with your current gear",
+            "Allow simulation for crafts that otherwise wouldn't\n" +
+            "be able to be crafted with your current gear",
             Config.OverrideUncraftability,
             v => Config.OverrideUncraftability = v,
             ref isDirty
@@ -74,7 +75,8 @@ public class SettingsWindow : Window
 
         DrawOption(
             "Show only learned actions",
-            "Don't show crafting actions that haven't been learned yet with your current job on the simulator sidebar",
+            "Don't show crafting actions that haven't been\n" +
+            "learned yet with your current job on the simulator sidebar",
             Config.HideUnlearnedActions,
             v => Config.HideUnlearnedActions = v,
             ref isDirty
@@ -113,7 +115,10 @@ public class SettingsWindow : Window
 
         DrawOption(
             "Iterations",
-            "The total number of iterations to run per crafting step. Higher values require more computational power. Higher values also may decrease variance, so other values should be tweaked as necessary to get a more favorable outcome.",
+            "The total number of iterations to run per crafting step.\n" +
+            "Higher values require more computational power. Higher values\n" +
+            "also may decrease variance, so other values should be tweaked\n" +
+            "as necessary to get a more favorable outcome.",
             config.Iterations,
             v => config = config with { Iterations = v },
             ref isSolverDirty
@@ -121,7 +126,9 @@ public class SettingsWindow : Window
 
         DrawOption(
             "Score Storage Threshold",
-            "If a craft achieves this certain arbitrary score, the solver will throw away all other possible combinations in favor of that one. Only change this value if you absolutely know what you're doing.",
+            "If a craft achieves this certain arbitrary score, the solver will\n" +
+            "throw away all other possible combinations in favor of that one.\n" +
+            "Only change this value if you absolutely know what you're doing.",
             config.ScoreStorageThreshold,
             v => config = config with { ScoreStorageThreshold = v },
             ref isSolverDirty
@@ -129,7 +136,10 @@ public class SettingsWindow : Window
 
         DrawOption(
             "Score Weighting Constant",
-            "A constant ranging from 0 to 1 that configures how the solver scores and picks paths to travel to next. A value of 0 means actions will be chosen based on their average outcome, whereas 1 uses their best outcome achieved so far.",
+            "A constant ranging from 0 to 1 that configures how the solver\n" +
+            "scores and picks paths to travel to next. A value of 0 means\n" +
+            "actions will be chosen based on their average outcome, whereas\n" +
+            "1 uses their best outcome achieved so far.",
             config.MaxScoreWeightingConstant,
             v => config = config with { MaxScoreWeightingConstant = v },
             ref isSolverDirty
@@ -137,7 +147,9 @@ public class SettingsWindow : Window
 
         DrawOption(
             "Exploration Constant",
-            "A constant that decides how often the solver will explore new, possibly good paths. If this value is too high, moves will mostly be decided at random.",
+            "A constant that decides how often the solver will explore new,\n" +
+            "possibly good paths. If this value is too high,\n" +
+            "moves will mostly be decided at random.",
             config.ExplorationConstant,
             v => config = config with { ExplorationConstant = v },
             ref isSolverDirty
@@ -145,7 +157,11 @@ public class SettingsWindow : Window
 
         DrawOption(
             "Max Step Count",
-            "The maximum number of crafting steps; this is generally the only setting you should change, and it should be set to around 5 steps more than what you'd expect. If this value is too low, the solver won't learn much per iteration; too high and it will waste time on useless extra steps.",
+            "The maximum number of crafting steps; this is generally the only\n" +
+            "setting you should change, and it should be set to around 5 steps\n" +
+            "more than what you'd expect. If this value is too low, the solver\n" +
+            "won't learn much per iteration; too high and it will waste time\n" +
+            "on useless extra steps.",
             config.MaxStepCount,
             v => config = config with { MaxStepCount = v },
             ref isSolverDirty
@@ -153,7 +169,9 @@ public class SettingsWindow : Window
 
         DrawOption(
             "Max Rollout Step Count",
-            "The maximum number of crafting steps every iteration can consider. Decreasing this value can have unintended side effects. Only change this value if you absolutely know what you're doing.",
+            "The maximum number of crafting steps every iteration can consider.\n" +
+            "Decreasing this value can have unintended side effects. Only change\n" +
+            "this value if you absolutely know what you're doing.",
             config.MaxRolloutStepCount,
             v => config = config with { MaxRolloutStepCount = v },
             ref isSolverDirty
@@ -161,7 +179,12 @@ public class SettingsWindow : Window
 
         DrawOption(
             "Fork Count",
-            $"Split the number of iterations across different solvers. In general, you should increase this value to at least the number of cores in your system (FYI, you have {Environment.ProcessorCount} cores) to attain the most speedup. The higher the number, the more chance you have of finding a better local maximum; this concept similar but not equivalent to the exploration constant.",
+            "Split the number of iterations across different solvers. In general,\n" +
+            "you should increase this value to at least the number of cores in\n" +
+            $"your system (FYI, you have {Environment.ProcessorCount} cores) to\n" +
+            "attain the most speedup. The higher the number, the more chance you\n" +
+            "have of finding a better local maximum; this concept similar but\n" +
+            "not equivalent to the exploration constant.",
             config.ForkCount,
             v => config = config with { ForkCount = v },
             ref isSolverDirty
@@ -169,7 +192,9 @@ public class SettingsWindow : Window
 
         DrawOption(
             "Furcated Action Count",
-            "On every craft step, pick this many top solutions and use them as the input for the next craft step. For best results, use Fork Count / 2 and add about 1 or 2 more if needed.",
+            "On every craft step, pick this many top solutions and use them as\n" +
+            "the input for the next craft step. For best results, use Fork Count / 2\n" +
+            "and add about 1 or 2 more if needed.",
             config.FurcatedActionCount,
             v => config = config with { FurcatedActionCount = v },
             ref isSolverDirty
@@ -177,17 +202,16 @@ public class SettingsWindow : Window
 
         DrawOption(
             "Strict Actions",
-            "When finding the next possible actions to execute, use a heuristic to restrict which actions to attempt taking. This results in a much better macro at the cost of not finding an extremely creative one.",
+            "When finding the next possible actions to execute, use a heuristic\n" +
+            "to restrict which actions to attempt taking. This results in a much\n" +
+            "better macro at the cost of not finding an extremely creative one.",
             config.StrictActions,
             v => config = config with { StrictActions = v },
             ref isSolverDirty
         );
 
-        ImGuiHelpers.ScaledDummy(15);
-
-        ImGui.TextUnformatted("Score Weights");
-        ImGuiHelpers.ScaledDummy(5);
-        ImGui.TextUnformatted("All values must add up to 1. Otherwise, the Score Storage Threshold must be changed.");
+        ImGuiUtils.BeginGroupPanel("Score Weights");
+        ImGui.TextWrapped("All values must add up to 1. Otherwise, the Score Storage Threshold must be changed.");
         ImGuiHelpers.ScaledDummy(10);
 
         DrawOption(
@@ -224,11 +248,14 @@ public class SettingsWindow : Window
 
         DrawOption(
             "Steps",
-            "Amount of weight to give to the craft's number of steps. The lower the step count, the higher the score.",
+            "Amount of weight to give to the craft's number of steps. The lower\n" +
+            "the step count, the higher the score.",
             config.ScoreFewerStepsBonus,
             v => config = config with { ScoreFewerStepsBonus = v },
             ref isSolverDirty
         );
+
+        ImGuiUtils.EndGroupPanel();
 
         if (ImGui.Button("Reset to defaults"))
         {

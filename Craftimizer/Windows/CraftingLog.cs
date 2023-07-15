@@ -46,9 +46,6 @@ public unsafe class CraftingLog : Window
     private static Food[] MedicineItems { get; }
     private static Random Random { get; }
 
-    private TimeSpan FrameTime { get; set; }
-    private Stopwatch Stopwatch { get; } = new();
-
     // Set in DrawConditions
     private AddonRecipeNote* Addon { get; set; }
     private RecipeNote* State { get; set; }
@@ -191,8 +188,6 @@ public unsafe class CraftingLog : Window
         DrawGearsets();
 
         ImGui.EndTable();
-
-        ImGui.TextUnformatted($"{FrameTime.TotalMilliseconds:0.00}ms");
     }
 
     private void DrawCraftInfo()
@@ -474,7 +469,6 @@ public unsafe class CraftingLog : Window
 
     public override unsafe void PreDraw()
     {
-        Stopwatch.Restart();
         ref var unit = ref Addon->AtkUnitBase;
         var scale = unit.Scale;
         var pos = new Vector2(unit.X, unit.Y);
@@ -493,13 +487,6 @@ public unsafe class CraftingLog : Window
         CalculateCharacterStats();
 
         base.PreDraw();
-    }
-
-    public override void PostDraw()
-    {
-        Stopwatch.Stop();
-        FrameTime = Stopwatch.Elapsed;
-        base.PostDraw();
     }
 
     private Gearsets.GearsetStats CalculateConsumableBonus(CharacterStats stats)

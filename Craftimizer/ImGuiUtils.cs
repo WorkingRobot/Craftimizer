@@ -145,17 +145,15 @@ internal static class ImGuiUtils
     // https://gist.github.com/dougbinks/ef0962ef6ebe2cadae76c4e9f0586c69#file-imguiutils-h-L228
     public static unsafe void Hyperlink(string text, string url)
     {
-        ImGui.PushStyleColor(ImGuiCol.Text, *ImGui.GetStyleColorVec4(ImGuiCol.ButtonHovered));
         ImGui.TextUnformatted(text);
-        ImGui.PopStyleColor();
         if (ImGui.IsItemHovered())
         {
             if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
                 Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
-            UnderlineLastItem(*ImGui.GetStyleColorVec4(ImGuiCol.ButtonHovered));
+            UnderlineLastItem(*ImGui.GetStyleColorVec4(ImGuiCol.Button));
             ImGui.SetTooltip("Open in browser");
         }
         else
-            UnderlineLastItem(*ImGui.GetStyleColorVec4(ImGuiCol.Button));
+            UnderlineLastItem(*ImGui.GetStyleColorVec4(ImGuiCol.Text));
     }
 }

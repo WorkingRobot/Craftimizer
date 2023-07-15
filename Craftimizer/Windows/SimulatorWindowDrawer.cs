@@ -54,7 +54,6 @@ public sealed partial class SimulatorWindow : Window, IDisposable
         ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthStretch);
         ImGui.TableNextColumn();
         DrawActions();
-        ImGui.TextUnformatted($"{FrameTime.TotalMilliseconds:0.00}ms");
         ImGui.TableNextColumn();
         DrawSimulation();
         ImGui.EndTable();
