@@ -1,7 +1,5 @@
 using Craftimizer.Plugin.Windows;
 using Craftimizer.Simulator;
-using Craftimizer.Simulator.Actions;
-using Dalamud.Game.Command;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
@@ -15,9 +13,10 @@ public sealed class Plugin : IDalamudPlugin
     public string Name => "Craftimizer";
 
     public WindowSystem WindowSystem { get; }
-    public SettingsWindow SettingsWindow { get; }
+    public Settings SettingsWindow { get; }
     public CraftingLog RecipeNoteWindow { get; }
-    public SimulatorWindow? SimulatorWindow { get; set; }
+    public Craft SynthesisWindow { get; }
+    public Windows.Simulator? SimulatorWindow { get; set; }
 
     public Plugin([RequiredVersion("1.0")] DalamudPluginInterface pluginInterface)
     {
@@ -27,8 +26,9 @@ public sealed class Plugin : IDalamudPlugin
 
         WindowSystem = new(Name);
 
-        RecipeNoteWindow = new();
         SettingsWindow = new();
+        RecipeNoteWindow = new();
+        SynthesisWindow = new();
 
         Service.PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
         Service.PluginInterface.UiBuilder.OpenConfigUi += OpenSettingsWindow;

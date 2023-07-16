@@ -6,11 +6,11 @@ using System;
 
 namespace Craftimizer.Plugin.Windows;
 
-public class SettingsWindow : Window
+public class Settings : Window
 {
     private static Configuration Config => Service.Configuration;
 
-    public SettingsWindow() : base("Craftimizer Settings")
+    public Settings() : base("Craftimizer Settings")
     {
         Service.WindowSystem.AddWindow(this);
 

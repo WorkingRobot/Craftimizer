@@ -7,22 +7,18 @@ using Dalamud.Interface.Components;
 using Dalamud.Interface.Windowing;
 using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game;
-using FFXIVClientStructs.FFXIV.Client.Game.Object;
-using FFXIVClientStructs.FFXIV.Client.Game.UI;
-using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using ImGuiNET;
 using Lumina.Excel.GeneratedSheets;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using ActionType = Craftimizer.Simulator.Actions.ActionType;
-using ClassJob = Craftimizer.Simulator.ClassJob;
+using RecipeNote = Craftimizer.Utils.RecipeNote;
 
 namespace Craftimizer.Plugin.Windows;
 
@@ -46,20 +42,7 @@ public unsafe class CraftingLog : Window
     private static Food[] MedicineItems { get; }
     private static Random Random { get; }
 
-    // Set in DrawConditions
-    private AddonRecipeNote* Addon { get; set; }
-    private RecipeNote* State { get; set; }
-    private ushort RecipeId { get; set; }
-    private Recipe Recipe { get; set; } = null!;
-
-    // Set in CalculateRecipeStats (in DrawConditions)
-    private RecipeLevelTable RecipeTable { get; set; } = null!;
-    private RecipeInfo RecipeInfo { get; set; } = null!;
-    private ClassJob RecipeClassJob { get; set; }
-    private short RecipeCharacterLevel { get; set; }
-    private bool RecipeCanUseManipulation { get; set; }
-    private int RecipeHQIngredientCount { get; set; }
-    private int RecipeMaxStartingQuality { get; set; }
+    private RecipeNote RecipeUtils { get; } = new();
 
     // Set in CalculateCharacterStats (in PreDraw)
     private Gearsets.GearsetItem[] CharacterEquipment { get; set; } = null!;
@@ -71,7 +54,10 @@ public unsafe class CraftingLog : Window
     
     // Set in UI
     private int QualityNotches { get; set; }
-    private int StartingQuality => RecipeHQIngredientCount == 0 ? 0 : (int)((float)QualityNotches * RecipeMaxStartingQuality / RecipeHQIngredientCount);
+    private int StartingQuality =>
+        RecipeUtils.HQIngredientCount == 0 ?
+        0 :
+        (int)((float)QualityNotches * RecipeUtils.MaxStartingQuality / RecipeUtils.HQIngredientCount);
 
     private Food? SelectedFood { get; set; }
     private bool SelectedFoodHQ { get; set; }
@@ -139,22 +125,6 @@ public unsafe class CraftingLog : Window
         IsOpen = true;
     }
 
-    private void CalculateRecipeStats()
-    {
-        RecipeTable = Recipe.RecipeLevelTable.Value!;
-        RecipeInfo = CreateRecipeInfo(Recipe);
-        RecipeClassJob = (ClassJob)Recipe.CraftType.Row;
-        RecipeCharacterLevel = PlayerState.Instance()->ClassJobLevelArray[RecipeClassJob.GetClassJobIndex()];
-        RecipeCanUseManipulation = ActionManager.CanUseActionOnTarget(ActionType.Manipulation.GetId(RecipeClassJob), (GameObject*)Service.ClientState.LocalPlayer!.Address);
-        RecipeHQIngredientCount = Recipe.UnkData5
-            .Where(i =>
-                i != null &&
-                i.ItemIngredient != 0 &&
-                (LuminaSheets.ItemSheet.GetRow((uint)i.ItemIngredient)?.CanBeHq ?? false)
-            ).Sum(i => i.AmountIngredient);
-        RecipeMaxStartingQuality = (int)Math.Floor(Recipe.MaterialQualityFactor * RecipeInfo.MaxQuality / 100f);
-    }
-
     private void CalculateCharacterStats()
     {
         var container = InventoryManager.Instance()->GetInventoryContainer(InventoryType.EquippedItems);
@@ -162,7 +132,7 @@ public unsafe class CraftingLog : Window
             return;
 
         CharacterEquipment = Gearsets.GetGearsetItems(container);
-        CharacterStatsNoConsumable = Gearsets.CalculateCharacterStats(CharacterEquipment, RecipeCharacterLevel, RecipeCanUseManipulation);
+        CharacterStatsNoConsumable = Gearsets.CalculateCharacterStats(CharacterEquipment, RecipeUtils.CharacterLevel, RecipeUtils.CanUseManipulation);
         CharacterConsumableBonus = CalculateConsumableBonus(CharacterStatsNoConsumable);
         CharacterStatsConsumable = CharacterStatsNoConsumable with
         {
@@ -173,7 +143,7 @@ public unsafe class CraftingLog : Window
         CharacterCannotCraftReason = Service.Configuration.OverrideUncraftability ? CannotCraftReason.OK : CanCraftRecipe(CharacterEquipment, CharacterStatsConsumable);
         
         if (CharacterCannotCraftReason == CannotCraftReason.OK)
-            CharacterSimulationInput = new(CharacterStatsConsumable, RecipeInfo, StartingQuality, Random);
+            CharacterSimulationInput = new(CharacterStatsConsumable, RecipeUtils.Info, StartingQuality, Random);
     }
 
     public override void Draw()
@@ -210,11 +180,11 @@ public unsafe class CraftingLog : Window
     private void DrawRecipeInfo()
     {
         var s = new StringBuilder();
-        s.AppendLine($"{RecipeClassJob.GetName()} {new string('★', RecipeTable.Stars)}");
-        s.AppendLine($"Level {RecipeTable.ClassJobLevel} (RLvl {RecipeInfo.RLvl})");
-        s.AppendLine($"Durability: {RecipeInfo.MaxDurability}");
-        s.AppendLine($"Progress: {RecipeInfo.MaxProgress}");
-        s.AppendLine($"Quality: {RecipeInfo.MaxQuality}");
+        s.AppendLine($"{RecipeUtils.ClassJob.GetName()} {new string('★', RecipeUtils.Table.Stars)}");
+        s.AppendLine($"Level {RecipeUtils.Table.ClassJobLevel} (RLvl {RecipeUtils.Info.RLvl})");
+        s.AppendLine($"Durability: {RecipeUtils.Info.MaxDurability}");
+        s.AppendLine($"Progress: {RecipeUtils.Info.MaxProgress}");
+        s.AppendLine($"Quality: {RecipeUtils.Info.MaxQuality}");
         ImGui.Text(s.ToString());
     }
 
@@ -231,10 +201,10 @@ public unsafe class CraftingLog : Window
 
     private void DrawCraftParameters()
     {
-        ImGui.BeginDisabled(RecipeHQIngredientCount == 0);
+        ImGui.BeginDisabled(RecipeUtils.HQIngredientCount == 0);
         var qualityNotches = QualityNotches;
         ImGui.SetNextItemWidth(LeftSideWidth - 115);
-        if (ImGui.SliderInt("Starting Quality", ref qualityNotches, 0, RecipeHQIngredientCount, StartingQuality.ToString(), ImGuiSliderFlags.NoInput | ImGuiSliderFlags.AlwaysClamp))
+        if (ImGui.SliderInt("Starting Quality", ref qualityNotches, 0, RecipeUtils.HQIngredientCount, StartingQuality.ToString(), ImGuiSliderFlags.NoInput | ImGuiSliderFlags.AlwaysClamp))
             QualityNotches = qualityNotches;
         ImGui.EndDisabled();
 
@@ -286,7 +256,7 @@ public unsafe class CraftingLog : Window
         var height = fontSize + (padding.Y * 2);
         var width = ImGui.GetContentRegionAvail().X;
         var size = new Vector2(width, height);
-        var infoColWidth = SimulatorWindow.TooltipProgressBarSize.X;
+        var infoColWidth = Simulator.TooltipProgressBarSize.X;
         var infoButtonCount = 3;
         var infoButtonWidth = (infoColWidth - ImGui.GetStyle().ItemSpacing.X * (infoButtonCount - 1)) / infoButtonCount;
         var infoButtonSize = new Vector2(infoButtonWidth, height);
@@ -319,7 +289,7 @@ public unsafe class CraftingLog : Window
             ImGui.TableNextColumn();
             ImGui.TextWrapped(macro.Name);
             if (state.HasValue)
-                SimulatorWindow.DrawAllProgressTooltips(state!.Value);
+                Simulator.DrawAllProgressTooltips(state!.Value);
 
             if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Copy, infoButtonSize))
                 CopyMacroToClipboard(macro);
@@ -340,7 +310,7 @@ public unsafe class CraftingLog : Window
             var j = 0;
             foreach (var action in macro.Actions)
             {
-                ImGui.Image(action.GetIcon(RecipeClassJob).ImGuiHandle, actionSize);
+                ImGui.Image(action.GetIcon(RecipeUtils.ClassJob).ImGuiHandle, actionSize);
                 if (j++ % actionCount != actionCount - 1)
                     ImGui.SameLine();
                 if (j == actionCount * 2)
@@ -354,7 +324,7 @@ public unsafe class CraftingLog : Window
 
     private void OpenSimulatorWindow(Macro? macro)
     {
-        Service.Plugin.OpenSimulatorWindow(Recipe.ItemResult.Value!, Recipe.IsExpert, CharacterSimulationInput, RecipeClassJob, macro);
+        Service.Plugin.OpenSimulatorWindow(RecipeUtils.Recipe.ItemResult.Value!, RecipeUtils.Recipe.IsExpert, CharacterSimulationInput, RecipeUtils.ClassJob, macro);
     }
 
     private string GetMacroCommand(ActionType action, bool addWaitTimes)
@@ -363,9 +333,9 @@ public unsafe class CraftingLog : Window
         if (actionBase is BaseComboAction comboActionBase)
             return $"{GetMacroCommand(comboActionBase.ActionTypeA, addWaitTimes)}\n{GetMacroCommand(comboActionBase.ActionTypeB, addWaitTimes)}";
         if (addWaitTimes)
-            return $"/ac \"{action.GetName(RecipeClassJob)}\" <wait.{actionBase.MacroWaitTime}>";
+            return $"/ac \"{action.GetName(RecipeUtils.ClassJob)}\" <wait.{actionBase.MacroWaitTime}>";
         else
-            return $"/ac \"{action.GetName(RecipeClassJob)}\"";
+            return $"/ac \"{action.GetName(RecipeUtils.ClassJob)}\"";
     }
 
     private void CopyMacroToClipboard(Macro macro)
@@ -401,11 +371,11 @@ public unsafe class CraftingLog : Window
             if (!gearset->Flags.HasFlag(RaptureGearsetModule.GearsetFlag.Exists))
                 continue;
 
-            if (!ClassJobUtils.IsClassJob(gearset->ClassJob, RecipeClassJob))
+            if (!ClassJobUtils.IsClassJob(gearset->ClassJob, RecipeUtils.ClassJob))
                 continue;
 
             var items = Gearsets.GetGearsetItems(gearset);
-            var stats = Gearsets.CalculateCharacterStats(items, RecipeCharacterLevel, RecipeCanUseManipulation);
+            var stats = Gearsets.CalculateCharacterStats(items, RecipeUtils.CharacterLevel, RecipeUtils.CanUseManipulation);
             var gearsetId = gearset->ID + 1;
 
             ImGuiUtils.BeginGroupPanel($"{SafeMemory.ReadString((nint)gearset->Name, 47)} ({gearsetId})");
@@ -421,61 +391,33 @@ public unsafe class CraftingLog : Window
 
     public override bool DrawConditions()
     {
-        if (Service.ClientState.LocalPlayer == null)
+        if (!RecipeUtils.Update(out var isNew))
             return false;
 
-        Addon = (AddonRecipeNote*)Service.GameGui.GetAddonByName("RecipeNote");
-
-        if (Addon == null)
+        // Check if RecipeNote addon is visible
+        if (RecipeUtils.AddonRecipe->AtkUnitBase.WindowNode == null)
             return false;
 
-        if (Addon->AtkUnitBase.WindowNode == null)
+        // Check if RecipeNote has a visible selected recipe
+        if (!RecipeUtils.AddonRecipe->Unk258->IsVisible)
             return false;
 
-        State = RecipeNote.Instance();
-
-        var list = State->RecipeList;
-        
-        if (list == null)
-            return false;
-
-        var recipeEntry = list->SelectedRecipe;
-
-        if (recipeEntry == null)
-            return false;
-
-        var isNewRecipe = RecipeId != recipeEntry->RecipeId;
-
-        RecipeId = recipeEntry->RecipeId;
-
-        var recipe = LuminaSheets.RecipeSheet.GetRow(RecipeId);
-
-        if (recipe == null)
-            return false;
-
-        Recipe = recipe;
-
-        if (!Addon->Unk258->IsVisible)
-            return false;
-
-        if (isNewRecipe)
-        {
+        if (isNew)
             QualityNotches = 0;
-            CalculateRecipeStats();
-        }
 
         return base.DrawConditions();
     }
 
     public override unsafe void PreDraw()
     {
-        ref var unit = ref Addon->AtkUnitBase;
+        var addon = RecipeUtils.AddonRecipe;
+        ref var unit = ref addon->AtkUnitBase;
         var scale = unit.Scale;
         var pos = new Vector2(unit.X, unit.Y);
         var size = new Vector2(unit.WindowNode->AtkResNode.Width, unit.WindowNode->AtkResNode.Height) * scale;
 
-        var node = (AtkResNode*)Addon->Unk458; // unit.GetNodeById(59);
-        var nodeParent = Addon->Unk258; // unit.GetNodeById(57);
+        var node = (AtkResNode*)addon->Unk458; // unit.GetNodeById(59);
+        var nodeParent = addon->Unk258; // unit.GetNodeById(57);
 
         Position = pos + new Vector2(size.X, (nodeParent->Y + node->Y) * scale);
         SizeConstraints = new WindowSizeConstraints
@@ -537,36 +479,38 @@ public unsafe class CraftingLog : Window
 
     private CannotCraftReason CanCraftRecipe(Gearsets.GearsetItem[] items, CharacterStats stats)
     {
-        if (!ClassJobUtils.IsClassJob((byte)Service.ClientState.LocalPlayer!.ClassJob.Id, RecipeClassJob))
+        if (!ClassJobUtils.IsClassJob((byte)Service.ClientState.LocalPlayer!.ClassJob.Id, RecipeUtils.ClassJob))
             return CannotCraftReason.WrongClassJob;
 
-        if (Recipe.IsSpecializationRequired && !stats.IsSpecialist)
+        var recipe = RecipeUtils.Recipe;
+
+        if (recipe.IsSpecializationRequired && !stats.IsSpecialist)
             return CannotCraftReason.SpecialistRequired;
 
-        if (Recipe.ItemRequired.Row != 0)
+        if (recipe.ItemRequired.Row != 0)
         {
-            if (Recipe.ItemRequired.Value != null)
+            if (recipe.ItemRequired.Value != null)
             {
-                if (!items.Any(i => Gearsets.IsItem(i, Recipe.ItemRequired.Row)))
+                if (!items.Any(i => Gearsets.IsItem(i, recipe.ItemRequired.Row)))
                 {
                     return CannotCraftReason.RequiredItem;
                 }
             }
         }
 
-        if (Recipe.StatusRequired.Row != 0)
+        if (recipe.StatusRequired.Row != 0)
         {
-            if (Recipe.StatusRequired.Value != null)
+            if (recipe.StatusRequired.Value != null)
             {
-                if (!Service.ClientState.LocalPlayer.StatusList.Any(s => s.StatusId == Recipe.StatusRequired.Row))
+                if (!Service.ClientState.LocalPlayer.StatusList.Any(s => s.StatusId == recipe.StatusRequired.Row))
                     return CannotCraftReason.RequiredStatus;
             }
         }
 
-        if (Recipe.RequiredCraftsmanship > stats.Craftsmanship)
+        if (recipe.RequiredCraftsmanship > stats.Craftsmanship)
             return CannotCraftReason.CraftsmanshipTooLow;
 
-        if (Recipe.RequiredControl > stats.Control)
+        if (recipe.RequiredControl > stats.Control)
             return CannotCraftReason.ControlTooLow;
 
         return CannotCraftReason.OK;

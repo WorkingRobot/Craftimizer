@@ -13,7 +13,7 @@ using Dalamud.Game.Text;
 
 namespace Craftimizer.Plugin.Windows;
 
-public sealed partial class SimulatorWindow : Window, IDisposable
+public sealed partial class Simulator : Window, IDisposable
 {
     private const int ActionColumnSize = 260;
 
@@ -36,7 +36,7 @@ public sealed partial class SimulatorWindow : Window, IDisposable
 
     private static readonly (ActionCategory Category, ActionType[] Actions)[] SortedActions;
 
-    static SimulatorWindow()
+    static Simulator()
     {
         SortedActions = Enum.GetValues<ActionType>()
             .Where(a => a.Category() != ActionCategory.Combo)
@@ -69,7 +69,7 @@ public sealed partial class SimulatorWindow : Window, IDisposable
             Configuration.Save();
         }
 
-        Simulator.SetState(LatestState);
+        Sim.SetState(LatestState);
 
         var actionSize = new Vector2((ActionColumnSize / 5) - ImGui.GetStyle().ItemSpacing.X * (6f / 5));
         ImGui.PushStyleColor(ImGuiCol.Button, Vector4.Zero);
@@ -89,7 +89,7 @@ public sealed partial class SimulatorWindow : Window, IDisposable
                 if (cannotUse && Configuration.HideUnlearnedActions)
                     continue;
 
-                var shouldNotUse = !baseAction.CanUse(Simulator) || Simulator.IsComplete;
+                var shouldNotUse = !baseAction.CanUse(Sim) || Sim.IsComplete;
 
                 ImGui.BeginDisabled(cannotUse);
 
@@ -97,7 +97,7 @@ public sealed partial class SimulatorWindow : Window, IDisposable
                     AppendAction(action);
 
                 if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-                    ImGui.SetTooltip($"{action.GetName(ClassJob)}\n{baseAction.GetTooltip(Simulator, true)}");
+                    ImGui.SetTooltip($"{action.GetName(ClassJob)}\n{baseAction.GetTooltip(Sim, true)}");
 
                 ImGui.EndDisabled();
 
@@ -210,11 +210,11 @@ public sealed partial class SimulatorWindow : Window, IDisposable
         ImGui.SameLine(0, 0);
         foreach (var effect in Enum.GetValues<EffectType>())
         {
-            var duration = Simulator.GetEffectDuration(effect);
+            var duration = Sim.GetEffectDuration(effect);
             if (duration == 0)
                 continue;
 
-            var strength = Simulator.GetEffectStrength(effect);
+            var strength = Sim.GetEffectStrength(effect);
             var icon = effect.GetIcon(strength);
             var iconSize = GetEffectSize(icon);
 

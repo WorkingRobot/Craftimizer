@@ -6,7 +6,7 @@ using System.Numerics;
 
 namespace Craftimizer.Plugin.Windows;
 
-public sealed partial class SimulatorWindow : Window, IDisposable
+public sealed partial class Simulator : Window, IDisposable
 {
     private readonly record struct SynthDrawParams
     {

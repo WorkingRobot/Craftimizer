@@ -1,6 +1,7 @@
 using Craftimizer.Simulator;
 using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using Lumina.Excel.GeneratedSheets;
 using System;
@@ -83,21 +84,33 @@ internal static unsafe class Gearsets
     public static GearsetStats CalculateGearsetStats(GearsetItem[] gearsetItems) =>
         gearsetItems.Select(CalculateGearsetItemStats).Aggregate(BaseStats, (a, b) => new(a.CP + b.CP, a.Craftsmanship + b.Craftsmanship, a.Control + b.Control));
 
-    public static CharacterStats CalculateCharacterStats(GearsetItem[] gearsetItems, int characterLevel, bool canUseManipulation)
+    public static GearsetStats CalculateGearsetCurrentStats()
     {
-        var stats = CalculateGearsetStats(gearsetItems);
-        return new CharacterStats
+        var attributes = UIState.Instance()->PlayerState.Attributes;
+
+        return new()
         {
-            CP = stats.CP,
-            Craftsmanship = stats.Craftsmanship,
-            Control = stats.Control,
+            CP = attributes[ParamCP],
+            Craftsmanship = attributes[ParamCraftsmanship],
+            Control = attributes[ParamControl],
+        };
+    }
+
+    public static CharacterStats CalculateCharacterStats(GearsetItem[] gearsetItems, int characterLevel, bool canUseManipulation) =>
+        CalculateCharacterStats(CalculateGearsetStats(gearsetItems), gearsetItems, characterLevel, canUseManipulation);
+
+    public static CharacterStats CalculateCharacterStats(GearsetStats gearsetStats, GearsetItem[] gearsetItems, int characterLevel, bool canUseManipulation) =>
+        new()
+        {
+            CP = gearsetStats.CP,
+            Craftsmanship = gearsetStats.Craftsmanship,
+            Control = gearsetStats.Control,
             Level = characterLevel,
             CanUseManipulation = canUseManipulation,
             HasSplendorousBuff = gearsetItems.Any(IsSplendorousTool),
             IsSpecialist = gearsetItems.Any(IsSpecialistSoulCrystal),
             CLvl = CalculateCLvl(characterLevel),
         };
-    }
 
     public static bool IsItem(GearsetItem item, uint itemId) =>
         item.itemId == itemId;

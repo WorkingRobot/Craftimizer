@@ -5,7 +5,7 @@ using System;
 
 namespace Craftimizer.Plugin.Windows;
 
-public sealed partial class SimulatorWindow : Window, IDisposable
+public sealed partial class Simulator : Window, IDisposable
 {
     private void AppendAction(ActionType action)
     {
@@ -24,8 +24,8 @@ public sealed partial class SimulatorWindow : Window, IDisposable
         }
         else
         {
-            var tooltip = actionBase.GetTooltip(Simulator, false);
-            var (response, state) = Simulator.Execute(LatestState, action);
+            var tooltip = actionBase.GetTooltip(Sim, false);
+            var (response, state) = Sim.Execute(LatestState, action);
             Actions.Add((action, tooltip, response, state));
         }
     }

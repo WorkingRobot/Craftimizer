@@ -9,7 +9,7 @@ using ClassJob = Craftimizer.Simulator.ClassJob;
 
 namespace Craftimizer.Plugin.Windows;
 
-public sealed partial class SimulatorWindow : Window, IDisposable
+public sealed partial class Simulator : Window, IDisposable
 {
     private const ImGuiWindowFlags WindowFlags = ImGuiWindowFlags.AlwaysAutoResize;
 
@@ -23,13 +23,13 @@ public sealed partial class SimulatorWindow : Window, IDisposable
     private string MacroName { get; set; }
     // State is the state of the simulation *after* its corresponding action is executed.
     private List<(ActionType Action, string Tooltip, ActionResponse Response, SimulationState State)> Actions { get; }
-    private Simulator.Simulator Simulator { get; set; }
+    private Craftimizer.Simulator.Simulator Sim { get; set; }
 
     private SimulationState LatestState => Actions.Count == 0 ? new(Input) : Actions[^1].State;
 
     // Simulator is set by ResetSimulator()
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    public SimulatorWindow(Item item, bool isExpert, SimulationInput input, ClassJob classJob, Macro? macro) : base("Craftimizer Simulator", WindowFlags)
+    public Simulator(Item item, bool isExpert, SimulationInput input, ClassJob classJob, Macro? macro) : base("Craftimizer Simulator", WindowFlags)
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     {
         Service.WindowSystem.AddWindow(this);
@@ -58,7 +58,7 @@ public sealed partial class SimulatorWindow : Window, IDisposable
 
     private void ResetSimulator()
     {
-        Simulator = Configuration.CreateSimulator(LatestState);
+        Sim = Configuration.CreateSimulator(LatestState);
         ReexecuteAllActions();
     }
 }

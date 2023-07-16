@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Craftimizer.Plugin.Windows;
 
-public sealed partial class SimulatorWindow : Window, IDisposable
+public sealed partial class Simulator : Window, IDisposable
 {
     private Task SolverTask { get; set; } = Task.CompletedTask;
     private CancellationTokenSource SolverTaskToken { get; set; } = new();
@@ -27,7 +27,7 @@ public sealed partial class SimulatorWindow : Window, IDisposable
 
     private SimulationState? GenerateSolverState()
     {
-        if (Simulator is SimulatorNoRandom)
+        if (Sim is SimulatorNoRandom)
         {
             if (!Actions.Exists(a => a.Response != ActionResponse.UsedAction))
                 return LatestState;
