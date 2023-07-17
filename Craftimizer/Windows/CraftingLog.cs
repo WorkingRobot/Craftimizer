@@ -394,6 +394,9 @@ public unsafe class CraftingLog : Window
         if (!RecipeUtils.Update(out var isNew))
             return false;
 
+        if (RecipeUtils.AddonRecipe == null)
+            return false;
+
         // Check if RecipeNote addon is visible
         if (RecipeUtils.AddonRecipe->AtkUnitBase.WindowNode == null)
             return false;

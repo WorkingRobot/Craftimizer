@@ -58,6 +58,9 @@ public unsafe class Craft : Window
     {
         if (!RecipeUtils.Update(out _))
             return false;
+        return false;
+        if (RecipeUtils.AddonSynthesis == null)
+            return false;
 
         // Check if Synthesis addon is visible
         if (RecipeUtils.AddonSynthesis->AtkUnitBase.WindowNode == null)

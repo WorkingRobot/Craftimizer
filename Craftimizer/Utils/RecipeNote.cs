@@ -31,7 +31,7 @@ public unsafe class RecipeNote
 
     public RecipeNote()
     {
-
+        
     }
 
     public bool Update(out bool isNewRecipe)
@@ -43,11 +43,6 @@ public unsafe class RecipeNote
 
         AddonRecipe = (AddonRecipeNote*)Service.GameGui.GetAddonByName("RecipeNote");
         AddonSynthesis = (AddonSynthesis*)Service.GameGui.GetAddonByName("Synthesis");
-
-        if (AddonRecipe == null)
-            return false;
-        if (AddonSynthesis == null)
-            return false;
 
         State = CSRecipeNote.Instance();
 
