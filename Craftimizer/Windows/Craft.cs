@@ -1,5 +1,6 @@
 using Craftimizer.Plugin.Utils;
 using Craftimizer.Utils;
+using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using ImGuiNET;
@@ -15,6 +16,8 @@ public sealed unsafe partial class Craft : Window, IDisposable
       | ImGuiWindowFlags.NoSavedSettings
       | ImGuiWindowFlags.NoFocusOnAppearing
       | ImGuiWindowFlags.NoNavFocus;
+
+    public static readonly Vector2 CraftProgressBarSize = new(300, 15);
 
     private static Configuration Config => Service.Configuration;
 
@@ -40,6 +43,13 @@ public sealed unsafe partial class Craft : Window, IDisposable
 
         ImGui.SameLine(0, 0);
         ImGui.Dummy(default);
+
+        ImGuiHelpers.ScaledDummy(5);
+
+        Simulator.DrawAllProgressBars(SolverLatestState, CraftProgressBarSize);
+
+        ImGuiHelpers.ScaledDummy(5);
+
         ImGui.BeginDisabled(!(SolverTask?.IsCompleted ?? true));
             if (ImGui.Button("Retry"))
                 QueueSolve(GetNextState()!.Value);

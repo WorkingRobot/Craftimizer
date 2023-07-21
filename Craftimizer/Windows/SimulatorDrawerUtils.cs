@@ -118,24 +118,24 @@ public sealed partial class Simulator : Window, IDisposable
         ImGuiUtils.EndGroupPanel();
     }
 
-    public static void DrawAllProgressTooltips(SimulationState state)
+    public static void DrawAllProgressBars(SimulationState state, Vector2 progressBarSize)
     {
-        DrawProgressBarTooltip(state.Progress, state.Input.Recipe.MaxProgress, ProgressColor);
+        DrawProgressBar(state.Progress, state.Input.Recipe.MaxProgress, progressBarSize, ProgressColor);
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip($"Progress: {state.Progress} / {state.Input.Recipe.MaxProgress}");
-        DrawProgressBarTooltip(state.Quality, state.Input.Recipe.MaxQuality, QualityColor);
+        DrawProgressBar(state.Quality, state.Input.Recipe.MaxQuality, progressBarSize, QualityColor);
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip($"Quality: {state.Quality} / {state.Input.Recipe.MaxQuality}");
-        DrawProgressBarTooltip(state.Durability, state.Input.Recipe.MaxDurability, DurabilityColor);
+        DrawProgressBar(state.Durability, state.Input.Recipe.MaxDurability, progressBarSize, DurabilityColor);
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip($"Durability: {state.Durability} / {state.Input.Recipe.MaxDurability}");
-        DrawProgressBarTooltip(state.CP, state.Input.Stats.CP, CPColor);
+        DrawProgressBar(state.CP, state.Input.Stats.CP, progressBarSize, CPColor);
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip($"CP: {state.CP} / {state.Input.Stats.CP}");
     }
 
-    private static void DrawProgressBarTooltip(int progress, int maxProgress, Vector4 color) =>
-        DrawProgressBar(progress, maxProgress, TooltipProgressBarSize, color);
+    public static void DrawAllProgressTooltips(SimulationState state) =>
+        DrawAllProgressBars(state, TooltipProgressBarSize);
 
     private static void DrawProgressBar(int progress, int maxProgress, Vector2 size, Vector4 color, string overlay = "")
     {
