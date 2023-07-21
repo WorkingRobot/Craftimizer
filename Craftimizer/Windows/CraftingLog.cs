@@ -30,6 +30,8 @@ public unsafe class CraftingLog : Window
       | ImGuiWindowFlags.NoFocusOnAppearing
       | ImGuiWindowFlags.NoNavFocus;
 
+    private static Configuration Config => Service.Configuration;
+
     private const int LeftSideWidth = 350;
 
     // If relative, increase stat by Value's % (rounded down), and cap increase to Max
@@ -42,7 +44,8 @@ public unsafe class CraftingLog : Window
     private static Food[] MedicineItems { get; }
     private static Random Random { get; }
 
-    private RecipeNote RecipeUtils { get; } = new();
+    private static RecipeNote RecipeUtils => Service.Plugin.RecipeNote;
+    private ushort OldRecipeId { get; set; }
 
     // Set in CalculateCharacterStats (in PreDraw)
     private Gearsets.GearsetItem[] CharacterEquipment { get; set; } = null!;
@@ -140,7 +143,7 @@ public unsafe class CraftingLog : Window
             Control = CharacterStatsNoConsumable.Control + CharacterConsumableBonus.Control,
             CP = CharacterStatsNoConsumable.CP + CharacterConsumableBonus.CP,
         };
-        CharacterCannotCraftReason = Service.Configuration.OverrideUncraftability ? CannotCraftReason.OK : CanCraftRecipe(CharacterEquipment, CharacterStatsConsumable);
+        CharacterCannotCraftReason = Config.OverrideUncraftability ? CannotCraftReason.OK : CanCraftRecipe(CharacterEquipment, CharacterStatsConsumable);
         
         if (CharacterCannotCraftReason == CannotCraftReason.OK)
             CharacterSimulationInput = new(CharacterStatsConsumable, RecipeUtils.Info, StartingQuality, Random);
@@ -273,9 +276,9 @@ public unsafe class CraftingLog : Window
         ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, infoColWidth);
         ImGui.TableSetupColumn("");
         var simulation = new SimulatorNoRandom(new(CharacterSimulationInput));
-        for (var i = 0; i < Service.Configuration.Macros.Count; ++i)
+        for (var i = 0; i < Config.Macros.Count; ++i)
         {
-            var macro = Service.Configuration.Macros[i];
+            var macro = Config.Macros[i];
             ImGui.PushID(i);
             ImGui.TableNextRow();
 
@@ -302,7 +305,7 @@ public unsafe class CraftingLog : Window
                 ImGui.SetTooltip("Open macro in simulator");
             ImGui.SameLine();
             if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Trash, infoButtonSize))
-                Service.Configuration.Macros.RemoveAt(i);
+                Config.Macros.RemoveAt(i);
             if (ImGui.IsItemHovered())
                 ImGui.SetTooltip("Delete macro");
 
@@ -371,7 +374,7 @@ public unsafe class CraftingLog : Window
             if (!gearset->Flags.HasFlag(RaptureGearsetModule.GearsetFlag.Exists))
                 continue;
 
-            if (!ClassJobUtils.IsClassJob(gearset->ClassJob, RecipeUtils.ClassJob))
+            if (ClassJobUtils.GetClassJobFromIdx(gearset->ClassJob) != RecipeUtils.ClassJob)
                 continue;
 
             var items = Gearsets.GetGearsetItems(gearset);
@@ -391,8 +394,12 @@ public unsafe class CraftingLog : Window
 
     public override bool DrawConditions()
     {
-        if (!RecipeUtils.Update(out var isNew))
+        if (!RecipeUtils.HasValidRecipe)
             return false;
+
+        if (OldRecipeId != RecipeUtils.RecipeId)
+            QualityNotches = 0;
+        OldRecipeId = RecipeUtils.RecipeId;
 
         if (RecipeUtils.AddonRecipe == null)
             return false;
@@ -404,9 +411,6 @@ public unsafe class CraftingLog : Window
         // Check if RecipeNote has a visible selected recipe
         if (!RecipeUtils.AddonRecipe->Unk258->IsVisible)
             return false;
-
-        if (isNew)
-            QualityNotches = 0;
 
         return base.DrawConditions();
     }
@@ -482,7 +486,7 @@ public unsafe class CraftingLog : Window
 
     private CannotCraftReason CanCraftRecipe(Gearsets.GearsetItem[] items, CharacterStats stats)
     {
-        if (!ClassJobUtils.IsClassJob((byte)Service.ClientState.LocalPlayer!.ClassJob.Id, RecipeUtils.ClassJob))
+        if (ClassJobUtils.GetClassJobFromIdx((byte)Service.ClientState.LocalPlayer!.ClassJob.Id) != RecipeUtils.ClassJob)
             return CannotCraftReason.WrongClassJob;
 
         var recipe = RecipeUtils.Recipe;
@@ -517,25 +521,6 @@ public unsafe class CraftingLog : Window
             return CannotCraftReason.ControlTooLow;
 
         return CannotCraftReason.OK;
-    }
-
-    private static RecipeInfo CreateRecipeInfo(Recipe recipe)
-    {
-        var recipeTable = recipe.RecipeLevelTable.Value!;
-        return new()
-        {
-            IsExpert = recipe.IsExpert,
-            ClassJobLevel = recipeTable.ClassJobLevel,
-            RLvl = (int)recipeTable.RowId,
-            ConditionsFlag = recipeTable.ConditionsFlag,
-            MaxDurability = recipeTable.Durability * recipe.DurabilityFactor / 100,
-            MaxQuality = (int)recipeTable.Quality * recipe.QualityFactor / 100,
-            MaxProgress = recipeTable.Difficulty * recipe.DifficultyFactor / 100,
-            QualityModifier = recipeTable.QualityModifier,
-            QualityDivider = recipeTable.QualityDivider,
-            ProgressModifier = recipeTable.ProgressModifier,
-            ProgressDivider = recipeTable.ProgressDivider,
-        };
     }
 
     private static string GetCannotCraftReasonText(CannotCraftReason reason) =>
