@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace Craftimizer.Simulator;
 
 [StructLayout(LayoutKind.Auto)]
-public struct SimulationState
+public record struct SimulationState
 {
     public readonly SimulationInput Input;
 
@@ -42,7 +42,4 @@ public struct SimulationState
         ActionCount = 0;
         ActionStates = new();
     }
-
-    public override readonly string ToString() =>
-        $"SimulationState {{ Input = {Input}, ActionCount = {ActionCount}, StepCount = {StepCount}, Progress = {Progress}, Quality = {Quality}, Durability = {Durability}, CP = {CP}, Condition = {Condition}, ActiveEffects = {ActiveEffects}, ActionStates = {ActionStates} }}";
 }

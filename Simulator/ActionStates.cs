@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 namespace Craftimizer.Simulator;
 
 [StructLayout(LayoutKind.Auto)]
-public struct ActionStates
+public record struct ActionStates
 {
     public byte TouchComboIdx;
     public byte CarefulObservationCount;
@@ -30,7 +30,4 @@ public struct ActionStates
 
         Observed = baseAction is Observe;
     }
-
-    public override readonly string ToString() =>
-        $"ActionStates {{ TouchComboIdx = {TouchComboIdx}, CarefulObservationCount = {CarefulObservationCount}, UsedHeartAndSoul = {UsedHeartAndSoul}, Observed = {Observed} }}";
 }
