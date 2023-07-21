@@ -4,6 +4,7 @@ using Craftimizer.Solver.Crafty;
 using Dalamud.Configuration;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Craftimizer.Plugin;
 
@@ -21,6 +22,33 @@ public enum SolverAlgorithm
     Stepwise,
     StepwiseForked,
     StepwiseFurcated,
+}
+
+public static class AlgorithmUtils
+{
+    public static void Invoke(this SolverAlgorithm me, SolverConfig config, SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
+    {
+        Func<SolverConfig, SimulationState, Action<ActionType>?, CancellationToken, SolverSolution> func = me switch
+        {
+            SolverAlgorithm.Oneshot => Solver.Crafty.Solver.SearchOneshot,
+            SolverAlgorithm.OneshotForked => Solver.Crafty.Solver.SearchOneshotForked,
+            SolverAlgorithm.Stepwise => Solver.Crafty.Solver.SearchStepwise,
+            SolverAlgorithm.StepwiseForked => Solver.Crafty.Solver.SearchStepwiseForked,
+            SolverAlgorithm.StepwiseFurcated or _ => Solver.Crafty.Solver.SearchStepwiseFurcated,
+        };
+        try
+        {
+            func(config, state, actionCallback, token);
+        }
+        catch (AggregateException e)
+        {
+            e.Handle(ex => ex is OperationCanceledException);
+        }
+        catch (OperationCanceledException)
+        {
+
+        }
+    }
 }
 
 [Serializable]
