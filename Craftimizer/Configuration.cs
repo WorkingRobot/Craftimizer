@@ -62,6 +62,8 @@ public class Configuration : IPluginConfiguration
     public SolverConfig SolverConfig { get; set; } = new();
     public SolverAlgorithm SolverAlgorithm { get; set; } = SolverAlgorithm.StepwiseFurcated;
     public bool ConditionRandomness { get; set; } = true;
+    public bool EnableSynthesisHelper { get; set; } = true;
+    public int SynthesisHelperStepCount { get; set; } = 5;
 
     public Simulator.Simulator CreateSimulator(SimulationState state) =>
         ConditionRandomness ?

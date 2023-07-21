@@ -116,6 +116,26 @@ public class Settings : Window
             ref isDirty
         );
 
+        DrawOption(
+            "Enable Synthesis Helper",
+            "Adds a helper next to your synthesis window to help solve for the best craft.\n" +
+            "Extremely useful for expert recipes, where the condition can greatly affect\n" +
+            "which actions you take.",
+            Config.EnableSynthesisHelper,
+            v => Config.EnableSynthesisHelper = v,
+            ref isDirty
+        );
+
+        ImGui.BeginDisabled(!Config.EnableSynthesisHelper);
+        DrawOption(
+            "Synthesis Helper Step Count",
+            "The number of future actions to solve for during an in-game craft.",
+            Config.SynthesisHelperStepCount,
+            v => Config.SynthesisHelperStepCount = v,
+            ref isDirty
+        );
+        ImGui.EndDisabled();
+
         ImGuiUtils.EndGroupPanel();
 
         ImGuiUtils.BeginGroupPanel("Solver");
