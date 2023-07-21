@@ -1,25 +1,29 @@
 using Craftimizer.Plugin;
 using Craftimizer.Simulator;
-using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using Dalamud.Game;
+using Dalamud.Logging;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using Lumina.Excel.GeneratedSheets;
-using System.Linq;
 using System;
+using System.Linq;
+using ActionType = Craftimizer.Simulator.Actions.ActionType;
 using ClassJob = Craftimizer.Simulator.ClassJob;
 using CSRecipeNote = FFXIVClientStructs.FFXIV.Client.Game.UI.RecipeNote;
-using ActionType = Craftimizer.Simulator.Actions.ActionType;
-using FFXIVClientStructs.FFXIV.Client.Game.Object;
 
 namespace Craftimizer.Utils;
 
-public unsafe class RecipeNote
+public sealed unsafe class RecipeNote : IDisposable
 {
     public AddonRecipeNote* AddonRecipe { get; private set; }
     public AddonSynthesis* AddonSynthesis { get; private set; }
-    public CSRecipeNote* State { get; private set; }
+    public bool IsCrafting { get; private set; }
     public ushort RecipeId { get; private set; }
     public Recipe Recipe { get; private set; } = null!;
+    public bool HasValidRecipe { get; private set; }
 
     public RecipeLevelTable Table { get; private set; } = null!;
     public RecipeInfo Info { get; private set; } = null!;
@@ -31,34 +35,45 @@ public unsafe class RecipeNote
 
     public RecipeNote()
     {
-        
+        Service.Framework.Update += FrameworkUpdate;
     }
 
-    public bool Update(out bool isNewRecipe)
+    private void FrameworkUpdate(Framework f)
     {
-        isNewRecipe = false;
+        HasValidRecipe = false;
+        try
+        {
+            HasValidRecipe = Update();
+        }
+        catch (Exception e)
+        {
+            PluginLog.LogError(e, "RecipeNote framework update failed");
+        }
+    }
 
+    public bool Update()
+    {
         if (Service.ClientState.LocalPlayer == null)
             return false;
 
         AddonRecipe = (AddonRecipeNote*)Service.GameGui.GetAddonByName("RecipeNote");
         AddonSynthesis = (AddonSynthesis*)Service.GameGui.GetAddonByName("Synthesis");
 
-        State = CSRecipeNote.Instance();
+        var recipeId = GetRecipeIdFromList();
+        if (recipeId == null)
+        {
+            recipeId = GetRecipeIdFromAgent();
+            if (recipeId == null)
+                return false;
+            else
+                IsCrafting = true;
+        }
+        else
+            IsCrafting = false;
 
-        var list = State->RecipeList;
+        var isNewRecipe = RecipeId != recipeId.Value;
 
-        if (list == null)
-            return false;
-
-        var recipeEntry = list->SelectedRecipe;
-
-        if (recipeEntry == null)
-            return false;
-
-        isNewRecipe = RecipeId != recipeEntry->RecipeId;
-
-        RecipeId = recipeEntry->RecipeId;
+        RecipeId = recipeId.Value;
 
         var recipe = LuminaSheets.RecipeSheet.GetRow(RecipeId);
 
@@ -71,6 +86,35 @@ public unsafe class RecipeNote
             CalculateStats();
 
         return true;
+    }
+
+    private static ushort? GetRecipeIdFromList()
+    {
+        var instance = CSRecipeNote.Instance();
+
+        var list = instance->RecipeList;
+
+        if (list == null)
+            return null;
+
+        var recipeEntry = list->SelectedRecipe;
+
+        if (recipeEntry == null)
+            return null;
+
+        return recipeEntry->RecipeId;
+    }
+
+    private static ushort? GetRecipeIdFromAgent()
+    {
+        var instance = AgentRecipeNote.Instance();
+
+        var recipeId = instance->ActiveCraftRecipeId;
+
+        if (recipeId == 0)
+            return null;
+
+        return (ushort)recipeId;
     }
 
     private void CalculateStats()
@@ -104,4 +148,9 @@ public unsafe class RecipeNote
             ProgressModifier = Table.ProgressModifier,
             ProgressDivider = Table.ProgressDivider,
         };
+
+    public void Dispose()
+    {
+        Service.Framework.Update -= FrameworkUpdate;
+    }
 }

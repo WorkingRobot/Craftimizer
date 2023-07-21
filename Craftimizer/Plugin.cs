@@ -1,12 +1,9 @@
 using Craftimizer.Plugin.Windows;
 using Craftimizer.Simulator;
 using Craftimizer.Utils;
-using Dalamud.Hooking;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
-using Dalamud.Logging;
 using Dalamud.Plugin;
-using Dalamud.Utility.Signatures;
 using Lumina.Excel.GeneratedSheets;
 using ClassJob = Craftimizer.Simulator.ClassJob;
 
@@ -22,7 +19,8 @@ public sealed class Plugin : IDalamudPlugin
     public Craft SynthesisWindow { get; }
     public Windows.Simulator? SimulatorWindow { get; set; }
 
-    public Hooks Hook { get; }
+    public Hooks Hooks { get; }
+    public RecipeNote RecipeNote { get; }
 
     public Plugin([RequiredVersion("1.0")] DalamudPluginInterface pluginInterface)
     {
@@ -30,6 +28,8 @@ public sealed class Plugin : IDalamudPlugin
         pluginInterface.Create<Service>();
         Service.Configuration = pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
+        Hooks = new();
+        RecipeNote = new();
         WindowSystem = new(Name);
 
         SettingsWindow = new();
@@ -38,8 +38,6 @@ public sealed class Plugin : IDalamudPlugin
 
         Service.PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
         Service.PluginInterface.UiBuilder.OpenConfigUi += OpenSettingsWindow;
-
-        Hook = new();
     }
 
     public void OpenSimulatorWindow(Item item, bool isExpert, SimulationInput input, ClassJob classJob, Macro? macro)
@@ -61,6 +59,8 @@ public sealed class Plugin : IDalamudPlugin
     public void Dispose()
     {
         SimulatorWindow?.Dispose();
-        Hook.Dispose();
+        SynthesisWindow.Dispose();
+        RecipeNote.Dispose();
+        Hooks.Dispose();
     }
 }

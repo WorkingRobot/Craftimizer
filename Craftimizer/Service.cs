@@ -23,6 +23,7 @@ public sealed class Service
     [PluginService] public static DataManager DataManager { get; private set; }
     [PluginService] public static TargetManager TargetManager { get; private set; }
     [PluginService] public static Condition Condition { get; private set; }
+    [PluginService] public static Framework Framework { get; private set; }
 
     public static Plugin Plugin { get; internal set; }
     public static Configuration Configuration { get; internal set; }
