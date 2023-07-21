@@ -82,7 +82,7 @@ public sealed class Simulator : SimulatorNoRandom
 
         if (strict)
         {
-            // always used Trained Eye if it's available
+            // always use Trained Eye if it's available
             if (action == ActionType.TrainedEye)
                 return baseAction.CanUse(this);
 

@@ -283,7 +283,7 @@ public sealed class Solver
             }
             else
             {
-                for(var i = 0; i < node.Children.Count; ++i)
+                for (var i = 0; i < node.Children.Count; ++i)
                 {
                     var n = node.ChildAt((i >> 3, i & 7))!;
                     if (NodesIncomplete(n, path))
@@ -350,22 +350,23 @@ public sealed class Solver
                 break;
 
             var s = Stopwatch.StartNew();
-            var tasks = new List<Task<(float MaxScore, int FurcatedActionIdx, SolverSolution Solution)>>(config.ForkCount);
+            var tasks = new Task<(float MaxScore, int FurcatedActionIdx, SolverSolution Solution)>[config.ForkCount];
             for (var i = 0; i < config.ForkCount; i++)
             {
                 var stateIdx = (int)((float)i / config.ForkCount * activeStates.Count);
                 var st = activeStates[stateIdx];
-                tasks.Add(
-                    Task.Run(() =>
+                tasks[i] = Task.Run(() =>
                     {
                         var solver = new Solver(config, activeStates[stateIdx].State);
                         solver.Search(config.Iterations / config.ForkCount, token);
                         return (solver.MaxScore, stateIdx, solver.Solution());
-                    }, token)
-                );
+                    }, token);
             }
-            Task.WaitAll(tasks.ToArray(), CancellationToken.None);
+            Task.WaitAll(tasks, token);
             s.Stop();
+
+            if (token.IsCancellationRequested)
+                break;
 
             var bestActions = tasks.Select(t => t.Result).OrderByDescending(r => r.MaxScore).Take(config.FurcatedActionCount).ToArray();
 
@@ -403,7 +404,7 @@ public sealed class Solver
                 var definiteCount = definiteActionCount;
                 var equalCount = int.MaxValue;
                 var refActions = newStates[0].Actions;
-                for(var i = 1; i < newStates.Count; ++i)
+                for (var i = 1; i < newStates.Count; ++i)
                 {
                     var cmpActions = newStates[i].Actions;
                     var possibleCount = Math.Min(Math.Min(refActions.Count, cmpActions.Count), equalCount);
@@ -469,8 +470,11 @@ public sealed class Solver
                     solver.Search(config.Iterations / config.ForkCount, token);
                     return (solver.MaxScore, solver.Solution());
                 }, token);
-            Task.WaitAll(tasks, CancellationToken.None);
+            Task.WaitAll(tasks, token);
             s.Stop();
+
+            if (token.IsCancellationRequested)
+                break;
 
             var (maxScore, solution) = tasks.Select(t => t.Result).MaxBy(r => r.MaxScore);
 
