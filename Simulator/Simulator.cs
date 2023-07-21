@@ -124,7 +124,7 @@ public class Simulator
             _ => 0.00f
         };
 
-    private Condition GetNextRandomCondition()
+    public virtual Condition GetNextRandomCondition()
     {
         var conditionChance = Input.Random.NextSingle();
 
@@ -135,7 +135,7 @@ public class Simulator
         return Condition.Normal;
     }
 
-    public virtual void StepCondition()
+    public void StepCondition()
     {
         Condition = Condition switch
         {
