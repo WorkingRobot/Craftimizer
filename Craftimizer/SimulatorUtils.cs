@@ -17,7 +17,7 @@ namespace Craftimizer.Plugin;
 
 internal static class ActionUtils
 {
-    private static (CraftAction? CraftAction, Action? Action)[,] ActionRows;
+    private static readonly (CraftAction? CraftAction, Action? Action)[,] ActionRows;
 
     static ActionUtils()
     {
@@ -91,6 +91,25 @@ internal static class ActionUtils
         // Old "Steady Hand" action icon
         return Icons.GetIconFromId(1953);
     }
+
+    public static ActionType? GetActionTypeFromId(uint actionId, ClassJob classJob, bool isCraftAction)
+    {
+        foreach(var action in Enum.GetValues<ActionType>())
+        {
+            var row = action.GetActionRow(classJob);
+            if (isCraftAction)
+            {
+                if (row.CraftAction?.RowId == actionId)
+                    return action;
+            }
+            else
+            {
+                if (row.Action?.RowId == actionId)
+                    return action;
+            }
+        }
+        return null;
+    }
 }
 
 internal static class ClassJobUtils
@@ -109,19 +128,24 @@ internal static class ClassJobUtils
             _ => 0
         };
 
+    public static ClassJob? GetClassJobFromIdx(byte classJobIdx) =>
+        classJobIdx switch
+        {
+            8 => ClassJob.Carpenter,
+            9 => ClassJob.Blacksmith,
+            10 => ClassJob.Armorer,
+            11 => ClassJob.Goldsmith,
+            12 => ClassJob.Leatherworker,
+            13 => ClassJob.Weaver,
+            14 => ClassJob.Alchemist,
+            15 => ClassJob.Culinarian,
+            _ => null
+        };
+
     public static string GetName(this ClassJob classJob)
     {
         var job = LuminaSheets.ClassJobSheet.GetRow(classJob.GetClassJobIndex())!;
         return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(job.Name.ToDalamudString().TextValue);
-    }
-
-    // Index in the actual ClassJob sheet
-    public static bool IsClassJob(byte classJobIdx, ClassJob classJob)
-    {
-        var job = LuminaSheets.ClassJobSheet.GetRow(classJobIdx)!;
-        if (job.ClassJobCategory.Row != 33) // DoH
-            return false;
-        return (ClassJob)job.DohDolJobIndex == classJob;
     }
 
     public static bool IsClassJob(this ClassJobCategory me, ClassJob classJob) =>
