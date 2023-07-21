@@ -13,7 +13,7 @@ public sealed partial class Simulator : Window, IDisposable
 {
     private const ImGuiWindowFlags WindowFlags = ImGuiWindowFlags.AlwaysAutoResize;
 
-    private static Configuration Configuration => Service.Configuration;
+    private static Configuration Config => Service.Configuration;
 
     private Item Item { get; }
     private bool IsExpert { get; }
@@ -39,7 +39,7 @@ public sealed partial class Simulator : Window, IDisposable
         Input = input;
         ClassJob = classJob;
         Macro = macro;
-        MacroName = Macro?.Name ?? $"Macro {Configuration.Macros.Count + 1}";
+        MacroName = Macro?.Name ?? $"Macro {Config.Macros.Count + 1}";
         Actions = new();
         ResetSimulator();
 
@@ -58,7 +58,7 @@ public sealed partial class Simulator : Window, IDisposable
 
     private void ResetSimulator()
     {
-        Sim = Configuration.CreateSimulator(LatestState);
+        Sim = Config.CreateSimulator(LatestState);
         ReexecuteAllActions();
     }
 }

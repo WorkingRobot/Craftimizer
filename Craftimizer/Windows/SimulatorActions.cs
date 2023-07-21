@@ -1,4 +1,3 @@
-using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Dalamud.Interface.Windowing;
 using System;

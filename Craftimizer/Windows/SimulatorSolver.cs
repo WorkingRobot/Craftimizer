@@ -1,10 +1,8 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
-using Craftimizer.Solver.Crafty;
 using Dalamud.Interface.Windowing;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,13 +10,13 @@ namespace Craftimizer.Plugin.Windows;
 
 public sealed partial class Simulator : Window, IDisposable
 {
-    private Task SolverTask { get; set; } = Task.CompletedTask;
-    private CancellationTokenSource SolverTaskToken { get; set; } = new();
+    private Task? SolverTask { get; set; }
+    private CancellationTokenSource? SolverTaskToken { get; set; }
     private ConcurrentQueue<ActionType> SolverActionQueue { get; } = new();
     private int SolverInitialActionCount { get; set; }
     private bool SolverActionsChanged { get; set; } = true;
 
-    private bool CanModifyActions => SolverTask.IsCompleted;
+    private bool CanModifyActions => SolverTask?.IsCompleted ?? true;
 
     private void OnActionsChanged()
     {
@@ -49,44 +47,50 @@ public sealed partial class Simulator : Window, IDisposable
         return ret;
     }
 
+    private void StopSolveMacro()
+    {
+        if (SolverTask == null || SolverTaskToken == null)
+            return;
+
+        if (!SolverTask.IsCompleted)
+            SolverTaskToken.Cancel();
+        else
+        {
+            SolverTaskToken.Dispose();
+            SolverTask.Dispose();
+
+            SolverTask = null;
+            SolverTaskToken = null;
+        }
+    }
+
     private void SolveMacro(SimulationState solverState)
     {
-        if (!SolverTask.IsCompleted)
-        {
-            SolverTaskToken.Cancel();
-        }
+        StopSolveMacro();
 
         // Prevents the quality bar from being unfair between solves
-        if (Configuration.ConditionRandomness)
+        if (Config.ConditionRandomness)
         {
-            Configuration.ConditionRandomness = false;
-            Configuration.Save();
+            Config.ConditionRandomness = false;
+            Config.Save();
 
             ResetSimulator();
         }
 
         SolverActionsChanged = false;
 
-        SolverTaskToken.Dispose();
-        SolverTask.Dispose();
         SolverActionQueue.Clear();
 
         SolverInitialActionCount = Actions.Count;
         SolverTaskToken = new();
-        Func<SolverConfig, SimulationState, Action<ActionType>?, CancellationToken, SolverSolution> solverMethod = Configuration.SolverAlgorithm switch
-        {
-            SolverAlgorithm.Oneshot => Solver.Crafty.Solver.SearchOneshot,
-            SolverAlgorithm.OneshotForked => Solver.Crafty.Solver.SearchOneshotForked,
-            SolverAlgorithm.Stepwise => Solver.Crafty.Solver.SearchStepwise,
-            SolverAlgorithm.StepwiseForked => Solver.Crafty.Solver.SearchStepwiseForked,
-            SolverAlgorithm.StepwiseFurcated or _ => Solver.Crafty.Solver.SearchStepwiseFurcated,
-        };
-        SolverTask = Task.Run(() => solverMethod(Configuration.SolverConfig, solverState, SolverActionQueue.Enqueue, SolverTaskToken.Token));
+        SolverTask = Task.Run(() => Config.SolverAlgorithm.Invoke(Config.SolverConfig, solverState, SolverActionQueue.Enqueue, SolverTaskToken.Token));
     }
 
     public void Dispose()
     {
-        SolverTask.Dispose();
-        SolverTaskToken.Dispose();
+        StopSolveMacro();
+        SolverTask?.Wait();
+        SolverTask?.Dispose();
+        SolverTaskToken?.Dispose();
     }
 }

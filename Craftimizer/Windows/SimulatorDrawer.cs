@@ -62,11 +62,11 @@ public sealed partial class Simulator : Window, IDisposable
 
     private void DrawActions()
     {
-        var hideUnlearnedActions = Configuration.HideUnlearnedActions;
+        var hideUnlearnedActions = Config.HideUnlearnedActions;
         if (ImGui.Checkbox("Show only learned actions", ref hideUnlearnedActions))
         {
-            Configuration.HideUnlearnedActions = hideUnlearnedActions;
-            Configuration.Save();
+            Config.HideUnlearnedActions = hideUnlearnedActions;
+            Config.Save();
         }
 
         Sim.SetState(LatestState);
@@ -86,7 +86,7 @@ public sealed partial class Simulator : Window, IDisposable
                 var baseAction = action.Base();
 
                 var cannotUse = action.Level() > Input.Stats.Level || (action == ActionType.Manipulation && !Input.Stats.CanUseManipulation);
-                if (cannotUse && Configuration.HideUnlearnedActions)
+                if (cannotUse && Config.HideUnlearnedActions)
                     continue;
 
                 var shouldNotUse = !baseAction.CanUse(Sim) || Sim.IsComplete;
@@ -313,12 +313,12 @@ public sealed partial class Simulator : Window, IDisposable
         var quarterButtonSize = new Vector2(quarterWidth, ImGui.CalcTextSize("A").Y + ImGui.GetStyle().FramePadding.Y * 2);
 
         var conditionRandomnessText = "Condition Randomness";
-        var conditionRandomness = Configuration.ConditionRandomness;
+        var conditionRandomness = Config.ConditionRandomness;
         ImGui.BeginDisabled(!CanModifyActions);
         if (ImGui.Checkbox(conditionRandomnessText, ref conditionRandomness))
         {
-            Configuration.ConditionRandomness = conditionRandomness;
-            Configuration.Save();
+            Config.ConditionRandomness = conditionRandomness;
+            Config.Save();
             ResetSimulator();
         }
         ImGui.EndDisabled();
@@ -355,15 +355,15 @@ public sealed partial class Simulator : Window, IDisposable
             {
                 Macro.Name = MacroName;
                 Macro.Actions = Actions.Select(a => a.Action).ToList();
-                Configuration.Save();
+                Config.Save();
             }
             ImGui.SameLine();
         }
         if (ImGui.Button("Save New", Macro == null ? halfButtonSize : quarterButtonSize))
         {
             Macro = new() { Name = MacroName, Actions = Actions.Select(a => a.Action).ToList() };
-            Configuration.Macros.Add(Macro);
-            Configuration.Save();
+            Config.Macros.Add(Macro);
+            Config.Save();
         }
         ImGui.SameLine();
         if (ImGui.Button("Reset", halfButtonSize))
@@ -377,9 +377,11 @@ public sealed partial class Simulator : Window, IDisposable
         string buttonText;
         string tooltipText;
         bool isEnabled;
-        if (!SolverTask.IsCompleted)
+        var taskCompleted = SolverTask?.IsCompleted ?? true;
+        var taskCancelled = SolverTaskToken?.IsCancellationRequested ?? false;
+        if (!taskCompleted)
         {
-            if (SolverTaskToken.IsCancellationRequested)
+            if (taskCancelled)
             {
                 buttonText = "Cancelling...";
                 tooltipText = "Cancelling macro generation. This shouldn't take long.";
@@ -412,21 +414,17 @@ public sealed partial class Simulator : Window, IDisposable
         ImGui.BeginDisabled(!isEnabled);
         if (ImGui.Button(buttonText, buttonSize))
         {
-            if (!SolverTask.IsCompleted)
+            if (!taskCompleted)
             {
-                if (!SolverTaskToken.IsCancellationRequested)
-                {
-                    SolverTaskToken.Cancel();
-                }
+                if (!taskCancelled)
+                    SolverTaskToken?.Cancel();
             }
             else
             {
                 if (SolverActionsChanged)
                 {
                     if (state.HasValue)
-                    {
                         SolveMacro(state.Value);
-                    }
                 }
                 else
                 {
