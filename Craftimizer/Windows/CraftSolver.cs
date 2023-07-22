@@ -48,7 +48,7 @@ public sealed unsafe partial class Craft : Window, IDisposable
         SolverSim = new(state);
 
         SolverTaskToken = new();
-        SolverTask = Task.Run(() => Config.SolverAlgorithm.Invoke(Config.SolverConfig, state, SolverActionQueue.Enqueue, SolverTaskToken.Token));
+        SolverTask = Task.Run(() => Config.SynthHelperSolverConfig.Invoke(state, SolverActionQueue.Enqueue, SolverTaskToken.Token));
     }
 
     private void SolveTick()

@@ -15,30 +15,13 @@ public class Macro
     public List<ActionType> Actions { get; set; } = new();
 }
 
-public enum SolverAlgorithm
-{
-    Oneshot,
-    OneshotForked,
-    Stepwise,
-    StepwiseForked,
-    StepwiseFurcated,
-}
-
 public static class AlgorithmUtils
 {
-    public static void Invoke(this SolverAlgorithm me, SolverConfig config, SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
+    public static void Invoke(this SolverConfig me, SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
     {
-        Func<SolverConfig, SimulationState, Action<ActionType>?, CancellationToken, SolverSolution> func = me switch
-        {
-            SolverAlgorithm.Oneshot => Solver.Crafty.Solver.SearchOneshot,
-            SolverAlgorithm.OneshotForked => Solver.Crafty.Solver.SearchOneshotForked,
-            SolverAlgorithm.Stepwise => Solver.Crafty.Solver.SearchStepwise,
-            SolverAlgorithm.StepwiseForked => Solver.Crafty.Solver.SearchStepwiseForked,
-            SolverAlgorithm.StepwiseFurcated or _ => Solver.Crafty.Solver.SearchStepwiseFurcated,
-        };
         try
         {
-            func(config, state, actionCallback, token);
+            Solver.Crafty.Solver.Search(me, state, actionCallback, token);
         }
         catch (AggregateException e)
         {
@@ -59,8 +42,8 @@ public class Configuration : IPluginConfiguration
     public bool OverrideUncraftability { get; set; } = true;
     public bool HideUnlearnedActions { get; set; } = true;
     public List<Macro> Macros { get; set; } = new();
-    public SolverConfig SolverConfig { get; set; } = new();
-    public SolverAlgorithm SolverAlgorithm { get; set; } = SolverAlgorithm.StepwiseFurcated;
+    public SolverConfig SimulatorSolverConfig { get; set; } = SolverConfig.SimulatorDefault;
+    public SolverConfig SynthHelperSolverConfig { get; set; } = SolverConfig.SynthHelperDefault;
     public bool ConditionRandomness { get; set; } = true;
     public bool EnableSynthesisHelper { get; set; } = true;
     public int SynthesisHelperStepCount { get; set; } = 5;

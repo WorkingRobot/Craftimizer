@@ -570,4 +570,21 @@ public sealed class Solver
 
         return solution;
     }
+
+    public static SolverSolution Search(SolverConfig config, SimulationInput input, Action<ActionType>? actionCallback = null, CancellationToken token = default) =>
+        Search(config, new SimulationState(input), actionCallback, token);
+
+    public static SolverSolution Search(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
+    {
+        Func<SolverConfig, SimulationState, Action<ActionType>?, CancellationToken, SolverSolution> func = config.Algorithm switch
+        {
+            SolverAlgorithm.Oneshot => SearchOneshot,
+            SolverAlgorithm.OneshotForked => SearchOneshotForked,
+            SolverAlgorithm.Stepwise => SearchStepwise,
+            SolverAlgorithm.StepwiseForked => SearchStepwiseForked,
+            SolverAlgorithm.StepwiseFurcated or _ => SearchStepwiseFurcated,
+        };
+        return func(config, state, actionCallback, token);
+    }
+        
 }
