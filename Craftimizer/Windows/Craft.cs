@@ -61,7 +61,7 @@ public sealed unsafe partial class Craft : Window, IDisposable
         var totalWidth = 300f;
         var actionsPerRow = 5;
 
-        var actionSize = new Vector2((totalWidth / actionsPerRow) - (ImGui.GetStyle().ItemSpacing.X * ((actionsPerRow + 1f) / actionsPerRow)));
+        var actionSize = new Vector2((totalWidth / actionsPerRow) - (ImGui.GetStyle().ItemSpacing.X * ((actionsPerRow - 1f) / actionsPerRow)));
         ImGui.PushStyleColor(ImGuiCol.Button, Vector4.Zero);
         ImGui.PushStyleColor(ImGuiCol.ButtonActive, Vector4.Zero);
         ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Vector4.Zero);
@@ -140,7 +140,7 @@ public sealed unsafe partial class Craft : Window, IDisposable
 
     public override bool DrawConditions()
     {
-        if (!Config.EnableSynthesisHelper)
+        if (!Config.EnableSynthHelper)
             return false;
 
         var ret = DrawConditionsInner();

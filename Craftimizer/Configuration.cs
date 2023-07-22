@@ -42,11 +42,11 @@ public class Configuration : IPluginConfiguration
     public bool OverrideUncraftability { get; set; } = true;
     public bool HideUnlearnedActions { get; set; } = true;
     public List<Macro> Macros { get; set; } = new();
+    public bool ConditionRandomness { get; set; } = true;
     public SolverConfig SimulatorSolverConfig { get; set; } = SolverConfig.SimulatorDefault;
     public SolverConfig SynthHelperSolverConfig { get; set; } = SolverConfig.SynthHelperDefault;
-    public bool ConditionRandomness { get; set; } = true;
-    public bool EnableSynthesisHelper { get; set; } = true;
-    public int SynthesisHelperStepCount { get; set; } = 5;
+    public bool EnableSynthHelper { get; set; } = true;
+    public int SynthHelperStepCount { get; set; } = 5;
 
     public Simulator.Simulator CreateSimulator(SimulationState state) =>
         ConditionRandomness ?

@@ -79,7 +79,7 @@ public sealed unsafe partial class Craft : Window, IDisposable
         }
         else
         {
-            if (SolverActions.Count >= Config.SynthesisHelperStepCount)
+            if (SolverActions.Count >= Config.SynthHelperStepCount)
             {
                 StopSolve();
                 return;
@@ -89,7 +89,7 @@ public sealed unsafe partial class Craft : Window, IDisposable
             var (_, state) = SolverSim.Execute(SolverLatestState, action);
             SolverActions.Add((action, tooltip, state));
 
-            if (SolverActions.Count >= Config.SynthesisHelperStepCount)
+            if (SolverActions.Count >= Config.SynthHelperStepCount)
                 StopSolve();
         }
     }

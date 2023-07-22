@@ -89,20 +89,8 @@ public class Settings : Window
         if (ImGui.BeginTabBar("settingsTabBar"))
         {
             DrawTabGeneral();
-
-            var config = Config.SimulatorSolverConfig;
-            DrawTabSolver("Solver (Simulator)", ref config, out var isDirty);
-            if (isDirty)
-                Config.SimulatorSolverConfig = config;
-
-            if (Config.EnableSynthesisHelper)
-            {
-                config = Config.SynthHelperSolverConfig;
-                DrawTabSolver("Solver (Synthesis Helper)", ref config, out isDirty);
-                if (isDirty)
-                    Config.SynthHelperSolverConfig = config;
-            }
-
+            DrawTabSimulator();
+            DrawTabSynthHelper();
             DrawTabAbout();
 
             ImGui.EndTabBar();
@@ -117,7 +105,7 @@ public class Settings : Window
         var isDirty = false;
 
         DrawOption(
-            "Override uncraftability warning",
+            "Override Uncraftability Warning",
             "Allow simulation for crafts that otherwise wouldn't\n" +
             "be able to be crafted with your current gear",
             Config.OverrideUncraftability,
@@ -126,42 +114,14 @@ public class Settings : Window
         );
 
         DrawOption(
-            "Show only learned actions",
-            "Don't show crafting actions that haven't been\n" +
-            "learned yet with your current job on the simulator sidebar",
-            Config.HideUnlearnedActions,
-            v => Config.HideUnlearnedActions = v,
-            ref isDirty
-        );
-
-        DrawOption(
-            "Condition randomness",
-            "Allows the simulator condition to fluctuate randomly like a real craft.\n" +
-            "Turns off when generating a macro.",
-            Config.ConditionRandomness,
-            v => Config.ConditionRandomness = v,
-            ref isDirty
-        );
-
-        DrawOption(
             "Enable Synthesis Helper",
             "Adds a helper next to your synthesis window to help solve for the best craft.\n" +
             "Extremely useful for expert recipes, where the condition can greatly affect\n" +
             "which actions you take.",
-            Config.EnableSynthesisHelper,
-            v => Config.EnableSynthesisHelper = v,
+            Config.EnableSynthHelper,
+            v => Config.EnableSynthHelper = v,
             ref isDirty
         );
-
-        ImGui.BeginDisabled(!Config.EnableSynthesisHelper);
-        DrawOption(
-            "Synthesis Helper Step Count",
-            "The number of future actions to solve for during an in-game craft.",
-            Config.SynthesisHelperStepCount,
-            v => Config.SynthesisHelperStepCount = v,
-            ref isDirty
-        );
-        ImGui.EndDisabled();
 
         if (isDirty)
             Config.Save();
@@ -169,16 +129,20 @@ public class Settings : Window
         ImGui.EndTabItem();
     }
 
-    private static void DrawTabSolver(string label, ref SolverConfig configRef, out bool isDirty)
+    private static void DrawSolverConfig(ref SolverConfig configRef, SolverConfig defaultConfig, out bool isDirty)
     {
         isDirty = false;
-
-        if (!ImGui.BeginTabItem(label))
-            return;
 
         var config = configRef;
 
         ImGuiUtils.BeginGroupPanel("General");
+
+        ImGui.SetNextItemWidth(200);
+        if (ImGui.Button("Reset to Default"))
+        {
+            config = defaultConfig;
+            isDirty = true;
+        }
 
         ImGui.SetNextItemWidth(200);
         if (ImGui.BeginCombo("Algorithm", GetAlgorithmName(config.Algorithm)))
@@ -247,6 +211,7 @@ public class Settings : Window
             ref isDirty
         );
 
+        ImGui.BeginDisabled(config.Algorithm is not (SolverAlgorithm.OneshotForked or SolverAlgorithm.StepwiseForked or SolverAlgorithm.StepwiseFurcated));
         DrawOption(
             "Fork Count",
             "Split the number of iterations across different solvers. In general,\n" +
@@ -260,7 +225,9 @@ public class Settings : Window
             v => config = config with { ForkCount = v },
             ref isDirty
         );
+        ImGui.EndDisabled();
 
+        ImGui.BeginDisabled(config.Algorithm is not SolverAlgorithm.StepwiseFurcated);
         DrawOption(
             "Furcated Action Count",
             "On every craft step, pick this many top solutions and use them as\n" +
@@ -271,6 +238,7 @@ public class Settings : Window
             v => config = config with { FurcatedActionCount = v },
             ref isDirty
         );
+        ImGui.EndDisabled();
 
         ImGuiUtils.EndGroupPanel();
 
@@ -353,6 +321,7 @@ public class Settings : Window
             ref isDirty
         );
 
+        ImGui.SetNextItemWidth(200);
         if (ImGui.Button("Normalize Weights"))
         {
             var total = config.ScoreProgressBonus +
@@ -371,20 +340,88 @@ public class Settings : Window
             isDirty = true;
         }
         if (ImGui.IsItemHovered())
-            ImGui.SetTooltip("Normalize all weights to add up to 1");
+            ImGui.SetTooltip("Normalize all weights to sum up to 1");
 
         ImGuiUtils.EndGroupPanel();
 
-        if (ImGui.Button("Reset"))
+        if (isDirty)
+            configRef = config;
+    }
+
+    private static void DrawTabSimulator()
+    {
+        if (!ImGui.BeginTabItem("Simulator"))
+            return;
+
+        var isDirty = false;
+
+        DrawOption(
+            "Show Only Learned Actions",
+            "Don't show crafting actions that haven't been\n" +
+            "learned yet with your current job on the simulator sidebar",
+            Config.HideUnlearnedActions,
+            v => Config.HideUnlearnedActions = v,
+            ref isDirty
+        );
+
+        DrawOption(
+            "Condition Randomness",
+            "Allows the simulator condition to fluctuate randomly like a real craft.\n" +
+            "Turns off when generating a macro.",
+            Config.ConditionRandomness,
+            v => Config.ConditionRandomness = v,
+            ref isDirty
+        );
+
+        ImGuiHelpers.ScaledDummy(5);
+        ImGui.Separator();
+        ImGuiHelpers.ScaledDummy(5);
+
+        var solverConfig = Config.SimulatorSolverConfig;
+        DrawSolverConfig(ref solverConfig, SolverConfig.SimulatorDefault, out var isSolverDirty);
+        if (isSolverDirty)
         {
-            config = new();
+            Config.SimulatorSolverConfig = solverConfig;
             isDirty = true;
         }
 
+        if (isDirty)
+            Config.Save();
+
         ImGui.EndTabItem();
+    }
+
+    private static void DrawTabSynthHelper()
+    {
+        if (!ImGui.BeginTabItem("Synthesis Helper"))
+            return;
+
+        var isDirty = false;
+
+        DrawOption(
+            "Step Count",
+            "The number of future actions to solve for during an in-game craft.",
+            Config.SynthHelperStepCount,
+            v => Config.SynthHelperStepCount = v,
+            ref isDirty
+        );
+
+        ImGuiHelpers.ScaledDummy(5);
+        ImGui.Separator();
+        ImGuiHelpers.ScaledDummy(5);
+
+        var solverConfig = Config.SynthHelperSolverConfig;
+        DrawSolverConfig(ref solverConfig, SolverConfig.SynthHelperDefault, out var isSolverDirty);
+        if (isSolverDirty)
+        {
+            Config.SynthHelperSolverConfig = solverConfig;
+            isDirty = true;
+        }
 
         if (isDirty)
-            configRef = config;
+            Config.Save();
+
+        ImGui.EndTabItem();
     }
 
     private static void DrawTabAbout()
