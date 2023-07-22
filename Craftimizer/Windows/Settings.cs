@@ -4,8 +4,6 @@ using ImGuiNET;
 using System.Numerics;
 using System;
 using Craftimizer.Solver.Crafty;
-using System.Reflection;
-using System.Diagnostics;
 
 namespace Craftimizer.Plugin.Windows;
 
@@ -19,7 +17,7 @@ public class Settings : Window
 
         SizeConstraints = new WindowSizeConstraints()
         {
-            MinimumSize = new Vector2(400, 600),
+            MinimumSize = new Vector2(400, 400),
             MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
         };
         Size = SizeConstraints.Value.MinimumSize;
@@ -391,6 +389,9 @@ public class Settings : Window
 
     private static void DrawTabAbout()
     {
+        if (!ImGui.BeginTabItem("About"))
+            return;
+
         var plugin = Service.Plugin;
         var icon = plugin.Icon;
 
@@ -415,5 +416,7 @@ public class Settings : Window
         ImGuiUtils.Hyperlink("Craftingway", "https://craftingway.app");
         ImGui.SameLine(0, 0);
         ImGui.Text(" for the original solver algorithm");
+
+        ImGui.EndTabItem();
     }
 }

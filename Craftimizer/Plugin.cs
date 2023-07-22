@@ -35,7 +35,7 @@ public sealed class Plugin : IDalamudPlugin
         Service.Configuration = pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
         var assembly = Assembly.GetExecutingAssembly();
-        Version = assembly.GetCustomAttribute<AssemblyVersionAttribute>()!.Version;
+        Version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
         Author = assembly.GetCustomAttribute<AssemblyCompanyAttribute>()!.Company;
         Configuration = assembly.GetCustomAttribute<AssemblyConfigurationAttribute>()!.Configuration;
         byte[] iconData;
