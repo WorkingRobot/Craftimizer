@@ -3,6 +3,9 @@ using Dalamud.Interface;
 using ImGuiNET;
 using System.Numerics;
 using System;
+using Craftimizer.Solver.Crafty;
+using System.Reflection;
+using System.Diagnostics;
 
 namespace Craftimizer.Plugin.Windows;
 
@@ -85,7 +88,33 @@ public class Settings : Window
 
     public override void Draw()
     {
-        ImGuiUtils.BeginGroupPanel("General");
+        if (ImGui.BeginTabBar("settingsTabBar"))
+        {
+            DrawTabGeneral();
+
+            var config = Config.SimulatorSolverConfig;
+            DrawTabSolver("Solver (Simulator)", ref config, out var isDirty);
+            if (isDirty)
+                Config.SimulatorSolverConfig = config;
+
+            if (Config.EnableSynthesisHelper)
+            {
+                config = Config.SynthHelperSolverConfig;
+                DrawTabSolver("Solver (Synthesis Helper)", ref config, out isDirty);
+                if (isDirty)
+                    Config.SynthHelperSolverConfig = config;
+            }
+
+            DrawTabAbout();
+
+            ImGui.EndTabBar();
+        }
+    }
+
+    private static void DrawTabGeneral()
+    {
+        if (!ImGui.BeginTabItem("General"))
+            return;
 
         var isDirty = false;
 
@@ -136,25 +165,33 @@ public class Settings : Window
         );
         ImGui.EndDisabled();
 
-        ImGuiUtils.EndGroupPanel();
+        if (isDirty)
+            Config.Save();
 
-        ImGuiUtils.BeginGroupPanel("Solver");
+        ImGui.EndTabItem();
+    }
 
-        ImGui.Text("Credit to altosock's ");
-        ImGui.SameLine(0, 0);
-        ImGuiUtils.Hyperlink("Craftingway", "https://craftingway.app");
-        ImGui.SameLine(0, 0);
-        ImGui.Text(" for the original algorithm");
+    private static void DrawTabSolver(string label, ref SolverConfig configRef, out bool isDirty)
+    {
+        isDirty = false;
 
-        ImGuiHelpers.ScaledDummy(5);
+        if (!ImGui.BeginTabItem(label))
+            return;
+
+        var config = configRef;
+
+        ImGuiUtils.BeginGroupPanel("General");
 
         ImGui.SetNextItemWidth(200);
-        if (ImGui.BeginCombo("Algorithm", GetAlgorithmName(Config.SolverAlgorithm)))
+        if (ImGui.BeginCombo("Algorithm", GetAlgorithmName(config.Algorithm)))
         {
             foreach (var alg in Enum.GetValues<SolverAlgorithm>())
             {
-                if (ImGui.Selectable(GetAlgorithmName(alg), Config.SolverAlgorithm == alg))
-                    Config.SolverAlgorithm = alg;
+                if (ImGui.Selectable(GetAlgorithmName(alg), config.Algorithm == alg))
+                {
+                    config = config with { Algorithm = alg };
+                    isDirty = true;
+                }
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip(GetAlgorithmTooltip(alg));
             }
@@ -168,9 +205,6 @@ public class Settings : Window
                 "results, especially for very difficult crafts."
             );
 
-        var config = Config.SolverConfig;
-        var isSolverDirty = false;
-
         DrawOption(
             "Iterations",
             "The total number of iterations to run per crafting step.\n" +
@@ -179,7 +213,7 @@ public class Settings : Window
             "as necessary to get a more favorable outcome.",
             config.Iterations,
             v => config = config with { Iterations = v },
-            ref isSolverDirty
+            ref isDirty
         );
 
         DrawOption(
@@ -191,7 +225,7 @@ public class Settings : Window
             "on useless extra steps.",
             config.MaxStepCount,
             v => config = config with { MaxStepCount = v },
-            ref isSolverDirty
+            ref isDirty
         );
 
         DrawOption(
@@ -201,7 +235,7 @@ public class Settings : Window
             "moves will mostly be decided at random.",
             config.ExplorationConstant,
             v => config = config with { ExplorationConstant = v },
-            ref isSolverDirty
+            ref isDirty
         );
 
         DrawOption(
@@ -212,7 +246,7 @@ public class Settings : Window
             "1 uses their best outcome achieved so far.",
             config.MaxScoreWeightingConstant,
             v => config = config with { MaxScoreWeightingConstant = v },
-            ref isSolverDirty
+            ref isDirty
         );
 
         DrawOption(
@@ -226,7 +260,7 @@ public class Settings : Window
             "(Only used in the Forked and Furcated algorithms)",
             config.ForkCount,
             v => config = config with { ForkCount = v },
-            ref isSolverDirty
+            ref isDirty
         );
 
         DrawOption(
@@ -237,12 +271,12 @@ public class Settings : Window
             "(Only used in the Stepwise Furcated algorithm)",
             config.FurcatedActionCount,
             v => config = config with { FurcatedActionCount = v },
-            ref isSolverDirty
+            ref isDirty
         );
 
         ImGuiUtils.EndGroupPanel();
 
-        ImGuiUtils.BeginGroupPanel("Solver (Advanced)");
+        ImGuiUtils.BeginGroupPanel("Advanced");
 
         DrawOption(
             "Score Storage Threshold",
@@ -251,7 +285,7 @@ public class Settings : Window
             "Only change this value if you absolutely know what you're doing.",
             config.ScoreStorageThreshold,
             v => config = config with { ScoreStorageThreshold = v },
-            ref isSolverDirty
+            ref isDirty
         );
 
         DrawOption(
@@ -261,7 +295,7 @@ public class Settings : Window
             "this value if you absolutely know what you're doing.",
             config.MaxRolloutStepCount,
             v => config = config with { MaxRolloutStepCount = v },
-            ref isSolverDirty
+            ref isDirty
         );
 
         DrawOption(
@@ -271,12 +305,12 @@ public class Settings : Window
             "better macro at the cost of not finding an extremely creative one.",
             config.StrictActions,
             v => config = config with { StrictActions = v },
-            ref isSolverDirty
+            ref isDirty
         );
 
         ImGuiUtils.EndGroupPanel();
 
-        ImGuiUtils.BeginGroupPanel("Solver Score Weights (Advanced)");
+        ImGuiUtils.BeginGroupPanel("Score Weights (Advanced)");
         ImGui.TextWrapped("All values should add up to 1. Otherwise, the Score Storage Threshold should be changed.");
         ImGuiHelpers.ScaledDummy(10);
 
@@ -285,7 +319,7 @@ public class Settings : Window
             "Amount of weight to give to the craft's progress.",
             config.ScoreProgressBonus,
             v => config = config with { ScoreProgressBonus = v },
-            ref isSolverDirty
+            ref isDirty
         );
 
         DrawOption(
@@ -293,7 +327,7 @@ public class Settings : Window
             "Amount of weight to give to the craft's quality.",
             config.ScoreQualityBonus,
             v => config = config with { ScoreQualityBonus = v },
-            ref isSolverDirty
+            ref isDirty
         );
 
         DrawOption(
@@ -301,7 +335,7 @@ public class Settings : Window
             "Amount of weight to give to the craft's remaining durability.",
             config.ScoreDurabilityBonus,
             v => config = config with { ScoreDurabilityBonus = v },
-            ref isSolverDirty
+            ref isDirty
         );
 
         DrawOption(
@@ -309,7 +343,7 @@ public class Settings : Window
             "Amount of weight to give to the craft's remaining CP.",
             config.ScoreCPBonus,
             v => config = config with { ScoreCPBonus = v },
-            ref isSolverDirty
+            ref isDirty
         );
 
         DrawOption(
@@ -318,7 +352,7 @@ public class Settings : Window
             "the step count, the higher the score.",
             config.ScoreFewerStepsBonus,
             v => config = config with { ScoreFewerStepsBonus = v },
-            ref isSolverDirty
+            ref isDirty
         );
 
         if (ImGui.Button("Normalize Weights"))
@@ -336,26 +370,50 @@ public class Settings : Window
                 ScoreCPBonus = config.ScoreCPBonus / total,
                 ScoreFewerStepsBonus = config.ScoreFewerStepsBonus / total
             };
-            isSolverDirty = true;
+            isDirty = true;
         }
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip("Normalize all weights to add up to 1");
 
         ImGuiUtils.EndGroupPanel();
 
-        if (ImGui.Button("Reset Solver Settings"))
+        if (ImGui.Button("Reset"))
         {
             config = new();
-            isSolverDirty = true;
-        }
-
-        if (isSolverDirty)
-        {
-            Config.SolverConfig = config;
             isDirty = true;
         }
 
+        ImGui.EndTabItem();
+
         if (isDirty)
-            Config.Save();
+            configRef = config;
+    }
+
+    private static void DrawTabAbout()
+    {
+        var plugin = Service.Plugin;
+        var icon = plugin.Icon;
+
+        ImGui.BeginTable("settingsAboutTable", 2);
+        ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, icon.Width);
+
+        ImGui.TableNextColumn();
+        ImGui.Image(icon.ImGuiHandle, new(icon.Width, icon.Height));
+
+        ImGui.TableNextColumn();
+        ImGui.Text($"{plugin.Name} v{plugin.Version} {plugin.Configuration}");
+        ImGui.Text($"By {plugin.Author} (");
+        ImGui.SameLine(0, 0);
+        ImGuiUtils.Hyperlink("WorkingRobot", "https://github.com/WorkingRobot");
+        ImGui.SameLine(0, 0);
+        ImGui.Text(")");
+
+        ImGui.EndTable();
+
+        ImGui.Text("Credit to altosock's ");
+        ImGui.SameLine(0, 0);
+        ImGuiUtils.Hyperlink("Craftingway", "https://craftingway.app");
+        ImGui.SameLine(0, 0);
+        ImGui.Text(" for the original solver algorithm");
     }
 }

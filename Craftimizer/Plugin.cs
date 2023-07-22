@@ -4,7 +4,9 @@ using Craftimizer.Utils;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
+using ImGuiScene;
 using Lumina.Excel.GeneratedSheets;
+using System.Reflection;
 using ClassJob = Craftimizer.Simulator.ClassJob;
 
 namespace Craftimizer.Plugin;
@@ -12,6 +14,10 @@ namespace Craftimizer.Plugin;
 public sealed class Plugin : IDalamudPlugin
 {
     public string Name => "Craftimizer";
+    public string Version { get; }
+    public string Author { get; }
+    public string Configuration { get; }
+    public TextureWrap Icon { get; }
 
     public WindowSystem WindowSystem { get; }
     public Settings SettingsWindow { get; }
@@ -27,6 +33,18 @@ public sealed class Plugin : IDalamudPlugin
         Service.Plugin = this;
         pluginInterface.Create<Service>();
         Service.Configuration = pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+
+        var assembly = Assembly.GetExecutingAssembly();
+        Version = assembly.GetCustomAttribute<AssemblyVersionAttribute>()!.Version;
+        Author = assembly.GetCustomAttribute<AssemblyCompanyAttribute>()!.Company;
+        Configuration = assembly.GetCustomAttribute<AssemblyConfigurationAttribute>()!.Configuration;
+        byte[] iconData;
+        using (var stream = assembly.GetManifestResourceStream("Craftimizer.icon.png")!)
+        {
+            iconData = new byte[stream.Length];
+            _ = stream.Read(iconData);
+        }
+        Icon = Service.PluginInterface.UiBuilder.LoadImage(iconData);
 
         Hooks = new();
         RecipeNote = new();
