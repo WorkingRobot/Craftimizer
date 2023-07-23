@@ -14,6 +14,13 @@ public class Settings : Window
     private const int OptionWidth = 200;
     private static Vector2 OptionButtonSize => new(OptionWidth, ImGuiUtils.ButtonHeight);
 
+    public const string TabGeneral = "General";
+    public const string TabSimulator = "Simulator";
+    public const string TabSynthHelper = "Synthesis Helper";
+    public const string TabAbout = "About";
+
+    private string? SelectedTab { get; set; }
+
     public Settings() : base("Craftimizer Settings")
     {
         Service.WindowSystem.AddWindow(this);
@@ -25,6 +32,23 @@ public class Settings : Window
         };
         Size = SizeConstraints.Value.MinimumSize;
         SizeCondition = ImGuiCond.Appearing;
+    }
+
+    public void SelectTab(string label)
+    {
+        SelectedTab = label;
+    }
+
+    private bool BeginTabItem(string label)
+    {
+        var isSelected = string.Equals(SelectedTab, label, StringComparison.Ordinal);
+        if (isSelected)
+        {
+            SelectedTab = null;
+            var open = true;
+            return ImGui.BeginTabItem(label, ref open, ImGuiTabItemFlags.SetSelected);
+        }
+        return ImGui.BeginTabItem(label);
     }
 
     private static void DrawOption(string label, string tooltip, bool val, Action<bool> setter, ref bool isDirty)
@@ -101,9 +125,9 @@ public class Settings : Window
         }
     }
 
-    private static void DrawTabGeneral()
+    private void DrawTabGeneral()
     {
-        if (!ImGui.BeginTabItem("General"))
+        if (!BeginTabItem("General"))
             return;
 
         ImGuiHelpers.ScaledDummy(5);
@@ -352,9 +376,9 @@ public class Settings : Window
             configRef = config;
     }
 
-    private static void DrawTabSimulator()
+    private void DrawTabSimulator()
     {
-        if (!ImGui.BeginTabItem("Simulator"))
+        if (!BeginTabItem("Simulator"))
             return;
 
         ImGuiHelpers.ScaledDummy(5);
@@ -397,9 +421,9 @@ public class Settings : Window
         ImGui.EndTabItem();
     }
 
-    private static void DrawTabSynthHelper()
+    private void DrawTabSynthHelper()
     {
-        if (!ImGui.BeginTabItem("Synthesis Helper"))
+        if (!BeginTabItem("Synthesis Helper"))
             return;
 
         ImGuiHelpers.ScaledDummy(5);
@@ -432,9 +456,9 @@ public class Settings : Window
         ImGui.EndTabItem();
     }
 
-    private static void DrawTabAbout()
+    private void DrawTabAbout()
     {
-        if (!ImGui.BeginTabItem("About"))
+        if (!BeginTabItem("About"))
             return;
 
         ImGuiHelpers.ScaledDummy(5);

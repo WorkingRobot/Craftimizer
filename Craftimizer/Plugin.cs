@@ -74,6 +74,12 @@ public sealed class Plugin : IDalamudPlugin
         SettingsWindow.BringToFront();
     }
 
+    public void OpenSettingsTab(string selectedTabLabel)
+    {
+        OpenSettingsWindow();
+        SettingsWindow.SelectTab(selectedTabLabel);
+    }
+
     public void Dispose()
     {
         SimulatorWindow?.Dispose();

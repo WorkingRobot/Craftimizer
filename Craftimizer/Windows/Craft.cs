@@ -61,7 +61,7 @@ public sealed unsafe partial class Craft : Window, IDisposable
 
         ImGui.SameLine();
         if (ImGuiComponents.IconButton("synthSettingsButton", FontAwesomeIcon.Cog))
-            Service.Plugin.OpenSettingsWindow();
+            Service.Plugin.OpenSettingsTab(Settings.TabSynthHelper);
     }
 
     private void DrawActions()

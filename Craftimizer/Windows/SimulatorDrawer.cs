@@ -332,7 +332,7 @@ public sealed partial class Simulator : Window, IDisposable
         ImGui.PopFont();
         ImGui.SameLine(0, totalWidth - ImGui.GetStyle().ItemSpacing.X - checkboxWidth - cogWidth);
         if (ImGuiComponents.IconButton("simSettingsButton", FontAwesomeIcon.Cog))
-            Service.Plugin.OpenSettingsWindow();
+            Service.Plugin.OpenSettingsTab(Settings.TabSimulator);
 
         //
 
