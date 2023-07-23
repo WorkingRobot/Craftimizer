@@ -1,15 +1,15 @@
-using Craftimizer.Simulator.Actions;
 using Craftimizer.Simulator;
-using Dalamud.Interface.Windowing;
-using ImGuiNET;
-using System.Numerics;
-using Dalamud.Interface;
-using Dalamud.Utility;
-using System;
-using ImGuiScene;
-using Dalamud.Interface.Components;
-using System.Linq;
+using Craftimizer.Simulator.Actions;
 using Dalamud.Game.Text;
+using Dalamud.Interface;
+using Dalamud.Interface.Components;
+using Dalamud.Interface.Windowing;
+using Dalamud.Utility;
+using ImGuiNET;
+using ImGuiScene;
+using System;
+using System.Linq;
+using System.Numerics;
 
 namespace Craftimizer.Plugin.Windows;
 

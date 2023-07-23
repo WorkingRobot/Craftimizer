@@ -1,13 +1,13 @@
 using Dalamud.Data;
-using Dalamud.Game.ClientState.Objects;
-using Dalamud.Game.ClientState;
-using Dalamud.Game.Gui;
 using Dalamud.Game;
+using Dalamud.Game.ClientState;
+using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Game.ClientState.Objects;
+using Dalamud.Game.Command;
+using Dalamud.Game.Gui;
+using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
-using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Game.Command;
-using Dalamud.Interface.Windowing;
 
 namespace Craftimizer.Plugin;
 

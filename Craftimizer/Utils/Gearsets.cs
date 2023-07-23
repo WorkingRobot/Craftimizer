@@ -65,7 +65,7 @@ internal static unsafe class Gearsets
             foreach (var statIncrease in item.UnkData73)
                 IncreaseStat(statIncrease.BaseParamSpecial, statIncrease.BaseParamValueSpecial);
 
-        foreach(var gearsetMateria in gearsetItem.materia)
+        foreach (var gearsetMateria in gearsetItem.materia)
         {
             if (gearsetMateria.Type == 0)
                 continue;

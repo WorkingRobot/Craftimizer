@@ -586,5 +586,5 @@ public sealed class Solver
         };
         return func(config, state, actionCallback, token);
     }
-        
+
 }

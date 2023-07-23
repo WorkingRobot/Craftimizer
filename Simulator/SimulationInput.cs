@@ -34,7 +34,7 @@ public sealed class SimulationInput
 
     public SimulationInput(CharacterStats stats, RecipeInfo recipe, int startingQuality = 0, int? seed = null) : this(stats, recipe, startingQuality, seed == null ? new Random() : new Random(seed.Value))
     {
-        
+
     }
 
     public Condition[] AvailableConditions => ConditionUtils.GetPossibleConditions(Recipe.ConditionsFlag);

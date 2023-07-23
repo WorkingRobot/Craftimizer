@@ -54,7 +54,7 @@ public unsafe class CraftingLog : Window
     private CharacterStats CharacterStatsConsumable { get; set; } = null!;
     private CannotCraftReason CharacterCannotCraftReason { get; set; }
     private SimulationInput CharacterSimulationInput { get; set; } = null!;
-    
+
     // Set in UI
     private int QualityNotches { get; set; }
     private int StartingQuality =>
@@ -144,7 +144,7 @@ public unsafe class CraftingLog : Window
             CP = CharacterStatsNoConsumable.CP + CharacterConsumableBonus.CP,
         };
         CharacterCannotCraftReason = Config.OverrideUncraftability ? CannotCraftReason.OK : CanCraftRecipe(CharacterEquipment, CharacterStatsConsumable);
-        
+
         if (CharacterCannotCraftReason == CannotCraftReason.OK)
             CharacterSimulationInput = new(CharacterStatsConsumable, RecipeUtils.Info, StartingQuality, Random);
     }
@@ -212,7 +212,7 @@ public unsafe class CraftingLog : Window
         ImGui.EndDisabled();
 
         ImGui.BeginTable("craftfood", 2, ImGuiTableFlags.BordersInnerV);
-        
+
         ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, LeftSideWidth - 120);
         ImGui.TableNextColumn();
 
@@ -283,7 +283,8 @@ public unsafe class CraftingLog : Window
             ImGui.TableNextRow();
 
             SimulationState? state = null;
-            if (CharacterCannotCraftReason == CannotCraftReason.OK) {
+            if (CharacterCannotCraftReason == CannotCraftReason.OK)
+            {
                 state = new(CharacterSimulationInput);
                 foreach (var action in macro.Actions)
                     (_, state) = simulation.Execute(state.Value, action);

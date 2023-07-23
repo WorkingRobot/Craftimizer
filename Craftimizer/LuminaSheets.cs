@@ -1,6 +1,6 @@
-using Lumina.Excel.GeneratedSheets;
-using Lumina.Excel;
 using Dalamud;
+using Lumina.Excel;
+using Lumina.Excel.GeneratedSheets;
 
 namespace Craftimizer.Plugin;
 

@@ -1,14 +1,10 @@
-using Craftimizer.Simulator.Actions;
+using Craftimizer.Plugin;
 using Dalamud.Hooking;
-using Dalamud.Logging;
-using Dalamud.Utility.Signatures;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using System;
 using ActionType = Craftimizer.Simulator.Actions.ActionType;
-using CSActionType = FFXIVClientStructs.FFXIV.Client.Game.ActionType;
-using Condition = Craftimizer.Simulator.Condition;
-using Craftimizer.Plugin;
 using ActionUtils = Craftimizer.Plugin.ActionUtils;
+using CSActionType = FFXIVClientStructs.FFXIV.Client.Game.ActionType;
 
 namespace Craftimizer.Utils;
 
@@ -35,7 +31,8 @@ public sealed unsafe class Hooks : IDisposable
         if (canCast && ret && (actionType == CSActionType.CraftAction || actionType == CSActionType.Spell))
         {
             var classJob = ClassJobUtils.GetClassJobFromIdx((byte)(Service.ClientState.LocalPlayer?.ClassJob.Id ?? 0));
-            if (classJob != null) {
+            if (classJob != null)
+            {
                 var simActionType = ActionUtils.GetActionTypeFromId(actionId, classJob.Value, actionType == CSActionType.CraftAction);
                 if (simActionType != null)
                     OnActionUsed?.Invoke(simActionType.Value);

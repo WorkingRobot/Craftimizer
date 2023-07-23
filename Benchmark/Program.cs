@@ -98,7 +98,7 @@ internal static class Program
         }
 
         s.Stop();
-        Console.WriteLine($"{s.Elapsed.TotalMilliseconds/60:0.00}ms/cycle");
+        Console.WriteLine($"{s.Elapsed.TotalMilliseconds / 60:0.00}ms/cycle");
         Console.WriteLine(string.Join(',', q));
         q.Sort();
         Console.WriteLine($"Min: {Quartile(q, 0)}, Max: {Quartile(q, 4)}, Avg: {Quartile(q, 2)}, Q1: {Quartile(q, 1)}, Q3: {Quartile(q, 3)}");

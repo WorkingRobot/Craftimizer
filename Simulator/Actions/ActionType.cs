@@ -38,7 +38,7 @@ public enum ActionType : byte
     Veneration,
     WasteNot,
     WasteNot2,
-    
+
     StandardTouchCombo,
     AdvancedTouchCombo,
     FocusedSynthesisCombo,
@@ -48,7 +48,7 @@ public enum ActionType : byte
 public static class ActionUtils
 {
     private static readonly BaseAction[] Actions;
-    
+
     static ActionUtils()
     {
         var types = typeof(BaseAction).Assembly.GetTypes()

@@ -87,7 +87,7 @@ public record struct Effects
     public readonly byte GetStrength(EffectType effect) =>
         effect == EffectType.InnerQuiet ? InnerQuiet :
         (byte)(HasEffect(effect) ? 1 : 0);
-    
+
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool HasEffect(EffectType effect) =>

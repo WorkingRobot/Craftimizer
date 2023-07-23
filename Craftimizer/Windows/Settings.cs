@@ -1,9 +1,9 @@
-using Dalamud.Interface.Windowing;
-using Dalamud.Interface;
-using ImGuiNET;
-using System.Numerics;
-using System;
 using Craftimizer.Solver.Crafty;
+using Dalamud.Interface;
+using Dalamud.Interface.Windowing;
+using ImGuiNET;
+using System;
+using System.Numerics;
 
 namespace Craftimizer.Plugin.Windows;
 

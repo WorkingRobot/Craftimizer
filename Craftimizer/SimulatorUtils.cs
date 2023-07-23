@@ -1,17 +1,17 @@
-using ImGuiScene;
-using Dalamud.Utility;
-using Lumina.Excel.GeneratedSheets;
-using System.Linq;
+using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
-using Action = Lumina.Excel.GeneratedSheets.Action;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
+using Dalamud.Utility;
+using ImGuiScene;
+using Lumina.Excel.GeneratedSheets;
 using System;
+using System.Globalization;
+using System.Linq;
+using System.Numerics;
+using System.Text;
+using Action = Lumina.Excel.GeneratedSheets.Action;
 using ClassJob = Craftimizer.Simulator.ClassJob;
 using Condition = Craftimizer.Simulator.Condition;
-using Craftimizer.Simulator;
-using System.Text;
-using System.Numerics;
-using System.Globalization;
 
 namespace Craftimizer.Plugin;
 
@@ -29,7 +29,7 @@ internal static class ActionUtils
             var actionId = actionType.Base().ActionId;
             if (LuminaSheets.CraftActionSheet.GetRow(actionId) is CraftAction baseCraftAction)
             {
-                foreach(var classJob in classJobs)
+                foreach (var classJob in classJobs)
                 {
                     ActionRows[(int)actionType, (int)classJob] = (classJob switch
                     {
@@ -94,7 +94,7 @@ internal static class ActionUtils
 
     public static ActionType? GetActionTypeFromId(uint actionId, ClassJob classJob, bool isCraftAction)
     {
-        foreach(var action in Enum.GetValues<ActionType>())
+        foreach (var action in Enum.GetValues<ActionType>())
         {
             var row = action.GetActionRow(classJob);
             if (isCraftAction)
@@ -197,7 +197,7 @@ internal static class ConditionUtils
             _ => Vector3.Zero // Unknown
         };
 
-    private const float ConditionCyclePeriod = 19/30f;
+    private const float ConditionCyclePeriod = 19 / 30f;
     // The real period of all condition color cycles are 0.633... (19/30) seconds
     // Interp accepts 0-1
     public static Vector4 GetColor(this Condition me, float interp)
@@ -210,7 +210,7 @@ internal static class ConditionUtils
         {
             addRgb = interp switch
             {
-                < 0.155f => Vector3.Lerp(new(128,0,0), new(128,80,0), (interp - 0) / 0.155f),
+                < 0.155f => Vector3.Lerp(new(128, 0, 0), new(128, 80, 0), (interp - 0) / 0.155f),
                 < 0.315f => Vector3.Lerp(new(128, 80, 0), new(128, 128, 0), (interp - 0.155f) / 0.16f),
                 < 0.475f => Vector3.Lerp(new(128, 128, 0), new(0, 64, 0), (interp - 0.315f) / 0.16f),
                 < 0.630f => Vector3.Lerp(new(0, 64, 0), new(0, 128, 128), (interp - 0.475f) / 0.155f),
@@ -293,7 +293,7 @@ internal static class EffectUtils
     public static ushort GetIconId(this EffectType me, int strength)
     {
         var status = me.Status();
-        uint iconId = status.Icon;
+        var iconId = status.Icon;
         if (status.MaxStacks != 0)
             iconId += (uint)Math.Clamp(strength, 1, status.MaxStacks) - 1;
         return (ushort)iconId;

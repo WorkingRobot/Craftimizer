@@ -8,7 +8,7 @@ namespace Craftimizer.Solver.Crafty;
 public struct ActionSet
 {
     private const bool IsDeterministic = false;
-    
+
     private uint bits;
 
     [Pure]
