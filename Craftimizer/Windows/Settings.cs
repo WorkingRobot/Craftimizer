@@ -93,7 +93,8 @@ public class Settings : Window
         {
             DrawTabGeneral();
             DrawTabSimulator();
-            DrawTabSynthHelper();
+            if (Config.EnableSynthHelper)
+                DrawTabSynthHelper();
             DrawTabAbout();
 
             ImGui.EndTabBar();
@@ -104,6 +105,8 @@ public class Settings : Window
     {
         if (!ImGui.BeginTabItem("General"))
             return;
+
+        ImGuiHelpers.ScaledDummy(5);
 
         var isDirty = false;
 
@@ -354,6 +357,8 @@ public class Settings : Window
         if (!ImGui.BeginTabItem("Simulator"))
             return;
 
+        ImGuiHelpers.ScaledDummy(5);
+
         var isDirty = false;
 
         DrawOption(
@@ -397,6 +402,8 @@ public class Settings : Window
         if (!ImGui.BeginTabItem("Synthesis Helper"))
             return;
 
+        ImGuiHelpers.ScaledDummy(5);
+
         var isDirty = false;
 
         DrawOption(
@@ -429,6 +436,8 @@ public class Settings : Window
     {
         if (!ImGui.BeginTabItem("About"))
             return;
+
+        ImGuiHelpers.ScaledDummy(5);
 
         var plugin = Service.Plugin;
         var icon = plugin.Icon;
