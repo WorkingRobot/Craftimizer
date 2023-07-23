@@ -54,7 +54,7 @@ public sealed unsafe partial class Craft : Window, IDisposable
         ImGuiHelpers.ScaledDummy(5);
 
         ImGui.PushFont(UiBuilder.IconFont);
-        var cogWidth = ImGui.CalcTextSize(FontAwesomeIcon.Cog.ToIconString()).X;
+        var cogWidth = ImGui.CalcTextSize(FontAwesomeIcon.Cog.ToIconString()).X + (ImGui.GetStyle().FramePadding.X * 2);
         ImGui.PopFont();
 
         ImGui.BeginDisabled(!(SolverTask?.IsCompleted ?? true));
