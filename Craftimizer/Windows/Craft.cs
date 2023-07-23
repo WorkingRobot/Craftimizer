@@ -124,7 +124,7 @@ public sealed unsafe partial class Craft : Window, IDisposable
         else
         {
             buttonText = "Retry";
-            tooltipText = "Retry and regenerate a new set of actions to finish the craft.";
+            tooltipText = "Retry and regenerate a new set of recommended actions to finish the craft.";
             isEnabled = true;
         }
         ImGui.BeginDisabled(!isEnabled);
