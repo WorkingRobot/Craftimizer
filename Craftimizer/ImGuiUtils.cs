@@ -9,6 +9,9 @@ namespace Craftimizer.Plugin;
 
 internal static class ImGuiUtils
 {
+    public static float ButtonHeight =>
+        ImGui.CalcTextSize("A").Y + (ImGui.GetStyle().FramePadding.Y * 2);
+
     private static readonly Stack<(Vector2 Min, Vector2 Max)> GroupPanelLabelStack = new();
 
     // Adapted from https://github.com/ocornut/imgui/issues/1496#issuecomment-655048353

@@ -1,6 +1,7 @@
 using Craftimizer.Plugin.Utils;
 using Craftimizer.Utils;
 using Dalamud.Interface;
+using Dalamud.Interface.Components;
 using Dalamud.Interface.Windowing;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using ImGuiNET;
@@ -17,7 +18,9 @@ public sealed unsafe partial class Craft : Window, IDisposable
       | ImGuiWindowFlags.NoFocusOnAppearing
       | ImGuiWindowFlags.NoNavFocus;
 
-    public static readonly Vector2 CraftProgressBarSize = new(300, 15);
+    private const float WindowWidth = 300;
+    private const int ActionsPerRow = 5;
+    private static readonly Vector2 CraftProgressBarSize = new(WindowWidth, 15);
 
     private static Configuration Config => Service.Configuration;
 
@@ -50,18 +53,23 @@ public sealed unsafe partial class Craft : Window, IDisposable
 
         ImGuiHelpers.ScaledDummy(5);
 
+        ImGui.PushFont(UiBuilder.IconFont);
+        var cogWidth = ImGui.CalcTextSize(FontAwesomeIcon.Cog.ToIconString()).X;
+        ImGui.PopFont();
+
         ImGui.BeginDisabled(!(SolverTask?.IsCompleted ?? true));
-            if (ImGui.Button("Retry"))
-                QueueSolve(GetNextState()!.Value);
+        if (ImGui.Button("Retry", new(WindowWidth - ImGui.GetStyle().ItemSpacing.X - cogWidth, ImGuiUtils.ButtonHeight)))
+            QueueSolve(GetNextState()!.Value);
         ImGui.EndDisabled();
+
+        ImGui.SameLine();
+        if (ImGuiComponents.IconButton("synthSettingsButton", FontAwesomeIcon.Cog))
+            Service.Plugin.OpenSettingsWindow();
     }
 
     private void DrawActions()
     {
-        var totalWidth = 300f;
-        var actionsPerRow = 5;
-
-        var actionSize = new Vector2((totalWidth / actionsPerRow) - (ImGui.GetStyle().ItemSpacing.X * ((actionsPerRow - 1f) / actionsPerRow)));
+        var actionSize = new Vector2((WindowWidth / ActionsPerRow) - (ImGui.GetStyle().ItemSpacing.X * ((ActionsPerRow - 1f) / ActionsPerRow)));
         ImGui.PushStyleColor(ImGuiCol.Button, Vector4.Zero);
         ImGui.PushStyleColor(ImGuiCol.ButtonActive, Vector4.Zero);
         ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Vector4.Zero);
@@ -87,7 +95,7 @@ public sealed unsafe partial class Craft : Window, IDisposable
                 ImGui.EndTooltip();
             }
             ImGui.PopID();
-            if (i % actionsPerRow != (actionsPerRow - 1))
+            if (i % ActionsPerRow != (ActionsPerRow - 1))
                 ImGui.SameLine();
         }
 

@@ -309,8 +309,8 @@ public sealed partial class Simulator : Window, IDisposable
         var totalWidth = drawParams.Total;
         var halfWidth = (totalWidth - ImGui.GetStyle().ItemSpacing.X) / 2f;
         var quarterWidth = (halfWidth - ImGui.GetStyle().ItemSpacing.X) / 2f;
-        var halfButtonSize = new Vector2(halfWidth, ImGui.CalcTextSize("A").Y + ImGui.GetStyle().FramePadding.Y * 2);
-        var quarterButtonSize = new Vector2(quarterWidth, ImGui.CalcTextSize("A").Y + ImGui.GetStyle().FramePadding.Y * 2);
+        var halfButtonSize = new Vector2(halfWidth, ImGuiUtils.ButtonHeight);
+        var quarterButtonSize = new Vector2(quarterWidth, ImGuiUtils.ButtonHeight);
 
         var conditionRandomnessText = "Condition Randomness";
         var conditionRandomness = Config.ConditionRandomness;
@@ -343,7 +343,6 @@ public sealed partial class Simulator : Window, IDisposable
 
         ImGui.SameLine();
 
-        ImGui.SetNextItemWidth(halfWidth);
         DrawSimulationGenerateButton(halfButtonSize);
 
         //

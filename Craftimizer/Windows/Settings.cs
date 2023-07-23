@@ -11,6 +11,9 @@ public class Settings : Window
 {
     private static Configuration Config => Service.Configuration;
 
+    private const int OptionWidth = 200;
+    private static Vector2 OptionButtonSize => new(OptionWidth, ImGuiUtils.ButtonHeight);
+
     public Settings() : base("Craftimizer Settings")
     {
         Service.WindowSystem.AddWindow(this);
@@ -37,7 +40,7 @@ public class Settings : Window
 
     private static void DrawOption(string label, string tooltip, int val, Action<int> setter, ref bool isDirty)
     {
-        ImGui.SetNextItemWidth(200);
+        ImGui.SetNextItemWidth(OptionWidth);
         if (ImGui.InputInt(label, ref val))
         {
             setter(val);
@@ -49,7 +52,7 @@ public class Settings : Window
 
     private static void DrawOption(string label, string tooltip, float val, Action<float> setter, ref bool isDirty)
     {
-        ImGui.SetNextItemWidth(200);
+        ImGui.SetNextItemWidth(OptionWidth);
         if (ImGui.InputFloat(label, ref val))
         {
             setter(val);
@@ -137,14 +140,13 @@ public class Settings : Window
 
         ImGuiUtils.BeginGroupPanel("General");
 
-        ImGui.SetNextItemWidth(200);
-        if (ImGui.Button("Reset to Default"))
+        if (ImGui.Button("Reset to Default", OptionButtonSize))
         {
             config = defaultConfig;
             isDirty = true;
         }
 
-        ImGui.SetNextItemWidth(200);
+        ImGui.SetNextItemWidth(OptionWidth);
         if (ImGui.BeginCombo("Algorithm", GetAlgorithmName(config.Algorithm)))
         {
             foreach (var alg in Enum.GetValues<SolverAlgorithm>())
@@ -321,8 +323,7 @@ public class Settings : Window
             ref isDirty
         );
 
-        ImGui.SetNextItemWidth(200);
-        if (ImGui.Button("Normalize Weights"))
+        if (ImGui.Button("Normalize Weights", OptionButtonSize))
         {
             var total = config.ScoreProgressBonus +
                         config.ScoreQualityBonus +
