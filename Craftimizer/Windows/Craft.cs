@@ -57,10 +57,7 @@ public sealed unsafe partial class Craft : Window, IDisposable
         var cogWidth = ImGui.CalcTextSize(FontAwesomeIcon.Cog.ToIconString()).X + (ImGui.GetStyle().FramePadding.X * 2);
         ImGui.PopFont();
 
-        ImGui.BeginDisabled(!(SolverTask?.IsCompleted ?? true));
-        if (ImGui.Button("Retry", new(WindowWidth - ImGui.GetStyle().ItemSpacing.X - cogWidth, ImGuiUtils.ButtonHeight)))
-            QueueSolve(GetNextState()!.Value);
-        ImGui.EndDisabled();
+        DrawSolveButton(new(WindowWidth - ImGui.GetStyle().ItemSpacing.X - cogWidth, ImGuiUtils.ButtonHeight));
 
         ImGui.SameLine();
         if (ImGuiComponents.IconButton("synthSettingsButton", FontAwesomeIcon.Cog))
@@ -100,6 +97,50 @@ public sealed unsafe partial class Craft : Window, IDisposable
         }
 
         ImGui.PopStyleColor(3);
+    }
+
+    private void DrawSolveButton(Vector2 buttonSize)
+    {
+        string buttonText;
+        string tooltipText;
+        bool isEnabled;
+        var taskCompleted = SolverTask?.IsCompleted ?? true;
+        var taskCancelled = SolverTaskToken?.IsCancellationRequested ?? false;
+        if (!taskCompleted)
+        {
+            if (taskCancelled)
+            {
+                buttonText = "Cancelling...";
+                tooltipText = "Cancelling action generation. This shouldn't take long.";
+                isEnabled = false;
+            }
+            else
+            {
+                buttonText = "Cancel";
+                tooltipText = "Cancel action generation";
+                isEnabled = true;
+            }
+        }
+        else
+        {
+            buttonText = "Retry";
+            tooltipText = "Retry and regenerate a new set of actions to finish the craft.";
+            isEnabled = true;
+        }
+        ImGui.BeginDisabled(!isEnabled);
+        if (ImGui.Button(buttonText, buttonSize))
+        {
+            if (!taskCompleted)
+            {
+                if (!taskCancelled)
+                    SolverTaskToken?.Cancel();
+            }
+            else
+                QueueSolve(GetNextState()!.Value);
+        }
+        ImGui.EndDisabled();
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+            ImGui.SetTooltip(tooltipText);
     }
 
     public override void PreDraw()
