@@ -33,7 +33,7 @@ jobs:
         env:
           DOTNET_CLI_TELEMETRY_OUTPUT: true
 
-      - name: Upload artifact
+      - name: Upload Artifact
         uses: actions/upload-artifact@v2.2.1
         with:
           name: ${{env.PROJECT_NAME}}
