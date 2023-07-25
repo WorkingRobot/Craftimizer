@@ -30,22 +30,17 @@ public struct SimulationNode
         CompletionState.NoMoreActions :
         simCompletionState;
 
-    public readonly float? CalculateScore(SolverConfig config) =>
-        CalculateScoreForState(State, SimulationCompletionState, config);
+    public readonly float CalculateCompletionScore(SolverConfig config) =>
+        CalculateStateCompletionScore(State, config);
 
-    private static bool CanByregot(SimulationState state)
+    private static bool CanByregot(SimulationState state) =>
+        BaseComboAction.VerifyDurability1(state) &&
+        state.Input.Stats.Level >= 50 &&
+        state.CP >= 24;
+
+    // Assumes state IsComplete is true
+    public static float CalculateStateCompletionScore(SimulationState state, SolverConfig config)
     {
-        if (state.ActiveEffects.InnerQuiet == 0)
-            return false;
-
-        return BaseComboAction.VerifyDurability2(state, 10);
-    }
-
-    public static float? CalculateScoreForState(SimulationState state, CompletionState completionState, SolverConfig config)
-    {
-        if (completionState != CompletionState.ProgressComplete)
-            return null;
-
         static float Apply(float bonus, float value, float target) =>
             bonus * Math.Min(1f, value / target);
 

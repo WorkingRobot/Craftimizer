@@ -196,10 +196,11 @@ public sealed class Solver
     public (Node ExpandedNode, float Score) ExpandAndRollout(Random random, Simulator simulator, Node initialNode)
     {
         ref var initialState = ref initialNode.State;
-        // expand once
-        if (initialState.IsComplete)
-            return (initialNode, initialState.CalculateScore(config) ?? 0);
 
+        if (initialState.IsComplete)
+            return (initialNode, initialState.CalculateCompletionScore(config));
+
+        // expand once
         var poppedAction = initialState.AvailableActions.PopRandom(random);
         var expandedNode = initialNode.Add(Execute(simulator, initialState.State, poppedAction, true));
 
@@ -207,7 +208,6 @@ public sealed class Solver
         var currentState = expandedNode.State.State;
         var currentCompletionState = expandedNode.State.SimulationCompletionState;
         var currentActions = expandedNode.State.AvailableActions;
-
 
         byte actionCount = 0;
         Span<ActionType> actions = stackalloc ActionType[Math.Min(config.MaxStepCount - currentState.ActionCount, config.MaxRolloutStepCount)];
@@ -223,15 +223,16 @@ public sealed class Solver
             currentActions = simulator.AvailableActionsHeuristic(true);
         }
 
+        // expansion failed to yield a completed craft
+        if (currentCompletionState != CompletionState.ProgressComplete)
+            return (expandedNode, 0);
+
         // store the result if a max score was reached
-        var score = SimulationNode.CalculateScoreForState(currentState, currentCompletionState, config) ?? 0;
-        if (currentCompletionState == CompletionState.ProgressComplete)
+        var score = SimulationNode.CalculateStateCompletionScore(currentState, config);
+        if (score >= config.ScoreStorageThreshold && score >= MaxScore)
         {
-            if (score >= config.ScoreStorageThreshold && score >= MaxScore)
-            {
-                var terminalNode = ExecuteActions(simulator, expandedNode, actions[..actionCount], true);
-                return (terminalNode, score);
-            }
+            var terminalNode = ExecuteActions(simulator, expandedNode, actions[..actionCount], true);
+            return (terminalNode, score);
         }
         return (expandedNode, score);
     }

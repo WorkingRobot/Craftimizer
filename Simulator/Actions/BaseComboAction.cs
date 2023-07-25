@@ -10,6 +10,15 @@ public abstract class BaseComboAction : BaseAction
     protected bool BaseCanUse(Simulator s) =>
         base.CanUse(s);
 
+    private static bool VerifyDurability1(int durability) =>
+        durability > 0;
+
+    public static bool VerifyDurability1(SimulationState s) =>
+        VerifyDurability1(s.Durability);
+
+    public static bool VerifyDurability1(Simulator s) =>
+        VerifyDurability1(s.Durability);
+
     private static bool VerifyDurability2(int durabilityA, int durability, Effects effects)
     {
         var wasteNots = effects.HasEffect(EffectType.WasteNot) || effects.HasEffect(EffectType.WasteNot2);
