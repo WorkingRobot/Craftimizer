@@ -271,7 +271,7 @@ internal static class ConditionUtils
 
 internal static class EffectUtils
 {
-    public static uint StatusId(this EffectType me) =>
+    public static ushort StatusId(this EffectType me) =>
         me switch
         {
             EffectType.InnerQuiet => 251,
@@ -282,7 +282,7 @@ internal static class EffectUtils
             EffectType.FinalAppraisal => 2190,
             EffectType.WasteNot2 => 257,
             EffectType.MuscleMemory => 2191,
-            EffectType.Manipulation => 258,
+            EffectType.Manipulation => 1164,
             EffectType.HeartAndSoul => 2665,
             _ => 3412,
         };

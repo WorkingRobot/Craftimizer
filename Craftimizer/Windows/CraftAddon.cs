@@ -96,32 +96,23 @@ public sealed unsafe partial class Craft : Window, IDisposable
         }
     }
 
-    private const ushort StatusInnerQuiet = 251;
-    private const ushort StatusWasteNot = 252;
-    private const ushort StatusVeneration = 2226;
-    private const ushort StatusGreatStrides = 254;
-    private const ushort StatusInnovation = 2189;
-    private const ushort StatusFinalAppraisal = 2190;
-    private const ushort StatusWasteNot2 = 257;
-    private const ushort StatusMuscleMemory = 2191;
-    private const ushort StatusManipulation = 1164;
-    private const ushort StatusHeartAndSoul = 2665;
-
     private SimulationState GetAddonSimulationState()
     {
         var player = Service.ClientState.LocalPlayer!;
         var values = new AddonValues(RecipeUtils.AddonSynthesis);
         var statusManager = ((Character*)player.Address)->GetStatusManager();
 
-        byte GetEffectStack(ushort id)
+        byte GetEffectStack(EffectType effect)
         {
+            var id = effect.StatusId();
             foreach (var status in statusManager->StatusSpan)
                 if (status.StatusID == id)
                     return status.StackCount;
             return 0;
         }
-        bool HasEffect(ushort id)
+        bool HasEffect(EffectType effect)
         {
+            var id = effect.StatusId();
             foreach (var status in statusManager->StatusSpan)
                 if (status.StatusID == id)
                     return true;
@@ -139,16 +130,16 @@ public sealed unsafe partial class Craft : Window, IDisposable
             Condition = values.Condition,
             ActiveEffects = new()
             {
-                InnerQuiet = GetEffectStack(StatusInnerQuiet),
-                WasteNot = GetEffectStack(StatusWasteNot),
-                Veneration = GetEffectStack(StatusVeneration),
-                GreatStrides = GetEffectStack(StatusGreatStrides),
-                Innovation = GetEffectStack(StatusInnovation),
-                FinalAppraisal = GetEffectStack(StatusFinalAppraisal),
-                WasteNot2 = GetEffectStack(StatusWasteNot2),
-                MuscleMemory = GetEffectStack(StatusMuscleMemory),
-                Manipulation = GetEffectStack(StatusManipulation),
-                HeartAndSoul = HasEffect(StatusHeartAndSoul),
+                InnerQuiet = GetEffectStack(EffectType.InnerQuiet),
+                WasteNot = GetEffectStack(EffectType.WasteNot),
+                Veneration = GetEffectStack(EffectType.Veneration),
+                GreatStrides = GetEffectStack(EffectType.GreatStrides),
+                Innovation = GetEffectStack(EffectType.Innovation),
+                FinalAppraisal = GetEffectStack(EffectType.FinalAppraisal),
+                WasteNot2 = GetEffectStack(EffectType.WasteNot2),
+                MuscleMemory = GetEffectStack(EffectType.MuscleMemory),
+                Manipulation = GetEffectStack(EffectType.Manipulation),
+                HeartAndSoul = HasEffect(EffectType.HeartAndSoul),
             },
             ActionStates = ActionStates
         };

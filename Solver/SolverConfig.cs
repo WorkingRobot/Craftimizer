@@ -1,15 +1,8 @@
 using System.Runtime.InteropServices;
+using Craftimizer.Solver.Algorithms;
+using Craftimizer.Solver.Heuristics;
 
 namespace Craftimizer.Solver;
-
-public enum SolverAlgorithm
-{
-    Oneshot,
-    OneshotForked,
-    Stepwise,
-    StepwiseForked,
-    StepwiseFurcated,
-}
 
 [StructLayout(LayoutKind.Auto)]
 public readonly record struct SolverConfig
@@ -30,8 +23,8 @@ public readonly record struct SolverConfig
     public float ScoreCPBonus { get; init; }
     public float ScoreFewerStepsBonus { get; init; }
 
-    public SolverAlgorithm Algorithm { get; init; }
-    public ActionHeuristic Heuristic { get; init; }
+    public AlgorithmType Algorithm { get; init; }
+    public HeuristicType Heuristic { get; init; }
 
     public SolverConfig()
     {
@@ -51,8 +44,8 @@ public readonly record struct SolverConfig
         ScoreCPBonus = .05f;
         ScoreFewerStepsBonus = .05f;
 
-        Algorithm = SolverAlgorithm.StepwiseFurcated;
-        Heuristic = ActionHeuristic.Strict;
+        Algorithm = AlgorithmType.StepwiseFurcated;
+        Heuristic = HeuristicType.Strict;
     }
 
     public static readonly SolverConfig SimulatorDefault = new SolverConfig() with
@@ -65,6 +58,6 @@ public readonly record struct SolverConfig
         Iterations = 300000,
         ForkCount = Environment.ProcessorCount - 1, // Keep one for the game thread
         FurcatedActionCount = Environment.ProcessorCount / 2,
-        Algorithm = SolverAlgorithm.StepwiseForked
+        Algorithm = AlgorithmType.StepwiseForked
     };
 }

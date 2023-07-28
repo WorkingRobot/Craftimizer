@@ -1,6 +1,7 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Craftimizer.Solver;
+using Craftimizer.Solver.Algorithms;
 using Dalamud.Configuration;
 using System;
 using System.Collections.Generic;
@@ -17,11 +18,11 @@ public class Macro
 
 public static class AlgorithmUtils
 {
-    public static void Invoke(this SolverConfig me, SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
+    public static void SearchSafely(this SolverConfig me, SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
     {
         try
         {
-            Solver.Solver.Search(me, state, actionCallback, token);
+            me.Search(state, actionCallback, token);
         }
         catch (AggregateException e)
         {

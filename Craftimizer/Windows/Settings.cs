@@ -1,4 +1,6 @@
-using Craftimizer.Solver.Crafty;
+using Craftimizer.Solver;
+using Craftimizer.Solver.Algorithms;
+using Craftimizer.Solver.Heuristics;
 using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
@@ -109,69 +111,69 @@ public class Settings : Window
             ImGui.SetTooltip(tooltip);
     }
 
-    private static string GetAlgorithmName(SolverAlgorithm algorithm) =>
+    private static string GetAlgorithmName(AlgorithmType algorithm) =>
         algorithm switch
         {
-            SolverAlgorithm.Oneshot => "Oneshot",
-            SolverAlgorithm.OneshotForked => "Oneshot Forked",
-            SolverAlgorithm.Stepwise => "Stepwise",
-            SolverAlgorithm.StepwiseForked => "Stepwise Forked",
-            SolverAlgorithm.StepwiseFurcated => "Stepwise Furcated",
+            AlgorithmType.Oneshot => "Oneshot",
+            AlgorithmType.OneshotForked => "Oneshot Forked",
+            AlgorithmType.Stepwise => "Stepwise",
+            AlgorithmType.StepwiseForked => "Stepwise Forked",
+            AlgorithmType.StepwiseFurcated => "Stepwise Furcated",
             _ => "Unknown",
         };
 
-    private static string GetAlgorithmTooltip(SolverAlgorithm algorithm) =>
+    private static string GetAlgorithmTooltip(AlgorithmType algorithm) =>
         algorithm switch
         {
-            SolverAlgorithm.Oneshot =>          "Run through all iterations and pick the best macro",
-            SolverAlgorithm.OneshotForked =>    "Oneshot, but using multiple solvers simultaneously",
-            SolverAlgorithm.Stepwise =>         "Run through all iterations and pick the next best step,\n" +
+            AlgorithmType.Oneshot =>          "Run through all iterations and pick the best macro",
+            AlgorithmType.OneshotForked =>    "Oneshot, but using multiple solvers simultaneously",
+            AlgorithmType.Stepwise =>         "Run through all iterations and pick the next best step,\n" +
                                                 "and repeat using previous steps as a starting point",
-            SolverAlgorithm.StepwiseForked =>   "Stepwise, but using multiple solvers simultaneously",
-            SolverAlgorithm.StepwiseFurcated => "Stepwise Forked, but the top N next best steps are\n" +
+            AlgorithmType.StepwiseForked =>   "Stepwise, but using multiple solvers simultaneously",
+            AlgorithmType.StepwiseFurcated => "Stepwise Forked, but the top N next best steps are\n" +
                                                 "selected from the solvers, and each one is equally\n" +
                                                 "used as a starting point",
             _ => "Unknown"
         };
 
-    private static string GetHeuristicName(ActionHeuristic heuristic) =>
+    private static string GetHeuristicName(HeuristicType heuristic) =>
         heuristic switch
         {
-            ActionHeuristic.Normal => "Normal",
-            ActionHeuristic.Strict => "Strict",
-            ActionHeuristic.ExpertOpener => "Expert Opener",
-            ActionHeuristic.ExpertQuality => "Expert Quality",
-            ActionHeuristic.ExpertFinisher => "Expert Finisher",
-            ActionHeuristic.ExpertHydra => "Expert Hydra",
+            HeuristicType.Normal => "Normal",
+            HeuristicType.Strict => "Strict",
+            HeuristicType.ExpertOpener => "Expert Opener",
+            HeuristicType.ExpertQuality => "Expert Quality",
+            HeuristicType.ExpertFinisher => "Expert Finisher",
+            HeuristicType.ExpertHydra => "Expert Hydra",
             _ => "Unknown",
         };
 
-    private static string GetHeuristicTooltip(ActionHeuristic heuristic) =>
+    private static string GetHeuristicTooltip(HeuristicType heuristic) =>
         heuristic switch
         {
-            ActionHeuristic.Normal =>           "Only allow guaranteed actions; use the widest subset\n" +
+            HeuristicType.Normal =>           "Only allow guaranteed actions; use the widest subset\n" +
                                                 "of actions available. This heuristic isn't very useful\n" +
                                                 "since it requires a lot of iterations to get anything\n" +
                                                 "adequate.",
-            ActionHeuristic.Strict =>           "Filters out any actions that probably wouldn't be a good\n" +
+            HeuristicType.Strict =>           "Filters out any actions that probably wouldn't be a good\n" +
                                                 "idea. This is a subset of the Normal heuristic. Use this\n" +
                                                 "for everything except the hardest expert crafts.",
-            ActionHeuristic.ExpertOpener =>     "The opener phase of an expert craft. Follows a strict set\n" +
+            HeuristicType.ExpertOpener =>     "The opener phase of an expert craft. Follows a strict set\n" +
                                                 "of rules to get the craft to near progress completion.\n" +
                                                 "Don't use unless you know what you're doing. Use the hydra" +
                                                 "heuristic instead.\n" +
                                                 "Based on FFXIVTeamcraft and IcyVeins expert guides.",
-            ActionHeuristic.ExpertQuality =>    "The quality phase of an expert craft. Follows a strict set\n" +
+            HeuristicType.ExpertQuality =>    "The quality phase of an expert craft. Follows a strict set\n" +
                                                 "of rules to get the craft to 10 Inner Quiet stacks.\n" +
                                                 "Don't use unless you know what you're doing. Use the hydra" +
                                                 "heuristic instead.\n" +
                                                 "Based on FFXIVTeamcraft and IcyVeins expert guides.",
-            ActionHeuristic.ExpertFinisher =>   "The finisher phase of an expert craft. Follows a strict set\n" +
+            HeuristicType.ExpertFinisher =>   "The finisher phase of an expert craft. Follows a strict set\n" +
                                                 "of rules to get the craft to completion.\n" +
                                                 "Don't use unless you know what you're doing. Use the hydra" +
                                                 "heuristic instead.\n" +
                                                 "Based on FFXIVTeamcraft and IcyVeins expert guides.",
-            ActionHeuristic.ExpertHydra =>      "Figures out which phase the expert craft is in and selects\n" +
+            HeuristicType.ExpertHydra =>      "Figures out which phase the expert craft is in and selects\n" +
                                                 "accordingly. This is not a real heuristic, it just picks" +
                                                 "which expert heuristic would be best.\n" +
                                                 "Based on FFXIVTeamcraft and IcyVeins expert guides.",
@@ -310,7 +312,7 @@ public class Settings : Window
             ref isDirty
         );
 
-        ImGui.BeginDisabled(config.Algorithm is not (SolverAlgorithm.OneshotForked or SolverAlgorithm.StepwiseForked or SolverAlgorithm.StepwiseFurcated));
+        ImGui.BeginDisabled(config.Algorithm is not (AlgorithmType.OneshotForked or AlgorithmType.StepwiseForked or AlgorithmType.StepwiseFurcated));
         DrawOption(
             "Fork Count",
             "Split the number of iterations across different solvers. In general,\n" +
@@ -326,7 +328,7 @@ public class Settings : Window
         );
         ImGui.EndDisabled();
 
-        ImGui.BeginDisabled(config.Algorithm is not SolverAlgorithm.StepwiseFurcated);
+        ImGui.BeginDisabled(config.Algorithm is not AlgorithmType.StepwiseFurcated);
         DrawOption(
             "Furcated Action Count",
             "On every craft step, pick this many top solutions and use them as\n" +

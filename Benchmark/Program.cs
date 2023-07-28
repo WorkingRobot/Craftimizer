@@ -1,6 +1,7 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Craftimizer.Solver;
+using Craftimizer.Solver.Algorithms;
 using System.Diagnostics;
 
 namespace Craftimizer.Benchmark;
@@ -49,6 +50,7 @@ internal static class Program
             ForkCount = 32,
             FurcatedActionCount = 16,
             MaxStepCount = 30,
+            Algorithm = AlgorithmType.Stepwise
         };
 
         var sim = new SimulatorNoRandom(new(input));
@@ -77,12 +79,8 @@ internal static class Program
 
         Console.WriteLine($"{state.Quality} {state.CP} {state.Progress} {state.Durability}");
         //return;
-        var (_, s) = Solver.Solver.SearchStepwise(config, state, a => Console.WriteLine(a));
+        var (_, s) = config.Search(state, a => Console.WriteLine(a));
         Console.WriteLine($"Qual: {s.Quality}/{s.Input.Recipe.MaxQuality}");
-        return;
-
-        Solver.Solver.SearchStepwiseFurcated(config, input);
-        //Benchmark(() => );
     }
 
     private static void Benchmark(Func<SolverSolution> search)

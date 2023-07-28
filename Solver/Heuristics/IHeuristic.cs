@@ -2,9 +2,9 @@ using Craftimizer.Simulator.Actions;
 using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 
-namespace Craftimizer.Solver;
+namespace Craftimizer.Solver.Heuristics;
 
-public interface IActionHeuristic
+public interface IHeuristic
 {
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -15,7 +15,7 @@ public interface IActionHeuristic
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected static ActionSet AvailableActions<T>(Simulator s, ReadOnlySpan<ActionType> availableActions) where T : IActionHeuristic
+    protected static ActionSet AvailableActions<T>(Simulator s, ReadOnlySpan<ActionType> availableActions) where T : IHeuristic
     {
         if (s.IsComplete)
             return new();

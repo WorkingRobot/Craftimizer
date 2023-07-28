@@ -3,16 +3,16 @@ using Craftimizer.Simulator.Actions;
 using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 
-namespace Craftimizer.Solver;
+namespace Craftimizer.Solver.Heuristics;
 
-internal sealed class ActionHeuristicStrict : IActionHeuristic
+internal sealed class Strict : IHeuristic
 {
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     // https://github.com/alostsock/crafty/blob/cffbd0cad8bab3cef9f52a3e3d5da4f5e3781842/crafty/src/craft_state.rs#L137
     public static bool ShouldUseAction(Simulator s, ActionType action, BaseAction baseAction)
     {
-        if (!ActionHeuristicNormal.ShouldUseAction(s, action, baseAction))
+        if (!Normal.ShouldUseAction(s, action, baseAction))
             return false;
 
         // always use Trained Eye if it's available
@@ -114,5 +114,5 @@ internal sealed class ActionHeuristicStrict : IActionHeuristic
 
     [Pure]
     public static ActionSet AvailableActions(Simulator s) =>
-        IActionHeuristic.AvailableActions<ActionHeuristicStrict>(s, ActionHeuristicNormal.AcceptedActions);
+        IHeuristic.AvailableActions<Strict>(s, Normal.AcceptedActions);
 }

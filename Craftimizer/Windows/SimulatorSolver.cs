@@ -83,7 +83,7 @@ public sealed partial class Simulator : Window, IDisposable
 
         SolverInitialActionCount = Actions.Count;
         SolverTaskToken = new();
-        SolverTask = Task.Run(() => Config.SimulatorSolverConfig.Invoke(solverState, SolverActionQueue.Enqueue, SolverTaskToken.Token));
+        SolverTask = Task.Run(() => Config.SimulatorSolverConfig.SearchSafely(solverState, SolverActionQueue.Enqueue, SolverTaskToken.Token));
     }
 
     public void Dispose()

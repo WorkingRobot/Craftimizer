@@ -2,9 +2,9 @@ using Craftimizer.Simulator.Actions;
 using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 
-namespace Craftimizer.Solver;
+namespace Craftimizer.Solver.Heuristics;
 
-internal sealed class ActionHeuristicNormal : IActionHeuristic
+internal sealed class Normal : IHeuristic
 {
     public static readonly ActionType[] AcceptedActions = new[]
     {
@@ -61,5 +61,5 @@ internal sealed class ActionHeuristicNormal : IActionHeuristic
 
     [Pure]
     public static ActionSet AvailableActions(Simulator s) =>
-        IActionHeuristic.AvailableActions<ActionHeuristicNormal>(s, AcceptedActions);
+        IHeuristic.AvailableActions<Normal>(s, AcceptedActions);
 }
