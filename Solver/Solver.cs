@@ -200,7 +200,7 @@ public sealed class Solver
         ref var initialState = ref initialNode.State;
 
         if (initialState.IsComplete)
-            return (initialNode, initialState.CalculateCompletionScore(config));
+            return (initialNode, initialState.CompletionState == CompletionState.ProgressComplete ? initialState.CalculateCompletionScore(config) : 0);
 
         // expand once
         var poppedAction = initialState.AvailableActions.PopRandom(random);
