@@ -9,7 +9,7 @@ public struct ActionSet
 {
     private const bool IsDeterministic = false;
 
-    private uint bits;
+    private ulong bits;
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -19,7 +19,7 @@ public struct ActionSet
     private static ActionType ToAction(int index) => (ActionType)index;
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint ToMask(ActionType action) => 1u << FromAction(action) + 1;
+    private static ulong ToMask(ActionType action) => 1Lu << (FromAction(action) + 1);
 
     // Return true if action was newly added and not there before.
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

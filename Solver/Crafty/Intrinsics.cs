@@ -94,8 +94,43 @@ internal static class Intrinsics
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int NthBitSetScalar(ulong value, int n)
+    {
+        var mask = 0x00000000FFFFFFFFLu;
+        var size = 32;
+        var _base = 0;
+
+        if (n++ >= BitOperations.PopCount(value))
+            return 64;
+
+        while (size > 0)
+        {
+            var count = BitOperations.PopCount(value & mask);
+            if (n > count)
+            {
+                _base += size;
+                size >>= 1;
+                mask |= mask << size;
+            }
+            else
+            {
+                size >>= 1;
+                mask >>= size;
+            }
+        }
+
+        return _base;
+    }
+
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int NthBitSetBMI2(uint value, int n) =>
         BitOperations.TrailingZeroCount(Bmi2.ParallelBitDeposit(1u << n, value));
+
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int NthBitSetBMI2(ulong value, int n) =>
+        BitOperations.TrailingZeroCount(Bmi2.X64.ParallelBitDeposit(1Lu << n, value));
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -105,6 +140,18 @@ internal static class Intrinsics
             return 32;
 
         return Bmi2.IsSupported ?
+            NthBitSetBMI2(value, n) :
+            NthBitSetScalar(value, n);
+    }
+
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int NthBitSet(ulong value, int n)
+    {
+        if (n >= BitOperations.PopCount(value))
+            return 64;
+
+        return Bmi2.X64.IsSupported ?
             NthBitSetBMI2(value, n) :
             NthBitSetScalar(value, n);
     }

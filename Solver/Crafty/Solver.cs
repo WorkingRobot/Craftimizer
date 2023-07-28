@@ -31,7 +31,7 @@ public sealed class Solver
         rootScores = new();
     }
 
-    private static SimulationNode Execute(Simulator simulator, SimulationState state, ActionType action, ActionHeuristicType heuristicType)
+    private static SimulationNode Execute(Simulator simulator, SimulationState state, ActionType action, ActionHeuristic heuristicType)
     {
         (_, var newState) = simulator.Execute(state, action);
         return new(
@@ -42,7 +42,7 @@ public sealed class Solver
         );
     }
 
-    private static Node ExecuteActions(Simulator simulator, Node startNode, ReadOnlySpan<ActionType> actions, ActionHeuristicType heuristicType)
+    private static Node ExecuteActions(Simulator simulator, Node startNode, ReadOnlySpan<ActionType> actions, ActionHeuristic heuristicType)
     {
         foreach (var action in actions)
         {

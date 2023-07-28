@@ -15,7 +15,7 @@ internal static unsafe class Gearsets
     public record struct GearsetItem(uint itemId, bool isHq, GearsetMateria[] materia);
 
     private static readonly GearsetStats BaseStats = new(180, 0, 0);
-
+    
     public const int ParamCP = 11;
     public const int ParamCraftsmanship = 70;
     public const int ParamControl = 71;

@@ -82,7 +82,7 @@ public unsafe class CraftingLog : Window
             if (item.ItemAction.Value == null)
                 continue;
 
-            if (!(item.ItemAction.Value.Type is 844 or 845 or 846))
+            if (item.ItemAction.Value.Type is not (844 or 845 or 846))
                 continue;
 
             var itemFood = LuminaSheets.ItemFoodSheet.GetRow(item.ItemAction.Value.Data[1]);

@@ -31,7 +31,7 @@ public readonly record struct SolverConfig
     public float ScoreFewerStepsBonus { get; init; }
 
     public SolverAlgorithm Algorithm { get; init; }
-    public ActionHeuristicType Heuristic { get; init; }
+    public ActionHeuristic Heuristic { get; init; }
 
     public SolverConfig()
     {
@@ -52,7 +52,7 @@ public readonly record struct SolverConfig
         ScoreFewerStepsBonus = .05f;
 
         Algorithm = SolverAlgorithm.StepwiseFurcated;
-        Heuristic = ActionHeuristicType.Strict;
+        Heuristic = ActionHeuristic.Strict;
     }
 
     public static readonly SolverConfig SimulatorDefault = new SolverConfig() with
