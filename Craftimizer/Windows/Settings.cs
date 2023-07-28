@@ -3,6 +3,7 @@ using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 
 namespace Craftimizer.Plugin.Windows;
@@ -86,6 +87,28 @@ public class Settings : Window
             ImGui.SetTooltip(tooltip);
     }
 
+    private static void DrawOption<T>(string label, string tooltip, T val, Func<T, string> nameGetter, Func<T, string> tooltipGetter, Action<T> setter, ref bool isDirty) where T : struct, Enum
+    {
+        var comparer = EqualityComparer<T>.Default;
+        ImGui.SetNextItemWidth(OptionWidth);
+        if (ImGui.BeginCombo(label, nameGetter(val)))
+        {
+            foreach (var inst in Enum.GetValues<T>())
+            {
+                if (ImGui.Selectable(nameGetter(inst), comparer.Equals(val, inst)))
+                {
+                    setter(inst);
+                    isDirty = true;
+                }
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip(tooltipGetter(val));
+            }
+            ImGui.EndCombo();
+        }
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip(tooltip);
+    }
+
     private static string GetAlgorithmName(SolverAlgorithm algorithm) =>
         algorithm switch
         {
@@ -108,6 +131,50 @@ public class Settings : Window
             SolverAlgorithm.StepwiseFurcated => "Stepwise Forked, but the top N next best steps are\n" +
                                                 "selected from the solvers, and each one is equally\n" +
                                                 "used as a starting point",
+            _ => "Unknown"
+        };
+
+    private static string GetHeuristicName(ActionHeuristic heuristic) =>
+        heuristic switch
+        {
+            ActionHeuristic.Normal => "Normal",
+            ActionHeuristic.Strict => "Strict",
+            ActionHeuristic.ExpertOpener => "Expert Opener",
+            ActionHeuristic.ExpertQuality => "Expert Quality",
+            ActionHeuristic.ExpertFinisher => "Expert Finisher",
+            ActionHeuristic.ExpertHydra => "Expert Hydra",
+            _ => "Unknown",
+        };
+
+    private static string GetHeuristicTooltip(ActionHeuristic heuristic) =>
+        heuristic switch
+        {
+            ActionHeuristic.Normal =>           "Only allow guaranteed actions; use the widest subset\n" +
+                                                "of actions available. This heuristic isn't very useful\n" +
+                                                "since it requires a lot of iterations to get anything\n" +
+                                                "adequate.",
+            ActionHeuristic.Strict =>           "Filters out any actions that probably wouldn't be a good\n" +
+                                                "idea. This is a subset of the Normal heuristic. Use this\n" +
+                                                "for everything except the hardest expert crafts.",
+            ActionHeuristic.ExpertOpener =>     "The opener phase of an expert craft. Follows a strict set\n" +
+                                                "of rules to get the craft to near progress completion.\n" +
+                                                "Don't use unless you know what you're doing. Use the hydra" +
+                                                "heuristic instead.\n" +
+                                                "Based on FFXIVTeamcraft and IcyVeins expert guides.",
+            ActionHeuristic.ExpertQuality =>    "The quality phase of an expert craft. Follows a strict set\n" +
+                                                "of rules to get the craft to 10 Inner Quiet stacks.\n" +
+                                                "Don't use unless you know what you're doing. Use the hydra" +
+                                                "heuristic instead.\n" +
+                                                "Based on FFXIVTeamcraft and IcyVeins expert guides.",
+            ActionHeuristic.ExpertFinisher =>   "The finisher phase of an expert craft. Follows a strict set\n" +
+                                                "of rules to get the craft to completion.\n" +
+                                                "Don't use unless you know what you're doing. Use the hydra" +
+                                                "heuristic instead.\n" +
+                                                "Based on FFXIVTeamcraft and IcyVeins expert guides.",
+            ActionHeuristic.ExpertHydra =>      "Figures out which phase the expert craft is in and selects\n" +
+                                                "accordingly. This is not a real heuristic, it just picks" +
+                                                "which expert heuristic would be best.\n" +
+                                                "Based on FFXIVTeamcraft and IcyVeins expert guides.",
             _ => "Unknown"
         };
 
@@ -173,28 +240,31 @@ public class Settings : Window
             isDirty = true;
         }
 
-        ImGui.SetNextItemWidth(OptionWidth);
-        if (ImGui.BeginCombo("Algorithm", GetAlgorithmName(config.Algorithm)))
-        {
-            foreach (var alg in Enum.GetValues<SolverAlgorithm>())
-            {
-                if (ImGui.Selectable(GetAlgorithmName(alg), config.Algorithm == alg))
-                {
-                    config = config with { Algorithm = alg };
-                    isDirty = true;
-                }
-                if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip(GetAlgorithmTooltip(alg));
-            }
-            ImGui.EndCombo();
-        }
-        if (ImGui.IsItemHovered())
-            ImGui.SetTooltip(
-                "The algorithm to use when solving for a macro. Different\n" +
-                "algorithms provide different pros and cons for using them.\n" +
-                "By far, the Stepwise Furcated algorithm provides the best\n" +
-                "results, especially for very difficult crafts."
-            );
+        DrawOption(
+            "Algorithm",
+            "The algorithm to use when solving for a macro. Different\n" +
+            "algorithms provide different pros and cons for using them.\n" +
+            "By far, the Stepwise Furcated algorithm provides the best\n" +
+            "results, especially for very difficult crafts.",
+            config.Algorithm,
+            GetAlgorithmName,
+            GetAlgorithmTooltip,
+            v => config = config with { Algorithm = v },
+            ref isDirty
+        );
+
+        DrawOption(
+            "Action Heuristic",
+            "The heuristic algorithm to use when figuring out which\n" +
+            "actions could be executed when in a given simulation state.\n" +
+            "Use Strict whenever possible and Expert Hydra when solving for\n" +
+            "difficult expert crafts.",
+            config.Heuristic,
+            GetHeuristicName,
+            GetHeuristicTooltip,
+            v => config = config with { Heuristic = v },
+            ref isDirty
+        );
 
         DrawOption(
             "Iterations",
