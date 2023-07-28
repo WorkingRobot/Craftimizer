@@ -152,6 +152,7 @@ dotnet_diagnostic.MA0051.severity = silent
 dotnet_diagnostic.MA0006.severity = suggestion
 dotnet_diagnostic.MA0016.severity = suggestion
 dotnet_diagnostic.MA0008.severity = suggestion
+dotnet_diagnostic.MA0046.severity = suggestion
 dotnet_diagnostic.CA1805.severity = warning
 dotnet_diagnostic.CA1825.severity = warning
 dotnet_diagnostic.CA1841.severity = suggestion

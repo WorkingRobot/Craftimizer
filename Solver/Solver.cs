@@ -174,7 +174,7 @@ public sealed class Solver
     }
 
     [Pure]
-    public Node Select()
+    private Node Select()
     {
         var node = rootNode;
         var nodeVisits = rootScores.Visits;
@@ -193,7 +193,7 @@ public sealed class Solver
         }
     }
 
-    public (Node ExpandedNode, float Score) ExpandAndRollout(Random random, Simulator simulator, Node initialNode)
+    private (Node ExpandedNode, float Score) ExpandAndRollout(Random random, Simulator simulator, Node initialNode)
     {
         ref var initialState = ref initialNode.State;
 
@@ -237,7 +237,7 @@ public sealed class Solver
         return (expandedNode, score);
     }
 
-    public void Backpropagate(Node startNode, float score)
+    private void Backpropagate(Node startNode, float score)
     {
         while (true)
         {

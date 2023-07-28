@@ -44,12 +44,9 @@ internal static class Program
             }
         );
 
-        var config = new SolverConfig()
+        var config = SolverConfig.SimulatorDefault with
         {
-            Iterations = 100_000,
-            ForkCount = 32,
-            FurcatedActionCount = 16,
-            MaxStepCount = 30,
+            Iterations = 30_000,
             Algorithm = AlgorithmType.Stepwise
         };
 
