@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace Craftimizer.Solver.Crafty;
+namespace Craftimizer.Solver;
 
 public sealed class ArenaNode<T> where T : struct
 {

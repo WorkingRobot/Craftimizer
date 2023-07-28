@@ -2,7 +2,7 @@ using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
-namespace Craftimizer.Solver.Crafty;
+namespace Craftimizer.Solver;
 
 // Adapted from https://github.com/dtao/ConcurrentList/blob/4fcf1c76e93021a41af5abb2d61a63caeba2adad/ConcurrentList/ConcurrentList.cs
 public struct ArenaBuffer<T> where T : struct

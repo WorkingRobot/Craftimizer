@@ -3,7 +3,7 @@ using Craftimizer.Simulator.Actions;
 using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 
-namespace Craftimizer.Solver.Crafty;
+namespace Craftimizer.Solver;
 
 internal sealed class ActionHeuristicStrict : IActionHeuristic
 {
@@ -62,7 +62,7 @@ internal sealed class ActionHeuristicStrict : IActionHeuristic
             if (wouldFinish)
             {
                 // don't allow finishing the craft if there is significant quality remaining
-                if (s.Quality < (s.Input.Recipe.MaxQuality / 5))
+                if (s.Quality < s.Input.Recipe.MaxQuality / 5)
                     return false;
             }
             else

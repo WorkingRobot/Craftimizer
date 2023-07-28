@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace Craftimizer.Solver.Crafty;
+namespace Craftimizer.Solver;
 
 public enum SolverAlgorithm
 {

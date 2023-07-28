@@ -2,7 +2,7 @@ using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using System.Runtime.InteropServices;
 
-namespace Craftimizer.Solver.Crafty;
+namespace Craftimizer.Solver;
 
 [StructLayout(LayoutKind.Auto)]
 public struct SimulationNode
@@ -70,7 +70,7 @@ public struct SimulationNode
         );
 
         var fewerStepsScore =
-            config.ScoreFewerStepsBonus * (1f - ((float)(state.ActionCount + 1) / config.MaxStepCount));
+            config.ScoreFewerStepsBonus * (1f - (float)(state.ActionCount + 1) / config.MaxStepCount);
 
         return progressScore + qualityScore + durabilityScore + cpScore + fewerStepsScore;
     }

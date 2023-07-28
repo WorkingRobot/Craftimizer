@@ -3,7 +3,7 @@ using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
-namespace Craftimizer.Solver.Crafty;
+namespace Craftimizer.Solver;
 
 public struct ActionSet
 {
@@ -19,7 +19,7 @@ public struct ActionSet
     private static ActionType ToAction(int index) => (ActionType)index;
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ulong ToMask(ActionType action) => 1Lu << (FromAction(action) + 1);
+    private static ulong ToMask(ActionType action) => 1Lu << FromAction(action) + 1;
 
     // Return true if action was newly added and not there before.
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

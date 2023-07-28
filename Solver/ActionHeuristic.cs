@@ -1,7 +1,7 @@
 using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 
-namespace Craftimizer.Solver.Crafty;
+namespace Craftimizer.Solver;
 
 public enum ActionHeuristic : byte
 {

@@ -1,6 +1,6 @@
 using Craftimizer.Simulator;
 
-namespace Craftimizer.Solver.Crafty;
+namespace Craftimizer.Solver;
 
 public sealed class Simulator : SimulatorNoRandom
 {
@@ -15,7 +15,7 @@ public sealed class Simulator : SimulatorNoRandom
     }
 
     public static CompletionState CalculateCompletionState(SimulationState state, int maxStepCount) =>
-        (state.ActionCount + 1) >= maxStepCount ?
+        state.ActionCount + 1 >= maxStepCount ?
         CompletionState.MaxActionCountReached :
         (CompletionState)CalculateCompletionState(state);
 }
