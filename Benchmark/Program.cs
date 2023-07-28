@@ -51,8 +51,8 @@ internal static class Program
         };
 
         var sim = new SimulatorNoRandom(new(input));
-        (_, var state) = sim.Execute(new(input), ActionType.MuscleMemory);
-        (_, state) = sim.Execute(state, ActionType.PrudentTouch);
+        //(_, var state) = sim.Execute(new(input), ActionType.MuscleMemory);
+        //(_, state) = sim.Execute(state, ActionType.PrudentTouch);
         //(_, state) = sim.Execute(state, ActionType.Manipulation);
         //(_, state) = sim.Execute(state, ActionType.Veneration);
         //(_, state) = sim.Execute(state, ActionType.WasteNot);
@@ -74,10 +74,13 @@ internal static class Program
         //(_, state) = sim.Execute(state, ActionType.CarefulSynthesis);
         //(_, state) = sim.Execute(state, ActionType.CarefulSynthesis);
 
-        Console.WriteLine($"{state.Quality} {state.CP} {state.Progress} {state.Durability}");
+        //Console.WriteLine($"{state.Quality} {state.CP} {state.Progress} {state.Durability}");
         //return;
-        var (_, s) = config.Search(state, a => Console.WriteLine(a));
+        var st = Stopwatch.StartNew();
+        var (_, s) = config.Search(input, a => Console.WriteLine(a));
+        st.Stop();
         Console.WriteLine($"Qual: {s.Quality}/{s.Input.Recipe.MaxQuality}");
+        Console.WriteLine($"{st.Elapsed.TotalMilliseconds:0.00}ms");
     }
 
     private static void Benchmark(Func<SolverSolution> search)

@@ -12,9 +12,10 @@ namespace Craftimizer.Solver;
 // https://github.com/alostsock/crafty/blob/cffbd0cad8bab3cef9f52a3e3d5da4f5e3781842/crafty/src/simulator.rs
 public sealed class Solver
 {
-    private SolverConfig config;
-    private Node rootNode;
-    private RootScores rootScores;
+    private readonly SolverConfig config;
+    private readonly Node rootNode;
+    private readonly RootScores rootScores;
+    private readonly Random random;
 
     public float MaxScore => rootScores.MaxScore;
 
@@ -29,6 +30,7 @@ public sealed class Solver
             config.Heuristic.AvailableActions(sim)
         ));
         rootScores = new();
+        random = new();
     }
 
     private static SimulationNode Execute(Simulator simulator, SimulationState state, ActionType action, HeuristicType heuristicType)
@@ -193,7 +195,7 @@ public sealed class Solver
         }
     }
 
-    private (Node ExpandedNode, float Score) ExpandAndRollout(Random random, Simulator simulator, Node initialNode)
+    private (Node ExpandedNode, float Score) ExpandAndRollout(Simulator simulator, Node initialNode)
     {
         ref var initialState = ref initialNode.State;
 
@@ -301,7 +303,6 @@ public sealed class Solver
     public void Search(int iterations, CancellationToken token)
     {
         Simulator simulator = new(rootNode.State.State, config.MaxStepCount);
-        var random = rootNode.State.State.Input.Random;
         var n = 0;
         for (var i = 0; i < iterations || MaxScore == 0; i++)
         {
@@ -309,7 +310,7 @@ public sealed class Solver
                 break;
 
             var selectedNode = Select();
-            var (endNode, score) = ExpandAndRollout(random, simulator, selectedNode);
+            var (endNode, score) = ExpandAndRollout(simulator, selectedNode);
             if (MaxScore == 0)
             {
                 if (endNode == selectedNode)

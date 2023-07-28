@@ -24,7 +24,6 @@ public sealed unsafe partial class Craft : Window, IDisposable
 
     private static Configuration Config => Service.Configuration;
 
-    private static Random Random { get; } = new();
     private static RecipeNote RecipeUtils => Service.Plugin.RecipeNote;
 
     private bool WasOpen { get; set; }
@@ -207,7 +206,7 @@ public sealed unsafe partial class Craft : Window, IDisposable
             return;
 
         CharacterStats = Gearsets.CalculateCharacterStats(Gearsets.CalculateGearsetCurrentStats(), Gearsets.GetGearsetItems(container), RecipeUtils.CharacterLevel, RecipeUtils.CanUseManipulation);
-        Input = new(CharacterStats, RecipeUtils.Info, 0, Random);
+        Input = new(CharacterStats, RecipeUtils.Info, 0);
         ActionCount = 0;
         ActionStates = new();
     }

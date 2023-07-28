@@ -42,7 +42,6 @@ public unsafe class CraftingLog : Window
 
     private static Food[] FoodItems { get; }
     private static Food[] MedicineItems { get; }
-    private static Random Random { get; }
 
     private static RecipeNote RecipeUtils => Service.Plugin.RecipeNote;
     private ushort OldRecipeId { get; set; }
@@ -117,8 +116,6 @@ public unsafe class CraftingLog : Window
         medicines.Sort((a, b) => b.Item.LevelItem.Row.CompareTo(a.Item.LevelItem.Row));
         FoodItems = foods.ToArray();
         MedicineItems = medicines.ToArray();
-
-        Random = new();
     }
 
     public CraftingLog() : base("Craftimizer RecipeNoteHelper", WindowFlags, true)
@@ -146,7 +143,7 @@ public unsafe class CraftingLog : Window
         CharacterCannotCraftReason = Config.OverrideUncraftability ? CannotCraftReason.OK : CanCraftRecipe(CharacterEquipment, CharacterStatsConsumable);
 
         if (CharacterCannotCraftReason == CannotCraftReason.OK)
-            CharacterSimulationInput = new(CharacterStatsConsumable, RecipeUtils.Info, StartingQuality, Random);
+            CharacterSimulationInput = new(CharacterStatsConsumable, RecipeUtils.Info, StartingQuality);
     }
 
     public override void Draw()
