@@ -13,10 +13,10 @@ public struct ActionSet
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int FromAction(ActionType action) => Simulator.AcceptedActionsLUT[(byte)action];
+    private static int FromAction(ActionType action) => (byte)action;
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ActionType ToAction(int index) => Simulator.AcceptedActions[index];
+    private static ActionType ToAction(int index) => (ActionType)index;
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint ToMask(ActionType action) => 1u << FromAction(action) + 1;

@@ -26,23 +26,23 @@ public sealed class Solver
             state,
             null,
             sim.CompletionState,
-            sim.AvailableActionsHeuristic(config.StrictActions)
+            config.Heuristic.AvailableActions(sim)
         ));
         rootScores = new();
     }
 
-    private static SimulationNode Execute(Simulator simulator, SimulationState state, ActionType action, bool strict)
+    private static SimulationNode Execute(Simulator simulator, SimulationState state, ActionType action, ActionHeuristicType heuristicType)
     {
         (_, var newState) = simulator.Execute(state, action);
         return new(
             newState,
             action,
             simulator.CompletionState,
-            simulator.AvailableActionsHeuristic(strict)
+            heuristicType.AvailableActions(simulator)
         );
     }
 
-    private static Node ExecuteActions(Simulator simulator, Node startNode, ReadOnlySpan<ActionType> actions, bool strict)
+    private static Node ExecuteActions(Simulator simulator, Node startNode, ReadOnlySpan<ActionType> actions, ActionHeuristicType heuristicType)
     {
         foreach (var action in actions)
         {
@@ -54,7 +54,7 @@ public sealed class Solver
                 return startNode;
             state.AvailableActions.RemoveAction(action);
 
-            startNode = startNode.Add(Execute(simulator, state.State, action, strict));
+            startNode = startNode.Add(Execute(simulator, state.State, action, heuristicType));
         }
 
         return startNode;
@@ -202,7 +202,7 @@ public sealed class Solver
 
         // expand once
         var poppedAction = initialState.AvailableActions.PopRandom(random);
-        var expandedNode = initialNode.Add(Execute(simulator, initialState.State, poppedAction, true));
+        var expandedNode = initialNode.Add(Execute(simulator, initialState.State, poppedAction, config.Heuristic));
 
         // playout to a terminal state
         var currentState = expandedNode.State.State;
@@ -220,7 +220,7 @@ public sealed class Solver
             currentCompletionState = simulator.CompletionState;
             if (currentCompletionState != CompletionState.Incomplete)
                 break;
-            currentActions = simulator.AvailableActionsHeuristic(true);
+            currentActions = config.Heuristic.AvailableActions(simulator);
         }
 
         // expansion failed to yield a completed craft
@@ -231,7 +231,7 @@ public sealed class Solver
         var score = SimulationNode.CalculateStateCompletionScore(currentState, config);
         if (score >= config.ScoreStorageThreshold && score >= MaxScore)
         {
-            var terminalNode = ExecuteActions(simulator, expandedNode, actions[..actionCount], true);
+            var terminalNode = ExecuteActions(simulator, expandedNode, actions[..actionCount], config.Heuristic);
             return (terminalNode, score);
         }
         return (expandedNode, score);
