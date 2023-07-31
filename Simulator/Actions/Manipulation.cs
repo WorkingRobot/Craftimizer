@@ -14,14 +14,20 @@ internal sealed class Manipulation : BaseBuffAction
 
     public override void Use(Simulator s)
     {
-        if (s.HasEffect(EffectType.Manipulation))
-            s.RestoreDurability(5);
+        if (s.RollSuccess(SuccessRate(s)))
+            UseSuccess(s);
 
         s.ReduceCP(CPCost(s));
         s.ReduceDurability(DurabilityCost);
 
-        UseSuccess(s);
+        // same as base.Use(s), but manipulation effect never kicks in, even if manip is active before
 
-        s.IncreaseStepCount();
+        if (IncreasesStepCount)
+            s.IncreaseStepCount();
+
+        s.ActionStates.MutateState(this);
+        s.ActionCount++;
+
+        s.ActiveEffects.DecrementDuration();
     }
 }
