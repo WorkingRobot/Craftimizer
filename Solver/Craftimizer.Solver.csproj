@@ -18,4 +18,8 @@
     <ProjectReference Include="..\Simulator\Craftimizer.Simulator.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Scorers\" />
+  </ItemGroup>
+
 </Project>

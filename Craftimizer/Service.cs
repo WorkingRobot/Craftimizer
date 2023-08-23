@@ -31,5 +31,4 @@ public sealed class Service
     public static Configuration Configuration { get; internal set; }
     public static WindowSystem WindowSystem => Plugin.WindowSystem;
 #pragma warning restore CS8618
-
 }
