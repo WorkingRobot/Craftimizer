@@ -11,7 +11,7 @@ namespace Craftimizer.Utils;
 public sealed unsafe class Hooks : IDisposable
 {
     public delegate void OnActionUsedDelegate(ActionType action);
-
+    
     public event OnActionUsedDelegate? OnActionUsed;
 
     public delegate bool UseActionDelegate(ActionManager* manager, CSActionType actionType, uint actionId, ulong targetId, uint param, uint useType, int pvp, nint a8);

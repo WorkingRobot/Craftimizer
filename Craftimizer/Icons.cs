@@ -1,3 +1,4 @@
+using Dalamud.Interface.Internal;
 using ImGuiScene;
 using System.Collections.Generic;
 
@@ -5,15 +6,12 @@ namespace Craftimizer.Plugin;
 
 internal static class Icons
 {
-    private static readonly Dictionary<string, TextureWrap> Cache = new();
+    private static readonly Dictionary<ushort, IDalamudTextureWrap> Cache = new();
 
-    public static TextureWrap GetIconFromPath(string path)
+    public static TextureWrap GetIconFromId(ushort id)
     {
-        if (!Cache.TryGetValue(path, out var ret))
-            Cache.Add(path, ret = Service.DataManager.GetImGuiTexture(path)!);
+        if (!Cache.TryGetValue(id, out var ret))
+            Cache.Add(id, ret = Service.TextureProvider.GetIcon(id)!);
         return ret;
     }
-
-    public static TextureWrap GetIconFromId(ushort id) =>
-        GetIconFromPath($"ui/icon/{id / 1000 * 1000:000000}/{id:000000}_hr1.tex");
 }
