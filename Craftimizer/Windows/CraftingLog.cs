@@ -145,8 +145,7 @@ public unsafe class CraftingLog : Window
         };
         CharacterCannotCraftReason = Config.OverrideUncraftability ? CannotCraftReason.OK : CanCraftRecipe(CharacterEquipment, CharacterStatsConsumable);
 
-        if (CharacterCannotCraftReason == CannotCraftReason.OK)
-            CharacterSimulationInput = new(CharacterStatsConsumable, RecipeUtils.Info, StartingQuality, Random);
+        CharacterSimulationInput = new(CharacterStatsConsumable, RecipeUtils.Info, StartingQuality, Random);
     }
 
     public override void Draw()
