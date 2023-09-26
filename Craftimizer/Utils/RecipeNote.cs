@@ -122,7 +122,7 @@ public sealed unsafe class RecipeNote : IDisposable
         Table = Recipe.RecipeLevelTable.Value!;
         Info = CreateInfo();
         ClassJob = (ClassJob)Recipe.CraftType.Row;
-        CharacterLevel = PlayerState.Instance()->ClassJobLevelArray[ClassJob.GetClassJobIndex()];
+        CharacterLevel = PlayerState.Instance()->ClassJobLevelArray[ClassJob.GetExpArrayIdx()];
         CanUseManipulation = ActionManager.CanUseActionOnTarget(ActionType.Manipulation.GetId(ClassJob), (GameObject*)Service.ClientState.LocalPlayer!.Address);
         HQIngredientCount = Recipe.UnkData5
             .Where(i =>

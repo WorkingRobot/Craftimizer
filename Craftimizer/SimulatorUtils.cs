@@ -142,6 +142,9 @@ internal static class ClassJobUtils
             _ => null
         };
 
+    public static sbyte GetExpArrayIdx(this ClassJob me) =>
+        LuminaSheets.ClassJobSheet.GetRow(me.GetClassJobIndex())!.ExpArrayIndex;
+
     public static string GetName(this ClassJob classJob)
     {
         var job = LuminaSheets.ClassJobSheet.GetRow(classJob.GetClassJobIndex())!;
