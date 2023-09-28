@@ -38,7 +38,7 @@ public unsafe class CraftingLog : Window
     // If not relative, increase stat by Value, and ignore Max
     [StructLayout(LayoutKind.Auto)]
     private record struct FoodStat(bool IsRelative, sbyte Value, short Max, sbyte ValueHQ, short MaxHQ);
-    private sealed record Food(Item Item, string Name, FoodStat? Craftsmanship, FoodStat? Control, FoodStat? CP);
+    private sealed record Food(Item Item, string Name, string NameHQ, FoodStat? Craftsmanship, FoodStat? Control, FoodStat? CP);
 
     private static Food[] FoodItems { get; }
     private static Food[] MedicineItems { get; }
@@ -106,7 +106,8 @@ public unsafe class CraftingLog : Window
 
             if (craftsmanship != null || control != null || cp != null)
             {
-                var food = new Food(item, item.Name.ToDalamudString().TextValue ?? $"Unknown ({item.RowId})", craftsmanship, control, cp);
+                var name = item.Name.ToDalamudString().TextValue ?? $"Unknown ({item.RowId})";
+                var food = new Food(item, name, $"{name} (HQ)", craftsmanship, control, cp);
                 if (isFood)
                     foods.Add(food);
                 if (isMedicine)
@@ -215,26 +216,53 @@ public unsafe class CraftingLog : Window
         ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, LeftSideWidth - 120);
         ImGui.TableNextColumn();
 
-        if (ImGui.BeginCombo("Food", SelectedFood?.Name ?? "None"))
+        if (ImGui.BeginCombo("Food", SelectedFood != null ? (SelectedFoodHQ ? SelectedFood.NameHQ : SelectedFood.Name) : "None"))
         {
             if (ImGui.Selectable("None", SelectedFood == null))
+            {
                 SelectedFood = null;
+                SelectedFoodHQ = false;
+            }
 
             foreach (var food in FoodItems)
-                if (ImGui.Selectable(food.Name, food == SelectedFood))
+            {
+                if (ImGui.Selectable(food.Name, food == SelectedFood && !SelectedFoodHQ))
+                {
                     SelectedFood = food;
+                    SelectedFoodHQ = false;
+                }
+                else if (ImGui.Selectable($"{food.Name} (HQ)", food == SelectedFood && SelectedFoodHQ))
+                {
+                    SelectedFood = food;
+                    SelectedFoodHQ = true;
+                }
+            }
 
             ImGui.EndCombo();
         }
 
-        if (ImGui.BeginCombo("Medicine", SelectedMedicine?.Name ?? "None"))
+        if (ImGui.BeginCombo("Medicine", SelectedMedicine != null ? (SelectedMedicineHQ ? SelectedMedicine.NameHQ : SelectedMedicine.Name) : "None"))
         {
             if (ImGui.Selectable("None", SelectedMedicine == null))
+            {
                 SelectedMedicine = null;
+                SelectedMedicineHQ = false;
+            }
+
 
             foreach (var food in MedicineItems)
-                if (ImGui.Selectable(food.Name, food == SelectedMedicine))
+            {
+                if (ImGui.Selectable(food.Name, food == SelectedMedicine && !SelectedMedicineHQ))
+                {
                     SelectedMedicine = food;
+                    SelectedMedicineHQ = false;
+                }
+                else if (ImGui.Selectable($"{food.Name} (HQ)", food == SelectedMedicine && SelectedMedicineHQ))
+                {
+                    SelectedMedicine = food;
+                    SelectedMedicineHQ = true;
+                }
+            }
 
             ImGui.EndCombo();
         }
