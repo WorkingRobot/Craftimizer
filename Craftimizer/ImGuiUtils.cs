@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
-
 namespace Craftimizer.Plugin;
 
 internal static class ImGuiUtils
@@ -157,5 +156,25 @@ internal static class ImGuiUtils
                 Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
             ImGui.SetTooltip("Open in Browser");
         }
+    }
+
+    public static void AlignCentered(float width)
+    {
+        var availWidth = ImGui.GetContentRegionAvail().X;
+        if (availWidth > width)
+            ImGui.SetCursorPosX(ImGui.GetCursorPos().X + (availWidth - width) / 2);
+    }
+
+    // https://stackoverflow.com/a/67855985
+    public static void TextCentered(string text)
+    {
+        AlignCentered(ImGui.CalcTextSize(text).X);
+        ImGui.TextUnformatted(text);
+    }
+
+    public static bool ButtonCentered(string text)
+    {
+        AlignCentered(ImGui.CalcTextSize(text).X + ImGui.GetStyle().FramePadding.Y * 2);
+        return ImGui.Button(text);
     }
 }

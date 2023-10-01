@@ -473,7 +473,7 @@ public class Settings : Window
         ImGui.Image(icon.ImGuiHandle, new(icon.Width, icon.Height));
 
         ImGui.TableNextColumn();
-        ImGui.Text($"{plugin.Name} v{plugin.Version} {plugin.Configuration}");
+        ImGui.Text($"{plugin.Name} v{plugin.Version} {plugin.BuildConfiguration}");
         ImGui.Text($"By {plugin.Author} (");
         ImGui.SameLine(0, 0);
         ImGuiUtils.Hyperlink("WorkingRobot", "https://github.com/WorkingRobot");

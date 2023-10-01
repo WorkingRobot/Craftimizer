@@ -16,6 +16,52 @@ using CSRecipeNote = FFXIVClientStructs.FFXIV.Client.Game.UI.RecipeNote;
 
 namespace Craftimizer.Utils;
 
+public record RecipeData
+{
+    public ushort RecipeId { get; }
+
+    public Recipe Recipe { get; }
+    public RecipeLevelTable Table { get; }
+
+    public ClassJob ClassJob { get; }
+    public RecipeInfo RecipeInfo { get; }
+    public int HQIngredientCount { get; }
+    public int MaxStartingQuality { get; }
+
+    public RecipeData(ushort recipeId)
+    {
+        RecipeId = recipeId;
+
+        Recipe = LuminaSheets.RecipeSheet.GetRow(recipeId) ??
+            throw new ArgumentException($"Invalid recipe id {recipeId}", nameof(recipeId));
+
+        Table = Recipe.RecipeLevelTable.Value!;
+        ClassJob = (ClassJob)Recipe.CraftType.Row;
+        RecipeInfo = new()
+        {
+            IsExpert = Recipe.IsExpert,
+            ClassJobLevel = Table.ClassJobLevel,
+            RLvl = (int)Table.RowId,
+            ConditionsFlag = Table.ConditionsFlag,
+            MaxDurability = Table.Durability * Recipe.DurabilityFactor / 100,
+            MaxQuality = (int)Table.Quality * Recipe.QualityFactor / 100,
+            MaxProgress = Table.Difficulty * Recipe.DifficultyFactor / 100,
+            QualityModifier = Table.QualityModifier,
+            QualityDivider = Table.QualityDivider,
+            ProgressModifier = Table.ProgressModifier,
+            ProgressDivider = Table.ProgressDivider,
+        };
+
+        HQIngredientCount = Recipe.UnkData5
+            .Where(i =>
+                i != null &&
+                i.ItemIngredient != 0 &&
+                (LuminaSheets.ItemSheet.GetRow((uint)i.ItemIngredient)?.CanBeHq ?? false)
+            ).Sum(i => i.AmountIngredient);
+        MaxStartingQuality = (int)Math.Floor(Recipe.MaterialQualityFactor * RecipeInfo.MaxQuality / 100f);
+    }
+}
+
 public sealed unsafe class RecipeNote : IDisposable
 {
     public AddonRecipeNote* AddonRecipe { get; private set; }

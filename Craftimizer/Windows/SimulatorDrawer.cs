@@ -133,7 +133,7 @@ public sealed partial class Simulator : Window, IDisposable
     {
         var imageSize = new Vector2(ImGui.GetFontSize() * 2.25f);
 
-        ImGui.Image(Icons.GetIconFromId(Item.Icon).ImGuiHandle, imageSize);
+        ImGui.Image(Service.IconManager.GetIcon(Item.Icon).ImGuiHandle, imageSize);
         ImGui.SameLine();
         ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (imageSize.Y - ImGui.GetFontSize()) / 2f);
         ImGui.TextUnformatted(Item.Name.ToDalamudString().ToString());

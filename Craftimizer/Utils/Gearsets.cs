@@ -8,7 +8,7 @@ using System;
 using System.Linq;
 
 namespace Craftimizer.Plugin.Utils;
-internal static unsafe class Gearsets
+public static unsafe class Gearsets
 {
     public record struct GearsetStats(int CP, int Craftsmanship, int Control);
     public record struct GearsetMateria(ushort Type, ushort Grade);
@@ -117,9 +117,12 @@ internal static unsafe class Gearsets
 
     public static bool IsSpecialistSoulCrystal(GearsetItem item)
     {
+        if (item.itemId == 0)
+            return false;
+
         var luminaItem = LuminaSheets.ItemSheet.GetRow(item.itemId)!;
-        //      Soul Crystal ItemUICategory                                         DoH Category
-        return luminaItem.ItemUICategory.Row != 62 && luminaItem.ClassJobUse.Value!.ClassJobCategory.Row == 33;
+        //     Soul Crystal ItemUICategory                                          DoH Category
+        return luminaItem.ItemUICategory.Row == 62 && luminaItem.ClassJobUse.Value!.ClassJobCategory.Row == 33;
     }
 
     public static bool IsSplendorousTool(GearsetItem item) =>
