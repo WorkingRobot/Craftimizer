@@ -1,6 +1,6 @@
 using CompState = Craftimizer.Simulator.CompletionState;
 
-namespace Craftimizer.Solver.Crafty;
+namespace Craftimizer.Solver;
 
 public enum CompletionState : byte
 {

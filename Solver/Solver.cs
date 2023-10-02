@@ -5,9 +5,9 @@ using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
-using Node = Craftimizer.Solver.Crafty.ArenaNode<Craftimizer.Solver.Crafty.SimulationNode>;
+using Node = Craftimizer.Solver.ArenaNode<Craftimizer.Solver.SimulationNode>;
 
-namespace Craftimizer.Solver.Crafty;
+namespace Craftimizer.Solver;
 
 // https://github.com/alostsock/crafty/blob/cffbd0cad8bab3cef9f52a3e3d5da4f5e3781842/crafty/src/simulator.rs
 public sealed class Solver
@@ -155,7 +155,7 @@ public sealed class Solver
             vInt = Vector.Max(vInt, Vector<int>.One);
             var v = Vector.ConvertToSingle(vInt);
 
-            var exploitation = (W * (s / v)) + (w * m);
+            var exploitation = W * (s / v) + w * m;
             var exploration = CVector * Intrinsics.ReciprocalSqrt(v);
             var evalScores = exploitation + exploration;
 

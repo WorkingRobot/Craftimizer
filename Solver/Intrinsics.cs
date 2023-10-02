@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
-namespace Craftimizer.Solver.Crafty;
+namespace Craftimizer.Solver;
 internal static class Intrinsics
 {
     [Pure]
@@ -50,7 +50,7 @@ internal static class Intrinsics
         var vcmp = Avx.CompareEqual(vfilt, vmax);
         var mask = unchecked((uint)Avx2.MoveMask(vcmp.AsByte()));
 
-        var inverseIdx = BitOperations.LeadingZeroCount(mask << ((8 - len) << 2)) >> 2;
+        var inverseIdx = BitOperations.LeadingZeroCount(mask << (8 - len << 2)) >> 2;
 
         return len - 1 - inverseIdx;
     }

@@ -3,7 +3,7 @@ using Craftimizer.Simulator.Actions;
 using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 
-namespace Craftimizer.Solver.Crafty;
+namespace Craftimizer.Solver;
 
 public sealed class Simulator : SimulatorNoRandom
 {
@@ -129,7 +129,7 @@ public sealed class Simulator : SimulatorNoRandom
                 if (wouldFinish)
                 {
                     // don't allow finishing the craft if there is significant quality remaining
-                    if (Quality < (Input.Recipe.MaxQuality / 5))
+                    if (Quality < Input.Recipe.MaxQuality / 5)
                         return false;
                 }
                 else
@@ -188,7 +188,7 @@ public sealed class Simulator : SimulatorNoRandom
     }
 
     public static CompletionState CalculateCompletionState(SimulationState state, int maxStepCount) =>
-        (state.ActionCount + 1) >= maxStepCount ?
+        state.ActionCount + 1 >= maxStepCount ?
         CompletionState.MaxActionCountReached :
         (CompletionState)CalculateCompletionState(state);
 }

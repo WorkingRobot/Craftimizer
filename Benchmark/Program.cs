@@ -1,6 +1,6 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
-using Craftimizer.Solver.Crafty;
+using Craftimizer.Solver;
 using System.Diagnostics;
 
 namespace Craftimizer.Benchmark;
@@ -77,11 +77,11 @@ internal static class Program
 
         Console.WriteLine($"{state.Quality} {state.CP} {state.Progress} {state.Durability}");
         //return;
-        var (_, s) = Solver.Crafty.Solver.SearchStepwiseFurcated(config, state, a => Console.WriteLine(a), default);
+        var (_, s) = Solver.Solver.SearchStepwiseFurcated(config, state, a => Console.WriteLine(a), default);
         Console.WriteLine($"Qual: {s.Quality}/{s.Input.Recipe.MaxQuality}");
         return;
 
-        Solver.Crafty.Solver.SearchStepwiseFurcated(config, new(input), null, default);
+        Solver.Solver.SearchStepwiseFurcated(config, new(input), null, default);
         //Benchmark(() => );
     }
 

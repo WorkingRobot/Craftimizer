@@ -1,6 +1,6 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
-using Craftimizer.Solver.Crafty;
+using Craftimizer.Solver;
 using Dalamud.Configuration;
 using System;
 using System.Collections.Generic;
@@ -21,7 +21,7 @@ public static class AlgorithmUtils
     {
         try
         {
-            Solver.Crafty.Solver.Search(me, state, actionCallback, token);
+            Solver.Solver.Search(me, state, actionCallback, token);
         }
         catch (AggregateException e)
         {
