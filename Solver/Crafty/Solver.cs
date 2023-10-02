@@ -332,10 +332,7 @@ public sealed class Solver
         }
     }
 
-    public static SolverSolution SearchStepwiseFurcated(SolverConfig config, SimulationInput input, Action<ActionType>? actionCallback = null, CancellationToken token = default) =>
-        SearchStepwiseFurcated(config, new SimulationState(input), actionCallback, token);
-
-    public static SolverSolution SearchStepwiseFurcated(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
+    public static SolverSolution SearchStepwiseFurcated(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback, CancellationToken token)
     {
         var definiteActionCount = 0;
         var bestSims = new List<(float Score, SolverSolution Result)>();
@@ -445,10 +442,7 @@ public sealed class Solver
         return result;
     }
 
-    public static SolverSolution SearchStepwiseForked(SolverConfig config, SimulationInput input, Action<ActionType>? actionCallback = null, CancellationToken token = default) =>
-        SearchStepwiseForked(config, new SimulationState(input), actionCallback, token);
-
-    public static SolverSolution SearchStepwiseForked(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
+    public static SolverSolution SearchStepwiseForked(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback, CancellationToken token)
     {
         var actions = new List<ActionType>();
         var sim = new Simulator(state, config.MaxStepCount);
@@ -495,10 +489,7 @@ public sealed class Solver
         return new(actions, state);
     }
 
-    public static SolverSolution SearchStepwise(SolverConfig config, SimulationInput input, Action<ActionType>? actionCallback = null, CancellationToken token = default) =>
-        SearchStepwise(config, new SimulationState(input), actionCallback, token);
-
-    public static SolverSolution SearchStepwise(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
+    public static SolverSolution SearchStepwise(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback, CancellationToken token)
     {
         var actions = new List<ActionType>();
         var sim = new Simulator(state, config.MaxStepCount);
@@ -535,10 +526,7 @@ public sealed class Solver
         return new(actions, state);
     }
 
-    public static SolverSolution SearchOneshotForked(SolverConfig config, SimulationInput input, Action<ActionType>? actionCallback = null, CancellationToken token = default) =>
-        SearchOneshotForked(config, new SimulationState(input), actionCallback, token);
-
-    public static SolverSolution SearchOneshotForked(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
+    public static SolverSolution SearchOneshotForked(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback, CancellationToken token)
     {
         var tasks = new Task<(float MaxScore, SolverSolution Solution)>[config.ForkCount];
         for (var i = 0; i < config.ForkCount; ++i)
@@ -557,10 +545,7 @@ public sealed class Solver
         return solution;
     }
 
-    public static SolverSolution SearchOneshot(SolverConfig config, SimulationInput input, Action<ActionType>? actionCallback = null, CancellationToken token = default) =>
-        SearchOneshot(config, new SimulationState(input), actionCallback, token);
-
-    public static SolverSolution SearchOneshot(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
+    public static SolverSolution SearchOneshot(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback, CancellationToken token)
     {
         var solver = new Solver(config, state);
         solver.Search(config.Iterations, token);
@@ -570,9 +555,6 @@ public sealed class Solver
 
         return solution;
     }
-
-    public static SolverSolution Search(SolverConfig config, SimulationInput input, Action<ActionType>? actionCallback = null, CancellationToken token = default) =>
-        Search(config, new SimulationState(input), actionCallback, token);
 
     public static SolverSolution Search(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
     {
@@ -586,5 +568,4 @@ public sealed class Solver
         };
         return func(config, state, actionCallback, token);
     }
-
 }

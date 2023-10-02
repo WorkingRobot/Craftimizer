@@ -9,7 +9,6 @@ using Dalamud.Interface.Components;
 using Dalamud.Interface.GameFonts;
 using Dalamud.Interface.Raii;
 using Dalamud.Interface.Windowing;
-using Dalamud.Logging;
 using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
@@ -92,6 +91,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 return false;
         }
 
+        var statsChanged = false;
         {
             var instance = CSRecipeNote.Instance();
 
@@ -104,7 +104,11 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 return false;
 
             var recipeId = recipeEntry->RecipeId;
-            RecipeData = new(recipeId);
+            if (recipeId != RecipeData?.RecipeId)
+            {
+                RecipeData = new(recipeId);
+                statsChanged = true;
+            }
         }
 
         Gearsets.GearsetItem[] gearItems;
@@ -117,10 +121,23 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
             gearItems = Gearsets.GetGearsetItems(container);
 
-            CharacterStats = Gearsets.CalculateCharacterStats(gearStats, gearItems, RecipeData.ClassJob.GetPlayerLevel(), RecipeData.ClassJob.CanPlayerUseManipulation());
+            var characterStats = Gearsets.CalculateCharacterStats(gearStats, gearItems, RecipeData.ClassJob.GetPlayerLevel(), RecipeData.ClassJob.CanPlayerUseManipulation());
+            if (characterStats != CharacterStats)
+            {
+                CharacterStats = characterStats;
+                statsChanged = true;
+            }
         }
 
-        CraftStatus = CalculateCraftStatus(gearItems);
+        var craftStatus = CalculateCraftStatus(gearItems);
+        if (craftStatus != CraftStatus)
+        {
+            CraftStatus = craftStatus;
+            statsChanged = true;
+        }
+
+        if (statsChanged && CraftStatus == CraftableStatus.OK)
+            CalculateBestMacros();
 
         return true;
     }
@@ -145,16 +162,28 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
     public override void Draw()
     {
-        using var table = ImRaii.Table("stats", 2, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.SizingStretchSame);
-        if (table)
         {
-            ImGui.TableSetupColumn("col1", ImGuiTableColumnFlags.WidthStretch);
-            ImGui.TableSetupColumn("col2", ImGuiTableColumnFlags.WidthStretch);
-            ImGui.TableNextColumn();
-            DrawCharacterStats();
-            ImGui.TableNextColumn();
-            DrawRecipeStats();
+            using var table = ImRaii.Table("stats", 2, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.SizingStretchSame);
+            if (table)
+            {
+                ImGui.TableSetupColumn("col1", ImGuiTableColumnFlags.WidthStretch);
+                ImGui.TableSetupColumn("col2", ImGuiTableColumnFlags.WidthStretch);
+                ImGui.TableNextColumn();
+                DrawCharacterStats();
+                ImGui.TableNextColumn();
+                DrawRecipeStats();
+            }
         }
+
+        if (CraftStatus != CraftableStatus.OK)
+            return;
+
+        ImGui.Separator();
+
+        ImGuiUtils.TextCentered("Best Saved Macro");
+        ImGuiUtils.ButtonCentered("View Saved Macros");
+        ImGuiUtils.TextCentered("Suggested Macro");
+        ImGuiUtils.ButtonCentered("Open Simulator");
     }
 
     private void DrawCharacterStats()
@@ -163,7 +192,12 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
         var level = RecipeData!.ClassJob.GetPlayerLevel();
         {
-            var className = RecipeData.ClassJob.GetName();
+            var textClassName = RecipeData.ClassJob.GetAbbreviation();
+            Vector2 textClassSize;
+            {
+                var layout = AxisFont.LayoutBuilder(textClassName).Build();
+                textClassSize = new(layout.Width, layout.Height);
+            }
             var levelText = string.Empty;
             if (level != 0)
                 levelText = SqText.ToLevelString(level);
@@ -178,7 +212,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
             ImGuiUtils.AlignCentered(
                 imageSize + 5 +
-                ImGui.CalcTextSize(className).X +
+                textClassSize.X +
                 (level == 0 ? 0 : (3 + ImGui.CalcTextSize(levelText).X)) +
                 (hasSplendorous ? (3 + imageSize) : 0) +
                 (hasSpecialist ? (3 + imageSize) : 0) +
@@ -186,7 +220,12 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 );
             ImGui.AlignTextToFramePadding();
 
-            ImGui.Image(Service.IconManager.GetIcon(RecipeData.ClassJob.GetIconId()).ImGuiHandle, new Vector2(imageSize));
+            var uv0 = new Vector2(6, 3);
+            var uv1 = uv0 + new Vector2(44);
+            uv0 /= new Vector2(56);
+            uv1 /= new Vector2(56);
+
+            ImGui.Image(Service.IconManager.GetIcon(RecipeData.ClassJob.GetIconId()).ImGuiHandle, new Vector2(imageSize), uv0, uv1);
             ImGui.SameLine(0, 5);
 
             if (level != 0)
@@ -197,7 +236,8 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 ImGui.SameLine(0, 3);
             }
 
-            ImGui.Text(className);
+            ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (imageSize - textClassSize.Y) / 2);
+            AxisFont.Text(textClassName);
 
             if (hasSplendorous)
             {
@@ -391,7 +431,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             if (textStarsSize != Vector2.Zero)
             {
                 ImGui.SameLine(0, 3);
-                ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (textStarsSize.Y - textSize) / 2);
+                ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (imageSize - textStarsSize.Y) / 2);
                 AxisFont.Text(textStars);
             }
 
@@ -413,6 +453,8 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                     ImGui.SetTooltip($"Expert Recipe");
             }
         }
+
+        ImGui.Separator();
 
         using var table = ImRaii.Table("recipeStats", 2);
         if (table)
@@ -533,6 +575,11 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             return i;
         }
         return null;
+    }
+
+    private void CalculateBestMacros()
+    {
+        throw new NotImplementedException();
     }
 
     public void Dispose()

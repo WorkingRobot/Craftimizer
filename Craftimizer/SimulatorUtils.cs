@@ -162,11 +162,17 @@ internal static class ClassJobUtils
         return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(job.Name.ToDalamudString().TextValue);
     }
 
+    public static string GetAbbreviation(this ClassJob me)
+    {
+        var job = LuminaSheets.ClassJobSheet.GetRow(me.GetClassJobIndex())!;
+        return job.Abbreviation.ToDalamudString().TextValue;
+    }
+
     public static Quest GetUnlockQuest(this ClassJob me) =>
         LuminaSheets.QuestSheet.GetRow(65720 + (uint)me) ?? throw new ArgumentException($"Could not get unlock quest for {me}", nameof(me));
 
     public static ushort GetIconId(this ClassJob me) =>
-        (ushort)(62100 + me.GetClassJobIndex());
+        (ushort)(62000 + me.GetClassJobIndex());
 
     public static bool IsClassJob(this ClassJobCategory me, ClassJob classJob) =>
         classJob switch

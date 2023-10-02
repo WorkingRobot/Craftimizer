@@ -77,11 +77,11 @@ internal static class Program
 
         Console.WriteLine($"{state.Quality} {state.CP} {state.Progress} {state.Durability}");
         //return;
-        var (_, s) = Solver.Crafty.Solver.SearchStepwiseFurcated(config, state, a => Console.WriteLine(a));
+        var (_, s) = Solver.Crafty.Solver.SearchStepwiseFurcated(config, state, a => Console.WriteLine(a), default);
         Console.WriteLine($"Qual: {s.Quality}/{s.Input.Recipe.MaxQuality}");
         return;
 
-        Solver.Crafty.Solver.SearchStepwiseFurcated(config, input);
+        Solver.Crafty.Solver.SearchStepwiseFurcated(config, new(input), null, default);
         //Benchmark(() => );
     }
 
