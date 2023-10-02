@@ -15,25 +15,6 @@ public class Macro
     public List<ActionType> Actions { get; set; } = new();
 }
 
-public static class AlgorithmUtils
-{
-    public static void Invoke(this SolverConfig me, SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
-    {
-        try
-        {
-            Solver.Solver.Search(me, state, actionCallback, token);
-        }
-        catch (AggregateException e)
-        {
-            e.Handle(ex => ex is OperationCanceledException);
-        }
-        catch (OperationCanceledException)
-        {
-
-        }
-    }
-}
-
 [Serializable]
 public class Configuration : IPluginConfiguration
 {

@@ -1,3 +1,5 @@
+using Craftimizer.Simulator.Actions;
+using Craftimizer.Simulator;
 using System.Runtime.InteropServices;
 
 namespace Craftimizer.Solver;
@@ -65,4 +67,21 @@ public readonly record struct SolverConfig
         FurcatedActionCount = Environment.ProcessorCount / 2,
         Algorithm = SolverAlgorithm.StepwiseForked
     };
+
+    public SolverSolution? Invoke(SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
+    {
+        try
+        {
+            return Solver.Search(this, state, actionCallback, token);
+        }
+        catch (AggregateException e)
+        {
+            e.Handle(ex => ex is OperationCanceledException);
+        }
+        catch (OperationCanceledException)
+        {
+
+        }
+        return null;
+    }
 }

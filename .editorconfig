@@ -158,6 +158,7 @@ dotnet_diagnostic.CA1841.severity = suggestion
 dotnet_diagnostic.CA1845.severity = suggestion
 dotnet_diagnostic.MA0011.severity = silent
 dotnet_diagnostic.MA0076.severity = silent
+dotnet_diagnostic.MA0046.severity = silent
 dotnet_diagnostic.MA0002.severity = silent
 csharp_style_prefer_switch_expression = true:suggestion
 csharp_style_prefer_pattern_matching = true:silent

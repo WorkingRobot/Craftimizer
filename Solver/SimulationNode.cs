@@ -30,7 +30,7 @@ public struct SimulationNode
         CompletionState.NoMoreActions :
         simCompletionState;
 
-    public readonly float? CalculateScore(SolverConfig config) =>
+    public readonly float? CalculateScore(MCTSConfig config) =>
         CalculateScoreForState(State, SimulationCompletionState, config);
 
     private static bool CanByregot(SimulationState state)
@@ -41,7 +41,7 @@ public struct SimulationNode
         return BaseComboAction.VerifyDurability2(state, 10);
     }
 
-    public static float? CalculateScoreForState(SimulationState state, CompletionState completionState, SolverConfig config)
+    public static float? CalculateScoreForState(SimulationState state, CompletionState completionState, MCTSConfig config)
     {
         if (completionState != CompletionState.ProgressComplete)
             return null;
@@ -50,32 +50,32 @@ public struct SimulationNode
             bonus * Math.Min(1f, value / target);
 
         var progressScore = Apply(
-            config.ScoreProgressBonus,
+            config.ScoreProgress,
             state.Progress,
             state.Input.Recipe.MaxProgress
         );
 
         var byregotBonus = CanByregot(state) ? (state.ActiveEffects.InnerQuiet * .2f + 1) * state.Input.BaseQualityGain : 0;
         var qualityScore = Apply(
-            config.ScoreQualityBonus,
+            config.ScoreQuality,
             state.Quality + byregotBonus,
             state.Input.Recipe.MaxQuality
         );
 
         var durabilityScore = Apply(
-            config.ScoreDurabilityBonus,
+            config.ScoreDurability,
             state.Durability,
             state.Input.Recipe.MaxDurability
         );
 
         var cpScore = Apply(
-            config.ScoreCPBonus,
+            config.ScoreCP,
             state.CP,
             state.Input.Stats.CP
         );
 
         var fewerStepsScore =
-            config.ScoreFewerStepsBonus * (1f - (float)(state.ActionCount + 1) / config.MaxStepCount);
+            config.ScoreSteps * (1f - (float)(state.ActionCount + 1) / config.MaxStepCount);
 
         return progressScore + qualityScore + durabilityScore + cpScore + fewerStepsScore;
     }
