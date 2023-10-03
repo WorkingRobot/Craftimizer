@@ -7,7 +7,7 @@ namespace Craftimizer.Benchmark;
 
 internal static class Program
 {
-    private static void Main()
+    private static async Task Main()
     {
         //var summary = BenchmarkRunner.Run<Bench>();
         //return;
@@ -77,12 +77,12 @@ internal static class Program
 
         Console.WriteLine($"{state.Quality} {state.CP} {state.Progress} {state.Durability}");
         //return;
-        var (_, s) = config.Invoke(state, a => Console.WriteLine(a))!.Value;
+        var solver = new Solver.Solver(config, state);
+        solver.OnLog += s => Console.WriteLine(s);
+        solver.OnNewAction += s => Console.WriteLine(s);
+        solver.Start();
+        var (_, s) = await solver.GetTask().ConfigureAwait(false);
         Console.WriteLine($"Qual: {s.Quality}/{s.Input.Recipe.MaxQuality}");
-        return;
-
-        config.Invoke(new(input));
-        //Benchmark(() => );
     }
 
     private static void Benchmark(Func<SolverSolution> search)

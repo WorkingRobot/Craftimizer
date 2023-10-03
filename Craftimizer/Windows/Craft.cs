@@ -215,7 +215,8 @@ public sealed unsafe partial class Craft : Window, IDisposable
     public void Dispose()
     {
         StopSolve();
-        SolverTask?.Wait();
+        SolverTaskToken?.Cancel();
+        SolverTask?.TryWait();
         SolverTask?.Dispose();
         SolverTaskToken?.Dispose();
 

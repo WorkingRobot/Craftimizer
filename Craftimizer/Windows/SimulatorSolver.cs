@@ -1,6 +1,7 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Dalamud.Interface.Windowing;
+using Dalamud.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
@@ -10,7 +11,7 @@ namespace Craftimizer.Plugin.Windows;
 
 public sealed partial class Simulator : Window, IDisposable
 {
-    private Task? SolverTask { get; set; }
+    private Solver.Solver? SolverTask { get; set; }
     private CancellationTokenSource? SolverTaskToken { get; set; }
     private ConcurrentQueue<ActionType> SolverActionQueue { get; } = new();
     private int SolverInitialActionCount { get; set; }
@@ -83,13 +84,17 @@ public sealed partial class Simulator : Window, IDisposable
 
         SolverInitialActionCount = Actions.Count;
         SolverTaskToken = new();
-        SolverTask = Task.Run(() => Config.SimulatorSolverConfig.Invoke(solverState, SolverActionQueue.Enqueue, SolverTaskToken.Token));
+        SolverTask = new(Config.SimulatorSolverConfig, solverState) { Token = SolverTaskToken.Token };
+        SolverTask.OnLog += s => PluginLog.Debug(s);
+        SolverTask.OnNewAction += SolverActionQueue.Enqueue;
+        SolverTask.Start();
     }
 
     public void Dispose()
     {
         StopSolveMacro();
-        SolverTask?.Wait();
+        SolverTaskToken?.Cancel();
+        SolverTask?.TryWait();
         SolverTask?.Dispose();
         SolverTaskToken?.Dispose();
     }

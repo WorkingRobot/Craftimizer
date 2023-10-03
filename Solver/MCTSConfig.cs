@@ -21,7 +21,7 @@ public readonly record struct MCTSConfig
 
     public MCTSConfig(SolverConfig config)
     {
-        MaxStepCount= config.MaxStepCount;
+        MaxStepCount = config.MaxStepCount;
         MaxRolloutStepCount = config.MaxRolloutStepCount;
         StrictActions = config.StrictActions;
 
@@ -29,10 +29,10 @@ public readonly record struct MCTSConfig
         ExplorationConstant = config.ExplorationConstant;
         ScoreStorageThreshold = config.ScoreStorageThreshold;
 
-        ScoreProgress = config.ScoreProgressBonus;
-        ScoreQuality = config.ScoreQualityBonus;
-        ScoreDurability = config.ScoreDurabilityBonus;
-        ScoreCP = config.ScoreCPBonus;
-        ScoreSteps = config.ScoreFewerStepsBonus;
+        ScoreProgress = config.ScoreProgress;
+        ScoreQuality = config.ScoreQuality;
+        ScoreDurability = config.ScoreDurability;
+        ScoreCP = config.ScoreCP;
+        ScoreSteps = config.ScoreSteps;
     }
 }

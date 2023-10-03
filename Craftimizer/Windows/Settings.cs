@@ -312,32 +312,32 @@ public class Settings : Window
         DrawOption(
             "Progress",
             "Amount of weight to give to the craft's progress.",
-            config.ScoreProgressBonus,
-            v => config = config with { ScoreProgressBonus = v },
+            config.ScoreProgress,
+            v => config = config with { ScoreProgress = v },
             ref isDirty
         );
 
         DrawOption(
             "Quality",
             "Amount of weight to give to the craft's quality.",
-            config.ScoreQualityBonus,
-            v => config = config with { ScoreQualityBonus = v },
+            config.ScoreQuality,
+            v => config = config with { ScoreQuality = v },
             ref isDirty
         );
 
         DrawOption(
             "Durability",
             "Amount of weight to give to the craft's remaining durability.",
-            config.ScoreDurabilityBonus,
-            v => config = config with { ScoreDurabilityBonus = v },
+            config.ScoreDurability,
+            v => config = config with { ScoreDurability = v },
             ref isDirty
         );
 
         DrawOption(
             "CP",
             "Amount of weight to give to the craft's remaining CP.",
-            config.ScoreCPBonus,
-            v => config = config with { ScoreCPBonus = v },
+            config.ScoreCP,
+            v => config = config with { ScoreCP = v },
             ref isDirty
         );
 
@@ -345,25 +345,25 @@ public class Settings : Window
             "Steps",
             "Amount of weight to give to the craft's number of steps. The lower\n" +
             "the step count, the higher the score.",
-            config.ScoreFewerStepsBonus,
-            v => config = config with { ScoreFewerStepsBonus = v },
+            config.ScoreSteps,
+            v => config = config with { ScoreSteps = v },
             ref isDirty
         );
 
         if (ImGui.Button("Normalize Weights", OptionButtonSize))
         {
-            var total = config.ScoreProgressBonus +
-                        config.ScoreQualityBonus +
-                        config.ScoreDurabilityBonus +
-                        config.ScoreCPBonus +
-                        config.ScoreFewerStepsBonus;
+            var total = config.ScoreProgress +
+                        config.ScoreQuality +
+                        config.ScoreDurability +
+                        config.ScoreCP +
+                        config.ScoreSteps;
             config = config with
             {
-                ScoreProgressBonus = config.ScoreProgressBonus / total,
-                ScoreQualityBonus = config.ScoreQualityBonus / total,
-                ScoreDurabilityBonus = config.ScoreDurabilityBonus / total,
-                ScoreCPBonus = config.ScoreCPBonus / total,
-                ScoreFewerStepsBonus = config.ScoreFewerStepsBonus / total
+                ScoreProgress = config.ScoreProgress / total,
+                ScoreQuality = config.ScoreQuality / total,
+                ScoreDurability = config.ScoreDurability / total,
+                ScoreCP = config.ScoreCP / total,
+                ScoreSteps = config.ScoreSteps / total
             };
             isDirty = true;
         }

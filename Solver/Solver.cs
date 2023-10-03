@@ -4,57 +4,165 @@ using System.Diagnostics;
 
 namespace Craftimizer.Solver;
 
-public static class Solver
+public sealed class Solver : IDisposable
 {
-    private static SolverSolution SearchStepwiseFurcated(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback, CancellationToken token)
+    public SolverConfig Config { get; }
+    public SimulationState State { get; }
+    public CancellationToken Token { get; init; }
+    public SolverSolution? Solution { get; private set; }
+
+    public bool IsStarted => CompletionTask != null;
+    public bool IsCompletedSuccessfully => Solution != null;
+    public bool IsCompleted => CompletionTask?.IsCompleted ?? false;
+
+    private Func<Task<SolverSolution>> SearchFunc { get; }
+    private MCTSConfig MCTSConfig => new(Config);
+    private Task? CompletionTask { get; set; }
+
+    public delegate void LogDelegate(string text);
+    public delegate void WorkerProgressDelegate(SolverSolution solution, float score);
+    public delegate void NewActionDelegate(ActionType action);
+    public delegate void SolutionDelegate(SolverSolution solution);
+
+    // Print to console or plugin log.
+    public event LogDelegate? OnLog;
+
+    // Isn't always called. This is just meant to show as an indicator to the user.
+    // Solution contains the best terminal state, and its actions to get there exclude the ones provided by OnNewAction.
+    // For example, to get to the terminal state, execute all OnNewAction actions, then execute all Solution actions.
+    public event WorkerProgressDelegate? OnWorkerProgress;
+
+    // Always called when a new step is generated.
+    public event NewActionDelegate? OnNewAction;
+
+    // Always called when the solver is fully complete.
+    public event SolutionDelegate? OnSolution;
+
+    public Solver(SolverConfig config, SimulationState state)
+    {
+        Config = config;
+        State = state;
+
+        SearchFunc = Config.Algorithm switch
+        {
+            SolverAlgorithm.Oneshot => SearchOneshot,
+            SolverAlgorithm.OneshotForked => SearchOneshotForked,
+            SolverAlgorithm.Stepwise => SearchStepwise,
+            SolverAlgorithm.StepwiseForked => SearchStepwiseForked,
+            SolverAlgorithm.StepwiseFurcated => SearchStepwiseFurcated,
+            _ => throw new ArgumentOutOfRangeException(nameof(config), config, $"Invalid algorithm: {config.Algorithm}")
+        };
+    }
+
+    public void Start()
+    {
+        if (IsStarted)
+            throw new InvalidOperationException("Solver has already started.");
+
+        CompletionTask = RunTask();
+    }
+
+    private async Task RunTask()
+    {
+        if (Token.IsCancellationRequested)
+            return;
+
+        Solution = await SearchFunc().ConfigureAwait(false);
+    }
+
+    public async Task<SolverSolution> GetTask()
+    {
+        if (!IsStarted)
+            throw new InvalidOperationException("Solver has not started.");
+
+        await CompletionTask!.ConfigureAwait(false);
+
+        return Solution!.Value;
+    }
+
+    public async Task<SolverSolution?> GetSafeTask()
+    {
+        try
+        {
+            return await GetTask().ConfigureAwait(false);
+        }
+        catch (AggregateException e)
+        {
+            e.Handle(ex => ex is OperationCanceledException);
+        }
+        catch (OperationCanceledException)
+        {
+
+        }
+        return null;
+    }
+
+    public void TryWait()
+    {
+        if (IsStarted && !IsCompleted)
+            GetSafeTask().Wait();
+    }
+
+    public void Dispose()
+    {
+        CompletionTask?.Dispose();
+    }
+
+    private async Task<SolverSolution> SearchStepwiseFurcated()
     {
         var definiteActionCount = 0;
         var bestSims = new List<(float Score, SolverSolution Result)>();
 
-        var sim = new Simulator(state, config.MaxStepCount);
+        var state = State;
+        var sim = new Simulator(state, Config.MaxStepCount);
 
         var activeStates = new List<SolverSolution>() { new(new(), state) };
 
         while (activeStates.Count != 0)
         {
-            if (token.IsCancellationRequested)
+            if (Token.IsCancellationRequested)
                 break;
 
             var s = Stopwatch.StartNew();
-            var tasks = new Task<(float MaxScore, int FurcatedActionIdx, SolverSolution Solution)>[config.ForkCount];
-            for (var i = 0; i < config.ForkCount; i++)
+            var tasks = new Task<(float MaxScore, int FurcatedActionIdx, SolverSolution Solution)>[Config.ForkCount];
+            for (var i = 0; i < Config.ForkCount; i++)
             {
-                var stateIdx = (int)((float)i / config.ForkCount * activeStates.Count);
-                var st = activeStates[stateIdx];
+                var stateIdx = (int)((float)i / Config.ForkCount * activeStates.Count);
                 tasks[i] = Task.Run(() =>
                     {
-                        var solver = new MCTS(new(config), activeStates[stateIdx].State);
-                        solver.Search(config.Iterations / config.ForkCount, token);
-                        return (solver.MaxScore, stateIdx, solver.Solution());
-                    }, token);
+                        var solver = new MCTS(MCTSConfig, activeStates[stateIdx].State);
+                        solver.Search(Config.Iterations / Config.ForkCount, Token);
+                        var solution = solver.Solution();
+                        var progressActions = activeStates[stateIdx].Actions.Concat(solution.Actions).Skip(definiteActionCount).ToList();
+                        OnWorkerProgress?.Invoke(solution with { Actions = progressActions }, solver.MaxScore);
+                        return (solver.MaxScore, stateIdx, solution);
+                    }, Token);
             }
-            Task.WaitAll(tasks, token);
+            await Task.WhenAll(tasks).WaitAsync(Token).ConfigureAwait(false);
             s.Stop();
+            OnLog?.Invoke($"{s.Elapsed.TotalMilliseconds:0.00}ms {Config.Iterations / Config.ForkCount / s.Elapsed.TotalSeconds / 1000:0.00} kI/s/t");
 
-            if (token.IsCancellationRequested)
+            if (Token.IsCancellationRequested)
                 break;
 
-            var bestActions = tasks.Select(t => t.Result).OrderByDescending(r => r.MaxScore).Take(config.FurcatedActionCount).ToArray();
+            var bestActions = tasks.Select(t => t.Result).OrderByDescending(r => r.MaxScore).Take(Config.FurcatedActionCount).ToArray();
 
             var bestAction = bestActions[0];
-            if (bestAction.MaxScore >= config.ScoreStorageThreshold)
+            if (bestAction.MaxScore >= Config.ScoreStorageThreshold)
             {
-                var (maxScore, furcatedActionIdx, solution) = bestAction;
-                var (activeActions, activeState) = activeStates[furcatedActionIdx];
+                var (_, furcatedActionIdx, solution) = bestAction;
+                var (activeActions, _) = activeStates[furcatedActionIdx];
 
                 activeActions.AddRange(solution.Actions);
+                foreach (var action in activeActions.Skip(definiteActionCount))
+                    OnNewAction?.Invoke(action);
                 return solution with { Actions = activeActions };
             }
 
-            var newStates = new List<SolverSolution>(config.FurcatedActionCount);
+            var newStates = new List<SolverSolution>(Config.FurcatedActionCount);
             for (var i = 0; i < bestActions.Length; ++i)
             {
-                var (maxScore, furcatedActionIdx, (solutionActions, solutionNode)) = bestActions[i];
+                var (maxScore, furcatedActionIdx, (solutionActions, _)) = bestActions[i];
                 if (solutionActions.Count == 0)
                     continue;
 
@@ -94,67 +202,69 @@ public static class Solver
                 }
                 if (definiteCount != equalCount)
                 {
-                    for (var i = definiteCount; i < equalCount; ++i)
-                        actionCallback?.Invoke(refActions[i]);
+                    foreach(var action in refActions.Take(equalCount).Skip(definiteCount))
+                        OnNewAction?.Invoke(action);
 
                     definiteActionCount = equalCount;
                 }
             }
 
             activeStates = newStates;
-
-            Console.WriteLine($"{s.Elapsed.TotalMilliseconds:0.00}ms {config.Iterations / config.ForkCount / s.Elapsed.TotalSeconds / 1000:0.00} kI/s/t");
         }
 
         if (bestSims.Count == 0)
             return new(new(), state);
 
         var result = bestSims.MaxBy(s => s.Score).Result;
-        for (var i = definiteActionCount; i < result.Actions.Count; ++i)
-            actionCallback?.Invoke(result.Actions[i]);
+        foreach (var action in result.Actions.Skip(definiteActionCount))
+            OnNewAction?.Invoke(action);
 
         return result;
     }
 
-    private static SolverSolution SearchStepwiseForked(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback, CancellationToken token)
+    private async Task<SolverSolution> SearchStepwiseForked()
     {
         var actions = new List<ActionType>();
-        var sim = new Simulator(state, config.MaxStepCount);
+        var state = State;
+        var sim = new Simulator(state, Config.MaxStepCount);
         while (true)
         {
-            if (token.IsCancellationRequested)
+            if (Token.IsCancellationRequested)
                 break;
 
             if (sim.IsComplete)
                 break;
 
-
             var s = Stopwatch.StartNew();
-            var tasks = new Task<(float MaxScore, SolverSolution Solution)>[config.ForkCount];
-            for (var i = 0; i < config.ForkCount; ++i)
+            var tasks = new Task<(float MaxScore, SolverSolution Solution)>[Config.ForkCount];
+            for (var i = 0; i < Config.ForkCount; ++i)
                 tasks[i] = Task.Run(() =>
                 {
-                    var solver = new MCTS(new(config), state);
-                    solver.Search(config.Iterations / config.ForkCount, token);
-                    return (solver.MaxScore, solver.Solution());
-                }, token);
-            Task.WaitAll(tasks, token);
+                    var solver = new MCTS(MCTSConfig, state);
+                    solver.Search(Config.Iterations / Config.ForkCount, Token);
+                    var solution = solver.Solution();
+                    OnWorkerProgress?.Invoke(solution, solver.MaxScore);
+                    return (solver.MaxScore, solution);
+                }, Token);
+            await Task.WhenAll(tasks).WaitAsync(Token).ConfigureAwait(false);
             s.Stop();
+            OnLog?.Invoke($"{s.Elapsed.TotalMilliseconds:0.00}ms {Config.Iterations / Config.ForkCount / s.Elapsed.TotalSeconds / 1000:0.00} kI/s/t");
 
-            if (token.IsCancellationRequested)
+            if (Token.IsCancellationRequested)
                 break;
 
             var (maxScore, solution) = tasks.Select(t => t.Result).MaxBy(r => r.MaxScore);
 
-            if (maxScore >= config.ScoreStorageThreshold)
+            if (maxScore >= Config.ScoreStorageThreshold)
             {
                 actions.AddRange(solution.Actions);
+                foreach (var action in solution.Actions)
+                    OnNewAction?.Invoke(action);
                 return solution with { Actions = actions };
             }
 
             var chosenAction = solution.Actions[0];
-            actionCallback?.Invoke(chosenAction);
-            Console.WriteLine($"{s.Elapsed.TotalMilliseconds:0.00}ms {config.Iterations / config.ForkCount / s.Elapsed.TotalSeconds / 1000:0.00} kI/s/t");
+            OnNewAction?.Invoke(chosenAction);
 
             (_, state) = sim.Execute(state, chosenAction);
             actions.Add(chosenAction);
@@ -163,84 +273,75 @@ public static class Solver
         return new(actions, state);
     }
 
-    private static SolverSolution SearchStepwise(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback, CancellationToken token)
+    private Task<SolverSolution> SearchStepwise()
     {
         var actions = new List<ActionType>();
-        var sim = new Simulator(state, config.MaxStepCount);
+        var state = State;
+        var sim = new Simulator(state, Config.MaxStepCount);
         while (true)
         {
-            if (token.IsCancellationRequested)
+            if (Token.IsCancellationRequested)
                 break;
 
             if (sim.IsComplete)
                 break;
 
-            var solver = new MCTS(new(config), state);
+            var solver = new MCTS(MCTSConfig, State);
 
             var s = Stopwatch.StartNew();
-            solver.Search(config.Iterations, token);
+            solver.Search(Config.Iterations, Token);
             s.Stop();
+            OnLog?.Invoke($"{s.Elapsed.TotalMilliseconds:0.00}ms {Config.Iterations / s.Elapsed.TotalSeconds / 1000:0.00} kI/s");
 
             var solution = solver.Solution();
 
-            if (solver.MaxScore >= config.ScoreStorageThreshold)
+            if (solver.MaxScore >= Config.ScoreStorageThreshold)
             {
                 actions.AddRange(solution.Actions);
-                return solution with { Actions = actions };
+                foreach (var action in solution.Actions)
+                    OnNewAction?.Invoke(action);
+                return Task.FromResult(solution with { Actions = actions });
             }
 
             var chosenAction = solution.Actions[0];
-            actionCallback?.Invoke(chosenAction);
-            Console.WriteLine($"{s.Elapsed.TotalMilliseconds:0.00}ms {config.Iterations / s.Elapsed.TotalSeconds / 1000:0.00} kI/s");
+            OnNewAction?.Invoke(chosenAction);
 
             (_, state) = sim.Execute(state, chosenAction);
             actions.Add(chosenAction);
         }
 
-        return new(actions, state);
+        return Task.FromResult(new SolverSolution(actions, state));
     }
 
-    private static SolverSolution SearchOneshotForked(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback, CancellationToken token)
+    private async Task<SolverSolution> SearchOneshotForked()
     {
-        var tasks = new Task<(float MaxScore, SolverSolution Solution)>[config.ForkCount];
-        for (var i = 0; i < config.ForkCount; ++i)
+        var tasks = new Task<(float MaxScore, SolverSolution Solution)>[Config.ForkCount];
+        for (var i = 0; i < Config.ForkCount; ++i)
             tasks[i] = Task.Run(() =>
             {
-                var solver = new MCTS(new(config), state);
-                solver.Search(config.Iterations / config.ForkCount, token);
-                return (solver.MaxScore, solver.Solution());
-            }, token);
-        Task.WaitAll(tasks, CancellationToken.None);
+                var solver = new MCTS(MCTSConfig, State);
+                solver.Search(Config.Iterations / Config.ForkCount, Token);
+                var solution = solver.Solution();
+                OnWorkerProgress?.Invoke(solution, solver.MaxScore);
+                return (solver.MaxScore, solution);
+            }, Token);
+        await Task.WhenAll(tasks).WaitAsync(Token).ConfigureAwait(false);
 
         var solution = tasks.Select(t => t.Result).MaxBy(r => r.MaxScore).Solution;
         foreach (var action in solution.Actions)
-            actionCallback?.Invoke(action);
+            OnNewAction?.Invoke(action);
 
         return solution;
     }
 
-    private static SolverSolution SearchOneshot(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback, CancellationToken token)
+    private Task<SolverSolution> SearchOneshot()
     {
-        var solver = new MCTS(new(config), state);
-        solver.Search(config.Iterations, token);
+        var solver = new MCTS(MCTSConfig, State);
+        solver.Search(Config.Iterations, Token);
         var solution = solver.Solution();
         foreach (var action in solution.Actions)
-            actionCallback?.Invoke(action);
+            OnNewAction?.Invoke(action);
 
-        return solution;
-    }
-
-    public static SolverSolution Search(SolverConfig config, SimulationState state, Action<ActionType>? actionCallback, CancellationToken token)
-    {
-        Func<SolverConfig, SimulationState, Action<ActionType>?, CancellationToken, SolverSolution> func = config.Algorithm switch
-        {
-            SolverAlgorithm.Oneshot => SearchOneshot,
-            SolverAlgorithm.OneshotForked => SearchOneshotForked,
-            SolverAlgorithm.Stepwise => SearchStepwise,
-            SolverAlgorithm.StepwiseForked => SearchStepwiseForked,
-            SolverAlgorithm.StepwiseFurcated => SearchStepwiseFurcated,
-            _ => throw new ArgumentOutOfRangeException(nameof(config), config, $"Invalid algorithm: {config.Algorithm}")
-        };
-        return func(config, state, actionCallback, token);
+        return Task.FromResult(solution);
     }
 }

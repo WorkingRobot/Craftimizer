@@ -26,11 +26,11 @@ public readonly record struct SolverConfig
     public int FurcatedActionCount { get; init; }
     public bool StrictActions { get; init; }
 
-    public float ScoreProgressBonus { get; init; }
-    public float ScoreQualityBonus { get; init; }
-    public float ScoreDurabilityBonus { get; init; }
-    public float ScoreCPBonus { get; init; }
-    public float ScoreFewerStepsBonus { get; init; }
+    public float ScoreProgress { get; init; }
+    public float ScoreQuality { get; init; }
+    public float ScoreDurability { get; init; }
+    public float ScoreCP { get; init; }
+    public float ScoreSteps { get; init; }
 
     public SolverAlgorithm Algorithm { get; init; }
 
@@ -46,11 +46,11 @@ public readonly record struct SolverConfig
         FurcatedActionCount = ForkCount / 2;
         StrictActions = true;
 
-        ScoreProgressBonus = .20f;
-        ScoreQualityBonus = .65f;
-        ScoreDurabilityBonus = .05f;
-        ScoreCPBonus = .05f;
-        ScoreFewerStepsBonus = .05f;
+        ScoreProgress = .20f;
+        ScoreQuality = .65f;
+        ScoreDurability = .05f;
+        ScoreCP = .05f;
+        ScoreSteps = .05f;
 
         Algorithm = SolverAlgorithm.StepwiseFurcated;
     }
@@ -67,21 +67,4 @@ public readonly record struct SolverConfig
         FurcatedActionCount = Environment.ProcessorCount / 2,
         Algorithm = SolverAlgorithm.StepwiseForked
     };
-
-    public SolverSolution? Invoke(SimulationState state, Action<ActionType>? actionCallback = null, CancellationToken token = default)
-    {
-        try
-        {
-            return Solver.Search(this, state, actionCallback, token);
-        }
-        catch (AggregateException e)
-        {
-            e.Handle(ex => ex is OperationCanceledException);
-        }
-        catch (OperationCanceledException)
-        {
-
-        }
-        return null;
-    }
 }
