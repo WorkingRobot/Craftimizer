@@ -22,6 +22,7 @@ public readonly record struct SolverConfig
     public float ExplorationConstant { get; init; }
     public int MaxStepCount { get; init; }
     public int MaxRolloutStepCount { get; init; }
+    public int MaxThreadCount { get; init; }
     public int ForkCount { get; init; }
     public int FurcatedActionCount { get; init; }
     public bool StrictActions { get; init; }

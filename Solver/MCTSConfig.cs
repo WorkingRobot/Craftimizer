@@ -5,6 +5,8 @@ namespace Craftimizer.Solver;
 [StructLayout(LayoutKind.Auto)]
 public readonly record struct MCTSConfig
 {
+    public int MaxThreadCount { get; init; }
+
     public int MaxStepCount { get; init; }
     public int MaxRolloutStepCount { get; init; }
     public bool StrictActions { get; init; }

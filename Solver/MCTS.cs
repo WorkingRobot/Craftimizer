@@ -285,8 +285,7 @@ public sealed class MCTS
         var n = 0;
         for (var i = 0; i < iterations || MaxScore == 0; i++)
         {
-            if (token.IsCancellationRequested)
-                break;
+            token.ThrowIfCancellationRequested();
 
             var selectedNode = Select();
             var (endNode, score) = ExpandAndRollout(random, simulator, selectedNode);

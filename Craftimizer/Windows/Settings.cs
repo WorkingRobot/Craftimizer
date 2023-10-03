@@ -242,6 +242,22 @@ public class Settings : Window
 
         ImGui.BeginDisabled(config.Algorithm is not (SolverAlgorithm.OneshotForked or SolverAlgorithm.StepwiseForked or SolverAlgorithm.StepwiseFurcated));
         DrawOption(
+            "Max Core Count",
+            "The number of cores to use when solving. You should use as many\n" +
+            "as you can. If it's too high, it will have an effect on your gameplay\n" +
+            $"experience. A good estimate would be 1 or 2 cores less than your\n" +
+            $"system (FYI, you have {Environment.ProcessorCount} cores,) but\n" +
+            $"make sure to accomodate for any other tasks you have in the\n" +
+            $"background, if you have any.\n" +
+            "(Only used in the Forked and Furcated algorithms)",
+            config.MaxThreadCount,
+            v => config = config with { MaxThreadCount = v },
+            ref isDirty
+        );
+        ImGui.EndDisabled();
+
+        ImGui.BeginDisabled(config.Algorithm is not (SolverAlgorithm.OneshotForked or SolverAlgorithm.StepwiseForked or SolverAlgorithm.StepwiseFurcated));
+        DrawOption(
             "Fork Count",
             "Split the number of iterations across different solvers. In general,\n" +
             "you should increase this value to at least the number of cores in\n" +
