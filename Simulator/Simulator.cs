@@ -73,6 +73,20 @@ public class Simulator
         return ActionResponse.UsedAction;
     }
 
+    public (ActionResponse Response, SimulationState NewState, int FailedActionIdx) ExecuteMultiple(SimulationState state, IEnumerable<ActionType> actions)
+    {
+        State = state;
+        var i = 0;
+        foreach(var action in actions)
+        {
+            var resp = Execute(action);
+            if (resp != ActionResponse.UsedAction)
+                return (resp, State, i);
+            i++;
+        }
+        return (ActionResponse.UsedAction, State, -1);
+    }
+
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int GetEffectStrength(EffectType effect) =>
