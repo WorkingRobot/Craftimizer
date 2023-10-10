@@ -2,6 +2,7 @@ using Craftimizer.Plugin;
 using Craftimizer.Simulator;
 using Dalamud.Game;
 using Dalamud.Logging;
+using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
@@ -84,7 +85,7 @@ public sealed unsafe class RecipeNote : IDisposable
         Service.Framework.Update += FrameworkUpdate;
     }
 
-    private void FrameworkUpdate(Framework f)
+    private void FrameworkUpdate(IFramework f)
     {
         HasValidRecipe = false;
         try
@@ -93,7 +94,7 @@ public sealed unsafe class RecipeNote : IDisposable
         }
         catch (Exception e)
         {
-            PluginLog.LogError(e, "RecipeNote framework update failed");
+            Log.Error(e, "RecipeNote framework update failed");
         }
     }
 

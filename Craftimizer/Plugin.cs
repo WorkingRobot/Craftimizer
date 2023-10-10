@@ -2,6 +2,7 @@ using Craftimizer.Plugin.Windows;
 using Craftimizer.Simulator;
 using Craftimizer.Utils;
 using Craftimizer.Windows;
+using Dalamud.Interface.Internal;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
@@ -18,7 +19,7 @@ public sealed class Plugin : IDalamudPlugin
     public string Version { get; }
     public string Author { get; }
     public string BuildConfiguration { get; }
-    public TextureWrap Icon { get; }
+    public IDalamudTextureWrap Icon { get; }
 
     public WindowSystem WindowSystem { get; }
     public Settings SettingsWindow { get; }

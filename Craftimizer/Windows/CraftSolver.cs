@@ -1,12 +1,11 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
+using Craftimizer.Utils;
 using Dalamud.Interface.Windowing;
-using Dalamud.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Craftimizer.Plugin.Windows;
 
@@ -50,7 +49,7 @@ public sealed unsafe partial class Craft : Window, IDisposable
 
         SolverTaskToken = new();
         SolverTask = new(Config.SynthHelperSolverConfig, state) { Token = SolverTaskToken.Token };
-        SolverTask.OnLog += s => PluginLog.Debug(s);
+        SolverTask.OnLog += s => Log.Debug(s);
         SolverTask.OnNewAction += SolverActionQueue.Enqueue;
         SolverTask.Start();
     }

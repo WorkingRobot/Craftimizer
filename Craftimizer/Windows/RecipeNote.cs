@@ -1,13 +1,17 @@
-﻿using Craftimizer.Plugin;
+using Craftimizer.Plugin;
 using Craftimizer.Plugin.Utils;
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
+using Craftimizer.Solver;
 using Craftimizer.Utils;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.GameFonts;
-using Dalamud.Interface.Raii;
+using Dalamud.Interface.Internal;
+using Dalamud.Interface.Style;
+using Dalamud.Interface.Utility;
+using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game;
@@ -56,6 +60,11 @@ public sealed unsafe class RecipeNote : Window, IDisposable
     private TextureWrap SplendorousBadge { get; }
     private TextureWrap SpecialistBadge { get; }
     private TextureWrap NoManipulationBadge { get; }
+    private IDalamudTextureWrap ExpertBadge { get; }
+    private IDalamudTextureWrap CollectibleBadge { get; }
+    private IDalamudTextureWrap SplendorousBadge { get; }
+    private IDalamudTextureWrap SpecialistBadge { get; }
+    private IDalamudTextureWrap NoManipulationBadge { get; }
     private GameFontHandle AxisFont { get; }
 
     public RecipeNote() : base("Craftimizer RecipeNode", WindowFlags, false)
@@ -563,14 +572,12 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         var gearsetModule = RaptureGearsetModule.Instance();
         for (var i = 0; i < 100; i++)
         {
-            var gearset = gearsetModule->Gearset[i];
-            if (gearset == null)
+            var gearset = gearsetModule->EntriesSpan[i];
+            if (!gearset.Flags.HasFlag(RaptureGearsetModule.GearsetFlag.Exists))
                 continue;
-            if (!gearset->Flags.HasFlag(RaptureGearsetModule.GearsetFlag.Exists))
+            if (gearset.ID != i)
                 continue;
-            if (gearset->ID != i)
-                continue;
-            if (gearset->ClassJob != job.GetClassJobIndex())
+            if (gearset.ClassJob != job.GetClassJobIndex())
                 continue;
             return i;
         }

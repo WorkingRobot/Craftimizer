@@ -2,6 +2,7 @@ using Craftimizer.Plugin.Utils;
 using Craftimizer.Utils;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
+using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using ImGuiNET;

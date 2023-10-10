@@ -21,8 +21,10 @@ public sealed class Service
     [PluginService] public static IDataManager DataManager { get; private set; }
     [PluginService] public static ITextureProvider TextureProvider { get; private set; }
     [PluginService] public static ITargetManager TargetManager { get; private set; }
-    [PluginService] public static Condition Condition { get; private set; }
-    [PluginService] public static Framework Framework { get; private set; }
+    [PluginService] public static ICondition Condition { get; private set; }
+    [PluginService] public static IFramework Framework { get; private set; }
+    [PluginService] public static IPluginLog PluginLog { get; private set; }
+    [PluginService] public static IGameInteropProvider GameInteropProvider { get; private set; }
 
     public static Plugin Plugin { get; private set; }
     public static Configuration Configuration => Plugin.Configuration;

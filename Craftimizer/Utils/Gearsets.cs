@@ -33,7 +33,7 @@ public static unsafe class Gearsets
 
     public static GearsetItem[] GetGearsetItems(RaptureGearsetModule.GearsetEntry* entry)
     {
-        var gearsetItems = new Span<RaptureGearsetModule.GearsetItem>(entry->ItemsData, 14);
+        var gearsetItems = entry->ItemsSpan;
         var items = new GearsetItem[14];
         for (var i = 0; i < 14; ++i)
         {

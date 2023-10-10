@@ -37,8 +37,8 @@
    </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DalamudPackager" Version="2.1.11" />
-    <PackageReference Include="Meziantou.Analyzer" Version="2.0.62">
+    <PackageReference Include="DalamudPackager" Version="2.1.12" />
+    <PackageReference Include="Meziantou.Analyzer" Version="2.0.92">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -54,10 +54,6 @@
     </Reference>
     <Reference Include="Dalamud">
       <HintPath>$(DalamudLibPath)Dalamud.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="Dalamud">
-      <HintPath>$(DalamudLibPath)Dalamud.Interface.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="ImGui.NET">

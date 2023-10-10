@@ -1,6 +1,7 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
+using Dalamud.Interface.Internal;
 using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
@@ -86,7 +87,7 @@ internal static class ActionUtils
         return "Unknown";
     }
 
-    public static TextureWrap GetIcon(this ActionType me, ClassJob classJob)
+    public static IDalamudTextureWrap GetIcon(this ActionType me, ClassJob classJob)
     {
         var (craftAction, action) = GetActionRow(me, classJob);
         if (craftAction != null)
@@ -325,7 +326,7 @@ internal static class EffectUtils
         return (ushort)iconId;
     }
 
-    public static TextureWrap GetIcon(this EffectType me, int strength) =>
+    public static IDalamudTextureWrap GetIcon(this EffectType me, int strength) =>
         Service.IconManager.GetIcon(me.GetIconId(strength));
 
     public static string GetTooltip(this EffectType me, int strength, int duration)

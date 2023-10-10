@@ -6,7 +6,6 @@
     "RepoUrl": "https://github.com/WorkingRobot/craftimizer",
     "InternalName": "craftimizer",
     "ApplicableVersion": "any",
-    "DalamudApiLevel": 8,
     "Tags": [
         "crafting",
         "doh",

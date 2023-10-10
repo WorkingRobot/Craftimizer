@@ -3,10 +3,11 @@ using Craftimizer.Simulator.Actions;
 using Dalamud.Game.Text;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
+using Dalamud.Interface.Internal;
+using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
 using Dalamud.Utility;
 using ImGuiNET;
-using ImGuiScene;
 using System;
 using System.Linq;
 using System.Numerics;
@@ -204,7 +205,7 @@ public sealed partial class Simulator : Window, IDisposable
         ImGuiUtils.BeginGroupPanel("Effects", drawParams.Total);
 
         var effectHeight = ImGui.GetFontSize() * 2f;
-        Vector2 GetEffectSize(TextureWrap icon) => new(icon.Width * effectHeight / icon.Height, effectHeight);
+        Vector2 GetEffectSize(IDalamudTextureWrap icon) => new(icon.Width * effectHeight / icon.Height, effectHeight);
 
         ImGui.Dummy(new(0, effectHeight));
         ImGui.SameLine(0, 0);

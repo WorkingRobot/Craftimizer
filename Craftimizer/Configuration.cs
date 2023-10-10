@@ -4,7 +4,6 @@ using Craftimizer.Solver;
 using Dalamud.Configuration;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace Craftimizer.Plugin;
 

@@ -12,7 +12,7 @@ public sealed class IconManager : IDisposable
 {
     private readonly Dictionary<uint, IDalamudTextureWrap> iconCache = new();
     private readonly Dictionary<string, IDalamudTextureWrap> textureCache = new();
-    private readonly Dictionary<string, TextureWrap> assemblyCache = new();
+    private readonly Dictionary<string, IDalamudTextureWrap> assemblyCache = new();
 
     public IDalamudTextureWrap GetIcon(uint id)
     {
@@ -30,14 +30,14 @@ public sealed class IconManager : IDisposable
         return ret;
     }
 
-    public TextureWrap GetAssemblyTexture(string filename)
+    public IDalamudTextureWrap GetAssemblyTexture(string filename)
     {
         if (!assemblyCache.TryGetValue(filename, out var ret))
             assemblyCache.Add(filename, ret = GetAssemblyTextureInternal(filename));
         return ret;
     }
 
-    private static TextureWrap GetAssemblyTextureInternal(string filename)
+    private static IDalamudTextureWrap GetAssemblyTextureInternal(string filename)
     {
         var assembly = Assembly.GetExecutingAssembly();
         byte[] iconData;

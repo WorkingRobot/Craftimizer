@@ -394,22 +394,20 @@ public unsafe class CraftingLog : Window
 
         for (var i = 0; i < 100; i++)
         {
-            var gearset = inst->Gearset[i];
-            if (gearset == null)
+            var gearset = inst->EntriesSpan[i];
+            if (gearset.ID != i)
                 continue;
-            if (gearset->ID != i)
-                continue;
-            if (!gearset->Flags.HasFlag(RaptureGearsetModule.GearsetFlag.Exists))
+            if (!gearset.Flags.HasFlag(RaptureGearsetModule.GearsetFlag.Exists))
                 continue;
 
-            if (ClassJobUtils.GetClassJobFromIdx(gearset->ClassJob) != RecipeUtils.ClassJob)
+            if (ClassJobUtils.GetClassJobFromIdx(gearset.ClassJob) != RecipeUtils.ClassJob)
                 continue;
 
-            var items = Gearsets.GetGearsetItems(gearset);
+            var items = Gearsets.GetGearsetItems(&gearset);
             var stats = Gearsets.CalculateCharacterStats(items, RecipeUtils.CharacterLevel, RecipeUtils.CanUseManipulation);
-            var gearsetId = gearset->ID + 1;
+            var gearsetId = gearset.ID + 1;
 
-            ImGuiUtils.BeginGroupPanel($"{SafeMemory.ReadString((nint)gearset->Name, 47)} ({gearsetId})");
+            ImGuiUtils.BeginGroupPanel($"{SafeMemory.ReadString((nint)gearset.Name, 47)} ({gearsetId})");
             ImGui.Text(GetCharacterStatsText(stats));
             ImGui.SameLine();
             if (ImGuiComponents.IconButton($"SwapGearset{gearsetId}", FontAwesomeIcon.SyncAlt))

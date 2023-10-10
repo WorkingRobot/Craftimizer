@@ -1,11 +1,10 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
+using Craftimizer.Utils;
 using Dalamud.Interface.Windowing;
-using Dalamud.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Craftimizer.Plugin.Windows;
 
@@ -85,7 +84,7 @@ public sealed partial class Simulator : Window, IDisposable
         SolverInitialActionCount = Actions.Count;
         SolverTaskToken = new();
         SolverTask = new(Config.SimulatorSolverConfig, solverState) { Token = SolverTaskToken.Token };
-        SolverTask.OnLog += s => PluginLog.Debug(s);
+        SolverTask.OnLog += s => Log.Debug(s);
         SolverTask.OnNewAction += SolverActionQueue.Enqueue;
         SolverTask.Start();
     }
