@@ -87,7 +87,7 @@ public sealed class Solver : IDisposable
         }
         catch (AggregateException e)
         {
-            e.Handle(ex => ex is OperationCanceledException);
+            e.Flatten().Handle(ex => ex is OperationCanceledException);
         }
         catch (OperationCanceledException)
         {

@@ -6,6 +6,7 @@ using Craftimizer.Solver;
 using Craftimizer.Utils;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface;
+using Dalamud.Interface.Colors;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.GameFonts;
 using Dalamud.Interface.Internal;
@@ -22,8 +23,11 @@ using FFXIVClientStructs.FFXIV.Component.GUI;
 using ImGuiNET;
 using ImGuiScene;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Threading;
+using System.Threading.Tasks;
 using ActionType = Craftimizer.Simulator.Actions.ActionType;
 using ClassJob = Craftimizer.Simulator.ClassJob;
 using CSRecipeNote = FFXIVClientStructs.FFXIV.Client.Game.UI.RecipeNote;
@@ -55,11 +59,11 @@ public sealed unsafe class RecipeNote : Window, IDisposable
     public CharacterStats? CharacterStats { get; private set; }
     public CraftableStatus CraftStatus { get; private set; }
 
-    private TextureWrap ExpertBadge { get; }
-    private TextureWrap CollectibleBadge { get; }
-    private TextureWrap SplendorousBadge { get; }
-    private TextureWrap SpecialistBadge { get; }
-    private TextureWrap NoManipulationBadge { get; }
+    private CancellationTokenSource? BestMacroTokenSource { get; set; }
+    private Exception? BestMacroException { get; set; }
+    public (Macro, SimulationState)? BestSavedMacro { get; private set; }
+    public SolverSolution? BestSuggestedMacro { get; private set; }
+
     private IDalamudTextureWrap ExpertBadge { get; }
     private IDalamudTextureWrap CollectibleBadge { get; }
     private IDalamudTextureWrap SplendorousBadge { get; }
@@ -190,8 +194,10 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         ImGui.Separator();
 
         ImGuiUtils.TextCentered("Best Saved Macro");
+        DrawMacro("savedMacro", BestSavedMacro == null ? null : (BestSavedMacro.Value.Item1.Actions, BestSavedMacro.Value.Item2));
         ImGuiUtils.ButtonCentered("View Saved Macros");
         ImGuiUtils.TextCentered("Suggested Macro");
+        DrawMacro("suggestedMacro", BestSuggestedMacro == null ? null : (BestSuggestedMacro.Value.Actions, BestSuggestedMacro.Value.State));
         ImGuiUtils.ButtonCentered("Open Simulator");
     }
 
@@ -210,7 +216,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             var levelText = string.Empty;
             if (level != 0)
                 levelText = SqText.ToLevelString(level);
-            var imageSize = ImGuiUtils.ButtonHeight;
+            var imageSize = ImGui.GetFrameHeight();
             bool hasSplendorous = false, hasSpecialist = false, shouldHaveManip = false;
             if (CraftStatus is not (CraftableStatus.LockedClassJob or CraftableStatus.WrongClassJob))
             {
@@ -285,7 +291,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                     var (questGiver, questTerritory, questLocation, mapPayload) = ResolveLevelData(unlockQuest.IssuerLocation.Row);
 
                     var unlockText = $"Unlock it from {questGiver}";
-                    ImGuiUtils.AlignCentered(ImGui.CalcTextSize(unlockText).X + 5 + ImGuiUtils.ButtonHeight);
+                    ImGuiUtils.AlignCentered(ImGui.CalcTextSize(unlockText).X + 5 + ImGui.GetFrameHeight());
                     ImGui.AlignTextToFramePadding();
                     ImGui.Text(unlockText);
                     ImGui.SameLine(0, 5);
@@ -319,7 +325,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                     var (vendorName, vendorTerritory, vendorLoation, mapPayload) = ResolveLevelData(5891399);
 
                     var unlockText = $"Trade a Soul of the Crafter to {vendorName}";
-                    ImGuiUtils.AlignCentered(ImGui.CalcTextSize(unlockText).X + 5 + ImGuiUtils.ButtonHeight);
+                    ImGuiUtils.AlignCentered(ImGui.CalcTextSize(unlockText).X + 5 + ImGui.GetFrameHeight());
                     ImGui.AlignTextToFramePadding();
                     ImGui.Text(unlockText);
                     ImGui.SameLine(0, 5);
@@ -335,7 +341,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 {
                     var item = RecipeData.Recipe.ItemRequired.Value!;
                     var itemName = item.Name.ToDalamudString().ToString();
-                    var imageSize = ImGuiUtils.ButtonHeight;
+                    var imageSize = ImGui.GetFrameHeight();
 
                     ImGuiUtils.TextCentered($"You are missing the required equipment.");
                     ImGuiUtils.AlignCentered(imageSize + 5 + ImGui.CalcTextSize(itemName).X);
@@ -350,7 +356,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                     var status = RecipeData.Recipe.StatusRequired.Value!;
                     var statusName = status.Name.ToDalamudString().ToString();
                     var statusIcon = Service.IconManager.GetIcon(status.Icon);
-                    var imageSize = new Vector2(ImGuiUtils.ButtonHeight * statusIcon.Width / statusIcon.Height, ImGuiUtils.ButtonHeight);
+                    var imageSize = new Vector2(ImGui.GetFrameHeight() * statusIcon.Width / statusIcon.Height, ImGui.GetFrameHeight());
 
                     ImGuiUtils.TextCentered($"You are missing the required status effect.");
                     ImGuiUtils.AlignCentered(imageSize.X + 5 + ImGui.CalcTextSize(statusName).X);
@@ -416,8 +422,8 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             var textLevel = SqText.ToLevelString(RecipeData.RecipeInfo.ClassJobLevel);
             var isExpert = RecipeData.RecipeInfo.IsExpert;
             var isCollectable = RecipeData.Recipe.ItemResult.Value!.IsCollectable;
-            var imageSize = ImGuiUtils.ButtonHeight;
-            var textSize = ImGui.CalcTextSize("A").Y;
+            var imageSize = ImGui.GetFrameHeight();
+            var textSize = ImGui.GetFontSize();
             var badgeSize = new Vector2(textSize * ExpertBadge.Width / ExpertBadge.Height, textSize);
             var badgeOffset = (imageSize - badgeSize.Y) / 2;
 
@@ -486,6 +492,31 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             ImGui.TableNextColumn();
             ImGui.Text($"{RecipeData.RecipeInfo.MaxDurability}");
         }
+    }
+
+    private void DrawMacro(string macroName, (List<ActionType> Actions, SimulationState State)? macro)
+    {
+        var availWidth = ImGui.GetContentRegionAvail().X;
+
+        using var window = ImRaii.Child(macroName, new(availWidth, 2 * ImGui.GetFrameHeight()), false);
+
+        if (macro == null)
+        {
+            if (BestMacroException == null)
+                ImGuiUtils.TextMiddle("Calculating...");
+            else
+            {
+                ImGui.AlignTextToFramePadding();
+                using (var color = ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudRed))
+                    ImGuiUtils.TextCentered("An exception occurred");
+                if (ImGuiUtils.ButtonCentered("Copy Error Message"))
+                    ImGui.SetClipboardText(BestMacroException.ToString());
+            }
+            return;
+        }
+
+        ImGuiUtils.TextCentered($"{macro.Value.Actions.Count} Actions");
+        ImGuiUtils.TextCentered($"{macro.Value.State.Quality} Quality");
     }
 
     private static void DrawRequiredStatsTable(int current, int required)
@@ -586,7 +617,71 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
     private void CalculateBestMacros()
     {
-        throw new NotImplementedException();
+        BestMacroTokenSource?.Cancel();
+        BestMacroTokenSource = new();
+        BestMacroException = null;
+        BestSavedMacro = null;
+        BestSuggestedMacro = null;
+
+        var token = BestMacroTokenSource.Token;
+        _ = Task.Run(() => CalculateBestMacrosTask(token), token)
+            .ContinueWith(t =>
+            {
+                if (token.IsCancellationRequested)
+                    return;
+
+                try
+                {
+                    t.Exception!.Flatten().Handle(ex => ex is TaskCanceledException or OperationCanceledException);
+                }
+                catch (AggregateException e)
+                {
+                    BestMacroException = e;
+                    Log.Error(e, "Calculating macros failed");
+                }
+            }, TaskContinuationOptions.OnlyOnFaulted);
+    }
+
+    private void CalculateBestMacrosTask(CancellationToken token)
+    {
+        var input = new SimulationInput(CharacterStats!, RecipeData!.RecipeInfo);
+        var state = new SimulationState(input);
+        var config = Service.Configuration.SimulatorSolverConfig;
+        var mctsConfig = new MCTSConfig(config);
+        var simulator = new Solver.Simulator(state, mctsConfig.MaxStepCount);
+        List<Macro> macros = new(Service.Configuration.Macros);
+
+        token.ThrowIfCancellationRequested();
+
+        var bestSaved = macros
+            .Select(macro =>
+                {
+                    var (resp, outState, failedIdx) = simulator.ExecuteMultiple(state, macro.Actions);
+                    outState.ActionCount = macro.Actions.Count;
+                    var score = SimulationNode.CalculateScoreForState(outState, simulator.CompletionState, mctsConfig) ?? 0;
+                    if (resp != ActionResponse.SimulationComplete)
+                    {
+                        if (failedIdx != -1)
+                            score /= 2;
+                    }
+                    return (macro, outState, score);
+                })
+            .MaxBy(m => m.score);
+
+        token.ThrowIfCancellationRequested();
+
+        BestSavedMacro = (bestSaved.macro, bestSaved.outState);
+
+        token.ThrowIfCancellationRequested();
+
+        var solver = new Solver.Solver(config, state) { Token = token };
+        solver.OnLog += Log.Debug;
+        solver.Start();
+        var solution = solver.GetTask().GetAwaiter().GetResult();
+
+        token.ThrowIfCancellationRequested();
+
+        BestSuggestedMacro = solution;
     }
 
     public void Dispose()

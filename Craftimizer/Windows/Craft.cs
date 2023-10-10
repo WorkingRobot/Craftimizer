@@ -58,7 +58,7 @@ public sealed unsafe partial class Craft : Window, IDisposable
         var cogWidth = ImGui.CalcTextSize(FontAwesomeIcon.Cog.ToIconString()).X + (ImGui.GetStyle().FramePadding.X * 2);
         ImGui.PopFont();
 
-        DrawSolveButton(new(WindowWidth - ImGui.GetStyle().ItemSpacing.X - cogWidth, ImGuiUtils.ButtonHeight));
+        DrawSolveButton(new(WindowWidth - ImGui.GetStyle().ItemSpacing.X - cogWidth, ImGui.GetFrameHeight()));
 
         ImGui.SameLine();
         if (ImGuiComponents.IconButton("synthSettingsButton", FontAwesomeIcon.Cog))

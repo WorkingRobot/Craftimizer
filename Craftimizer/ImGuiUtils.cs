@@ -8,9 +8,6 @@ namespace Craftimizer.Plugin;
 
 internal static class ImGuiUtils
 {
-    public static float ButtonHeight =>
-        ImGui.CalcTextSize("A").Y + (ImGui.GetStyle().FramePadding.Y * 2);
-
     private static readonly Stack<(Vector2 Min, Vector2 Max)> GroupPanelLabelStack = new();
 
     // Adapted from https://github.com/ocornut/imgui/issues/1496#issuecomment-655048353
@@ -165,10 +162,25 @@ internal static class ImGuiUtils
             ImGui.SetCursorPosX(ImGui.GetCursorPos().X + (availWidth - width) / 2);
     }
 
+    public static void AlignMiddle(Vector2 size)
+    {
+        var availSize = ImGui.GetContentRegionAvail();
+        if (availSize.X > size.X)
+            ImGui.SetCursorPosX(ImGui.GetCursorPos().X + (availSize.X - size.X) / 2);
+        if (availSize.Y > size.Y)
+            ImGui.SetCursorPosY(ImGui.GetCursorPos().Y + (availSize.Y - size.Y) / 2);
+    }
+
     // https://stackoverflow.com/a/67855985
     public static void TextCentered(string text)
     {
         AlignCentered(ImGui.CalcTextSize(text).X);
+        ImGui.TextUnformatted(text);
+    }
+
+    public static void TextMiddle(string text)
+    {
+        AlignMiddle(ImGui.CalcTextSize(text));
         ImGui.TextUnformatted(text);
     }
 

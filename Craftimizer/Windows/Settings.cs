@@ -13,7 +13,7 @@ public class Settings : Window
     private static Configuration Config => Service.Configuration;
 
     private const int OptionWidth = 200;
-    private static Vector2 OptionButtonSize => new(OptionWidth, ImGuiUtils.ButtonHeight);
+    private static Vector2 OptionButtonSize => new(OptionWidth, ImGui.GetFrameHeight());
 
     public const string TabGeneral = "General";
     public const string TabSimulator = "Simulator";
