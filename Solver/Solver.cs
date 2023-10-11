@@ -137,7 +137,11 @@ public sealed class Solver : IDisposable
                         }
                         finally
                         {
-                            semaphore.Release();
+                            try
+                            {
+                                semaphore.Release();
+                            }
+                            catch (ObjectDisposedException) { }
                         }
                         var solution = solver.Solution();
                         var progressActions = activeStates[stateIdx].Actions.Concat(solution.Actions).Skip(definiteActionCount).ToList();
@@ -255,7 +259,11 @@ public sealed class Solver : IDisposable
                     }
                     finally
                     {
-                        semaphore.Release();
+                        try
+                        {
+                            semaphore.Release();
+                        }
+                        catch (ObjectDisposedException) { }
                     }
                     var solution = solver.Solution();
                     OnWorkerProgress?.Invoke(solution, solver.MaxScore);
@@ -342,7 +350,11 @@ public sealed class Solver : IDisposable
                 }
                 finally
                 {
-                    semaphore.Release();
+                    try
+                    {
+                        semaphore.Release();
+                    }
+                    catch (ObjectDisposedException) { }
                 }
                 var solution = solver.Solution();
                 OnWorkerProgress?.Invoke(solution, solver.MaxScore);
