@@ -24,11 +24,11 @@ public sealed partial class Simulator : Window, IDisposable
     private static readonly Vector2 ProgressBarSizeOld = new(200, 20);
     public static readonly Vector2 TooltipProgressBarSize = new(100, 5);
 
-    private static readonly Vector4 ProgressColor = new(0.44f, 0.65f, 0.18f, 1f);
-    private static readonly Vector4 QualityColor = new(0.26f, 0.71f, 0.69f, 1f);
-    private static readonly Vector4 DurabilityColor = new(0.13f, 0.52f, 0.93f, 1f);
-    private static readonly Vector4 HQColor = new(0.592f, 0.863f, 0.376f, 1f);
-    private static readonly Vector4 CPColor = new(0.63f, 0.37f, 0.75f, 1f);
+    public static readonly Vector4 ProgressColor = new(0.44f, 0.65f, 0.18f, 1f);
+    public static readonly Vector4 QualityColor = new(0.26f, 0.71f, 0.69f, 1f);
+    public static readonly Vector4 DurabilityColor = new(0.13f, 0.52f, 0.93f, 1f);
+    public static readonly Vector4 HQColor = new(0.592f, 0.863f, 0.376f, 1f);
+    public static readonly Vector4 CPColor = new(0.63f, 0.37f, 0.75f, 1f);
 
     private static readonly Vector4 BadActionImageTint = new(1f, .5f, .5f, 1f);
     private static readonly Vector4 BadActionImageColor = new(1f, .3f, .3f, 1f);

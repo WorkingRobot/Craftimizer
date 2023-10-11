@@ -154,6 +154,16 @@ public class Settings : Window
             ref isDirty
         );
 
+        DrawOption(
+            "Show Only One Macro Stat",
+            "Only one stat will be shown for a macro. If a craft will be finished, quality\n" +
+            "is shown. Otherwise, progress is shown. Durability and remaining CP will be\n" +
+            "hidden.",
+            Config.ShowOptimalMacroStat,
+            v => Config.ShowOptimalMacroStat = v,
+            ref isDirty
+        );
+
         if (isDirty)
             Config.Save();
 

@@ -45,7 +45,7 @@ public record RecipeData
             RLvl = (int)Table.RowId,
             ConditionsFlag = Table.ConditionsFlag,
             MaxDurability = Table.Durability * Recipe.DurabilityFactor / 100,
-            MaxQuality = (int)Table.Quality * Recipe.QualityFactor / 100,
+            MaxQuality = (Recipe.CanHq || Recipe.IsExpert) ? (int)Table.Quality * Recipe.QualityFactor / 100 : 0,
             MaxProgress = Table.Difficulty * Recipe.DifficultyFactor / 100,
             QualityModifier = Table.QualityModifier,
             QualityDivider = Table.QualityDivider,

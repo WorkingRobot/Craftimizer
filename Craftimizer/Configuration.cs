@@ -26,6 +26,7 @@ public class Configuration : IPluginConfiguration
     public SolverConfig SimulatorSolverConfig { get; set; } = SolverConfig.SimulatorDefault;
     public SolverConfig SynthHelperSolverConfig { get; set; } = SolverConfig.SynthHelperDefault;
     public bool EnableSynthHelper { get; set; } = true;
+    public bool ShowOptimalMacroStat { get; set; } = true;
     public int SynthHelperStepCount { get; set; } = 5;
 
     public Simulator.Simulator CreateSimulator(SimulationState state) =>

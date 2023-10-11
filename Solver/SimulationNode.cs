@@ -47,7 +47,7 @@ public struct SimulationNode
             return null;
 
         static float Apply(float bonus, float value, float target) =>
-            bonus * Math.Min(1f, value / target);
+            bonus * (target > 0 ? Math.Min(1f, value / target) : 1);
 
         var progressScore = Apply(
             config.ScoreProgress,
