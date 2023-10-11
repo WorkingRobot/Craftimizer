@@ -68,7 +68,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
     private IDalamudTextureWrap NoManipulationBadge { get; }
     private GameFontHandle AxisFont { get; }
 
-    public RecipeNote() : base("Craftimizer RecipeNode", WindowFlags, false)
+    public RecipeNote() : base("Craftimizer RecipeNote", WindowFlags, false)
     {
         ExpertBadge = Service.IconManager.GetAssemblyTexture("Graphics.expert_badge.png");
         CollectibleBadge = Service.IconManager.GetAssemblyTexture("Graphics.collectible_badge.png");

@@ -25,7 +25,6 @@ public sealed class Plugin : IDalamudPlugin
     public Settings SettingsWindow { get; }
     public Craftimizer.Windows.RecipeNote RecipeNoteWindow { get; }
     public Craft SynthesisWindow { get; }
-    public Windows.Simulator? SimulatorWindow { get; set; }
 
     public Configuration Configuration { get; }
     public Hooks Hooks { get; }
@@ -54,16 +53,6 @@ public sealed class Plugin : IDalamudPlugin
 
         Service.PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
         Service.PluginInterface.UiBuilder.OpenConfigUi += OpenSettingsWindow;
-    }
-
-    public void OpenSimulatorWindow(Item item, bool isExpert, SimulationInput input, ClassJob classJob, Macro? macro)
-    {
-        if (SimulatorWindow != null)
-        {
-            SimulatorWindow.IsOpen = false;
-            WindowSystem.RemoveWindow(SimulatorWindow);
-        }
-        SimulatorWindow = new(item, isExpert, input, classJob, macro);
     }
 
     public void OpenSettingsWindow()
