@@ -35,9 +35,6 @@ public sealed class Solver : IDisposable
     // Always called when a new step is generated.
     public event NewActionDelegate? OnNewAction;
 
-    // Always called when the solver is fully complete.
-    public event SolutionDelegate? OnSolution;
-
     public Solver(SolverConfig config, SimulationState state)
     {
         Config = config;
@@ -107,6 +104,12 @@ public sealed class Solver : IDisposable
         CompletionTask?.Dispose();
     }
 
+    private void InvokeNewAction(ActionType action)
+    {
+        foreach (var sanitizedAction in SolverSolution.SanitizeCombo(action))
+            OnNewAction?.Invoke(sanitizedAction);
+    }
+
     private async Task<SolverSolution> SearchStepwiseFurcated()
     {
         var definiteActionCount = 0;
@@ -115,7 +118,7 @@ public sealed class Solver : IDisposable
         var state = State;
         var sim = new Simulator(state, Config.MaxStepCount);
 
-        var activeStates = new List<SolverSolution>() { new(new(), state) };
+        var activeStates = new List<SolverSolution>() { new(Array.Empty<ActionType>(), state) };
 
         while (activeStates.Count != 0)
         {
@@ -162,12 +165,12 @@ public sealed class Solver : IDisposable
             if (bestAction.MaxScore >= Config.ScoreStorageThreshold)
             {
                 var (_, furcatedActionIdx, solution) = bestAction;
-                var (activeActions, _) = activeStates[furcatedActionIdx];
+                (IEnumerable<ActionType> activeActions, _) = activeStates[furcatedActionIdx];
 
-                activeActions.AddRange(solution.Actions);
+                activeActions = activeActions.Concat(solution.Actions);
                 foreach (var action in activeActions.Skip(definiteActionCount))
-                    OnNewAction?.Invoke(action);
-                return solution with { Actions = activeActions };
+                    InvokeNewAction(action);
+                return solution with { ActionEnumerable = activeActions };
             }
 
             var newStates = new List<SolverSolution>(Config.FurcatedActionCount);
@@ -214,7 +217,7 @@ public sealed class Solver : IDisposable
                 if (definiteCount != equalCount)
                 {
                     foreach(var action in refActions.Take(equalCount).Skip(definiteCount))
-                        OnNewAction?.Invoke(action);
+                        InvokeNewAction(action);
 
                     definiteActionCount = equalCount;
                 }
@@ -224,11 +227,11 @@ public sealed class Solver : IDisposable
         }
 
         if (bestSims.Count == 0)
-            return new(new(), state);
+            return new(Array.Empty<ActionType>(), state);
 
         var result = bestSims.MaxBy(s => s.Score).Result;
         foreach (var action in result.Actions.Skip(definiteActionCount))
-            OnNewAction?.Invoke(action);
+            InvokeNewAction(action);
 
         return result;
     }
@@ -282,12 +285,12 @@ public sealed class Solver : IDisposable
             {
                 actions.AddRange(solution.Actions);
                 foreach (var action in solution.Actions)
-                    OnNewAction?.Invoke(action);
+                    InvokeNewAction(action);
                 return solution with { Actions = actions };
             }
 
             var chosenAction = solution.Actions[0];
-            OnNewAction?.Invoke(chosenAction);
+            InvokeNewAction(chosenAction);
 
             (_, state) = sim.Execute(state, chosenAction);
             actions.Add(chosenAction);
@@ -321,12 +324,12 @@ public sealed class Solver : IDisposable
             {
                 actions.AddRange(solution.Actions);
                 foreach (var action in solution.Actions)
-                    OnNewAction?.Invoke(action);
+                    InvokeNewAction(action);
                 return Task.FromResult(solution with { Actions = actions });
             }
 
             var chosenAction = solution.Actions[0];
-            OnNewAction?.Invoke(chosenAction);
+            InvokeNewAction(chosenAction);
 
             (_, state) = sim.Execute(state, chosenAction);
             actions.Add(chosenAction);
@@ -365,7 +368,7 @@ public sealed class Solver : IDisposable
 
         var solution = tasks.Select(t => t.Result).MaxBy(r => r.MaxScore).Solution;
         foreach (var action in solution.Actions)
-            OnNewAction?.Invoke(action);
+            InvokeNewAction(action);
 
         return solution;
     }
@@ -376,7 +379,7 @@ public sealed class Solver : IDisposable
         solver.Search(Config.Iterations, Token);
         var solution = solver.Solution();
         foreach (var action in solution.Actions)
-            OnNewAction?.Invoke(action);
+            InvokeNewAction(action);
 
         return Task.FromResult(solution);
     }

@@ -14,4 +14,7 @@ internal sealed class HeartAndSoul : BaseBuffAction
     public override int CPCost(Simulator s) => 0;
 
     public override bool CanUse(Simulator s) => s.Input.Stats.IsSpecialist && !s.ActionStates.UsedHeartAndSoul;
+
+    public override string GetTooltip(Simulator s, bool addUsability) =>
+        $"{GetBaseTooltip(s, addUsability)}Specialist Only";
 }

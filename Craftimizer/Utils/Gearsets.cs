@@ -20,6 +20,24 @@ public static unsafe class Gearsets
     public const int ParamCraftsmanship = 70;
     public const int ParamControl = 71;
 
+    private static readonly int[] LevelToCLvlLUT;
+
+    static Gearsets()
+    {
+        LevelToCLvlLUT = new int[90];
+        for (uint i = 0; i < 80; ++i) {
+            var level = i + 1;
+            LevelToCLvlLUT[i] = LuminaSheets.ParamGrowSheet.GetRow(level)!.CraftingLevel;
+        }
+        for (var i = 80; i < 90; ++i)
+        {
+            var level = i + 1;
+            LevelToCLvlLUT[i] = (int)LuminaSheets.RecipeLevelTableSheet.First(r => r.ClassJobLevel == level).RowId;
+        }
+    }
+
+    public static void Initialize() { }
+
     public static GearsetItem[] GetGearsetItems(InventoryContainer* container)
     {
         var items = new GearsetItem[(int)container->Size];
@@ -128,10 +146,10 @@ public static unsafe class Gearsets
     public static bool IsSplendorousTool(GearsetItem item) =>
         LuminaSheets.ItemSheetEnglish.GetRow(item.itemId)!.Description.ToDalamudString().TextValue.Contains("Increases to quality are 1.75 times higher than normal when material condition is Good.", StringComparison.Ordinal);
 
-    public static int CalculateCLvl(int characterLevel) =>
-        characterLevel <= 80
-        ? LuminaSheets.ParamGrowSheet.GetRow((uint)characterLevel)!.CraftingLevel
-        : (int)LuminaSheets.RecipeLevelTableSheet.First(r => r.ClassJobLevel == characterLevel).RowId;
+    public static int CalculateCLvl(int level) =>
+        (level > 0 && level <= 90) ?
+            LevelToCLvlLUT[level - 1] :
+            throw new ArgumentOutOfRangeException(nameof(level), level, "Level is out of range.");
 
     // https://github.com/ffxiv-teamcraft/ffxiv-teamcraft/blob/24d0db2d9676f264edf53651b21005305267c84c/apps/client/src/app/modules/gearsets/materia.service.ts#L265
     private static int CalculateParamCap(Item item, int paramId)

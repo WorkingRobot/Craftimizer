@@ -48,7 +48,8 @@ public abstract class BaseAction
         s.ActionStates.MutateState(this);
         s.ActionCount++;
 
-        s.ActiveEffects.DecrementDuration();
+        if (IncreasesStepCount)
+            s.ActiveEffects.DecrementDuration();
     }
 
     public virtual void UseSuccess(Simulator s)

@@ -1,6 +1,6 @@
 using Craftimizer.Plugin;
 using Dalamud.Interface.Internal;
-using ImGuiScene;
+using Dalamud.Plugin.Services;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,6 +11,7 @@ namespace Craftimizer.Utils;
 public sealed class IconManager : IDisposable
 {
     private readonly Dictionary<uint, IDalamudTextureWrap> iconCache = new();
+    private readonly Dictionary<uint, IDalamudTextureWrap> hqIconCache = new();
     private readonly Dictionary<string, IDalamudTextureWrap> textureCache = new();
     private readonly Dictionary<string, IDalamudTextureWrap> assemblyCache = new();
 
@@ -19,6 +20,16 @@ public sealed class IconManager : IDisposable
         if (!iconCache.TryGetValue(id, out var ret))
             iconCache.Add(id, ret = Service.TextureProvider.GetIcon(id) ??
                 throw new ArgumentException($"Invalid icon id {id}", nameof(id)));
+        return ret;
+    }
+
+    public IDalamudTextureWrap GetHqIcon(uint id, bool isHq = true)
+    {
+        if (!isHq)
+            return GetIcon(id);
+        if (!hqIconCache.TryGetValue(id, out var ret))
+            hqIconCache.Add(id, ret = Service.TextureProvider.GetIcon(id, ITextureProvider.IconFlags.HiRes | ITextureProvider.IconFlags.ItemHighQuality) ??
+                throw new ArgumentException($"Invalid hq icon id {id}", nameof(id)));
         return ret;
     }
 
@@ -54,6 +65,10 @@ public sealed class IconManager : IDisposable
         foreach (var image in iconCache.Values)
             image.Dispose();
         iconCache.Clear();
+
+        foreach (var image in hqIconCache.Values)
+            image.Dispose();
+        hqIconCache.Clear();
 
         foreach (var image in textureCache.Values)
             image.Dispose();

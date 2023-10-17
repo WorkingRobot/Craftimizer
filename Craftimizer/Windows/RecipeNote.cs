@@ -4,12 +4,14 @@ using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Craftimizer.Solver;
 using Craftimizer.Utils;
+using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.GameFonts;
 using Dalamud.Interface.Internal;
+using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Dalamud.Utility;
@@ -59,6 +61,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
     private CancellationTokenSource? BestMacroTokenSource { get; set; }
     private Exception? BestMacroException { get; set; }
     public (Macro, SimulationState)? BestSavedMacro { get; private set; }
+    public bool HasSavedMacro { get; private set; }
     public SolverSolution? BestSuggestedMacro { get; private set; }
 
     private IDalamudTextureWrap ExpertBadge { get; }
@@ -82,7 +85,21 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         IsOpen = true;
     }
 
+    private bool wasOpen;
     public override bool DrawConditions()
+    {
+        var isOpen = ShouldDraw();
+        if (isOpen != wasOpen)
+        {
+            if (wasOpen)
+                BestMacroTokenSource?.Cancel();
+        }
+
+        wasOpen = isOpen;
+        return isOpen;
+    }
+
+    private bool ShouldDraw()
     {
         if (Service.ClientState.LocalPlayer == null)
             return false;
@@ -146,7 +163,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             statsChanged = true;
         }
 
-        if (statsChanged && CraftStatus == CraftableStatus.OK)
+        if ((statsChanged || (BestMacroTokenSource?.IsCancellationRequested ?? false)) && CraftStatus == CraftableStatus.OK)
             CalculateBestMacros();
 
         return true;
@@ -172,16 +189,22 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
     public override void Draw()
     {
+        var availWidth = ImGui.GetContentRegionAvail().X;
+        using (var table = ImRaii.Table("stats", 2, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.SizingFixedSame))
         {
-            using var table = ImRaii.Table("stats", 2, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.SizingStretchSame);
             if (table)
             {
-                ImGui.TableSetupColumn("col1", ImGuiTableColumnFlags.WidthStretch);
-                ImGui.TableSetupColumn("col2", ImGuiTableColumnFlags.WidthStretch);
+                ImGui.TableSetupColumn("col1", ImGuiTableColumnFlags.WidthFixed, 0);
+                ImGui.TableSetupColumn("col2", ImGuiTableColumnFlags.WidthFixed, 0);
                 ImGui.TableNextColumn();
                 DrawCharacterStats();
                 ImGui.TableNextColumn();
                 DrawRecipeStats();
+
+                // Ensure that we know the window should be the same size as this table. Any more and it'll grow slowly and won't shrink when it could
+                ImGui.SameLine(0, 0);
+                // The -1 is to account for the extra vertical separator on the right that ImGui draws for some reason
+                availWidth = ImGui.GetCursorPosX() - ImGui.GetStyle().WindowPadding.X + ImGui.GetStyle().CellPadding.X - 1;
             }
         }
 
@@ -190,35 +213,44 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
         ImGui.Separator();
 
+        using (var table = ImRaii.Table("macros", 1, ImGuiTableFlags.SizingStretchSame))
         {
-            using var table = ImRaii.Table("macros", 1, ImGuiTableFlags.SizingStretchSame);
             if (table)
             {
                 ImGui.TableNextColumn();
 
-                ImGui.AlignTextToFramePadding();
-                ImGuiUtils.TextCentered("Best Saved Macro");
-                if (BestSavedMacro is { } savedMacro)
+                availWidth -= ImGui.GetStyle().ItemSpacing.X * 2;
+                using (var panel = ImGuiUtils.GroupPanel("Best Saved Macro", availWidth, out _))
                 {
-                    ImGuiUtils.TextCentered(savedMacro.Item1.Name);
-                    DrawMacro("savedMacro", (savedMacro.Item1.Actions, savedMacro.Item2));
+                    var stepsAvailWidthOffset = ImGui.GetContentRegionAvail().X - availWidth;
+                    if (BestSavedMacro is { } savedMacro)
+                    {
+                        ImGuiUtils.TextCentered(savedMacro.Item1.Name, availWidth);
+                        DrawMacro((savedMacro.Item1.Actions, savedMacro.Item2), a => { savedMacro.Item1.ActionEnumerable = a; Service.Configuration.Save(); }, stepsAvailWidthOffset, true);
+                    }
+                    else
+                    {
+                        ImGui.Text("");
+                        DrawMacro(null, null, stepsAvailWidthOffset, true);
+                    }
                 }
-                else
+
+                using (var panel = ImGuiUtils.GroupPanel("Suggested Macro", availWidth, out _))
                 {
-                    ImGui.Text("");
-                    DrawMacro("savedMacro", null);
+                    var stepsAvailWidthOffset = ImGui.GetContentRegionAvail().X - availWidth;
+                    if (BestSuggestedMacro is { } suggestedMacro)
+                        DrawMacro((suggestedMacro.Actions, suggestedMacro.State), null, stepsAvailWidthOffset, false);
+                    else
+                        DrawMacro(null, null, stepsAvailWidthOffset, false);
                 }
-                ImGui.Button("View Saved Macros", new(-1, 0));
 
-                ImGui.Separator();
+                ImGuiHelpers.ScaledDummy(5);
 
-                ImGui.AlignTextToFramePadding();
-                ImGuiUtils.TextCentered("Suggested Macro");
-                if (BestSuggestedMacro is { } suggestedMacro)
-                    DrawMacro("suggestedMacro", (suggestedMacro.Actions, suggestedMacro.State));
-                else
-                    DrawMacro("suggestedMacro", null);
-                ImGui.Button("Open Simulator", new(-1, 0));
+                if (ImGui.Button("View Saved Macros", new(-1, 0)))
+                    Service.Plugin.OpenMacroListWindow();
+
+                if (ImGui.Button("Open in Simulator", new(-1, 0)))
+                    Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), Enumerable.Empty<ActionType>(), null);
             }
         }
     }
@@ -237,7 +269,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             }
             var levelText = string.Empty;
             if (level != 0)
-                levelText = SqText.ToLevelString(level);
+                levelText = SqText.LevelPrefix.ToIconChar() + SqText.ToLevelString(level);
             var imageSize = ImGui.GetFrameHeight();
             bool hasSplendorous = false, hasSpecialist = false, shouldHaveManip = false;
             if (CraftStatus is not (CraftableStatus.LockedClassJob or CraftableStatus.WrongClassJob))
@@ -338,6 +370,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                     }
                     else
                         ImGuiUtils.TextCentered($"You do not have any {RecipeData.ClassJob.GetName().ToLowerInvariant()} gearsets.");
+                    ImGui.Dummy(default);
                 }
                 break;
             case CraftableStatus.SpecialistRequired:
@@ -439,9 +472,9 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             var textStarsSize = Vector2.Zero;
             if (!string.IsNullOrEmpty(textStars)) {
                 var layout = AxisFont.LayoutBuilder(textStars).Build();
-                textStarsSize = new(layout.Width + 3, layout.Height);
+                textStarsSize = new(layout.Width, layout.Height);
             }
-            var textLevel = SqText.ToLevelString(RecipeData.RecipeInfo.ClassJobLevel);
+            var textLevel = SqText.LevelPrefix.ToIconChar() + SqText.ToLevelString(RecipeData.RecipeInfo.ClassJobLevel);
             var isExpert = RecipeData.RecipeInfo.IsExpert;
             var isCollectable = RecipeData.Recipe.ItemResult.Value!.IsCollectable;
             var imageSize = ImGui.GetFrameHeight();
@@ -452,7 +485,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             ImGuiUtils.AlignCentered(
                 imageSize + 5 +
                 ImGui.CalcTextSize(textLevel).X +
-                textStarsSize.X +
+                (textStarsSize != Vector2.Zero ? textStarsSize.X + 3 : 0) +
                 (isCollectable ? badgeSize.X + 3 : 0) +
                 (isExpert ? badgeSize.X + 3 : 0)
                 );
@@ -516,16 +549,16 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         }
     }
 
-    private void DrawMacro(string imGuiId, (List<ActionType> Actions, SimulationState State)? macroValue)
+    private void DrawMacro((IReadOnlyList<ActionType> Actions, SimulationState State)? macroValue, Action<IEnumerable<ActionType>>? setter, float stepsAvailWidthOffset, bool isSavedMacro)
     {
-        //using var window = ImRaii.Child(imGuiId, new(-1, (name != null ? ImGui.GetTextLineHeightWithSpacing() : 0) + 2 * ImGui.GetFrameHeightWithSpacing()), false, ImGuiWindowFlags.AlwaysAutoResize);
-
         var windowHeight = 2 * ImGui.GetFrameHeightWithSpacing();
 
-        if (macroValue == null)
+        if (macroValue is not { } macro)
         {
-            if (BestMacroException == null)
-                ImGuiUtils.TextMiddleNewLine("Calculating...", new(ImGui.GetContentRegionAvail().X, windowHeight + 1 + ImGui.GetStyle().ItemSpacing.Y));
+            if (isSavedMacro && !HasSavedMacro)
+                ImGuiUtils.TextMiddleNewLine("You have no macros!", new(ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset, windowHeight + 1));
+            else if (BestMacroException == null)
+                ImGuiUtils.TextMiddleNewLine("Calculating...", new(ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset, windowHeight + 1));
             else
             {
                 ImGui.AlignTextToFramePadding();
@@ -536,8 +569,8 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             }
             return;
         }
-
-        var macro = macroValue!.Value;
+        if (macro.Actions.Any(a => a.Category() == ActionCategory.Combo))
+            throw new InvalidOperationException("Combo actions should be sanitized away");
 
         using var table = ImRaii.Table("table", 3, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.SizingStretchSame);
         if (table)
@@ -552,7 +585,6 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             var spacing = ImGui.GetStyle().ItemSpacing.Y;
             var miniRowHeight = (windowHeight - spacing) / 2f;
 
-            //ImGui.Text($"{macro.Actions.Count}");
             {
                 if (Service.Configuration.ShowOptimalMacroStat)
                 {
@@ -564,7 +596,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                         progressHeight / 2f,
                         .5f,
                         ImGui.GetColorU32(ImGuiCol.TableBorderLight),
-                        ImGui.GetColorU32(Plugin.Windows.Simulator.QualityColor));
+                        ImGui.GetColorU32(Colors.Quality));
                         if (ImGui.IsItemHovered())
                             ImGui.SetTooltip($"Quality: {macro.State.Quality} / {macro.State.Input.Recipe.MaxQuality}");
                     }
@@ -575,7 +607,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                         progressHeight / 2f,
                         .5f,
                         ImGui.GetColorU32(ImGuiCol.TableBorderLight),
-                        ImGui.GetColorU32(Plugin.Windows.Simulator.ProgressColor));
+                        ImGui.GetColorU32(Colors.Progress));
                         if (ImGui.IsItemHovered())
                             ImGui.SetTooltip($"Progress: {macro.State.Progress} / {macro.State.Input.Recipe.MaxProgress}");
                     }
@@ -587,7 +619,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                         miniRowHeight / 2f,
                         .5f,
                         ImGui.GetColorU32(ImGuiCol.TableBorderLight),
-                        ImGui.GetColorU32(Plugin.Windows.Simulator.ProgressColor));
+                        ImGui.GetColorU32(Colors.Progress));
                     if (ImGui.IsItemHovered())
                         ImGui.SetTooltip($"Progress: {macro.State.Progress} / {macro.State.Input.Recipe.MaxProgress}");
 
@@ -597,7 +629,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                         miniRowHeight / 2f,
                         .5f,
                         ImGui.GetColorU32(ImGuiCol.TableBorderLight),
-                        ImGui.GetColorU32(Plugin.Windows.Simulator.QualityColor));
+                        ImGui.GetColorU32(Colors.Quality));
                     if (ImGui.IsItemHovered())
                         ImGui.SetTooltip($"Quality: {macro.State.Quality} / {macro.State.Input.Recipe.MaxQuality}");
 
@@ -605,7 +637,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                         miniRowHeight / 2f,
                         .5f,
                         ImGui.GetColorU32(ImGuiCol.TableBorderLight),
-                        ImGui.GetColorU32(Plugin.Windows.Simulator.DurabilityColor));
+                        ImGui.GetColorU32(Colors.Durability));
                     if (ImGui.IsItemHovered())
                         ImGui.SetTooltip($"Remaining Durability: {macro.State.Durability} / {macro.State.Input.Recipe.MaxDurability}");
 
@@ -615,7 +647,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                         miniRowHeight / 2f,
                         .5f,
                         ImGui.GetColorU32(ImGuiCol.TableBorderLight),
-                        ImGui.GetColorU32(Plugin.Windows.Simulator.CPColor));
+                        ImGui.GetColorU32(Colors.CP));
                     if (ImGui.IsItemHovered())
                         ImGui.SetTooltip($"Remaining CP: {macro.State.CP} / {macro.State.Input.Stats.CP}");
                 }
@@ -623,31 +655,44 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             
             ImGui.TableNextColumn();
             {
-                ImGuiUtils.TextMiddleNewLine($"{macro.Actions.Count}", new(miniRowHeight));
+                if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Edit, new(miniRowHeight)))
+                    Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), macro.Actions, setter);
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip($"{macro.Actions.Count} Step{(macro.Actions.Count != 1 ? "s" : "")}");
-                using (var iconFont = ImRaii.PushFont(UiBuilder.IconFont))
-                    if (ImGuiUtils.ButtonCentered(FontAwesomeIcon.Copy.ToIconString(), new(miniRowHeight)))
-                    {
-                        throw new NotImplementedException();
-                    }
+                    ImGui.SetTooltip("Open in Simulator");
+                if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Copy, new(miniRowHeight)))
+                    Service.Plugin.CopyMacro(macro.Actions);
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip("Copy to Clipboard");
             }
 
             ImGui.TableNextColumn();
             {
-                var itemsPerRow = (int)MathF.Ceiling((ImGui.GetContentRegionAvail().X + spacing) / (miniRowHeight + spacing));
-                var itemCount = Math.Min(macro.Actions.Count, itemsPerRow * 2);
+                var itemsPerRow = (int)MathF.Floor((ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset + spacing) / (miniRowHeight + spacing));
+                var itemCount = macro.Actions.Count;
                 for (var i = 0; i < itemsPerRow * 2; i++)
                 {
                     if (i % itemsPerRow != 0)
                         ImGui.SameLine(0, spacing);
                     if (i < itemCount)
                     {
-                        ImGui.Image(macro.Actions[i].GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(miniRowHeight));
-                        if (ImGui.IsItemHovered())
-                            ImGui.SetTooltip(macro.Actions[i].GetName(RecipeData!.ClassJob));
+                        var shouldShowMore = i + 1 == itemsPerRow * 2 && i + 1 < itemCount;
+                        if (!shouldShowMore)
+                        {
+                            ImGui.Image(macro.Actions[i].GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(miniRowHeight));
+                            if (ImGui.IsItemHovered())
+                                ImGui.SetTooltip(macro.Actions[i].GetName(RecipeData!.ClassJob));
+                        }
+                        else
+                        {
+                            var amtMore = itemCount - itemsPerRow * 2;
+                            var pos = ImGui.GetCursorPos();
+                            ImGui.Image(macro.Actions[i].GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(miniRowHeight), default, Vector2.One, new(1, 1, 1, .5f));
+                            if (ImGui.IsItemHovered())
+                                ImGui.SetTooltip($"{macro.Actions[i].GetName(RecipeData!.ClassJob)}\nand {amtMore} more");
+                            ImGui.SetCursorPos(pos);
+                            ImGui.GetWindowDrawList().AddRectFilled(ImGui.GetCursorScreenPos(), ImGui.GetCursorScreenPos() + new Vector2(miniRowHeight), ImGui.GetColorU32(ImGuiCol.FrameBg), miniRowHeight / 8f);
+                            ImGui.GetWindowDrawList().AddTextClippedEx(ImGui.GetCursorScreenPos(), ImGui.GetCursorScreenPos() + new Vector2(miniRowHeight), $"+{amtMore}", null, new(.5f), null);
+                        }
                     }
                     else
                         ImGui.Dummy(new(miniRowHeight));
@@ -758,25 +803,31 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         BestMacroTokenSource = new();
         BestMacroException = null;
         BestSavedMacro = null;
+        HasSavedMacro = false;
         BestSuggestedMacro = null;
 
         var token = BestMacroTokenSource.Token;
-        _ = Task.Run(() => CalculateBestMacrosTask(token), token)
-            .ContinueWith(t =>
-            {
-                if (token.IsCancellationRequested)
-                    return;
+        var task = Task.Run(() => CalculateBestMacrosTask(token), token);
+        _ = task.ContinueWith(t =>
+        {
+            if (token == BestMacroTokenSource.Token)
+                BestMacroTokenSource = null;
+        });
+        _ = task.ContinueWith(t =>
+        {
+            if (token.IsCancellationRequested)
+                return;
 
-                try
-                {
-                    t.Exception!.Flatten().Handle(ex => ex is TaskCanceledException or OperationCanceledException);
-                }
-                catch (AggregateException e)
-                {
-                    BestMacroException = e;
-                    Log.Error(e, "Calculating macros failed");
-                }
-            }, TaskContinuationOptions.OnlyOnFaulted);
+            try
+            {
+                t.Exception!.Flatten().Handle(ex => ex is TaskCanceledException or OperationCanceledException);
+            }
+            catch (AggregateException e)
+            {
+                BestMacroException = e;
+                Log.Error(e, "Calculating macros failed");
+            }
+        }, TaskContinuationOptions.OnlyOnFaulted);
     }
 
     private void CalculateBestMacrosTask(CancellationToken token)
@@ -790,26 +841,30 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
         token.ThrowIfCancellationRequested();
 
-        var bestSaved = macros
-            .Select(macro =>
-                {
-                    var (resp, outState, failedIdx) = simulator.ExecuteMultiple(state, macro.Actions);
-                    outState.ActionCount = macro.Actions.Count;
-                    var score = SimulationNode.CalculateScoreForState(outState, simulator.CompletionState, mctsConfig) ?? 0;
-                    if (resp != ActionResponse.SimulationComplete)
+        HasSavedMacro = macros.Count > 0;
+        if (HasSavedMacro)
+        {
+            var bestSaved = macros
+                .Select(macro =>
                     {
-                        if (failedIdx != -1)
-                            score /= 2;
-                    }
-                    return (macro, outState, score);
-                })
-            .MaxBy(m => m.score);
+                        var (resp, outState, failedIdx) = simulator.ExecuteMultiple(state, macro.Actions);
+                        outState.ActionCount = macro.Actions.Count;
+                        var score = SimulationNode.CalculateScoreForState(outState, simulator.CompletionState, mctsConfig) ?? 0;
+                        if (resp != ActionResponse.SimulationComplete)
+                        {
+                            if (failedIdx != -1)
+                                score /= 2;
+                        }
+                        return (macro, outState, score);
+                    })
+                .MaxBy(m => m.score);
 
-        token.ThrowIfCancellationRequested();
+            token.ThrowIfCancellationRequested();
 
-        BestSavedMacro = (bestSaved.macro, bestSaved.outState);
+            BestSavedMacro = (bestSaved.macro, bestSaved.outState);
 
-        token.ThrowIfCancellationRequested();
+            token.ThrowIfCancellationRequested();
+        }
 
         var solver = new Solver.Solver(config, state) { Token = token };
         solver.OnLog += Log.Debug;
@@ -819,10 +874,13 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         token.ThrowIfCancellationRequested();
 
         BestSuggestedMacro = solution;
+
+        token.ThrowIfCancellationRequested();
     }
 
     public void Dispose()
     {
+        Service.WindowSystem.RemoveWindow(this);
         AxisFont?.Dispose();
     }
 }

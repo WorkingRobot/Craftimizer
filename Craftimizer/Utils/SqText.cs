@@ -1,15 +1,16 @@
-﻿using Dalamud.Game.Text;
+using Dalamud.Game.Text;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 
 namespace Craftimizer.Utils;
 
 public static class SqText
 {
-    private static ReadOnlyDictionary<char, SeIconChar> levelNumReplacements = new(new Dictionary<char, SeIconChar>
+    public static SeIconChar LevelPrefix => SeIconChar.LevelEn;
+
+    public static readonly ReadOnlyDictionary<char, SeIconChar> LevelNumReplacements = new(new Dictionary<char, SeIconChar>
     {
         ['0'] = SeIconChar.Number0,
         ['1'] = SeIconChar.Number1,
@@ -26,8 +27,15 @@ public static class SqText
     public static string ToLevelString<T>(T value) where T : IBinaryInteger<T>
     {
         var str = value.ToString() ?? throw new FormatException("Failed to format value");
-        foreach(var (k, v) in levelNumReplacements)
+        foreach(var (k, v) in LevelNumReplacements)
             str = str.Replace(k, v.ToIconChar());
-        return SeIconChar.LevelEn.ToIconChar() + str;
+        return str;
+    }
+
+    public static bool TryParseLevelString(string str, out int result)
+    {
+        foreach(var (k, v) in LevelNumReplacements)
+            str = str.Replace(v.ToIconChar(), k);
+        return int.TryParse(str, out result);
     }
 }

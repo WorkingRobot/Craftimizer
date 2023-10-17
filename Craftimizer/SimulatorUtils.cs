@@ -6,7 +6,6 @@ using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
-using ImGuiScene;
 using Lumina.Excel.GeneratedSheets;
 using System;
 using System.Globalization;
@@ -63,6 +62,8 @@ internal static class ActionUtils
             }
         }
     }
+
+    public static void Initialize() { }
 
     public static (CraftAction? CraftAction, Action? Action) GetActionRow(this ActionType me, ClassJob classJob) =>
         ActionRows[(int)me, (int)classJob];
@@ -309,10 +310,13 @@ internal static class EffectUtils
             EffectType.FinalAppraisal => 2190,
             EffectType.WasteNot2 => 257,
             EffectType.MuscleMemory => 2191,
-            EffectType.Manipulation => 258,
+            EffectType.Manipulation => 1164,
             EffectType.HeartAndSoul => 2665,
-            _ => 3412,
+            _ => throw new ArgumentOutOfRangeException(nameof(me)),
         };
+
+    public static bool IsIndefinite(this EffectType me) =>
+        me is EffectType.InnerQuiet or EffectType.HeartAndSoul;
 
     public static Status Status(this EffectType me) =>
         LuminaSheets.StatusSheet.GetRow(me.StatusId())!;

@@ -14,10 +14,13 @@ internal abstract class BaseBuffAction : BaseAction
     public override void UseSuccess(Simulator s) =>
         s.AddEffect(Effect, Duration);
 
-    public sealed override string GetTooltip(Simulator s, bool addUsability)
+    public override string GetTooltip(Simulator s, bool addUsability)
     {
         var builder = new StringBuilder(base.GetTooltip(s, addUsability));
         builder.AppendLine($"{Duration} Steps");
         return builder.ToString();
     }
+
+    protected string GetBaseTooltip(Simulator s, bool addUsability) =>
+        base.GetTooltip(s, addUsability);
 }

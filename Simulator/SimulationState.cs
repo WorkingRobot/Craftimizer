@@ -25,6 +25,8 @@ public record struct SimulationState
         74, 76, 78, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 94, 96, 98, 100
     };
     public readonly int HQPercent => HQPercentTable[(int)Math.Clamp((float)Quality / Input.Recipe.MaxQuality * 100, 0, 100)];
+    public readonly int Collectability => Math.Max(Quality / 10, 1);
+    public readonly int MaxCollectability => Math.Max(Input.Recipe.MaxQuality / 10, 1);
 
     public readonly bool IsFirstStep => StepCount == 0;
 
