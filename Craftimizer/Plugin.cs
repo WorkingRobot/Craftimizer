@@ -11,6 +11,7 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace Craftimizer.Plugin;
@@ -69,10 +70,46 @@ public sealed class Plugin : IDalamudPlugin
         {
             HelpMessage = "Open the crafting macros window.",
         });
-        Service.CommandManager.AddHandler("/crafteditor", new CommandInfo((_, _) => OpenSettingsWindow())
+        Service.CommandManager.AddHandler("/crafteditor", new CommandInfo((_, _) => OpenEmptyMacroEditor())
         {
             HelpMessage = "Open the crafting macro editor.",
         });
+    }
+
+    public (CharacterStats? Character, RecipeData? Recipe, MacroEditor.CrafterBuffs? Buffs) GetOpenedStats()
+    {
+        var editorWindow = (EditorWindow?.IsOpen ?? false) ? EditorWindow : null;
+        var recipeData = editorWindow?.RecipeData ?? Service.Plugin.RecipeNoteWindow.RecipeData;
+        var characterStats = editorWindow?.CharacterStats ?? Service.Plugin.RecipeNoteWindow.CharacterStats;
+        var buffs = editorWindow?.Buffs ?? (RecipeNoteWindow.CharacterStats != null ? new(Service.ClientState.LocalPlayer?.StatusList) : null);
+
+        return (characterStats, recipeData, buffs);
+    }
+
+    public (CharacterStats Character, RecipeData Recipe, MacroEditor.CrafterBuffs Buffs) GetDefaultStats()
+    {
+        var stats = GetOpenedStats();
+        return (
+            stats.Character ?? new()
+            {
+                Craftsmanship = 100,
+                Control = 100,
+                CP = 200,
+                Level = 10,
+                CanUseManipulation = false,
+                HasSplendorousBuff = false,
+                IsSpecialist = false,
+                CLvl = 10,
+            },
+            stats.Recipe ?? new(1023),
+            stats.Buffs ?? new(null)
+        );
+    }
+
+    public void OpenEmptyMacroEditor()
+    {
+        var stats = GetDefaultStats();
+        OpenMacroEditor(stats.Character, stats.Recipe, stats.Buffs, Enumerable.Empty<ActionType>(), null);
     }
 
     public void OpenMacroEditor(CharacterStats characterStats, RecipeData recipeData, MacroEditor.CrafterBuffs buffs, IEnumerable<ActionType> actions, Action<IEnumerable<ActionType>>? setter)

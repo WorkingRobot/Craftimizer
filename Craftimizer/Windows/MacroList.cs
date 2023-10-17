@@ -21,7 +21,6 @@ public sealed class MacroList : Window, IDisposable
 
     public CharacterStats? CharacterStats { get; private set; }
     public RecipeData? RecipeData { get; private set; }
-    private MacroEditor? EditorWindow { get; set; }
 
     private IReadOnlyList<Macro> Macros => Service.Configuration.Macros;
     private Dictionary<Macro, SimulationState> MacroStateCache { get; } = new();
@@ -51,10 +50,7 @@ public sealed class MacroList : Window, IDisposable
         var oldCharacterStats = CharacterStats;
         var oldRecipeData = RecipeData;
 
-        EditorWindow = Service.Plugin.EditorWindow;
-        EditorWindow = (EditorWindow?.IsOpen ?? false) ? EditorWindow : null;
-        RecipeData = EditorWindow?.RecipeData ?? Service.Plugin.RecipeNoteWindow.RecipeData;
-        CharacterStats = EditorWindow?.CharacterStats ?? Service.Plugin.RecipeNoteWindow.CharacterStats;
+        (CharacterStats, RecipeData, _) = Service.Plugin.GetOpenedStats();
 
         if (oldCharacterStats != CharacterStats || oldRecipeData != RecipeData)
             RecalculateStats();
@@ -310,21 +306,8 @@ public sealed class MacroList : Window, IDisposable
 
     private void OpenEditor(Macro? macro)
     {
-        var character = CharacterStats ?? new()
-        {
-            Craftsmanship = 100,
-            Control = 100,
-            CP = 200,
-            Level = 10,
-            CanUseManipulation = false,
-            HasSplendorousBuff = false,
-            IsSpecialist = false,
-            CLvl = 10,
-        };
-        var recipe = RecipeData ?? new(1023);
-
-        var buffs = EditorWindow?.Buffs ?? new(Service.Plugin.RecipeNoteWindow.CharacterStats != null ? Service.ClientState.LocalPlayer?.StatusList : null);
-        Service.Plugin.OpenMacroEditor(character, recipe, buffs, macro?.Actions ?? Enumerable.Empty<ActionType>(), macro != null ? (actions => { macro.ActionEnumerable = actions; Service.Configuration.Save(); }) : null);
+        var stats = Service.Plugin.GetDefaultStats();
+        Service.Plugin.OpenMacroEditor(stats.Character, stats.Recipe, stats.Buffs, macro?.Actions ?? Enumerable.Empty<ActionType>(), macro != null ? (actions => { macro.ActionEnumerable = actions; Service.Configuration.Save(); }) : null);
     }
 
     private void OnMacroChanged(Macro macro)
