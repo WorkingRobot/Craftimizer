@@ -80,9 +80,12 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         NoManipulationBadge = Service.IconManager.GetAssemblyTexture("Graphics.no_manip.png");
         AxisFont = Service.PluginInterface.UiBuilder.GetGameFontHandle(new(GameFontFamilyAndSize.Axis14));
 
-        Service.WindowSystem.AddWindow(this);
-
+        RespectCloseHotkey = false;
+        DisableWindowSounds = true;
+        ShowCloseButton = false;
         IsOpen = true;
+
+        Service.WindowSystem.AddWindow(this);
     }
 
     private bool wasOpen;
