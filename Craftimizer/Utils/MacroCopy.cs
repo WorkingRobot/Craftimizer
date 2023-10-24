@@ -27,7 +27,7 @@ public static class MacroCopy
         var config = Service.Configuration.MacroCopy;
         var macros = new List<string>();
         var s = new List<string>();
-        foreach(var action in actions)
+        for (var i = 0; i < actions.Count; ++i)
         {
             if (s.Count == 0)
             {
@@ -35,18 +35,18 @@ public static class MacroCopy
                     s.Add("/mlock");
             }
 
-            s.Add(GetActionCommand(action, config));
+            s.Add(GetActionCommand(actions[i], config));
             
-            if (config.Type == MacroCopyConfiguration.CopyType.CopyToMacro || !config.CombineMacro)
+            if (i != actions.Count - 1 && (config.Type == MacroCopyConfiguration.CopyType.CopyToMacro || !config.CombineMacro))
             {
                 if (s.Count == MacroSize - 1)
                 {
-                    if (GetEndCommand(macros.Count, true, config) is { } endCommand)
+                    if (GetEndCommand(macros.Count, false, config) is { } endCommand)
                         s.Add(endCommand);
                 }
                 if (s.Count == MacroSize)
                 {
-                    macros.Add(string.Join("\n", s));
+                    macros.Add(string.Join(Environment.NewLine, s));
                     s.Clear();
                 }
             }
@@ -55,7 +55,7 @@ public static class MacroCopy
         {
             if (GetEndCommand(macros.Count, true, config) is { } endCommand)
                 s.Add(endCommand);
-            macros.Add(string.Join("\n", s));
+            macros.Add(string.Join(Environment.NewLine, s));
         }
 
         switch (config.Type)
@@ -146,7 +146,7 @@ public static class MacroCopy
 
     private static void CopyToClipboard(List<string> macros, MacroCopyConfiguration config)
     {
-        ImGui.SetClipboardText(string.Join("\n\n", macros));
+        ImGui.SetClipboardText(string.Join(Environment.NewLine + Environment.NewLine, macros));
         Service.PluginInterface.UiBuilder.AddNotification(macros.Count > 1 ? "Copied macro to clipboard." : $"Copied {macros.Count} macros to clipboard.", "Craftimizer Macro Copied", NotificationType.Success);
     }
 }
