@@ -59,6 +59,7 @@ public class MacroCopyConfiguration
     public bool AddNotification { get; set; } = true;
 
     // Requires AddNotification
+    public bool ForceNotification { get; set; }
     public bool AddNotificationSound { get; set; } = true;
     public int IntermediateNotificationSound { get; set; } = 10;
     public int EndNotificationSound { get; set; } = 6;

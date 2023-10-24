@@ -281,6 +281,15 @@ public sealed class Settings : Window, IDisposable
             if (Config.MacroCopy.AddNotification)
             {
                 DrawOption(
+                    "Force Notification",
+                    "Prioritize always having a notification sound at the end of\n" +
+                    "every macro. Keeping this off prevents macros with only 1 action.",
+                    Config.MacroCopy.ForceNotification,
+                    v => Config.MacroCopy.ForceNotification = v,
+                    ref isDirty
+                );
+
+                DrawOption(
                     "Add Notification Sound",
                     "Adds a sound to the end of every macro.",
                     Config.MacroCopy.AddNotificationSound,

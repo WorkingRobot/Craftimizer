@@ -37,24 +37,30 @@ public static class MacroCopy
 
             s.Add(GetActionCommand(actions[i], config));
             
-            if (i != actions.Count - 1 && (config.Type == MacroCopyConfiguration.CopyType.CopyToMacro || !config.CombineMacro))
+            if (config.Type == MacroCopyConfiguration.CopyType.CopyToMacro || !config.CombineMacro)
             {
-                if (s.Count == MacroSize - 1)
+                if (i != actions.Count - 1 && (i != actions.Count - 2 || config.ForceNotification))
                 {
-                    if (GetEndCommand(macros.Count, false, config) is { } endCommand)
-                        s.Add(endCommand);
-                }
-                if (s.Count == MacroSize)
-                {
-                    macros.Add(string.Join(Environment.NewLine, s));
-                    s.Clear();
+                    if (s.Count == MacroSize - 1)
+                    {
+                        if (GetEndCommand(macros.Count, false, config) is { } endCommand)
+                            s.Add(endCommand);
+                    }
+                    if (s.Count == MacroSize)
+                    {
+                        macros.Add(string.Join(Environment.NewLine, s));
+                        s.Clear();
+                    }
                 }
             }
         }
         if (s.Count > 0)
         {
-            if (GetEndCommand(macros.Count, true, config) is { } endCommand)
-                s.Add(endCommand);
+            if (s.Count < MacroSize)
+            {
+                if (GetEndCommand(macros.Count, true, config) is { } endCommand)
+                    s.Add(endCommand);
+            }
             macros.Add(string.Join(Environment.NewLine, s));
         }
 
