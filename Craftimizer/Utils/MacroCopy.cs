@@ -56,7 +56,7 @@ public static class MacroCopy
         }
         if (s.Count > 0)
         {
-            if (s.Count < MacroSize)
+            if (s.Count < MacroSize || (config.Type != MacroCopyConfiguration.CopyType.CopyToMacro && config.CombineMacro))
             {
                 if (GetEndCommand(macros.Count, true, config) is { } endCommand)
                     s.Add(endCommand);

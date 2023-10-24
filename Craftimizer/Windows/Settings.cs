@@ -295,14 +295,20 @@ public sealed class Settings : Window, IDisposable
 
             if (Config.MacroCopy.AddNotification)
             {
-                DrawOption(
-                    "Force Notification",
-                    "Prioritize always having a notification sound at the end of\n" +
-                    "every macro. Keeping this off prevents macros with only 1 action.",
-                    Config.MacroCopy.ForceNotification,
-                    v => Config.MacroCopy.ForceNotification = v,
-                    ref isDirty
-                );
+                var isForceUseful = Config.MacroCopy.Type == MacroCopyConfiguration.CopyType.CopyToMacro || !Config.MacroCopy.CombineMacro;
+                using (var d = ImRaii.Disabled(!isForceUseful))
+                {
+                    DrawOption(
+                        "Force Notification",
+                        "Prioritize always having a notification sound at the end of\n" +
+                        "every macro. Keeping this off prevents macros with only 1 action.",
+                        Config.MacroCopy.ForceNotification,
+                        v => Config.MacroCopy.ForceNotification = v,
+                        ref isDirty
+                    );
+                }
+                if (!isForceUseful && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+                    ImGui.SetTooltip("Only useful when Combine Macro is off");
 
                 DrawOption(
                     "Add Notification Sound",
