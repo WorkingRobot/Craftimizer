@@ -446,9 +446,8 @@ internal static class ImGuiUtils
 
     public static bool IconButtonSized(FontAwesomeIcon icon, Vector2 size)
     {
-        ImGui.PushFont(UiBuilder.IconFont);
+        using var font = ImRaii.PushFont(UiBuilder.IconFont);
         var ret = ImGui.Button(icon.ToIconString(), size);
-        ImGui.PopFont();
         return ret;
     }
 

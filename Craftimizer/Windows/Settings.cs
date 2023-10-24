@@ -1,10 +1,13 @@
 using Craftimizer.Solver;
+using Dalamud.Interface;
+using Dalamud.Interface.Colors;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using ImGuiNET;
 using System;
+using System.Linq;
 using System.Numerics;
 
 namespace Craftimizer.Plugin.Windows;
@@ -252,7 +255,7 @@ public sealed class Settings : Window, IDisposable
             }
 
             DrawOption(
-                "Use MacroChain's /nextmacro",
+                "Use Macro Chain's /nextmacro",
                 "Replaces the last step with /nextmacro to run the next macro\n" +
                 "automatically. Overrides Add End Notification except for the\n" +
                 "last macro.",
@@ -260,6 +263,18 @@ public sealed class Settings : Window, IDisposable
                 v => Config.MacroCopy.UseNextMacro = v,
                 ref isDirty
             );
+
+            if (Config.MacroCopy.UseNextMacro && !Service.PluginInterface.InstalledPlugins.Any(p => p.IsLoaded && string.Equals(p.InternalName, "MacroChain", StringComparison.Ordinal)))
+            {
+                ImGui.SameLine();
+                using (var color = ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudOrange))
+                {
+                    using var font = ImRaii.PushFont(UiBuilder.IconFont);
+                    ImGui.Text(FontAwesomeIcon.ExclamationCircle.ToIconString());
+                }
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip("Macro Chain is not installed");
+            }
 
             DrawOption(
                 "Add Macro Lock",
