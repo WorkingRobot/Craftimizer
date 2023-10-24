@@ -144,7 +144,7 @@ public static class MacroCopy
 
         var module = RaptureMacroModule.Instance();
         var macro = module->GetMacro(isShared ? 1u : 0u, (uint)idx);
-        var text = Utf8String.FromString(macroText);
+        var text = Utf8String.FromString(macroText.Replace(Environment.NewLine, "\n"));
         module->ReplaceMacroLines(macro, text);
         text->Dtor();
         IMemorySpace.Free(text);
