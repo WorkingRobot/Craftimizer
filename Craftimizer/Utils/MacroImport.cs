@@ -8,10 +8,10 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Craftimizer.Utils;
 
@@ -20,7 +20,7 @@ public static class MacroImport
     public static IReadOnlyList<ActionType>? TryParseMacro(string inputMacro)
     {
         var actions = new List<ActionType>();
-        foreach(var line in inputMacro.ReplaceLineEndings("\n").Split("\n"))
+        foreach (var line in inputMacro.ReplaceLineEndings("\n").Split("\n"))
         {
             if (TryParseLine(line) is { } action)
                 actions.Add(action);
@@ -55,7 +55,7 @@ public static class MacroImport
                 line = line[..end];
         }
 
-        foreach(var action in Enum.GetValues<ActionType>())
+        foreach (var action in Enum.GetValues<ActionType>())
         {
             if (line.Equals(action.GetName(ClassJob.Carpenter), StringComparison.OrdinalIgnoreCase))
                 return action;
@@ -173,6 +173,29 @@ public static class MacroImport
         public ErrorData? Error { get; set; }
     }
 
+    private sealed record CraftingwayMacro
+    {
+        public int Id { get; set; }
+        public string? Slug { get; set; }
+        public string? Version { get; set; }
+        public string? Job { get; set; }
+        [JsonPropertyName("job_level")]
+        public int JobLevel { get; set; }
+        public int Craftsmanship { get; set; }
+        public int Control { get; set; }
+        public int CP { get; set; }
+        public string? Food { get; set; }
+        public string? Potion { get; set; }
+        [JsonPropertyName("recipe_job_level")]
+        public int RecipeJobLevel { get; set; }
+        public string? Recipe { get; set; }
+        // HqIngredients
+        public string? Actions { get; set; }
+        [JsonPropertyName("created_at")]
+        public long CreatedAt { get; set; }
+        public string? Error { get; set; }
+    }
+
     public readonly record struct RetrievedMacro(string Name, IReadOnlyList<ActionType> Actions);
 
     private static async Task<RetrievedMacro> RetrieveTeamcraftUrl(Uri uri, CancellationToken token)
@@ -195,7 +218,10 @@ public static class MacroImport
 
         var id = path[(lastSlash + 1)..];
 
-        var resp = await client.GetFromJsonAsync<TeamcraftMacro>($"https://firestore.googleapis.com/v1beta1/projects/ffxivteamcraft/databases/(default)/documents/rotations/{id}", token).ConfigureAwait(false);
+        var resp = await client.GetFromJsonAsync<TeamcraftMacro>(
+            $"https://firestore.googleapis.com/v1beta1/projects/ffxivteamcraft/databases/(default)/documents/rotations/{id}",
+            token).
+            ConfigureAwait(false);
         if (resp is null)
             throw new Exception("Internal error; failed to retrieve macro");
         if (resp.Error is { } error)
@@ -208,44 +234,44 @@ public static class MacroImport
                 $"rlvl{recipe.RLvl.Value} - {rotation.Rotation.Value.Length} steps, {recipe.Durability.Value} dur" :
                 "New Teamcraft Rotation");
         var actions = new List<ActionType>();
-        foreach(var action in rotation.Rotation.Value)
+        foreach (var action in rotation.Rotation.Value)
         {
             ActionType? actionType = action.Value switch
             {
-                "BasicSynthesis" =>		    ActionType.BasicSynthesis,
-                "CarefulSynthesis" =>	    ActionType.CarefulSynthesis,
-                "PrudentSynthesis" =>	    ActionType.PrudentSynthesis,
-                "RapidSynthesis" =>		    ActionType.RapidSynthesis,
-                "Groundwork" =>		        ActionType.Groundwork,
-                "FocusedSynthesis" =>	    ActionType.FocusedSynthesis,
-                "MuscleMemory" =>		    ActionType.MuscleMemory,
-                "IntensiveSynthesis" =>	    ActionType.IntensiveSynthesis,
-                "BasicTouch" =>		        ActionType.BasicTouch,
-                "StandardTouch" =>		    ActionType.StandardTouch,
-                "AdvancedTouch" =>		    ActionType.AdvancedTouch,
-                "HastyTouch" =>		        ActionType.HastyTouch,
-                "ByregotsBlessing" =>	    ActionType.ByregotsBlessing,
-                "PreciseTouch" =>		    ActionType.PreciseTouch,
-                "FocusedTouch" =>		    ActionType.FocusedTouch,
-                "PrudentTouch" =>		    ActionType.PrudentTouch,
-                "TrainedEye" =>		        ActionType.TrainedEye,
-                "PreparatoryTouch" =>	    ActionType.PreparatoryTouch,
-                "Reflect" =>		        ActionType.Reflect,
-                "TrainedFinesse" =>		    ActionType.TrainedFinesse,
-                "TricksOfTheTrade" =>	    ActionType.TricksOfTheTrade,
-                "MastersMend" =>		    ActionType.MastersMend,
-                "Manipulation" =>		    ActionType.Manipulation,
-                "WasteNot" =>		        ActionType.WasteNot,
-                "WasteNotII" =>		        ActionType.WasteNot2,
-                "GreatStrides" =>		    ActionType.GreatStrides,
-                "Innovation" =>		        ActionType.Innovation,
-                "Veneration" =>		        ActionType.Veneration,
-                "FinalAppraisal" =>		    ActionType.FinalAppraisal,
-                "Observe" =>		        ActionType.Observe,
-                "HeartAndSoul" =>		    ActionType.HeartAndSoul,
-                "CarefulObservation" =>		ActionType.CarefulObservation,
-                "DelicateSynthesis" =>		ActionType.DelicateSynthesis,
-                "RemoveFinalAppraisal" =>	throw new Exception("Removing Final Appraisal is an unsupported action"),
+                "BasicSynthesis" => ActionType.BasicSynthesis,
+                "CarefulSynthesis" => ActionType.CarefulSynthesis,
+                "PrudentSynthesis" => ActionType.PrudentSynthesis,
+                "RapidSynthesis" => ActionType.RapidSynthesis,
+                "Groundwork" => ActionType.Groundwork,
+                "FocusedSynthesis" => ActionType.FocusedSynthesis,
+                "MuscleMemory" => ActionType.MuscleMemory,
+                "IntensiveSynthesis" => ActionType.IntensiveSynthesis,
+                "BasicTouch" => ActionType.BasicTouch,
+                "StandardTouch" => ActionType.StandardTouch,
+                "AdvancedTouch" => ActionType.AdvancedTouch,
+                "HastyTouch" => ActionType.HastyTouch,
+                "ByregotsBlessing" => ActionType.ByregotsBlessing,
+                "PreciseTouch" => ActionType.PreciseTouch,
+                "FocusedTouch" => ActionType.FocusedTouch,
+                "PrudentTouch" => ActionType.PrudentTouch,
+                "TrainedEye" => ActionType.TrainedEye,
+                "PreparatoryTouch" => ActionType.PreparatoryTouch,
+                "Reflect" => ActionType.Reflect,
+                "TrainedFinesse" => ActionType.TrainedFinesse,
+                "TricksOfTheTrade" => ActionType.TricksOfTheTrade,
+                "MastersMend" => ActionType.MastersMend,
+                "Manipulation" => ActionType.Manipulation,
+                "WasteNot" => ActionType.WasteNot,
+                "WasteNotII" => ActionType.WasteNot2,
+                "GreatStrides" => ActionType.GreatStrides,
+                "Innovation" => ActionType.Innovation,
+                "Veneration" => ActionType.Veneration,
+                "FinalAppraisal" => ActionType.FinalAppraisal,
+                "Observe" => ActionType.Observe,
+                "HeartAndSoul" => ActionType.HeartAndSoul,
+                "CarefulObservation" => ActionType.CarefulObservation,
+                "DelicateSynthesis" => ActionType.DelicateSynthesis,
+                "RemoveFinalAppraisal" => throw new Exception("Removing Final Appraisal is an unsupported action"),
                 null => null,
                 { } actionValue => throw new Exception($"Unknown action {actionValue}"),
             };
@@ -264,6 +290,69 @@ public static class MacroImport
             ConnectCallback = heCallback.ConnectCallback,
         });
 
-        throw new NotImplementedException();
+        // https://craftingway.app/rotation/variable-blueprint-KmrvS
+
+        var path = uri.GetComponents(UriComponents.Path, UriFormat.SafeUnescaped);
+        if (!path.StartsWith("rotation/", StringComparison.Ordinal))
+            throw new ArgumentException("Craftingway macro url should start with /rotation", nameof(uri));
+        path = path[9..];
+
+        var lastSlash = path.LastIndexOf('/');
+        if (lastSlash != -1)
+            throw new ArgumentException("Craftingway macro url is not in the right format", nameof(uri));
+
+        var id = path;
+
+        var resp = await client.GetFromJsonAsync<CraftingwayMacro>(
+            $"https://servingway.fly.dev/rotation/{id}",
+            token)
+            .ConfigureAwait(false);
+        if (resp is null)
+            throw new Exception("Internal error; failed to retrieve macro");
+        if (resp.Error is { } error)
+            throw new Exception($"Internal server error; {error}");
+        if (resp.Actions is not { } rotation)
+            throw new Exception($"Internal error; No actions or error was returned");
+        // https://github.com/ffxiv-teamcraft/ffxiv-teamcraft/blob/67f453041c6b2b31d32fcf6e1fd53aa38ed7a12b/apps/client/src/app/model/other/crafting-rotation.ts#L49
+        var name = resp.Slug ?? "New Craftinway Rotation";
+        var actions = new List<ActionType>();
+        foreach (var action in resp.Actions.Split(','))
+        {
+            ActionType? actionType = action switch
+            {
+                "BasicSynthesis" => ActionType.BasicSynthesis,
+                "BasicTouch" => ActionType.BasicTouch,
+                "MastersMend" => ActionType.MastersMend,
+                "Observe" => ActionType.Observe,
+                "WasteNot" => ActionType.WasteNot,
+                "Veneration" => ActionType.Veneration,
+                "StandardTouch" => ActionType.StandardTouch,
+                "GreatStrides" => ActionType.GreatStrides,
+                "Innovation" => ActionType.Innovation,
+                "BasicSynthesisTraited" => ActionType.BasicSynthesis,
+                "WasteNotII" => ActionType.WasteNot2,
+                "ByregotsBlessing" => ActionType.ByregotsBlessing,
+                "MuscleMemory" => ActionType.MuscleMemory,
+                "CarefulSynthesis" => ActionType.CarefulSynthesis,
+                "Manipulation" => ActionType.Manipulation,
+                "PrudentTouch" => ActionType.PrudentTouch,
+                "FocusedSynthesis" => ActionType.FocusedSynthesis,
+                "FocusedTouch" => ActionType.FocusedTouch,
+                "Reflect" => ActionType.Reflect,
+                "PreparatoryTouch" => ActionType.PreparatoryTouch,
+                "Groundwork" => ActionType.Groundwork,
+                "DelicateSynthesis" => ActionType.DelicateSynthesis,
+                "TrainedEye" => ActionType.TrainedEye,
+                "CarefulSynthesisTraited" => ActionType.CarefulSynthesis,
+                "AdvancedTouch" => ActionType.AdvancedTouch,
+                "GroundworkTraited" => ActionType.Groundwork,
+                "PrudentSynthesis" => ActionType.PrudentSynthesis,
+                "TrainedFinesse" => ActionType.TrainedFinesse,
+                { } actionValue => throw new Exception($"Unknown action {actionValue}"),
+            };
+            if (actionType.HasValue)
+                actions.Add(actionType.Value);
+        }
+        return new(name, actions);
     }
 }
