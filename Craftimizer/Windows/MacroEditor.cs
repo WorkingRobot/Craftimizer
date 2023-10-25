@@ -1390,7 +1390,10 @@ public sealed class MacroEditor : Window, IDisposable
                             }
                             catch (AggregateException e)
                             {
-                                popupImportError = e.Message;
+                                if (e.InnerExceptions.Count == 1)
+                                    popupImportError = e.InnerExceptions[0].Message;
+                                else
+                                    popupImportError = e.Message;
                                 Log.Error(e, "Retrieving macro failed");
                             }
                         }, TaskContinuationOptions.OnlyOnFaulted);
