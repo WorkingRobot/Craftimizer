@@ -24,6 +24,8 @@ internal static class ImGuiUtils
     // ^ only useful if width = -1
     public static float BeginGroupPanel(string name, float width)
     {
+        ImGui.PushID(name);
+
         // container group
         ImGui.BeginGroup();
 
@@ -43,14 +45,22 @@ internal static class ImGuiUtils
 
             // label group
             ImGui.BeginGroup();
-            ImGui.Dummy(new Vector2(frameHeight / 2, 0)); // shifts text by fh/2
-            ImGui.SameLine(0, 0);
-            var textFrameHeight = ImGui.GetFrameHeight();
-            ImGui.AlignTextToFramePadding();
-            ImGui.TextUnformatted(name);
-            GroupPanelLabelStack.Push((ImGui.GetItemRectMin(), ImGui.GetItemRectMax(), textFrameHeight / 2f)); // push rect to stack
-            ImGui.SameLine(0, 0);
-            ImGui.Dummy(new Vector2(0f, textFrameHeight + itemSpacing.Y)); // shifts content by fh + is.y
+            if (ImGui.CalcTextSize(name, true).X == 0)
+            {
+                GroupPanelLabelStack.Push(default);
+                ImGui.Dummy(new Vector2(0f, itemSpacing.Y)); // shifts content by is.y
+            }
+            else
+            {
+                ImGui.Dummy(new Vector2(frameHeight / 2, 0)); // shifts text by fh/2
+                ImGui.SameLine(0, 0);
+                var textFrameHeight = ImGui.GetFrameHeight();
+                ImGui.AlignTextToFramePadding();
+                ImGui.Text(name);
+                GroupPanelLabelStack.Push((ImGui.GetItemRectMin(), ImGui.GetItemRectMax(), textFrameHeight / 2f)); // push rect to stack
+                ImGui.SameLine(0, 0);
+                ImGui.Dummy(new Vector2(0f, textFrameHeight + itemSpacing.Y)); // shifts content by fh + is.y
+            }
 
             // content group
             ImGui.BeginGroup();
@@ -80,28 +90,33 @@ internal static class ImGuiUtils
             // inner group
             ImGui.EndGroup();
 
-            var labelRect = GroupPanelLabelStack.Pop();
-            var innerMin = ImGui.GetItemRectMin() + new Vector2(0, labelRect.TopPadding);
-            var innerMax = ImGui.GetItemRectMax();
+            var (labelMin, labelMax, labelPadding) = GroupPanelLabelStack.Pop();
 
-            (Vector2 Min, Vector2 Max) frameRect = (innerMin, innerMax);
-            // add itemspacing padding on the label's sides
-            labelRect.Min.X -= itemSpacing.X / 2;
-            labelRect.Max.X += itemSpacing.X / 2;
+            var innerMin = ImGui.GetItemRectMin();
+            var innerMax = ImGui.GetItemRectMax();
+            // If there was actual text
+            if (labelMax.X != labelMin.X)
+            {
+                innerMin += new Vector2(0, labelPadding);
+
+                // add itemspacing padding on the label's sides
+                labelMin.X -= itemSpacing.X / 2;
+                labelMax.X += itemSpacing.X / 2;
+            }
             for (var i = 0; i < 4; ++i)
             {
                 var (minClip, maxClip) = i switch
                 {
-                    0 => (new Vector2(float.NegativeInfinity), new Vector2(labelRect.Min.X, float.PositiveInfinity)),
-                    1 => (new Vector2(labelRect.Max.X, float.NegativeInfinity), new Vector2(float.PositiveInfinity)),
-                    2 => (new Vector2(labelRect.Min.X, float.NegativeInfinity), new Vector2(labelRect.Max.X, labelRect.Min.Y)),
-                    3 => (new Vector2(labelRect.Min.X, labelRect.Max.Y), new Vector2(labelRect.Max.X, float.PositiveInfinity)),
+                    0 => (new Vector2(float.NegativeInfinity), new Vector2(labelMin.X, float.PositiveInfinity)),
+                    1 => (new Vector2(labelMax.X, float.NegativeInfinity), new Vector2(float.PositiveInfinity)),
+                    2 => (new Vector2(labelMin.X, float.NegativeInfinity), new Vector2(labelMax.X, labelMin.Y)),
+                    3 => (new Vector2(labelMin.X, labelMax.Y), new Vector2(labelMax.X, float.PositiveInfinity)),
                     _ => (Vector2.Zero, Vector2.Zero)
                 };
 
                 ImGui.PushClipRect(minClip, maxClip, true);
                 ImGui.GetWindowDrawList().AddRect(
-                    frameRect.Min, frameRect.Max,
+                    innerMin, innerMax,
                     ImGui.GetColorU32(ImGuiCol.Border),
                     itemSpacing.X);
                 ImGui.PopClipRect();
@@ -111,6 +126,8 @@ internal static class ImGuiUtils
         }
 
         ImGui.EndGroup();
+
+        ImGui.PopID();
     }
 
     private struct EndUnconditionally : ImRaii.IEndObject, IDisposable
@@ -442,6 +459,12 @@ internal static class ImGuiUtils
             imGuiListClipperPtr.End();
             imGuiListClipperPtr.Destroy();
         }
+    }
+
+    public static bool InputTextMultilineWithHint(string label, string hint, ref string input, int maxLength, Vector2 size, ImGuiInputTextFlags flags = ImGuiInputTextFlags.None, ImGuiInputTextCallback? callback = null, IntPtr user_data = default)
+    {
+        const ImGuiInputTextFlags Multiline = (ImGuiInputTextFlags)(1 << 26);
+        return ImGuiExtras.InputTextEx(label, hint, ref input, maxLength, size, flags | Multiline, callback, user_data);
     }
 
     public static bool IconButtonSized(FontAwesomeIcon icon, Vector2 size)
