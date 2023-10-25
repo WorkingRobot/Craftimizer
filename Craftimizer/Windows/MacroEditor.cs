@@ -1186,7 +1186,7 @@ public sealed class MacroEditor : Window, IDisposable
                                  "can vary wildly depending on the solver's settings.");
         }
         ImGui.SameLine();
-        if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Copy, new(height)))
+        if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Paste, new(height)))
             Service.Plugin.CopyMacro(Macro.Select(s => s.Action).ToArray());
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip("Copy to Clipboard");

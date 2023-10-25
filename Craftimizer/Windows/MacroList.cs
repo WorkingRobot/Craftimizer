@@ -197,7 +197,7 @@ public sealed class MacroList : Window, IDisposable
 
             ImGui.TableNextColumn();
             {
-                if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Copy, new(miniRowHeight)))
+                if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Paste, new(miniRowHeight)))
                     Service.Plugin.CopyMacro(macro.Actions);
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip("Copy to Clipboard");

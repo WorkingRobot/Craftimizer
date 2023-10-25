@@ -662,7 +662,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                     Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), macro.Actions, setter);
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip("Open in Simulator");
-                if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Copy, new(miniRowHeight)))
+                if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Paste, new(miniRowHeight)))
                     Service.Plugin.CopyMacro(macro.Actions);
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip("Copy to Clipboard");
