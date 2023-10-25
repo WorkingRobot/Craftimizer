@@ -6,8 +6,10 @@ using Craftimizer.Utils;
 using Dalamud.Game.ClientState.Statuses;
 using Dalamud.Game.Text;
 using Dalamud.Interface;
+using Dalamud.Interface.Colors;
 using Dalamud.Interface.GameFonts;
 using Dalamud.Interface.Internal;
+using Dalamud.Interface.Internal.Notifications;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Dalamud.Utility;
@@ -104,6 +106,14 @@ public sealed class MacroEditor : Window, IDisposable
     private IDalamudTextureWrap EatFromTheHandBadge { get; }
     private GameFontHandle AxisFont { get; }
 
+    private string popupSaveAsMacroName = string.Empty;
+
+    private string popupImportText = string.Empty;
+    private string popupImportUrl = string.Empty;
+    private string popupImportError = string.Empty;
+    private CancellationTokenSource? popupImportUrlTokenSource;
+    private MacroImport.RetrievedMacro? popupImportUrlMacro;
+
     public MacroEditor(CharacterStats characterStats, RecipeData recipeData, CrafterBuffs buffs, IEnumerable<ActionType> actions, Action<IEnumerable<ActionType>>? setter) : base("Craftimizer Macro Editor", WindowFlags, false)
     {
         CharacterStats = characterStats;
@@ -168,7 +178,8 @@ public sealed class MacroEditor : Window, IDisposable
 
         ImGui.Separator();
 
-        using (var table = ImRaii.Table("macroInfo", 2, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.SizingStretchSame)) {
+        using (var table = ImRaii.Table("macroInfo", 2, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.SizingStretchSame))
+        {
             if (table)
             {
                 ImGui.TableSetupColumn("col1", ImGuiTableColumnFlags.WidthStretch, 2);
@@ -691,7 +702,7 @@ public sealed class MacroEditor : Window, IDisposable
         ImGui.AlignTextToFramePadding();
 
         ImGui.Image(Service.IconManager.GetIcon(RecipeData.Recipe.ItemResult.Value!.Icon).ImGuiHandle, new Vector2(imageSize));
-        
+
         ImGui.SameLine(0, 5);
 
         ushort? newRecipe = null;
@@ -983,7 +994,7 @@ public sealed class MacroEditor : Window, IDisposable
                 DrawBars(datas);
             }
         }
-    
+
         using (var panel = ImGuiUtils.GroupPanel("Buffs", -1, out _))
         {
             using var _font = ImRaii.PushFont(AxisFont.ImFont);
@@ -995,7 +1006,7 @@ public sealed class MacroEditor : Window, IDisposable
             ImGui.SameLine(0, 0);
 
             var effects = State.ActiveEffects;
-            foreach(var effect in Enum.GetValues<EffectType>())
+            foreach (var effect in Enum.GetValues<EffectType>())
             {
                 if (!effects.HasEffect(effect))
                     continue;
@@ -1040,7 +1051,7 @@ public sealed class MacroEditor : Window, IDisposable
         });
         var maxSize = (textSize - 2 * spacing - ImGui.CalcTextSize("/").X) / 2;
         var barSize = totalSize - textSize - spacing;
-        foreach(var bar in bars)
+        foreach (var bar in bars)
         {
             using var panel = ImGuiUtils.GroupPanel(bar.Name, totalSize, out _);
             if (bar.Condition is { } condition)
@@ -1138,7 +1149,7 @@ public sealed class MacroEditor : Window, IDisposable
     {
         var height = ImGui.GetFrameHeight();
         var spacing = ImGui.GetStyle().ItemSpacing.X;
-        var width = availWidth - (spacing + height) * (DefaultActions.Length > 0 ? 3 : 2); // small buttons at the end
+        var width = availWidth - ((spacing + height) * (3 + (DefaultActions.Length > 0 ? 1 : 0))); // small buttons at the end
         var halfWidth = (width - spacing) / 2f;
         var quarterWidth = (halfWidth - spacing) / 2f;
 
@@ -1191,6 +1202,15 @@ public sealed class MacroEditor : Window, IDisposable
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip("Copy to Clipboard");
         ImGui.SameLine();
+        using (var _disabled = ImRaii.Disabled(SolverRunning))
+        {
+            if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.FileImport, new(height)))
+                ShowImportPopup();
+        }
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+            ImGui.SetTooltip("Import Macro");
+        DrawImportPopup();
+        ImGui.SameLine();
         if (DefaultActions.Length > 0)
         {
             using (var _disabled = ImRaii.Disabled(SolverRunning))
@@ -1219,11 +1239,10 @@ public sealed class MacroEditor : Window, IDisposable
             ImGui.SetTooltip("Clear");
     }
 
-    private string popupMacroName = string.Empty;
     private void ShowSaveAsPopup()
     {
         ImGui.OpenPopup($"##saveAsPopup");
-        popupMacroName = string.Empty;
+        popupSaveAsMacroName = string.Empty;
         ImGui.SetNextWindowPos(ImGui.GetMousePos() - new Vector2(ImGui.CalcItemWidth() * .25f, ImGui.GetFrameHeight() + ImGui.GetStyle().WindowPadding.Y * 2));
     }
 
@@ -1235,11 +1254,11 @@ public sealed class MacroEditor : Window, IDisposable
             if (ImGui.IsWindowAppearing())
                 ImGui.SetKeyboardFocusHere();
             ImGui.SetNextItemWidth(ImGui.CalcItemWidth());
-            if (ImGui.InputTextWithHint($"##setName", "Name", ref popupMacroName, 100, ImGuiInputTextFlags.AutoSelectAll | ImGuiInputTextFlags.EnterReturnsTrue))
+            if (ImGui.InputTextWithHint($"##setName", "Name", ref popupSaveAsMacroName, 100, ImGuiInputTextFlags.AutoSelectAll | ImGuiInputTextFlags.EnterReturnsTrue))
             {
-                if (!string.IsNullOrWhiteSpace(popupMacroName))
+                if (!string.IsNullOrWhiteSpace(popupSaveAsMacroName))
                 {
-                    var newMacro = new Macro() { Name = popupMacroName, Actions = Macro.Select(s => s.Action).ToArray() };
+                    var newMacro = new Macro() { Name = popupSaveAsMacroName, Actions = Macro.Select(s => s.Action).ToArray() };
                     Service.Configuration.AddMacro(newMacro);
                     MacroSetter = actions =>
                     {
@@ -1252,6 +1271,152 @@ public sealed class MacroEditor : Window, IDisposable
         }
     }
 
+    private void ShowImportPopup()
+    {
+        ImGui.OpenPopup($"##importPopup");
+        popupImportText = string.Empty;
+        popupImportUrl = string.Empty;
+        popupImportError = string.Empty;
+        popupImportUrlMacro = null;
+        popupImportUrlTokenSource = null;
+    }
+
+    private void DrawImportPopup()
+    {
+        const string ExampleMacro = "/mlock\n/ac \"Muscle Memory\" <wait.3>\n/ac Manipulation <wait.2>\n/ac Veneration <wait.2>\n/ac \"Waste Not II\" <wait.2>\n/ac Groundwork <wait.3>\n/ac Innovation <wait.2>\n/ac \"Preparatory Touch\" <wait.3>\n/ac \"Preparatory Touch\" <wait.3>\n/ac \"Preparatory Touch\" <wait.3>\n/ac \"Preparatory Touch\" <wait.3>\n/ac \"Great Strides\" <wait.2>\n/ac \"Byregot's Blessing\" <wait.3>\n/ac \"Careful Synthesis\" <wait.3>";
+        const string ExampleUrl = "https://ffxivteamcraft.com/simulator/39630/35499/9XOZDZKhbVXJUIPXjM63";
+
+        ImGui.SetNextWindowPos(ImGui.GetMainViewport().GetCenter(), ImGuiCond.Always, new Vector2(0.5f));
+        ImGui.SetNextWindowSizeConstraints(new(400, 0), new(float.PositiveInfinity));
+        using var popup = ImRaii.Popup($"##importPopup", ImGuiWindowFlags.Modal | ImGuiWindowFlags.NoMove);
+        if (popup)
+        {
+            bool submittedText, submittedUrl;
+
+            using (var panel = ImGuiUtils.GroupPanel("##text", -1, out var availWidth))
+            {
+                ImGui.AlignTextToFramePadding();
+                ImGuiUtils.TextCentered("Paste your macro here");
+                {
+                    using var font = ImRaii.PushFont(UiBuilder.MonoFont);
+                    ImGuiUtils.InputTextMultilineWithHint("", ExampleMacro, ref popupImportText, 2048, new(availWidth, ImGui.GetTextLineHeight() * 15 + ImGui.GetStyle().FramePadding.Y), ImGuiInputTextFlags.AutoSelectAll);
+                }
+                using (var _disabled = ImRaii.Disabled(popupImportUrlTokenSource != null))
+                    submittedText = ImGui.Button("Import", new(availWidth, 0));
+            }
+
+            using (var panel = ImGuiUtils.GroupPanel("##url", -1, out var availWidth))
+            {
+                var availOffset = ImGui.GetContentRegionAvail().X - availWidth;
+
+                ImGui.AlignTextToFramePadding();
+                ImGuiUtils.TextCentered("or provide a url to it");
+                ImGui.SameLine();
+                using (var color = ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudGrey))
+                {
+                    using var font = ImRaii.PushFont(UiBuilder.IconFont);
+                    ImGuiUtils.TextRight(FontAwesomeIcon.InfoCircle.ToIconString(), ImGui.GetContentRegionAvail().X - availOffset);
+                }
+                if (ImGui.IsItemHovered())
+                {
+                    using var t = ImRaii.Tooltip();
+                    ImGui.Text("Supported sites:");
+                    ImGui.BulletText("ffxivteamcraft.com");
+                    ImGui.BulletText("craftingway.app");
+                    ImGui.Text("More suggestions are appreciated!");
+                }
+                ImGui.SetNextItemWidth(availWidth);
+                submittedUrl = ImGui.InputTextWithHint("", ExampleUrl, ref popupImportUrl, 2048, ImGuiInputTextFlags.AutoSelectAll | ImGuiInputTextFlags.EnterReturnsTrue);
+                using (var _disabled = ImRaii.Disabled(popupImportUrlTokenSource != null))
+                    submittedUrl = ImGui.Button("Import", new(availWidth, 0)) || submittedUrl;
+            }
+
+            ImGui.Dummy(default);
+
+            if (!string.IsNullOrWhiteSpace(popupImportError))
+            {
+                using (var c = ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudRed))
+                    ImGui.TextWrapped(popupImportError);
+                ImGui.Dummy(default);
+            }
+
+            if (ImGuiUtils.ButtonCentered("Nevermind", new(ImGui.GetContentRegionAvail().X / 2f, 0)))
+            {
+                popupImportUrlTokenSource?.Cancel();
+                ImGui.CloseCurrentPopup();
+            }
+
+            if (popupImportUrlTokenSource == null)
+            {
+                if (submittedText)
+                {
+                    if (MacroImport.TryParseMacro(popupImportText) is { } parsedActions)
+                    {
+                        popupImportUrlTokenSource?.Cancel();
+                        Macro.Clear();
+                        foreach (var action in parsedActions)
+                            AddStep(action);
+
+                        Service.PluginInterface.UiBuilder.AddNotification($"Imported macro with {parsedActions.Count} step{(parsedActions.Count != 1 ? "s" : "")}", "Craftimizer Macro Imported", NotificationType.Success);
+                        popupImportUrlTokenSource?.Cancel();
+                        ImGui.CloseCurrentPopup();
+                    }
+                    else
+                        popupImportError = "Could not find any actions to import. Is it a valid macro?";
+                }
+                if (submittedUrl)
+                {
+                    if (MacroImport.TryParseUrl(popupImportUrl, out _))
+                    {
+                        popupImportUrlTokenSource = new();
+                        popupImportUrlMacro = null;
+                        var token = popupImportUrlTokenSource.Token;
+                        var url = popupImportUrl;
+
+                        var task = Task.Run(() => MacroImport.RetrieveUrl(url, token), token);
+                        _ = task.ContinueWith(t =>
+                        {
+                            if (token == popupImportUrlTokenSource.Token)
+                                popupImportUrlTokenSource = null;
+                        });
+                        _ = task.ContinueWith(t =>
+                        {
+                            if (token.IsCancellationRequested)
+                                return;
+
+                            try
+                            {
+                                t.Exception!.Flatten().Handle(ex => ex is TaskCanceledException or OperationCanceledException);
+                            }
+                            catch (AggregateException e)
+                            {
+                                popupImportError = e.Message;
+                                Log.Error(e, "Retrieving macro failed");
+                            }
+                        }, TaskContinuationOptions.OnlyOnFaulted);
+                        _ = task.ContinueWith(t => popupImportUrlMacro = t.Result, TaskContinuationOptions.OnlyOnRanToCompletion);
+                    }
+                    else
+                        popupImportError = "The url is not in the right format for any supported sites.";
+                }
+                if (popupImportUrlMacro is { Name: var name, Actions: var actions })
+                {
+                    Macro.Clear();
+                    foreach(var action in actions)
+                        AddStep(action);
+                    Service.PluginInterface.UiBuilder.AddNotification($"Imported macro \"{name}\"", "Craftimizer Macro Imported", NotificationType.Success);
+
+                    popupImportUrlTokenSource?.Cancel();
+                    ImGui.CloseCurrentPopup();
+                }
+            }
+        }
+        else
+        {
+            popupImportUrlTokenSource?.Cancel();
+            popupImportUrlTokenSource = null;
+        }
+    }
     private void CalculateBestMacro()
     {
         SolverTokenSource?.Cancel();
@@ -1294,7 +1459,7 @@ public sealed class MacroEditor : Window, IDisposable
 
         var solver = new Solver.Solver(config, state) { Token = token };
         solver.OnLog += Log.Debug;
-        solver.OnNewAction += a => AddStep(a, isMacro: true);
+        solver.OnNewAction += a => AddStep(a, isSolver: true);
         solver.Start();
         _ = solver.GetTask().GetAwaiter().GetResult();
 
@@ -1321,11 +1486,11 @@ public sealed class MacroEditor : Window, IDisposable
             lastState = ((step.Response, step.State) = sim.Execute(lastState, step.Action)).State;
     }
 
-    private void AddStep(ActionType action, int index = -1, bool isMacro = false)
+    private void AddStep(ActionType action, int index = -1, bool isSolver = false)
     {
         if (index < -1 || index >= Macro.Count)
             throw new ArgumentOutOfRangeException(nameof(index));
-        if (!isMacro && SolverRunning)
+        if (!isSolver && SolverRunning)
             throw new InvalidOperationException("Cannot add steps while solver is running");
         if (!SolverRunning)
             SolverStartStepCount = null;
@@ -1336,13 +1501,14 @@ public sealed class MacroEditor : Window, IDisposable
             var resp = sim.Execute(State, action);
             Macro.Add(new() { Action = action, Response = resp.Response, State = resp.NewState });
         }
-        else {
+        else
+        {
             var state = index == 0 ? InitialState : Macro[index - 1].State;
             var sim = new Sim(state);
             var resp = sim.Execute(state, action);
             Macro.Insert(index, new() { Action = action, Response = resp.Response, State = resp.NewState });
             state = resp.NewState;
-            for(var i = index + 1; i < Macro.Count; i++)
+            for (var i = index + 1; i < Macro.Count; i++)
                 state = ((Macro[i].Response, Macro[i].State) = sim.Execute(state, Macro[i].Action)).State;
         }
     }
