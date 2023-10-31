@@ -12,7 +12,7 @@ public class ActionSetTests
         var lut = Craftimizer.Solver.Simulator.AcceptedActionsLUT;
 
         Assert.IsTrue(actions.Length <= 32);
-        foreach(var i in Enum.GetValues<ActionType>())
+        foreach (var i in Enum.GetValues<ActionType>())
         {
             var idx = lut[(byte)i];
             if (idx != 0)
@@ -29,7 +29,7 @@ public class ActionSetTests
 
         set.AddAction(ActionType.BasicSynthesis);
         set.AddAction(ActionType.WasteNot2);
-        
+
         Assert.AreEqual(2, set.Count);
         Assert.IsFalse(set.IsEmpty);
 
@@ -50,7 +50,7 @@ public class ActionSetTests
 
         Assert.IsTrue(set.RemoveAction(ActionType.BasicSynthesis));
         Assert.IsFalse(set.RemoveAction(ActionType.BasicSynthesis));
-        
+
         Assert.IsTrue(set.AddAction(ActionType.BasicSynthesis));
         Assert.IsTrue(set.AddAction(ActionType.WasteNot2));
 
@@ -100,5 +100,35 @@ public class ActionSetTests
         Assert.AreEqual(ActionType.DelicateSynthesis, set.ElementAt(0));
         Assert.AreEqual(ActionType.ByregotsBlessing, set.ElementAt(1));
         Assert.AreEqual(ActionType.BasicSynthesis, set.ElementAt(2));
+    }
+
+    [TestMethod]
+    public void TestRandomIndex()
+    {
+        var actions = new[]
+            {
+                ActionType.BasicTouch,
+                ActionType.BasicSynthesis,
+                ActionType.GreatStrides,
+                ActionType.TrainedFinesse,
+            };
+
+        var set = new ActionSet();
+        foreach(var action in actions)
+            set.AddAction(action);
+
+        var counts = new Dictionary<ActionType, int>();
+        var rng = new Random(0);
+        for (var i = 0; i < 100; i++)
+        {
+            var action = set.SelectRandom(rng);
+
+            Assert.IsTrue(actions.Contains(action));
+
+            counts[action] = counts.GetValueOrDefault(action) + 1;
+        }
+
+        foreach (var action in actions)
+            Assert.IsTrue(counts.GetValueOrDefault(action) > 0);
     }
 }

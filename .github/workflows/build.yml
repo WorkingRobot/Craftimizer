@@ -36,11 +36,11 @@ jobs:
 
       - name: Build
         run: |
-          dotnet build --configuration Release
+          dotnet build --configuration Release --no-restore
 
       - name: Test
         run: |
-          dotnet test --configuration Release --logger "trx;logfilename=results.trx" --logger "html;logfilename=results.html" --logger "console;verbosity=detailed" --results-directory="TestResults"
+          dotnet test --configuration Release --logger "trx;logfilename=results.trx" --logger "html;logfilename=results.html" --logger "console;verbosity=detailed" --no-build --results-directory="TestResults"
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
