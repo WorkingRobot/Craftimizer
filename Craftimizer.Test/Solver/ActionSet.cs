@@ -87,7 +87,7 @@ public class ActionSetTests
         set.AddAction(ActionType.DelicateSynthesis);
         set.AddAction(ActionType.FocusedTouch);
 
-        Assert.AreEqual(3, set.Count);
+        Assert.AreEqual(4, set.Count);
 
         Assert.AreEqual(ActionType.DelicateSynthesis, set.ElementAt(0));
         Assert.AreEqual(ActionType.FocusedTouch, set.ElementAt(1));
