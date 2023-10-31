@@ -5,21 +5,27 @@ using System.Runtime.CompilerServices;
 
 namespace Craftimizer.Solver;
 
+// #define IS_DETERMINISTIC
+
 public struct ActionSet
 {
-    private const bool IsDeterministic = false;
-
     private uint bits;
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int FromAction(ActionType action) => Simulator.AcceptedActionsLUT[(byte)action];
+    private static int FromAction(ActionType action)
+    {
+        var ret = Simulator.AcceptedActionsLUT[(byte)action];
+        if (ret == 0)
+            throw new ArgumentOutOfRangeException(nameof(action), action, $"Action {action} is unsupported in {nameof(ActionSet)}.");
+        return ret;
+    }
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ActionType ToAction(int index) => Simulator.AcceptedActions[index];
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint ToMask(ActionType action) => 1u << FromAction(action) + 1;
+    private static uint ToMask(ActionType action) => 1u << (FromAction(action) + 1);
 
     // Return true if action was newly added and not there before.
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -57,25 +63,28 @@ public struct ActionSet
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly ActionType SelectRandom(Random random)
     {
-        if (IsDeterministic)
-            return First();
-
+#if IS_DETERMINISTIC
+        return First();
+#else
         return ElementAt(random.Next(Count));
+#endif
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ActionType PopRandom(Random random)
     {
-        if (IsDeterministic)
-            return PopFirst();
-
+#if IS_DETERMINISTIC
+        return PopFirst();
+#else
         var action = ElementAt(random.Next(Count));
         RemoveAction(action);
         return action;
+#endif
     }
 
+#if IS_DETERMINISTIC
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ActionType PopFirst()
+    private ActionType PopFirst()
     {
         var action = First();
         RemoveAction(action);
@@ -84,5 +93,6 @@ public struct ActionSet
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ActionType First() => ElementAt(0);
+    private readonly ActionType First() => ElementAt(0);
+#endif
 }
