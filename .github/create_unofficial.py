@@ -11,7 +11,7 @@ shutil.copy(OFFICIAL_ZIP, UNOFFICIAL_ZIP)
 subprocess.check_call(['7z', 'd', UNOFFICIAL_ZIP, f"{PROJECT_NAME}.json"])
 
 with zipfile.ZipFile(UNOFFICIAL_ZIP) as file:
-	members = file.namelist()
+	members = [member for member in file.namelist() if member in (f"{PROJECT_NAME}.dll", f"{PROJECT_NAME}.deps.json", f"{PROJECT_NAME}.json", f"{PROJECT_NAME}.pdb")]
 
 subprocess.check_call(['7z', 'rn', UNOFFICIAL_ZIP] + list(chain.from_iterable((m, m.replace(PROJECT_NAME, f"{PROJECT_NAME}Unofficial")) for m in members)))
 
