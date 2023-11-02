@@ -16,7 +16,7 @@ public struct ActionSet
     private static int FromAction(ActionType action)
     {
         var ret = Simulator.AcceptedActionsLUT[(byte)action];
-        if (ret == 0)
+        if (ret == -1)
             throw new ArgumentOutOfRangeException(nameof(action), action, $"Action {action} is unsupported in {nameof(ActionSet)}.");
         return ret;
     }

@@ -63,6 +63,8 @@ public sealed class Simulator : SimulatorNoRandom
     static Simulator()
     {
         AcceptedActionsLUT = new int[Enum.GetValues<ActionType>().Length];
+        for (var i = 0; i < AcceptedActionsLUT.Length; i++)
+            AcceptedActionsLUT[i] = -1;
         for (var i = 0; i < AcceptedActions.Length; i++)
             AcceptedActionsLUT[(byte)AcceptedActions[i]] = i;
     }

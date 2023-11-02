@@ -15,7 +15,7 @@ public class ActionSetTests
         foreach (var i in Enum.GetValues<ActionType>())
         {
             var idx = lut[(byte)i];
-            if (idx != 0)
+            if (idx != -1)
                 Assert.AreEqual(i, actions[idx]);
         }
     }
