@@ -4,6 +4,8 @@
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Platforms>x64</Platforms>
+    <Configurations>Debug;Release;Trace</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,5 +14,10 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
+
+  <PropertyGroup>
+      <DefineConstants Condition="'$(IS_BENCH)'=='1'">$(DefineConstants);IS_DETERMINISTIC</DefineConstants>
+      <DefineConstants Condition="'$(Configuration)' == 'Trace'">$(DefineConstants);IS_DETERMINISTIC;IS_TRACE</DefineConstants>
+  </PropertyGroup>
 
 </Project>

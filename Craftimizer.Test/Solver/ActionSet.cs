@@ -105,6 +105,10 @@ public class ActionSetTests
     [TestMethod]
     public void TestRandomIndex()
     {
+#if IS_DETERMINISTIC
+        Assert.Inconclusive("Craftimizer is built for benchmarking; all random actions are deterministic and not actually random.");
+#endif
+
         var actions = new[]
             {
                 ActionType.BasicTouch,

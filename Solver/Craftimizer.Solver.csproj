@@ -5,6 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <Platforms>x64</Platforms>
+    <Configurations>Debug;Release;Trace</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,5 +19,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Simulator\Craftimizer.Simulator.csproj" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <DefineConstants Condition="'$(IS_BENCH)'=='1'">$(DefineConstants);IS_DETERMINISTIC</DefineConstants>
+    <DefineConstants Condition="'$(Configuration)' == 'Trace'">$(DefineConstants);IS_DETERMINISTIC;IS_TRACE</DefineConstants>
+  </PropertyGroup>
 
 </Project>

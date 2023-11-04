@@ -5,8 +5,6 @@ using System.Runtime.CompilerServices;
 
 namespace Craftimizer.Solver;
 
-// #define IS_DETERMINISTIC
-
 public struct ActionSet
 {
     private uint bits;

@@ -4,6 +4,7 @@
     <Authors>Asriel Camora</Authors>
     <Version>1.9.1.0</Version>
     <PackageProjectUrl>https://github.com/WorkingRobot/craftimizer.git</PackageProjectUrl>
+    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>

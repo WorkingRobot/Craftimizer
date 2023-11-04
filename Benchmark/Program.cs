@@ -1,3 +1,4 @@
+using BenchmarkDotNet.Running;
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Craftimizer.Solver;
@@ -7,10 +8,11 @@ namespace Craftimizer.Benchmark;
 
 internal static class Program
 {
-    private static async Task Main()
+    private static async Task Main(string[] args)
     {
-        //var summary = BenchmarkRunner.Run<Bench>();
-        //return;
+        Environment.SetEnvironmentVariable("IS_BENCH", "1");
+        BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
+        return;
 
         //TypeLayout.PrintLayout<ArenaNode<SimulationNode>>(true);
         //return;
@@ -78,7 +80,7 @@ internal static class Program
         Console.WriteLine($"{state.Quality} {state.CP} {state.Progress} {state.Durability}");
         //return;
         var solver = new Solver.Solver(config, state);
-        solver.OnLog += s => Console.WriteLine(s);
+        solver.OnLog += Console.WriteLine;
         solver.OnNewAction += s => Console.WriteLine(s);
         solver.Start();
         var (_, s) = await solver.GetTask().ConfigureAwait(false);
