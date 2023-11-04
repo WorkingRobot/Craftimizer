@@ -839,7 +839,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         var state = new SimulationState(input);
         var config = Service.Configuration.SimulatorSolverConfig;
         var mctsConfig = new MCTSConfig(config);
-        var simulator = new Solver.Simulator(state, mctsConfig.MaxStepCount);
+        var simulator = new SimulatorNoRandom(state);
         List<Macro> macros = new(Service.Configuration.Macros);
 
         token.ThrowIfCancellationRequested();

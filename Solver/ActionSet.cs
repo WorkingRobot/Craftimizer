@@ -11,6 +11,48 @@ public struct ActionSet
 {
     private uint bits;
 
+    public static readonly ActionType[] AcceptedActions = new[]
+    {
+        ActionType.StandardTouchCombo,
+        ActionType.AdvancedTouchCombo,
+        ActionType.FocusedTouchCombo,
+        ActionType.FocusedSynthesisCombo,
+        ActionType.TrainedFinesse,
+        ActionType.PrudentSynthesis,
+        ActionType.Groundwork,
+        ActionType.AdvancedTouch,
+        ActionType.CarefulSynthesis,
+        ActionType.TrainedEye,
+        ActionType.DelicateSynthesis,
+        ActionType.PreparatoryTouch,
+        ActionType.Reflect,
+        ActionType.FocusedTouch,
+        ActionType.FocusedSynthesis,
+        ActionType.PrudentTouch,
+        ActionType.Manipulation,
+        ActionType.MuscleMemory,
+        ActionType.ByregotsBlessing,
+        ActionType.WasteNot2,
+        ActionType.BasicSynthesis,
+        ActionType.Innovation,
+        ActionType.GreatStrides,
+        ActionType.StandardTouch,
+        ActionType.Veneration,
+        ActionType.WasteNot,
+        ActionType.Observe,
+        ActionType.MastersMend,
+        ActionType.BasicTouch,
+    };
+
+    public static readonly int[] AcceptedActionsLUT;
+
+    static ActionSet()
+    {
+        AcceptedActionsLUT = new int[Enum.GetValues<ActionType>().Length];
+        for (var i = 0; i < AcceptedActions.Length; i++)
+            AcceptedActionsLUT[(byte)AcceptedActions[i]] = i;
+    }
+
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int FromAction(ActionType action)
@@ -22,7 +64,7 @@ public struct ActionSet
     }
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ActionType ToAction(int index) => Simulator.AcceptedActions[index];
+    private static ActionType ToAction(int index) => AcceptedActions[index];
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint ToMask(ActionType action) => 1u << (FromAction(action) + 1);

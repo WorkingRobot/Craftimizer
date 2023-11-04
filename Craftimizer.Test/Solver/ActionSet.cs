@@ -8,8 +8,8 @@ public class ActionSetTests
     [TestMethod]
     public void TestAcceptedActions()
     {
-        var actions = Craftimizer.Solver.Simulator.AcceptedActions;
-        var lut = Craftimizer.Solver.Simulator.AcceptedActionsLUT;
+        var actions = ActionSet.AcceptedActions;
+        var lut = ActionSet.AcceptedActionsLUT;
 
         Assert.IsTrue(actions.Length <= 32);
         foreach (var i in Enum.GetValues<ActionType>())
@@ -123,7 +123,7 @@ public class ActionSetTests
         {
             var action = set.SelectRandom(rng);
 
-            Assert.IsTrue(actions.Contains(action));
+            CollectionAssert.Contains(actions, action);
 
             counts[action] = counts.GetValueOrDefault(action) + 1;
         }

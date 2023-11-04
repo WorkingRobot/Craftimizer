@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace Craftimizer.Solver;
 
-public sealed class Simulator : SimulatorNoRandom
+internal sealed class Simulator : SimulatorNoRandom
 {
     private readonly int maxStepCount;
 
@@ -23,50 +23,6 @@ public sealed class Simulator : SimulatorNoRandom
     public Simulator(SimulationState state, int maxStepCount) : base(state)
     {
         this.maxStepCount = maxStepCount;
-    }
-
-    public static readonly ActionType[] AcceptedActions = new[]
-    {
-        ActionType.StandardTouchCombo,
-        ActionType.AdvancedTouchCombo,
-        ActionType.FocusedTouchCombo,
-        ActionType.FocusedSynthesisCombo,
-        ActionType.TrainedFinesse,
-        ActionType.PrudentSynthesis,
-        ActionType.Groundwork,
-        ActionType.AdvancedTouch,
-        ActionType.CarefulSynthesis,
-        ActionType.TrainedEye,
-        ActionType.DelicateSynthesis,
-        ActionType.PreparatoryTouch,
-        ActionType.Reflect,
-        ActionType.FocusedTouch,
-        ActionType.FocusedSynthesis,
-        ActionType.PrudentTouch,
-        ActionType.Manipulation,
-        ActionType.MuscleMemory,
-        ActionType.ByregotsBlessing,
-        ActionType.WasteNot2,
-        ActionType.BasicSynthesis,
-        ActionType.Innovation,
-        ActionType.GreatStrides,
-        ActionType.StandardTouch,
-        ActionType.Veneration,
-        ActionType.WasteNot,
-        ActionType.Observe,
-        ActionType.MastersMend,
-        ActionType.BasicTouch,
-    };
-
-    public static readonly int[] AcceptedActionsLUT;
-
-    static Simulator()
-    {
-        AcceptedActionsLUT = new int[Enum.GetValues<ActionType>().Length];
-        for (var i = 0; i < AcceptedActionsLUT.Length; i++)
-            AcceptedActionsLUT[i] = -1;
-        for (var i = 0; i < AcceptedActions.Length; i++)
-            AcceptedActionsLUT[(byte)AcceptedActions[i]] = i;
     }
 
     // https://github.com/alostsock/crafty/blob/cffbd0cad8bab3cef9f52a3e3d5da4f5e3781842/crafty/src/craft_state.rs#L146
@@ -191,7 +147,7 @@ public sealed class Simulator : SimulatorNoRandom
             return new();
 
         var ret = new ActionSet();
-        foreach (var action in AcceptedActions)
+        foreach (var action in ActionSet.AcceptedActions)
             if (CanUseAction(action, strict))
                 ret.AddAction(action);
         return ret;
