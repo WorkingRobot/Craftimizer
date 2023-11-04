@@ -10,5 +10,5 @@ internal sealed class DelicateSynthesis : BaseAction
     public override bool IncreasesQuality => true;
 
     public override int CPCost(Simulator s) => 32;
-    public override float Efficiency(Simulator s) => 1.00f;
+    public override int Efficiency(Simulator s) => 100;
 }

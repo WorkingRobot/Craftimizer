@@ -9,7 +9,7 @@ internal sealed class MuscleMemory : BaseAction
     public override bool IncreasesProgress => true;
 
     public override int CPCost(Simulator s) => 6;
-    public override float Efficiency(Simulator s) => 3.00f;
+    public override int Efficiency(Simulator s) => 300;
 
     public override bool CanUse(Simulator s) => s.IsFirstStep && base.CanUse(s);
 

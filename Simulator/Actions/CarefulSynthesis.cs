@@ -10,5 +10,5 @@ internal sealed class CarefulSynthesis : BaseAction
 
     public override int CPCost(Simulator s) => 7;
     // Careful Synthesis Mastery Trait
-    public override float Efficiency(Simulator s) => s.Input.Stats.Level >= 82 ? 1.80f : 1.50f;
+    public override int Efficiency(Simulator s) => s.Input.Stats.Level >= 82 ? 180 : 150;
 }

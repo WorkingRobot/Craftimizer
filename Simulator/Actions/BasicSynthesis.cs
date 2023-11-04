@@ -10,5 +10,5 @@ internal sealed class BasicSynthesis : BaseAction
 
     public override int CPCost(Simulator s) => 0;
     // Basic Synthesis Mastery Trait
-    public override float Efficiency(Simulator s) => s.Input.Stats.Level >= 31 ? 1.20f : 1.00f;
+    public override int Efficiency(Simulator s) => s.Input.Stats.Level >= 31 ? 120 : 100;
 }

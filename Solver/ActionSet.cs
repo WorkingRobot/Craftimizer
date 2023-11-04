@@ -49,6 +49,8 @@ public struct ActionSet
     static ActionSet()
     {
         AcceptedActionsLUT = new int[Enum.GetValues<ActionType>().Length];
+        for (var i = 0; i < AcceptedActionsLUT.Length; i++)
+            AcceptedActionsLUT[i] = -1;
         for (var i = 0; i < AcceptedActions.Length; i++)
             AcceptedActionsLUT[(byte)AcceptedActions[i]] = i;
     }
@@ -57,7 +59,7 @@ public struct ActionSet
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int FromAction(ActionType action)
     {
-        var ret = Simulator.AcceptedActionsLUT[(byte)action];
+        var ret = AcceptedActionsLUT[(byte)action];
         if (ret == -1)
             throw new ArgumentOutOfRangeException(nameof(action), action, $"Action {action} is unsupported in {nameof(ActionSet)}.");
         return ret;

@@ -9,5 +9,5 @@ internal sealed class AdvancedTouch : BaseAction
     public override bool IncreasesQuality => true;
 
     public override int CPCost(Simulator s) => s.ActionStates.TouchComboIdx == 2 ? 18 : 46;
-    public override float Efficiency(Simulator s) => 1.50f;
+    public override int Efficiency(Simulator s) => 150;
 }

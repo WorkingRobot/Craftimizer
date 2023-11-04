@@ -213,51 +213,51 @@ public class Simulator
         return (int)Math.Ceiling(amt);
     }
 
-    public int CalculateProgressGain(float efficiency, bool dryRun = true)
+    public int CalculateProgressGain(int efficiency, bool dryRun = true)
     {
-        var buffModifier = 1.00f;
+        var buffModifier = 100;
         if (HasEffect(EffectType.MuscleMemory))
         {
-            buffModifier += 1.00f;
+            buffModifier += 100;
             if (!dryRun)
                 RemoveEffect(EffectType.MuscleMemory);
         }
         if (HasEffect(EffectType.Veneration))
-            buffModifier += 0.50f;
+            buffModifier += 50;
 
         var conditionModifier = Condition switch
         {
-            Condition.Malleable => 1.50f,
-            _ => 1.00f
+            Condition.Malleable => 150,
+            _ => 100
         };
 
-        var progressGain = (int)(Input.BaseProgressGain * efficiency * conditionModifier * buffModifier);
+        var progressGain = (int)((long)Input.BaseProgressGain * efficiency * conditionModifier * buffModifier / 1e6);
         return progressGain;
     }
 
-    public int CalculateQualityGain(float efficiency, bool dryRun = true)
+    public int CalculateQualityGain(int efficiency, bool dryRun = true)
     {
-        var buffModifier = 1.00f;
+        var buffModifier = 100;
         if (HasEffect(EffectType.GreatStrides))
         {
-            buffModifier += 1.00f;
+            buffModifier += 100;
             if (!dryRun)
                 RemoveEffect(EffectType.GreatStrides);
         }
         if (HasEffect(EffectType.Innovation))
-            buffModifier += 0.50f;
+            buffModifier += 50;
 
-        buffModifier *= 1 + (GetEffectStrength(EffectType.InnerQuiet) * 0.10f);
+        var iqModifier = 100 + (GetEffectStrength(EffectType.InnerQuiet) * 10);
 
         var conditionModifier = Condition switch
         {
-            Condition.Poor => 0.50f,
-            Condition.Good => Input.Stats.HasSplendorousBuff ? 1.75f : 1.50f,
-            Condition.Excellent => 4.00f,
-            _ => 1.00f,
+            Condition.Poor => 50,
+            Condition.Good => Input.Stats.HasSplendorousBuff ? 175 : 150,
+            Condition.Excellent => 400,
+            _ => 100,
         };
 
-        var qualityGain = (int)(Input.BaseQualityGain * efficiency * conditionModifier * buffModifier);
+        var qualityGain = (int)((long)Input.BaseQualityGain * efficiency * conditionModifier * iqModifier * buffModifier / 1e8);
         return qualityGain;
     }
 
@@ -297,10 +297,10 @@ public class Simulator
         ReduceCPRaw(CalculateCPCost(amount));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void IncreaseProgress(float efficiency) =>
+    public void IncreaseProgress(int efficiency) =>
         IncreaseProgressRaw(CalculateProgressGain(efficiency, false));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void IncreaseQuality(float efficiency) =>
+    public void IncreaseQuality(int efficiency) =>
         IncreaseQualityRaw(CalculateQualityGain(efficiency, false));
 }
