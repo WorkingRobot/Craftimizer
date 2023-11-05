@@ -89,33 +89,47 @@ public class ActionSetTests
 
         Assert.AreEqual(4, set.Count);
 
+#if !IS_TRACE
         Assert.AreEqual(ActionType.DelicateSynthesis, set.ElementAt(0));
         Assert.AreEqual(ActionType.FocusedTouch, set.ElementAt(1));
         Assert.AreEqual(ActionType.ByregotsBlessing, set.ElementAt(2));
         Assert.AreEqual(ActionType.BasicSynthesis, set.ElementAt(3));
+#else
+        Assert.AreEqual(ActionType.BasicSynthesis, set.ElementAt(0));
+        Assert.AreEqual(ActionType.ByregotsBlessing, set.ElementAt(1));
+        Assert.AreEqual(ActionType.FocusedTouch, set.ElementAt(2));
+        Assert.AreEqual(ActionType.DelicateSynthesis, set.ElementAt(3));
+#endif
 
         set.RemoveAction(ActionType.FocusedTouch);
 
         Assert.AreEqual(3, set.Count);
+
+#if !IS_TRACE
         Assert.AreEqual(ActionType.DelicateSynthesis, set.ElementAt(0));
         Assert.AreEqual(ActionType.ByregotsBlessing, set.ElementAt(1));
         Assert.AreEqual(ActionType.BasicSynthesis, set.ElementAt(2));
+#else
+        Assert.AreEqual(ActionType.BasicSynthesis, set.ElementAt(0));
+        Assert.AreEqual(ActionType.ByregotsBlessing, set.ElementAt(1));
+        Assert.AreEqual(ActionType.DelicateSynthesis, set.ElementAt(2));
+#endif
     }
 
     [TestMethod]
     public void TestRandomIndex()
     {
 #if IS_DETERMINISTIC
-        Assert.Inconclusive("Craftimizer is built for benchmarking; all random actions are deterministic and not actually random.");
+        Assert.Inconclusive("Craftimizer is currently built for determinism; all random actions are not actually random.");
 #endif
 
         var actions = new[]
-            {
-                ActionType.BasicTouch,
-                ActionType.BasicSynthesis,
-                ActionType.GreatStrides,
-                ActionType.TrainedFinesse,
-            };
+        {
+            ActionType.BasicTouch,
+            ActionType.BasicSynthesis,
+            ActionType.GreatStrides,
+            ActionType.TrainedFinesse,
+        };
 
         var set = new ActionSet();
         foreach(var action in actions)

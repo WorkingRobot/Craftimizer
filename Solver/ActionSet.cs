@@ -11,6 +11,7 @@ public struct ActionSet
 
     public static readonly ActionType[] AcceptedActions = new[]
     {
+#if !IS_TRACE
         ActionType.StandardTouchCombo,
         ActionType.AdvancedTouchCombo,
         ActionType.FocusedTouchCombo,
@@ -40,6 +41,36 @@ public struct ActionSet
         ActionType.Observe,
         ActionType.MastersMend,
         ActionType.BasicTouch,
+#else
+        //ActionType.BasicSynthesis,
+        ActionType.BasicTouch,
+        ActionType.MastersMend,
+        ActionType.Observe,
+        ActionType.WasteNot,
+        ActionType.Veneration,
+        ActionType.StandardTouch,
+        ActionType.GreatStrides,
+        ActionType.Innovation,
+        ActionType.BasicSynthesis,
+        ActionType.WasteNot2,
+        ActionType.ByregotsBlessing,
+        ActionType.MuscleMemory,
+        //ActionType.CarefulSynthesis,
+        ActionType.Manipulation,
+        ActionType.PrudentTouch,
+        ActionType.FocusedSynthesis,
+        ActionType.FocusedTouch,
+        ActionType.Reflect,
+        ActionType.PreparatoryTouch,
+        //ActionType.Groundwork,
+        ActionType.DelicateSynthesis,
+        ActionType.TrainedEye,
+        ActionType.CarefulSynthesis,
+        ActionType.AdvancedTouch,
+        ActionType.Groundwork,
+        ActionType.PrudentSynthesis,
+        ActionType.TrainedFinesse,
+#endif
     };
 
     public static readonly int[] AcceptedActionsLUT;
@@ -64,7 +95,12 @@ public struct ActionSet
     }
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ActionType ToAction(int index) => AcceptedActions[index];
+    private static ActionType ToAction(int index)
+    {
+        if (index < 0 || index >= AcceptedActions.Length)
+            throw new ArgumentOutOfRangeException(nameof(index), index, $"Index {index} is out of range for {nameof(ActionSet)}.");
+        return AcceptedActions[index];
+    }
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint ToMask(ActionType action) => 1u << (FromAction(action) + 1);

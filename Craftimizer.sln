@@ -53,7 +53,8 @@ Global
 		{C3AEA981-9DA8-405C-995B-86528493891B}.Debug|x64.Build.0 = Debug|x64
 		{C3AEA981-9DA8-405C-995B-86528493891B}.Release|x64.ActiveCfg = Release|x64
 		{C3AEA981-9DA8-405C-995B-86528493891B}.Release|x64.Build.0 = Release|x64
-		{C3AEA981-9DA8-405C-995B-86528493891B}.Trace|x64.ActiveCfg = Release|x64
+		{C3AEA981-9DA8-405C-995B-86528493891B}.Trace|x64.ActiveCfg = Trace|x64
+		{C3AEA981-9DA8-405C-995B-86528493891B}.Trace|x64.Build.0 = Trace|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

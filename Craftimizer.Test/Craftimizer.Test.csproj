@@ -8,7 +8,7 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <Platforms>x64</Platforms>
-    <Configurations>Debug;Release</Configurations>
+    <Configurations>Debug;Release;Trace</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,9 +22,14 @@
     <ProjectReference Include="..\Simulator\Craftimizer.Simulator.csproj" />
     <ProjectReference Include="..\Solver\Craftimizer.Solver.csproj" />
   </ItemGroup>
-    
+
   <PropertyGroup Condition="'$(IS_BENCH)'=='1'">
     <DefineConstants>$(DefineConstants);IS_DETERMINISTIC</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Trace'">
+    <Optimize>True</Optimize>
+    <DefineConstants>$(DefineConstants);IS_DETERMINISTIC;IS_TRACE</DefineConstants>
   </PropertyGroup>
 
 </Project>

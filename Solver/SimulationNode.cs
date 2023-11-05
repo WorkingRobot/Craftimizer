@@ -46,6 +46,9 @@ public struct SimulationNode
         if (completionState != CompletionState.ProgressComplete)
             return null;
 
+        if (state.Input.Recipe.MaxQuality == 0)
+            return 1f - ((float)(state.ActionCount + 1) / config.MaxStepCount);
+
         static float Apply(float bonus, float value, float target) =>
             bonus * (target > 0 ? Math.Min(1f, value / target) : 1);
 
@@ -55,7 +58,7 @@ public struct SimulationNode
             state.Input.Recipe.MaxProgress
         );
 
-        var byregotBonus = CanByregot(state) ? (state.ActiveEffects.InnerQuiet * .2f + 1) * state.Input.BaseQualityGain : 0;
+        var byregotBonus = 0;// CanByregot(state) ? (state.ActiveEffects.InnerQuiet * .2f + 1) * state.Input.BaseQualityGain : 0;
         var qualityScore = Apply(
             config.ScoreQuality,
             state.Quality + byregotBonus,
@@ -75,7 +78,7 @@ public struct SimulationNode
         );
 
         var fewerStepsScore =
-            config.ScoreSteps * (1f - (float)(state.ActionCount + 1) / config.MaxStepCount);
+            config.ScoreSteps * (1f - ((float)(state.ActionCount + 1) / config.MaxStepCount));
 
         return progressScore + qualityScore + durabilityScore + cpScore + fewerStepsScore;
     }
