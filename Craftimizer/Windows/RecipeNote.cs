@@ -197,8 +197,6 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         {
             if (table)
             {
-                ImGui.TableSetupColumn("col1", ImGuiTableColumnFlags.WidthFixed, 0);
-                ImGui.TableSetupColumn("col2", ImGuiTableColumnFlags.WidthFixed, 0);
                 ImGui.TableNextColumn();
                 DrawCharacterStats();
                 ImGui.TableNextColumn();
@@ -216,46 +214,35 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
         ImGui.Separator();
 
-        using (var table = ImRaii.Table("macros", 1, ImGuiTableFlags.SizingStretchSame))
+        var panelWidth = availWidth - ImGui.GetStyle().ItemSpacing.X * 2;
+        using (var panel = ImGuiUtils.GroupPanel("Best Saved Macro", panelWidth, out _))
         {
-            if (table)
+            var stepsPanelWidthOffset = ImGui.GetContentRegionAvail().X - panelWidth;
+            if (BestSavedMacro is { } savedMacro)
             {
-                ImGui.TableNextColumn();
-
-                availWidth -= ImGui.GetStyle().ItemSpacing.X * 2;
-                using (var panel = ImGuiUtils.GroupPanel("Best Saved Macro", availWidth, out _))
-                {
-                    var stepsAvailWidthOffset = ImGui.GetContentRegionAvail().X - availWidth;
-                    if (BestSavedMacro is { } savedMacro)
-                    {
-                        ImGuiUtils.TextCentered(savedMacro.Item1.Name, availWidth);
-                        DrawMacro((savedMacro.Item1.Actions, savedMacro.Item2), a => { savedMacro.Item1.ActionEnumerable = a; Service.Configuration.Save(); }, stepsAvailWidthOffset, true);
-                    }
-                    else
-                    {
-                        ImGui.Text("");
-                        DrawMacro(null, null, stepsAvailWidthOffset, true);
-                    }
-                }
-
-                using (var panel = ImGuiUtils.GroupPanel("Suggested Macro", availWidth, out _))
-                {
-                    var stepsAvailWidthOffset = ImGui.GetContentRegionAvail().X - availWidth;
-                    if (BestSuggestedMacro is { } suggestedMacro)
-                        DrawMacro((suggestedMacro.Actions, suggestedMacro.State), null, stepsAvailWidthOffset, false);
-                    else
-                        DrawMacro(null, null, stepsAvailWidthOffset, false);
-                }
-
-                ImGuiHelpers.ScaledDummy(5);
-
-                if (ImGui.Button("View Saved Macros", new(-1, 0)))
-                    Service.Plugin.OpenMacroListWindow();
-
-                if (ImGui.Button("Open in Simulator", new(-1, 0)))
-                    Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), Enumerable.Empty<ActionType>(), null);
+                ImGuiUtils.TextCentered(savedMacro.Item1.Name, panelWidth);
+                DrawMacro((savedMacro.Item1.Actions, savedMacro.Item2), a => { savedMacro.Item1.ActionEnumerable = a; Service.Configuration.Save(); }, stepsPanelWidthOffset, true);
             }
+            else
+                DrawMacro(null, null, stepsPanelWidthOffset, true);
         }
+
+        using (var panel = ImGuiUtils.GroupPanel("Suggested Macro", panelWidth, out _))
+        {
+            var stepsPanelWidthOffset = ImGui.GetContentRegionAvail().X - panelWidth;
+            if (BestSuggestedMacro is { } suggestedMacro)
+                DrawMacro((suggestedMacro.Actions, suggestedMacro.State), null, stepsPanelWidthOffset, false);
+            else
+                DrawMacro(null, null, stepsPanelWidthOffset, false);
+        }
+
+        ImGuiHelpers.ScaledDummy(5);
+
+        if (ImGui.Button("View Saved Macros", new(availWidth, 0)))
+            Service.Plugin.OpenMacroListWindow();
+
+        if (ImGui.Button("Open in Simulator", new(availWidth, 0)))
+            Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), Enumerable.Empty<ActionType>(), null);
     }
 
     private void DrawCharacterStats()
@@ -440,26 +427,25 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 break;
             case CraftableStatus.OK:
                 {
-                    using var table = ImRaii.Table("characterStats", 2, ImGuiTableFlags.NoHostExtendX);
+                    using var table = ImRaii.Table("characterStats", 2);
                     if (table)
                     {
-                        ImGui.TableSetupColumn("ccol1", ImGuiTableColumnFlags.WidthFixed, 100);
-                        ImGui.TableSetupColumn("ccol2", ImGuiTableColumnFlags.WidthStretch);
+                        ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 100);
 
                         ImGui.TableNextColumn();
                         ImGui.Text("Craftsmanship");
                         ImGui.TableNextColumn();
-                        ImGui.Text($"{CharacterStats!.Craftsmanship}");
+                        ImGuiUtils.TextRight($"{CharacterStats!.Craftsmanship}");
 
                         ImGui.TableNextColumn();
                         ImGui.Text("Control");
                         ImGui.TableNextColumn();
-                        ImGui.Text($"{CharacterStats.Control}");
+                        ImGuiUtils.TextRight($"{CharacterStats.Control}");
 
                         ImGui.TableNextColumn();
                         ImGui.Text("CP");
                         ImGui.TableNextColumn();
-                        ImGui.Text($"{CharacterStats.CP}");
+                        ImGuiUtils.TextRight($"{CharacterStats.CP}");
                     }
                 }
                 break;
@@ -532,23 +518,22 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         using var table = ImRaii.Table("recipeStats", 2);
         if (table)
         {
-            ImGui.TableSetupColumn("rcol1", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("rcol2", ImGuiTableColumnFlags.WidthStretch);
+            ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 100);
 
             ImGui.TableNextColumn();
             ImGui.Text("Progress");
             ImGui.TableNextColumn();
-            ImGui.Text($"{RecipeData.RecipeInfo.MaxProgress}");
+            ImGuiUtils.TextRight($"{RecipeData.RecipeInfo.MaxProgress}");
 
             ImGui.TableNextColumn();
             ImGui.Text("Quality");
             ImGui.TableNextColumn();
-            ImGui.Text($"{RecipeData.RecipeInfo.MaxQuality}");
+            ImGuiUtils.TextRight($"{RecipeData.RecipeInfo.MaxQuality}");
 
             ImGui.TableNextColumn();
             ImGui.Text("Durability");
             ImGui.TableNextColumn();
-            ImGui.Text($"{RecipeData.RecipeInfo.MaxDurability}");
+            ImGuiUtils.TextRight($"{RecipeData.RecipeInfo.MaxDurability}");
         }
     }
 
@@ -709,11 +694,10 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         if (current >= required)
             throw new ArgumentOutOfRangeException(nameof(current));
 
-        using var table = ImRaii.Table("requiredStats", 2, ImGuiTableFlags.NoHostExtendX);
+        using var table = ImRaii.Table("requiredStats", 2);
         if (table)
         {
-            ImGui.TableSetupColumn("ccol1", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("ccol2", ImGuiTableColumnFlags.WidthStretch);
+            ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 100);
 
             ImGui.TableNextColumn();
             ImGui.Text("Current");
