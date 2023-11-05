@@ -33,14 +33,6 @@ public struct SimulationNode
     public readonly float? CalculateScore(MCTSConfig config) =>
         CalculateScoreForState(State, SimulationCompletionState, config);
 
-    private static bool CanByregot(SimulationState state)
-    {
-        if (state.ActiveEffects.InnerQuiet == 0)
-            return false;
-
-        return BaseComboAction.VerifyDurability2(state, 10);
-    }
-
     public static float? CalculateScoreForState(SimulationState state, CompletionState completionState, MCTSConfig config)
     {
         if (completionState != CompletionState.ProgressComplete)
@@ -48,7 +40,7 @@ public struct SimulationNode
 
         if (state.Input.Recipe.MaxQuality == 0)
             return 1f - ((float)(state.ActionCount + 1) / config.MaxStepCount);
-
+        
         static float Apply(float bonus, float value, float target) =>
             bonus * (target > 0 ? Math.Min(1f, value / target) : 1);
 
@@ -58,10 +50,9 @@ public struct SimulationNode
             state.Input.Recipe.MaxProgress
         );
 
-        var byregotBonus = 0;// CanByregot(state) ? (state.ActiveEffects.InnerQuiet * .2f + 1) * state.Input.BaseQualityGain : 0;
         var qualityScore = Apply(
             config.ScoreQuality,
-            state.Quality + byregotBonus,
+            state.Quality,
             state.Input.Recipe.MaxQuality
         );
 
