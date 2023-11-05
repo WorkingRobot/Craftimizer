@@ -1,5 +1,7 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
+using System.Diagnostics.Contracts;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Craftimizer.Solver;
@@ -40,9 +42,11 @@ public struct SimulationNode
 
         if (state.Input.Recipe.MaxQuality == 0)
             return 1f - ((float)(state.ActionCount + 1) / config.MaxStepCount);
-        
+
+        [Pure]
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         static float Apply(float bonus, float value, float target) =>
-            bonus * (target > 0 ? Math.Min(1f, value / target) : 1);
+            bonus * (target > 0 ? Math.Clamp(value / target, 0, 1) : 1);
 
         var progressScore = Apply(
             config.ScoreProgress,

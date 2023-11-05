@@ -89,31 +89,18 @@ public class ActionSetTests
 
         Assert.AreEqual(4, set.Count);
 
-#if !IS_TRACE
         Assert.AreEqual(ActionType.DelicateSynthesis, set.ElementAt(0));
         Assert.AreEqual(ActionType.FocusedTouch, set.ElementAt(1));
         Assert.AreEqual(ActionType.ByregotsBlessing, set.ElementAt(2));
         Assert.AreEqual(ActionType.BasicSynthesis, set.ElementAt(3));
-#else
-        Assert.AreEqual(ActionType.BasicSynthesis, set.ElementAt(0));
-        Assert.AreEqual(ActionType.ByregotsBlessing, set.ElementAt(1));
-        Assert.AreEqual(ActionType.FocusedTouch, set.ElementAt(2));
-        Assert.AreEqual(ActionType.DelicateSynthesis, set.ElementAt(3));
-#endif
 
         set.RemoveAction(ActionType.FocusedTouch);
 
         Assert.AreEqual(3, set.Count);
 
-#if !IS_TRACE
         Assert.AreEqual(ActionType.DelicateSynthesis, set.ElementAt(0));
         Assert.AreEqual(ActionType.ByregotsBlessing, set.ElementAt(1));
         Assert.AreEqual(ActionType.BasicSynthesis, set.ElementAt(2));
-#else
-        Assert.AreEqual(ActionType.BasicSynthesis, set.ElementAt(0));
-        Assert.AreEqual(ActionType.ByregotsBlessing, set.ElementAt(1));
-        Assert.AreEqual(ActionType.DelicateSynthesis, set.ElementAt(2));
-#endif
     }
 
     [TestMethod]

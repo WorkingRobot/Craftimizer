@@ -11,7 +11,6 @@ public struct ActionSet
 
     public static readonly ActionType[] AcceptedActions = new[]
     {
-#if !IS_TRACE
         ActionType.StandardTouchCombo,
         ActionType.AdvancedTouchCombo,
         ActionType.FocusedTouchCombo,
@@ -41,36 +40,6 @@ public struct ActionSet
         ActionType.Observe,
         ActionType.MastersMend,
         ActionType.BasicTouch,
-#else
-        //ActionType.BasicSynthesis,
-        ActionType.BasicTouch,
-        ActionType.MastersMend,
-        ActionType.Observe,
-        ActionType.WasteNot,
-        ActionType.Veneration,
-        ActionType.StandardTouch,
-        ActionType.GreatStrides,
-        ActionType.Innovation,
-        ActionType.BasicSynthesis,
-        ActionType.WasteNot2,
-        ActionType.ByregotsBlessing,
-        ActionType.MuscleMemory,
-        //ActionType.CarefulSynthesis,
-        ActionType.Manipulation,
-        ActionType.PrudentTouch,
-        ActionType.FocusedSynthesis,
-        ActionType.FocusedTouch,
-        ActionType.Reflect,
-        ActionType.PreparatoryTouch,
-        //ActionType.Groundwork,
-        ActionType.DelicateSynthesis,
-        ActionType.TrainedEye,
-        ActionType.CarefulSynthesis,
-        ActionType.AdvancedTouch,
-        ActionType.Groundwork,
-        ActionType.PrudentSynthesis,
-        ActionType.TrainedFinesse,
-#endif
     };
 
     public static readonly int[] AcceptedActionsLUT;

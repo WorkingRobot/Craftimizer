@@ -8,12 +8,8 @@ internal static class Program
 {
     private static Task Main(string[] args)
     {
-#if !IS_TRACE
         RunBench(args);
         return Task.CompletedTask;
-#else
-        return RunTrace();
-#endif
         // return RunOther();
     }
 
