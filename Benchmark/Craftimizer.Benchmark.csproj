@@ -10,6 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="BenchmarkDotNet.Artifacts\**" />
+    <EmbeddedResource Remove="BenchmarkDotNet.Artifacts\**" />
+    <None Remove="BenchmarkDotNet.Artifacts\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.13.8" />
     <PackageReference Include="Meziantou.Analyzer" Version="2.0.92">
       <PrivateAssets>all</PrivateAssets>
@@ -22,4 +28,14 @@
     <ProjectReference Include="..\Simulator\Craftimizer.Simulator.csproj" />
     <ProjectReference Include="..\Solver\Craftimizer.Solver.csproj" />
   </ItemGroup>
+
+  <PropertyGroup Condition="'$(IS_BENCH)'=='1'">
+    <DefineConstants>$(DefineConstants);IS_DETERMINISTIC</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Trace'">
+    <Optimize>True</Optimize>
+    <DefineConstants>$(DefineConstants);IS_DETERMINISTIC;IS_TRACE</DefineConstants>
+  </PropertyGroup>
+    
 </Project>

@@ -22,9 +22,9 @@
     <ProjectReference Include="..\Simulator\Craftimizer.Simulator.csproj" />
     <ProjectReference Include="..\Solver\Craftimizer.Solver.csproj" />
   </ItemGroup>
-
-  <PropertyGroup>
-    <DefineConstants Condition="'$(IS_BENCH)'=='1'">$(DefineConstants);IS_DETERMINISTIC</DefineConstants>
+    
+  <PropertyGroup Condition="'$(IS_BENCH)'=='1'">
+    <DefineConstants>$(DefineConstants);IS_DETERMINISTIC</DefineConstants>
   </PropertyGroup>
 
 </Project>
