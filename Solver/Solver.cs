@@ -311,7 +311,7 @@ public sealed class Solver : IDisposable
             if (sim.IsComplete)
                 break;
 
-            var solver = new MCTS(MCTSConfig, State);
+            var solver = new MCTS(MCTSConfig, state);
 
             var s = Stopwatch.StartNew();
             solver.Search(Config.Iterations, Token);
