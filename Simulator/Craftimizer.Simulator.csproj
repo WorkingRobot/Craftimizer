@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <Platforms>x64</Platforms>
     <Configurations>Debug;Release</Configurations>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
   </PropertyGroup>
 
   <ItemGroup>
