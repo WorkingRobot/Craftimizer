@@ -17,7 +17,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Craftimizer.Solver", "Solve
 		{172EE849-AC7E-4F2A-ACAB-EF9D065523B3} = {172EE849-AC7E-4F2A-ACAB-EF9D065523B3}
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Craftimizer.Test", "Craftimizer.Test\Craftimizer.Test.csproj", "{C3AEA981-9DA8-405C-995B-86528493891B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Craftimizer.Test", "Test\Craftimizer.Test.csproj", "{C3AEA981-9DA8-405C-995B-86528493891B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
