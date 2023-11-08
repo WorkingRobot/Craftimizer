@@ -41,7 +41,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
       | ImGuiWindowFlags.NoFocusOnAppearing
       | ImGuiWindowFlags.NoNavFocus;
 
-    public enum CraftableStatus
+    public enum CraftableStatus 
     {
         OK,
         LockedClassJob,
@@ -71,7 +71,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
     private IDalamudTextureWrap NoManipulationBadge { get; }
     private GameFontHandle AxisFont { get; }
 
-    public RecipeNote() : base("Craftimizer RecipeNote", WindowFlags, false)
+    public RecipeNote() : base("Craftimizer RecipeNote", WindowFlags)
     {
         ExpertBadge = Service.IconManager.GetAssemblyTexture("Graphics.expert_badge.png");
         CollectibleBadge = Service.IconManager.GetAssemblyTexture("Graphics.collectible_badge.png");
@@ -84,6 +84,12 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         DisableWindowSounds = true;
         ShowCloseButton = false;
         IsOpen = true;
+
+        SizeConstraints = new WindowSizeConstraints
+        {
+            MinimumSize = new(-1),
+            MaximumSize = new(10000, 10000)
+        };
 
         Service.WindowSystem.AddWindow(this);
     }
@@ -182,12 +188,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         var node = (AtkResNode*)Addon->Unk458; // unit.GetNodeById(59);
         var nodeParent = Addon->Unk258; // unit.GetNodeById(57);
 
-        Position = pos + new Vector2(size.X, (nodeParent->Y + node->Y) * scale);
-        SizeConstraints = new WindowSizeConstraints
-        {
-            MinimumSize = new(-1),
-            MaximumSize = new(10000, 10000)
-        };
+        Position = ImGuiHelpers.MainViewport.Pos + pos + new Vector2(size.X, (nodeParent->Y + node->Y) * scale);
     }
 
     public override void Draw()
