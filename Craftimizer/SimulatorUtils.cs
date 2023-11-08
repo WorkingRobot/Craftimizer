@@ -1,8 +1,11 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
+using Dalamud.Interface.Internal;
 using Dalamud.Utility;
-using ImGuiScene;
+using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using Lumina.Excel.GeneratedSheets;
 using System;
 using System.Globalization;
@@ -10,8 +13,10 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using Action = Lumina.Excel.GeneratedSheets.Action;
+using ActionType = Craftimizer.Simulator.Actions.ActionType;
 using ClassJob = Craftimizer.Simulator.ClassJob;
 using Condition = Craftimizer.Simulator.Condition;
+using Status = Lumina.Excel.GeneratedSheets.Status;
 
 namespace Craftimizer.Plugin;
 
@@ -58,6 +63,8 @@ internal static class ActionUtils
         }
     }
 
+    public static void Initialize() { }
+
     public static (CraftAction? CraftAction, Action? Action) GetActionRow(this ActionType me, ClassJob classJob) =>
         ActionRows[(int)me, (int)classJob];
 
@@ -81,15 +88,15 @@ internal static class ActionUtils
         return "Unknown";
     }
 
-    public static TextureWrap GetIcon(this ActionType me, ClassJob classJob)
+    public static IDalamudTextureWrap GetIcon(this ActionType me, ClassJob classJob)
     {
         var (craftAction, action) = GetActionRow(me, classJob);
         if (craftAction != null)
-            return Icons.GetIconFromId(craftAction.Icon);
+            return Service.IconManager.GetIcon(craftAction.Icon);
         if (action != null)
-            return Icons.GetIconFromId(action.Icon);
+            return Service.IconManager.GetIcon(action.Icon);
         // Old "Steady Hand" action icon
-        return Icons.GetIconFromId(1953);
+        return Service.IconManager.GetIcon(1953);
     }
 
     public static ActionType? GetActionTypeFromId(uint actionId, ClassJob classJob, bool isCraftAction)
@@ -142,11 +149,32 @@ internal static class ClassJobUtils
             _ => null
         };
 
-    public static string GetName(this ClassJob classJob)
+    public static sbyte GetExpArrayIdx(this ClassJob me) =>
+        LuminaSheets.ClassJobSheet.GetRow(me.GetClassJobIndex())!.ExpArrayIndex;
+
+    public static unsafe short GetPlayerLevel(this ClassJob me) =>
+        PlayerState.Instance()->ClassJobLevelArray[me.GetExpArrayIdx()];
+
+    public static unsafe bool CanPlayerUseManipulation(this ClassJob me) =>
+        ActionManager.CanUseActionOnTarget(ActionType.Manipulation.GetId(me), (GameObject*)Service.ClientState.LocalPlayer!.Address);
+
+    public static string GetName(this ClassJob me)
     {
-        var job = LuminaSheets.ClassJobSheet.GetRow(classJob.GetClassJobIndex())!;
+        var job = LuminaSheets.ClassJobSheet.GetRow(me.GetClassJobIndex())!;
         return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(job.Name.ToDalamudString().TextValue);
     }
+
+    public static string GetAbbreviation(this ClassJob me)
+    {
+        var job = LuminaSheets.ClassJobSheet.GetRow(me.GetClassJobIndex())!;
+        return job.Abbreviation.ToDalamudString().TextValue;
+    }
+
+    public static Quest GetUnlockQuest(this ClassJob me) =>
+        LuminaSheets.QuestSheet.GetRow(65720 + (uint)me) ?? throw new ArgumentException($"Could not get unlock quest for {me}", nameof(me));
+
+    public static ushort GetIconId(this ClassJob me) =>
+        (ushort)(62000 + me.GetClassJobIndex());
 
     public static bool IsClassJob(this ClassJobCategory me, ClassJob classJob) =>
         classJob switch
@@ -282,10 +310,13 @@ internal static class EffectUtils
             EffectType.FinalAppraisal => 2190,
             EffectType.WasteNot2 => 257,
             EffectType.MuscleMemory => 2191,
-            EffectType.Manipulation => 258,
+            EffectType.Manipulation => 1164,
             EffectType.HeartAndSoul => 2665,
-            _ => 3412,
+            _ => throw new ArgumentOutOfRangeException(nameof(me)),
         };
+
+    public static bool IsIndefinite(this EffectType me) =>
+        me is EffectType.InnerQuiet or EffectType.HeartAndSoul;
 
     public static Status Status(this EffectType me) =>
         LuminaSheets.StatusSheet.GetRow(me.StatusId())!;
@@ -299,8 +330,8 @@ internal static class EffectUtils
         return (ushort)iconId;
     }
 
-    public static TextureWrap GetIcon(this EffectType me, int strength) =>
-        Icons.GetIconFromId(me.GetIconId(strength));
+    public static IDalamudTextureWrap GetIcon(this EffectType me, int strength) =>
+        Service.IconManager.GetIcon(me.GetIconId(strength));
 
     public static string GetTooltip(this EffectType me, int strength, int duration)
     {

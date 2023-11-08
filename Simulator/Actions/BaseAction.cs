@@ -22,7 +22,7 @@ public abstract class BaseAction
 
     // Instanced properties
     public abstract int CPCost(Simulator s);
-    public virtual float Efficiency(Simulator s) => 0f;
+    public virtual int Efficiency(Simulator s) => 0;
     public virtual float SuccessRate(Simulator s) => 1f;
 
     public virtual bool CanUse(Simulator s) =>
@@ -48,7 +48,8 @@ public abstract class BaseAction
         s.ActionStates.MutateState(this);
         s.ActionCount++;
 
-        s.ActiveEffects.DecrementDuration();
+        if (IncreasesStepCount)
+            s.ActiveEffects.DecrementDuration();
     }
 
     public virtual void UseSuccess(Simulator s)

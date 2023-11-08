@@ -1,6 +1,7 @@
 using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using FFXIVClientStructs.FFXIV.Client.System.Memory;
 using FFXIVClientStructs.FFXIV.Client.System.String;
+using FFXIVClientStructs.FFXIV.Client.UI;
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -8,7 +9,7 @@ using System.Text;
 namespace Craftimizer.Plugin.Utils;
 
 // https://github.com/Caraxi/SimpleTweaksPlugin/blob/0973b93931cdf8a1b01153984d62f76d998747ff/Utility/ChatHelper.cs#L17
-public static class Chat
+public static unsafe class Chat
 {
     private static class Signatures
     {
@@ -16,11 +17,11 @@ public static class Chat
         internal const string SanitiseString = "E8 ?? ?? ?? ?? EB 0A 48 8D 4C 24 ?? E8 ?? ?? ?? ?? 48 8D 8D";
     }
 
-    private delegate void ProcessChatBoxDelegate(IntPtr uiModule, IntPtr message, IntPtr unused, byte a4);
+    private delegate void ProcessChatBoxDelegate(UIModule* uiModule, IntPtr message, IntPtr unused, byte a4);
 
     private static ProcessChatBoxDelegate? ProcessChatBox { get; }
 
-    private static readonly unsafe delegate* unmanaged<Utf8String*, int, IntPtr, void> _sanitiseString = null!;
+    private static readonly unsafe delegate* unmanaged<Utf8String*, int, IntPtr, void> SanitiseString = null!;
 
     static Chat()
     {
@@ -33,7 +34,7 @@ public static class Chat
         {
             if (Service.SigScanner.TryScanText(Signatures.SanitiseString, out var sanitisePtr))
             {
-                _sanitiseString = (delegate* unmanaged<Utf8String*, int, IntPtr, void>)sanitisePtr;
+                SanitiseString = (delegate* unmanaged<Utf8String*, int, IntPtr, void>)sanitisePtr;
             }
         }
     }
@@ -58,7 +59,7 @@ public static class Chat
             throw new InvalidOperationException("Could not find signature for chat sending");
         }
 
-        var uiModule = (IntPtr)Framework.Instance()->GetUiModule();
+        var uiModule = Framework.Instance()->GetUiModule();
 
         using var payload = new ChatPayload(message);
         var mem1 = Marshal.AllocHGlobal(400);
@@ -118,14 +119,14 @@ public static class Chat
     /// <exception cref="InvalidOperationException">If the signature for this function could not be found</exception>
     public static unsafe string SanitiseText(string text)
     {
-        if (_sanitiseString == null)
+        if (SanitiseString == null)
         {
             throw new InvalidOperationException("Could not find signature for chat sanitisation");
         }
 
         var uText = Utf8String.FromString(text);
 
-        _sanitiseString(uText, 0x27F, IntPtr.Zero);
+        SanitiseString(uText, 0x27F, IntPtr.Zero);
         var sanitised = uText->ToString();
 
         uText->Dtor();
@@ -151,19 +152,19 @@ public static class Chat
 
         internal ChatPayload(byte[] stringBytes)
         {
-            this.textPtr = Marshal.AllocHGlobal(stringBytes.Length + 30);
-            Marshal.Copy(stringBytes, 0, this.textPtr, stringBytes.Length);
-            Marshal.WriteByte(this.textPtr + stringBytes.Length, 0);
+            textPtr = Marshal.AllocHGlobal(stringBytes.Length + 30);
+            Marshal.Copy(stringBytes, 0, textPtr, stringBytes.Length);
+            Marshal.WriteByte(textPtr + stringBytes.Length, 0);
 
-            this.textLen = (ulong)(stringBytes.Length + 1);
+            textLen = (ulong)(stringBytes.Length + 1);
 
-            this.unk1 = 64;
-            this.unk2 = 0;
+            unk1 = 64;
+            unk2 = 0;
         }
 
         public void Dispose()
         {
-            Marshal.FreeHGlobal(this.textPtr);
+            Marshal.FreeHGlobal(textPtr);
         }
     }
 }

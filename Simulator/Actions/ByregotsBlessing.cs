@@ -9,7 +9,7 @@ internal sealed class ByregotsBlessing : BaseAction
     public override bool IncreasesQuality => true;
 
     public override int CPCost(Simulator s) => 24;
-    public override float Efficiency(Simulator s) => 1.00f + (0.20f * s.GetEffectStrength(EffectType.InnerQuiet));
+    public override int Efficiency(Simulator s) => 100 + (20 * s.GetEffectStrength(EffectType.InnerQuiet));
 
     public override bool CanUse(Simulator s) => s.HasEffect(EffectType.InnerQuiet) && base.CanUse(s);
 

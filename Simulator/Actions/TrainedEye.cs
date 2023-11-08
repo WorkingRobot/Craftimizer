@@ -18,4 +18,7 @@ internal sealed class TrainedEye : BaseAction
 
     public override void UseSuccess(Simulator s) =>
         s.IncreaseQualityRaw(s.Input.Recipe.MaxQuality - s.Quality);
+
+    public override string GetTooltip(Simulator s, bool addUsability) =>
+        $"{base.GetTooltip(s, addUsability)}+{s.Input.Recipe.MaxQuality - s.Quality} Quality";
 }

@@ -10,7 +10,7 @@ internal sealed class TrainedFinesse : BaseAction
     public override int DurabilityCost => 0;
 
     public override int CPCost(Simulator s) => 32;
-    public override float Efficiency(Simulator s) => 1.00f;
+    public override int Efficiency(Simulator s) => 100;
 
     public override bool CanUse(Simulator s) =>
         s.GetEffectStrength(EffectType.InnerQuiet) == 10

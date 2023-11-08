@@ -8,7 +8,7 @@ using System;
 using System.Linq;
 
 namespace Craftimizer.Plugin.Utils;
-internal static unsafe class Gearsets
+public static unsafe class Gearsets
 {
     public record struct GearsetStats(int CP, int Craftsmanship, int Control);
     public record struct GearsetMateria(ushort Type, ushort Grade);
@@ -19,6 +19,24 @@ internal static unsafe class Gearsets
     public const int ParamCP = 11;
     public const int ParamCraftsmanship = 70;
     public const int ParamControl = 71;
+
+    private static readonly int[] LevelToCLvlLUT;
+
+    static Gearsets()
+    {
+        LevelToCLvlLUT = new int[90];
+        for (uint i = 0; i < 80; ++i) {
+            var level = i + 1;
+            LevelToCLvlLUT[i] = LuminaSheets.ParamGrowSheet.GetRow(level)!.CraftingLevel;
+        }
+        for (var i = 80; i < 90; ++i)
+        {
+            var level = i + 1;
+            LevelToCLvlLUT[i] = (int)LuminaSheets.RecipeLevelTableSheet.First(r => r.ClassJobLevel == level).RowId;
+        }
+    }
+
+    public static void Initialize() { }
 
     public static GearsetItem[] GetGearsetItems(InventoryContainer* container)
     {
@@ -33,7 +51,7 @@ internal static unsafe class Gearsets
 
     public static GearsetItem[] GetGearsetItems(RaptureGearsetModule.GearsetEntry* entry)
     {
-        var gearsetItems = new Span<RaptureGearsetModule.GearsetItem>(entry->ItemsData, 14);
+        var gearsetItems = entry->ItemsSpan;
         var items = new GearsetItem[14];
         for (var i = 0; i < 14; ++i)
         {
@@ -117,18 +135,21 @@ internal static unsafe class Gearsets
 
     public static bool IsSpecialistSoulCrystal(GearsetItem item)
     {
+        if (item.itemId == 0)
+            return false;
+
         var luminaItem = LuminaSheets.ItemSheet.GetRow(item.itemId)!;
-        //      Soul Crystal ItemUICategory                                         DoH Category
-        return luminaItem.ItemUICategory.Row != 62 && luminaItem.ClassJobUse.Value!.ClassJobCategory.Row == 33;
+        //     Soul Crystal ItemUICategory                                          DoH Category
+        return luminaItem.ItemUICategory.Row == 62 && luminaItem.ClassJobUse.Value!.ClassJobCategory.Row == 33;
     }
 
     public static bool IsSplendorousTool(GearsetItem item) =>
         LuminaSheets.ItemSheetEnglish.GetRow(item.itemId)!.Description.ToDalamudString().TextValue.Contains("Increases to quality are 1.75 times higher than normal when material condition is Good.", StringComparison.Ordinal);
 
-    public static int CalculateCLvl(int characterLevel) =>
-        characterLevel <= 80
-        ? LuminaSheets.ParamGrowSheet.GetRow((uint)characterLevel)!.CraftingLevel
-        : (int)LuminaSheets.RecipeLevelTableSheet.First(r => r.ClassJobLevel == characterLevel).RowId;
+    public static int CalculateCLvl(int level) =>
+        (level > 0 && level <= 90) ?
+            LevelToCLvlLUT[level - 1] :
+            throw new ArgumentOutOfRangeException(nameof(level), level, "Level is out of range.");
 
     // https://github.com/ffxiv-teamcraft/ffxiv-teamcraft/blob/24d0db2d9676f264edf53651b21005305267c84c/apps/client/src/app/modules/gearsets/materia.service.ts#L265
     private static int CalculateParamCap(Item item, int paramId)

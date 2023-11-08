@@ -9,7 +9,7 @@ internal sealed class Reflect : BaseAction
     public override bool IncreasesQuality => true;
 
     public override int CPCost(Simulator s) => 6;
-    public override float Efficiency(Simulator s) => 1.00f;
+    public override int Efficiency(Simulator s) => 100;
 
     public override bool CanUse(Simulator s) => s.IsFirstStep && base.CanUse(s);
 

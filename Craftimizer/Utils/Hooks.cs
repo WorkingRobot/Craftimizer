@@ -20,7 +20,7 @@ public sealed unsafe class Hooks : IDisposable
 
     public Hooks()
     {
-        UseActionHook = Hook<UseActionDelegate>.FromAddress((nint)ActionManager.MemberFunctionPointers.UseAction, UseActionDetour);
+        UseActionHook = Service.GameInteropProvider.HookFromAddress<UseActionDelegate>((nint)ActionManager.MemberFunctionPointers.UseAction, UseActionDetour);
         UseActionHook.Enable();
     }
 
@@ -28,7 +28,7 @@ public sealed unsafe class Hooks : IDisposable
     {
         var canCast = manager->GetActionStatus(actionType, actionId) == 0;
         var ret = UseActionHook.Original(manager, actionType, actionId, targetId, param, useType, pvp, a8);
-        if (canCast && ret && (actionType == CSActionType.CraftAction || actionType == CSActionType.Spell))
+        if (canCast && ret && (actionType == CSActionType.CraftAction || actionType == CSActionType.Action))
         {
             var classJob = ClassJobUtils.GetClassJobFromIdx((byte)(Service.ClientState.LocalPlayer?.ClassJob.Id ?? 0));
             if (classJob != null)

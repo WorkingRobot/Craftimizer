@@ -9,5 +9,5 @@ internal sealed class BasicTouch : BaseAction
     public override bool IncreasesQuality => true;
 
     public override int CPCost(Simulator s) => 18;
-    public override float Efficiency(Simulator s) => 1.00f;
+    public override int Efficiency(Simulator s) => 100;
 }

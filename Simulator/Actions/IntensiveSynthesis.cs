@@ -9,7 +9,7 @@ internal sealed class IntensiveSynthesis : BaseAction
     public override bool IncreasesProgress => true;
 
     public override int CPCost(Simulator s) => 6;
-    public override float Efficiency(Simulator s) => 4.00f;
+    public override int Efficiency(Simulator s) => 400;
 
     public override bool CanUse(Simulator s) =>
         (s.Condition == Condition.Good || s.Condition == Condition.Excellent || s.HasEffect(EffectType.HeartAndSoul))

@@ -6,5 +6,7 @@ public enum CompletionState : byte
     ProgressComplete,
     NoMoreDurability,
 
-    Other
+    InvalidAction,
+    MaxActionCountReached,
+    NoMoreActions
 }

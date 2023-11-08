@@ -1,77 +1,127 @@
+using Craftimizer.Plugin.Utils;
 using Craftimizer.Plugin.Windows;
 using Craftimizer.Simulator;
+using Craftimizer.Simulator.Actions;
 using Craftimizer.Utils;
+using Craftimizer.Windows;
+using Dalamud.Game.Command;
+using Dalamud.Interface.Internal;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
-using ImGuiScene;
-using Lumina.Excel.GeneratedSheets;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
-using ClassJob = Craftimizer.Simulator.ClassJob;
 
 namespace Craftimizer.Plugin;
 
 public sealed class Plugin : IDalamudPlugin
 {
-    public string Name => "Craftimizer";
     public string Version { get; }
     public string Author { get; }
-    public string Configuration { get; }
-    public TextureWrap Icon { get; }
+    public string BuildConfiguration { get; }
+    public IDalamudTextureWrap Icon { get; }
 
     public WindowSystem WindowSystem { get; }
     public Settings SettingsWindow { get; }
-    public CraftingLog RecipeNoteWindow { get; }
-    public Craft SynthesisWindow { get; }
-    public Windows.Simulator? SimulatorWindow { get; set; }
+    public RecipeNote RecipeNoteWindow { get; }
+    public MacroList ListWindow { get; private set; }
+    public MacroEditor? EditorWindow { get; private set; }
+    public MacroClipboard? ClipboardWindow { get; private set; }
 
+    public Configuration Configuration { get; }
     public Hooks Hooks { get; }
-    public RecipeNote RecipeNote { get; }
+    public IconManager IconManager { get; }
 
     public Plugin([RequiredVersion("1.0")] DalamudPluginInterface pluginInterface)
     {
-        Service.Plugin = this;
-        pluginInterface.Create<Service>();
-        Service.Configuration = pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+        Service.Initialize(this, pluginInterface);
+
+        WindowSystem = new("Craftimizer");
+        Configuration = pluginInterface.GetPluginConfig() as Configuration ?? new();
+        Hooks = new();
+        IconManager = new();
 
         var assembly = Assembly.GetExecutingAssembly();
         Version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
         Author = assembly.GetCustomAttribute<AssemblyCompanyAttribute>()!.Company;
-        Configuration = assembly.GetCustomAttribute<AssemblyConfigurationAttribute>()!.Configuration;
-        byte[] iconData;
-        using (var stream = assembly.GetManifestResourceStream("Craftimizer.icon.png")!)
-        {
-            iconData = new byte[stream.Length];
-            _ = stream.Read(iconData);
-        }
-        Icon = Service.PluginInterface.UiBuilder.LoadImage(iconData);
-
-        Hooks = new();
-        RecipeNote = new();
-        WindowSystem = new(Name);
+        BuildConfiguration = assembly.GetCustomAttribute<AssemblyConfigurationAttribute>()!.Configuration;
+        Icon = IconManager.GetAssemblyTexture("icon.png");
 
         SettingsWindow = new();
         RecipeNoteWindow = new();
-        SynthesisWindow = new();
+        ListWindow = new();
+
+        // Trigger static constructors so a huge hitch doesn't occur on first RecipeNote frame.
+        FoodStatus.Initialize();
+        Gearsets.Initialize();
+        ActionUtils.Initialize();
 
         Service.PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
         Service.PluginInterface.UiBuilder.OpenConfigUi += OpenSettingsWindow;
+        Service.PluginInterface.UiBuilder.OpenMainUi += OpenCraftingLog;
+
+        Service.CommandManager.AddHandler("/craftimizer", new CommandInfo((_, _) => OpenSettingsWindow())
+        {
+            HelpMessage = "Open the settings window.",
+        });
+        Service.CommandManager.AddHandler("/craftmacros", new CommandInfo((_, _) => OpenMacroListWindow())
+        {
+            HelpMessage = "Open the crafting macros window.",
+        });
+        Service.CommandManager.AddHandler("/crafteditor", new CommandInfo((_, _) => OpenEmptyMacroEditor())
+        {
+            HelpMessage = "Open the crafting macro editor.",
+        });
     }
 
-    public void OpenSimulatorWindow(Item item, bool isExpert, SimulationInput input, ClassJob classJob, Macro? macro)
+    public (CharacterStats? Character, RecipeData? Recipe, MacroEditor.CrafterBuffs? Buffs) GetOpenedStats()
     {
-        if (SimulatorWindow != null)
-        {
-            SimulatorWindow.IsOpen = false;
-            WindowSystem.RemoveWindow(SimulatorWindow);
-        }
-        SimulatorWindow = new(item, isExpert, input, classJob, macro);
+        var editorWindow = (EditorWindow?.IsOpen ?? false) ? EditorWindow : null;
+        var recipeData = editorWindow?.RecipeData ?? Service.Plugin.RecipeNoteWindow.RecipeData;
+        var characterStats = editorWindow?.CharacterStats ?? Service.Plugin.RecipeNoteWindow.CharacterStats;
+        var buffs = editorWindow?.Buffs ?? (RecipeNoteWindow.CharacterStats != null ? new(Service.ClientState.LocalPlayer?.StatusList) : null);
+
+        return (characterStats, recipeData, buffs);
+    }
+
+    public (CharacterStats Character, RecipeData Recipe, MacroEditor.CrafterBuffs Buffs) GetDefaultStats()
+    {
+        var stats = GetOpenedStats();
+        return (
+            stats.Character ?? new()
+            {
+                Craftsmanship = 100,
+                Control = 100,
+                CP = 200,
+                Level = 10,
+                CanUseManipulation = false,
+                HasSplendorousBuff = false,
+                IsSpecialist = false,
+                CLvl = 10,
+            },
+            stats.Recipe ?? new(1023),
+            stats.Buffs ?? new(null)
+        );
+    }
+
+    public void OpenEmptyMacroEditor()
+    {
+        var stats = GetDefaultStats();
+        OpenMacroEditor(stats.Character, stats.Recipe, stats.Buffs, Enumerable.Empty<ActionType>(), null);
+    }
+
+    public void OpenMacroEditor(CharacterStats characterStats, RecipeData recipeData, MacroEditor.CrafterBuffs buffs, IEnumerable<ActionType> actions, Action<IEnumerable<ActionType>>? setter)
+    {
+        EditorWindow?.Dispose();
+        EditorWindow = new(characterStats, recipeData, buffs, actions, setter);
     }
 
     public void OpenSettingsWindow()
     {
-        SettingsWindow.IsOpen = true;
-        SettingsWindow.BringToFront();
+        if (SettingsWindow.IsOpen ^= true)
+            SettingsWindow.BringToFront();
     }
 
     public void OpenSettingsTab(string selectedTabLabel)
@@ -80,11 +130,37 @@ public sealed class Plugin : IDalamudPlugin
         SettingsWindow.SelectTab(selectedTabLabel);
     }
 
+    public void OpenMacroListWindow()
+    {
+        ListWindow.IsOpen = true;
+        ListWindow.BringToFront();
+    }
+
+    public void OpenCraftingLog()
+    {
+        Chat.SendMessage("/craftinglog");
+    }
+
+    public void OpenMacroClipboard(List<string> macros)
+    {
+        ClipboardWindow?.Dispose();
+        ClipboardWindow = new(macros);
+    }
+
+    public void CopyMacro(IReadOnlyList<ActionType> actions) =>
+        MacroCopy.Copy(actions);
+
     public void Dispose()
     {
-        SimulatorWindow?.Dispose();
-        SynthesisWindow.Dispose();
-        RecipeNote.Dispose();
+        Service.CommandManager.RemoveHandler("/craftimizer");
+        Service.CommandManager.RemoveHandler("/craftmacros");
+        Service.CommandManager.RemoveHandler("/crafteditor");
+        SettingsWindow.Dispose();
+        RecipeNoteWindow.Dispose();
+        ListWindow.Dispose();
+        EditorWindow?.Dispose();
+        ClipboardWindow?.Dispose();
         Hooks.Dispose();
+        IconManager.Dispose();
     }
 }

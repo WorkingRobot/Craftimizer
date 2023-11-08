@@ -10,7 +10,7 @@ internal sealed class PreparatoryTouch : BaseAction
     public override int DurabilityCost => 20;
 
     public override int CPCost(Simulator s) => 40;
-    public override float Efficiency(Simulator s) => 2.00f;
+    public override int Efficiency(Simulator s) => 200;
 
     public override void UseSuccess(Simulator s)
     {

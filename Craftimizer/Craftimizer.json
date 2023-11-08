@@ -1,12 +1,11 @@
 {
-    "Author": "Asriel Camora",
+    "Author": "Asriel",
     "Name": "Craftimizer",
     "Punchline": "Simulate crafts and create computer-assisted macros from the comfort of your own game",
     "Description": "Allows you to generate macros and simulate all sorts of crafts without having to open another app. Open your crafting log to get started.",
     "RepoUrl": "https://github.com/WorkingRobot/craftimizer",
-    "InternalName": "craftimizer",
+    "InternalName": "Craftimizer",
     "ApplicableVersion": "any",
-    "DalamudApiLevel": 8,
     "Tags": [
         "crafting",
         "doh",

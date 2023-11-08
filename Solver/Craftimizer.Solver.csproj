@@ -5,10 +5,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <Platforms>x64</Platforms>
+    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Meziantou.Analyzer" Version="2.0.62">
+    <PackageReference Include="Meziantou.Analyzer" Version="2.0.92">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -17,5 +19,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Simulator\Craftimizer.Simulator.csproj" />
   </ItemGroup>
+
+  <PropertyGroup Condition="'$(IS_BENCH)'=='1'">
+    <DefineConstants>$(DefineConstants);IS_DETERMINISTIC</DefineConstants>
+  </PropertyGroup>
 
 </Project>

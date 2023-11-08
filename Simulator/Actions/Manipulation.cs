@@ -14,14 +14,16 @@ internal sealed class Manipulation : BaseBuffAction
 
     public override void Use(Simulator s)
     {
-        if (s.HasEffect(EffectType.Manipulation))
-            s.RestoreDurability(5);
-
-        s.ReduceCP(CPCost(s));
-        s.ReduceDurability(DurabilityCost);
-
         UseSuccess(s);
 
+        s.ReduceCP(CPCost(s));
+
         s.IncreaseStepCount();
+
+        s.ActionStates.MutateState(this);
+        s.ActionCount++;
+
+        if (IncreasesStepCount)
+            s.ActiveEffects.DecrementDuration();
     }
 }

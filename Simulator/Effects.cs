@@ -84,6 +84,11 @@ public record struct Effects
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsIndefinite(EffectType effect) =>
+        effect is EffectType.InnerQuiet or EffectType.HeartAndSoul;
+
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly byte GetStrength(EffectType effect) =>
         effect == EffectType.InnerQuiet ? InnerQuiet :
         (byte)(HasEffect(effect) ? 1 : 0);

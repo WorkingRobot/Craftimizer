@@ -1,3 +1,6 @@
+using Craftimizer.Simulator.Actions;
+using System.Collections.ObjectModel;
+
 namespace Craftimizer.Simulator;
 
 public enum ActionCategory
@@ -13,6 +16,25 @@ public enum ActionCategory
 
 public static class ActionCategoryUtils
 {
+    private static readonly ReadOnlyDictionary<ActionCategory, ActionType[]> SortedActions;
+
+    static ActionCategoryUtils()
+    {
+        SortedActions = new(
+            Enum.GetValues<ActionType>()
+            .Where(a => a.Category() != ActionCategory.Combo)
+            .GroupBy(a => a.Category())
+            .ToDictionary(g => g.Key, g => g.OrderBy(a => a.Level()).ToArray()));
+    }
+
+    public static IReadOnlyList<ActionType> GetActions(this ActionCategory me)
+    {
+        if (SortedActions.TryGetValue(me, out var actions))
+            return actions;
+
+        throw new ArgumentException($"Unknown action category {me}", nameof(me));
+    }
+
     public static string GetDisplayName(this ActionCategory category) =>
         category switch
         {
