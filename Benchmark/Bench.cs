@@ -1,11 +1,10 @@
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Engines;
 using Craftimizer.Simulator;
 using Craftimizer.Solver;
 
 namespace Craftimizer.Benchmark;
 
-[SimpleJob(RunStrategy.Monitoring)]
+[SimpleJob]
 [MinColumn, Q1Column, Q3Column, MaxColumn]
 public class Bench
 {
@@ -73,10 +72,8 @@ public class Bench
     {
         new()
         {
-            Iterations = 100_000,
-            ForkCount = 32,
-            FurcatedActionCount = 16,
-            MaxStepCount = 30,
+            Algorithm = SolverAlgorithm.Stepwise,
+            Iterations = 30_000,
         }
     };
 
