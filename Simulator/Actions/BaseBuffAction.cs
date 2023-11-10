@@ -11,16 +11,16 @@ internal abstract class BaseBuffAction : BaseAction
 
     public sealed override int DurabilityCost => 0;
 
-    public override void UseSuccess(Simulator s) =>
+    public override void UseSuccess<S>(Simulator<S> s) =>
         s.AddEffect(Effect, Duration);
 
-    public override string GetTooltip(Simulator s, bool addUsability)
+    public override string GetTooltip<S>(Simulator<S> s, bool addUsability)
     {
         var builder = new StringBuilder(base.GetTooltip(s, addUsability));
         builder.AppendLine($"{Duration} Steps");
         return builder.ToString();
     }
 
-    protected string GetBaseTooltip(Simulator s, bool addUsability) =>
+    protected string GetBaseTooltip<S>(Simulator<S> s, bool addUsability) where S : ISimulator =>
         base.GetTooltip(s, addUsability);
 }

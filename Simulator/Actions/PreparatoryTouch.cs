@@ -9,10 +9,10 @@ internal sealed class PreparatoryTouch : BaseAction
     public override bool IncreasesQuality => true;
     public override int DurabilityCost => 20;
 
-    public override int CPCost(Simulator s) => 40;
-    public override int Efficiency(Simulator s) => 200;
+    public override int CPCost<S>(Simulator<S> s) => 40;
+    public override int Efficiency<S>(Simulator<S> s) => 200;
 
-    public override void UseSuccess(Simulator s)
+    public override void UseSuccess<S>(Simulator<S> s)
     {
         base.UseSuccess(s);
         s.StrengthenEffect(EffectType.InnerQuiet);

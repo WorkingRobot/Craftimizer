@@ -4,9 +4,9 @@ using System.Runtime.CompilerServices;
 
 namespace Craftimizer.Simulator;
 
-public class Simulator
+public readonly ref struct Simulator<S> where S : ISimulator
 {
-    protected SimulationState State;
+    public readonly ref SimulationState State;
 
     public SimulationInput Input => State.Input;
     public ref int ActionCount => ref State.ActionCount;
@@ -21,37 +21,15 @@ public class Simulator
 
     public bool IsFirstStep => State.StepCount == 0;
 
-    public virtual CompletionState CompletionState {
-        get
-        {
-            if (Progress >= Input.Recipe.MaxProgress)
-                return CompletionState.ProgressComplete;
-            if (Durability <= 0)
-                return CompletionState.NoMoreDurability;
-            return CompletionState.Incomplete;
-        }
-    }
+    public CompletionState CompletionState => S.GetCompletionState(this);
     public bool IsComplete => CompletionState != CompletionState.Incomplete;
 
-    public IEnumerable<ActionType> AvailableActions => ActionUtils.AvailableActions(this);
-
-    public Simulator(SimulationState state)
+    public Simulator(ref SimulationState state)
     {
-        State = state;
+        State = ref state;
     }
 
-    public void SetState(SimulationState state)
-    {
-        State = state;
-    }
-
-    public (ActionResponse Response, SimulationState NewState) Execute(SimulationState state, ActionType action)
-    {
-        State = state;
-        return (Execute(action), State);
-    }
-
-    private ActionResponse Execute(ActionType action)
+    public ActionResponse Execute(ActionType action)
     {
         if (IsComplete)
             return ActionResponse.SimulationComplete;
@@ -75,19 +53,8 @@ public class Simulator
         return ActionResponse.UsedAction;
     }
 
-    public (ActionResponse Response, SimulationState NewState, int FailedActionIdx) ExecuteMultiple(SimulationState state, IEnumerable<ActionType> actions)
-    {
-        State = state;
-        var i = 0;
-        foreach(var action in actions)
-        {
-            var resp = Execute(action);
-            if (resp != ActionResponse.UsedAction)
-                return (resp, State, i);
-            i++;
-        }
-        return (ActionResponse.UsedAction, State, -1);
-    }
+    public static implicit operator SimulationState(Simulator<S> s) =>
+        s.State;
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -123,41 +90,13 @@ public class Simulator
     public bool HasEffect(EffectType effect) =>
         ActiveEffects.HasEffect(effect);
 
-    public virtual bool RollSuccessRaw(float successRate) =>
-        successRate >= Input.Random.NextSingle();
-
     public bool RollSuccess(float successRate) =>
-        RollSuccessRaw(CalculateSuccessRate(successRate));
+        S.RollSuccessRaw(this, CalculateSuccessRate(successRate));
 
     public void IncreaseStepCount()
     {
         StepCount++;
         StepCondition();
-    }
-
-    private static float GetConditionChance(SimulationInput input, Condition condition) =>
-        condition switch
-        {
-            Condition.Good => input.Recipe.IsExpert ? 0.12f : (input.Stats.Level >= 63 ? 0.15f : 0.18f),
-            Condition.Excellent => 0.04f,
-            Condition.Centered => 0.15f,
-            Condition.Sturdy => 0.15f,
-            Condition.Pliant => 0.10f,
-            Condition.Malleable => 0.13f,
-            Condition.Primed => 0.15f,
-            Condition.GoodOmen => 0.12f, // https://github.com/ffxiv-teamcraft/simulator/issues/77
-            _ => 0.00f
-        };
-
-    public virtual Condition GetNextRandomCondition()
-    {
-        var conditionChance = Input.Random.NextSingle();
-
-        foreach (var condition in Input.AvailableConditions)
-            if ((conditionChance -= GetConditionChance(Input, condition)) < 0)
-                return condition;
-
-        return Condition.Normal;
     }
 
     public void StepCondition()
@@ -168,7 +107,7 @@ public class Simulator
             Condition.Good => Condition.Normal,
             Condition.Excellent => Condition.Poor,
             Condition.GoodOmen => Condition.Good,
-            _ => GetNextRandomCondition()
+            _ => S.GetNextRandomCondition(this)
         };
     }
 

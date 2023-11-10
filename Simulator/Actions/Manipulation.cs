@@ -9,10 +9,10 @@ internal sealed class Manipulation : BaseBuffAction
     public override EffectType Effect => EffectType.Manipulation;
     public override byte Duration => 8;
 
-    public override int CPCost(Simulator s) => 96;
-    public override bool CanUse(Simulator s) => s.Input.Stats.CanUseManipulation && base.CanUse(s);
+    public override int CPCost<S>(Simulator<S> s) => 96;
+    public override bool CanUse<S>(Simulator<S> s) => s.Input.Stats.CanUseManipulation && base.CanUse(s);
 
-    public override void Use(Simulator s)
+    public override void Use<S>(Simulator<S> s)
     {
         UseSuccess(s);
 

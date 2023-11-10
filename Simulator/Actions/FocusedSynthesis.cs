@@ -8,7 +8,7 @@ internal sealed class FocusedSynthesis : BaseAction
 
     public override bool IncreasesProgress => true;
 
-    public override int CPCost(Simulator s) => 5;
-    public override int Efficiency(Simulator s) => 200;
-    public override float SuccessRate(Simulator s) => s.ActionStates.Observed ? 1.00f : 0.50f;
+    public override int CPCost<S>(Simulator<S> s) => 5;
+    public override int Efficiency<S>(Simulator<S> s) => 200;
+    public override float SuccessRate<S>(Simulator<S> s) => s.ActionStates.Observed ? 1.00f : 0.50f;
 }

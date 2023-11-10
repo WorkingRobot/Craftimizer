@@ -904,7 +904,8 @@ public sealed class MacroEditor : Window, IDisposable
 
     private void DrawActionHotbars()
     {
-        var sim = new Sim(State);
+        var state = State;
+        var sim = new Simulator<Sim>(ref state);
 
         var imageSize = ImGui.GetFrameHeight() * 2;
         var spacing = ImGui.GetStyle().ItemSpacing.Y;
@@ -1130,10 +1131,7 @@ public sealed class MacroEditor : Window, IDisposable
                     ImGui.PopClipRect();
                 }
                 if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-                {
-                    var sim = new Sim(lastState);
-                    ImGui.SetTooltip($"{action.GetName(RecipeData!.ClassJob)}\n{actionBase.GetTooltip(sim, true)}");
-                }
+                    ImGui.SetTooltip($"{action.GetName(RecipeData!.ClassJob)}\n{actionBase.GetTooltip(new Simulator<Sim>(ref lastState), true)}");
                 lastState = state;
             }
         }
@@ -1483,10 +1481,12 @@ public sealed class MacroEditor : Window, IDisposable
     private void RecalculateState()
     {
         InitialState = new SimulationState(new(CharacterStats, RecipeData.RecipeInfo, StartingQuality));
-        var sim = new Sim(InitialState);
         var lastState = InitialState;
         foreach (var step in Macro)
-            lastState = ((step.Response, step.State) = sim.Execute(lastState, step.Action)).State;
+        {
+            (step.Response, _, _) = lastState.ExecuteOn<Sim>(step.Action);
+            step.State = lastState;
+        }
     }
 
     private void AddStep(ActionType action, int index = -1, bool isSolver = false)
@@ -1500,19 +1500,20 @@ public sealed class MacroEditor : Window, IDisposable
 
         if (index == -1)
         {
-            var sim = new Sim(State);
-            var resp = sim.Execute(State, action);
-            Macro.Add(new() { Action = action, Response = resp.Response, State = resp.NewState });
+            var (resp, _, _, newState) = State.Execute<Sim>(action);
+            Macro.Add(new() { Action = action, Response = resp, State = newState });
         }
         else
         {
             var state = index == 0 ? InitialState : Macro[index - 1].State;
-            var sim = new Sim(state);
-            var resp = sim.Execute(state, action);
-            Macro.Insert(index, new() { Action = action, Response = resp.Response, State = resp.NewState });
-            state = resp.NewState;
+            var (resp, _, _) = state.ExecuteOn<Sim>(action);
+            Macro.Insert(index, new() { Action = action, Response = resp, State = state });
             for (var i = index + 1; i < Macro.Count; i++)
-                state = ((Macro[i].Response, Macro[i].State) = sim.Execute(state, Macro[i].Action)).State;
+            {
+                var step = Macro[i];
+                (step.Response, _, _) = state.ExecuteOn<Sim>(step.Action);
+                step.State = state;
+            }
         }
     }
 
@@ -1527,9 +1528,12 @@ public sealed class MacroEditor : Window, IDisposable
         Macro.RemoveAt(index);
 
         var state = index == 0 ? InitialState : Macro[index - 1].State;
-        var sim = new Sim(state);
         for (var i = index; i < Macro.Count; i++)
-            state = ((Macro[i].Response, Macro[i].State) = sim.Execute(state, Macro[i].Action)).State;
+        {
+            var step = Macro[i];
+            (step.Response, _, _) = state.ExecuteOn<Sim>(step.Action);
+            step.State = state;
+        }
     }
 
     public void Dispose()

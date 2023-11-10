@@ -8,5 +8,5 @@ internal sealed class Observe : BaseAction
 
     public override int DurabilityCost => 0;
 
-    public override int CPCost(Simulator s) => 7;
+    public override int CPCost<S>(Simulator<S> s) => 7;
 }

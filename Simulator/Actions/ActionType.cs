@@ -63,12 +63,6 @@ public static class ActionUtils
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static BaseAction Base(this ActionType me) => Actions[(int)me];
 
-    public static IEnumerable<ActionType> AvailableActions(Simulator simulation) =>
-        simulation.IsComplete
-            ? Enumerable.Empty<ActionType>()
-            : Enum.GetValues<ActionType>()
-                .Where(a => a.Base().CanUse(simulation));
-
     public static int Level(this ActionType me) =>
         me.Base().Level;
 

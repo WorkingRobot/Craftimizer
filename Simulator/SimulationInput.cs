@@ -5,6 +5,7 @@ public sealed class SimulationInput
     public CharacterStats Stats { get; }
     public RecipeInfo Recipe { get; }
     public Random Random { get; }
+    public object? SolverData { get; set; }
 
     public int StartingQuality { get; }
     public int BaseProgressGain { get; }

@@ -329,8 +329,7 @@ public sealed class MacroList : Window, IDisposable
             return state;
 
         state = new SimulationState(new(CharacterStats, RecipeData.RecipeInfo));
-        var sim = new Sim(state);
-        (_, state, _) = sim.ExecuteMultiple(state, macro.Actions);
+        state.ExecuteMultipleOn<Sim>(macro.Actions);
         return MacroStateCache[macro] = state;
     }
 

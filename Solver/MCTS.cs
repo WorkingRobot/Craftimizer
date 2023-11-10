@@ -9,7 +9,7 @@ using Node = Craftimizer.Solver.ArenaNode<Craftimizer.Solver.SimulationNode>;
 namespace Craftimizer.Solver;
 
 // https://github.com/alostsock/crafty/blob/cffbd0cad8bab3cef9f52a3e3d5da4f5e3781842/crafty/src/simulator.rs
-public sealed class MCTS
+internal sealed class MCTS
 {
     private readonly MCTSConfig config;
     private readonly Node rootNode;
@@ -20,28 +20,29 @@ public sealed class MCTS
     public MCTS(MCTSConfig config, SimulationState state)
     {
         this.config = config;
-        var sim = new Simulator(state, config.MaxStepCount);
+        var sim = new Simulator<Simulator>(ref state);
         rootNode = new(new(
             state,
             null,
             sim.CompletionState,
-            sim.AvailableActionsHeuristic(config.StrictActions)
+            Simulator.AvailableActionsHeuristic(sim, config.StrictActions)
         ));
         rootScores = new();
     }
 
-    private static SimulationNode Execute(Simulator simulator, SimulationState state, ActionType action, bool strict)
+    private static SimulationNode Execute(SimulationState state, ActionType action, bool strict)
     {
-        (_, var newState) = simulator.Execute(state, action);
+        var sim = new Simulator<Simulator>(ref state);
+        sim.Execute(action);
         return new(
-            newState,
+            state,
             action,
-            simulator.CompletionState,
-            simulator.AvailableActionsHeuristic(strict)
+            sim.CompletionState,
+            Simulator.AvailableActionsHeuristic(sim, strict)
         );
     }
 
-    private static Node ExecuteActions(Simulator simulator, Node startNode, ReadOnlySpan<ActionType> actions, bool strict)
+    private static Node ExecuteActions(Node startNode, ReadOnlySpan<ActionType> actions, bool strict)
     {
         foreach (var action in actions)
         {
@@ -53,7 +54,7 @@ public sealed class MCTS
                 return startNode;
             state.AvailableActions.RemoveAction(action);
 
-            startNode = startNode.Add(Execute(simulator, state.State, action, strict));
+            startNode = startNode.Add(Execute(state.State, action, strict));
         }
 
         return startNode;
@@ -174,7 +175,7 @@ public sealed class MCTS
         }
     }
 
-    private (Node ExpandedNode, float Score) ExpandAndRollout(Random random, Simulator simulator, Node initialNode)
+    private (Node ExpandedNode, float Score) ExpandAndRollout(Random random, Node initialNode)
     {
         ref var initialState = ref initialNode.State;
         // expand once
@@ -182,7 +183,7 @@ public sealed class MCTS
             return (initialNode, initialState.CalculateScore(config) ?? 0);
 
         var poppedAction = initialState.AvailableActions.PopRandom(random);
-        var expandedNode = initialNode.Add(Execute(simulator, initialState.State, poppedAction, true));
+        var expandedNode = initialNode.Add(Execute(initialState.State, poppedAction, true));
 
         // playout to a terminal state
         var currentState = expandedNode.State.State;
@@ -197,11 +198,10 @@ public sealed class MCTS
         {
             var nextAction = currentActions.SelectRandom(random);
             actions[actionCount++] = nextAction;
-            (_, currentState) = simulator.Execute(currentState, nextAction);
-            currentCompletionState = simulator.CompletionState;
-            if (currentCompletionState != CompletionState.Incomplete)
+            (_, currentCompletionState, var isComplete) = currentState.ExecuteOn<Simulator>(nextAction);
+            if (isComplete)
                 break;
-            currentActions = simulator.AvailableActionsHeuristic(true);
+            currentActions = Simulator.AvailableActionsHeuristic(new Simulator<Simulator>(ref currentState), true);
         }
 
         // store the result if a max score was reached
@@ -210,7 +210,7 @@ public sealed class MCTS
         {
             if (score >= config.ScoreStorageThreshold && score >= MaxScore)
             {
-                var terminalNode = ExecuteActions(simulator, expandedNode, actions[..actionCount], true);
+                var terminalNode = ExecuteActions(expandedNode, actions[..actionCount], true);
                 return (terminalNode, score);
             }
         }
@@ -280,7 +280,6 @@ public sealed class MCTS
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Search(int iterations, CancellationToken token)
     {
-        Simulator simulator = new(rootNode.State.State, config.MaxStepCount);
         var random = rootNode.State.State.Input.Random;
         var n = 0;
         for (var i = 0; i < iterations || MaxScore == 0; i++)
@@ -288,7 +287,7 @@ public sealed class MCTS
             token.ThrowIfCancellationRequested();
 
             var selectedNode = Select();
-            var (endNode, score) = ExpandAndRollout(random, simulator, selectedNode);
+            var (endNode, score) = ExpandAndRollout(random, selectedNode);
             if (MaxScore == 0)
             {
                 if (endNode == selectedNode)

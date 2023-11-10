@@ -8,14 +8,14 @@ internal sealed class PreciseTouch : BaseAction
 
     public override bool IncreasesQuality => true;
 
-    public override int CPCost(Simulator s) => 18;
-    public override int Efficiency(Simulator s) => 150;
+    public override int CPCost<S>(Simulator<S> s) => 18;
+    public override int Efficiency<S>(Simulator<S> s) => 150;
 
-    public override bool CanUse(Simulator s) =>
+    public override bool CanUse<S>(Simulator<S> s) =>
         (s.Condition == Condition.Good || s.Condition == Condition.Excellent || s.HasEffect(EffectType.HeartAndSoul))
         && base.CanUse(s);
 
-    public override void UseSuccess(Simulator s)
+    public override void UseSuccess<S>(Simulator<S> s)
     {
         base.UseSuccess(s);
         s.StrengthenEffect(EffectType.InnerQuiet);

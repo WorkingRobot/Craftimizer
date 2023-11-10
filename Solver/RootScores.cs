@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace Craftimizer.Solver;
 
 [StructLayout(LayoutKind.Auto)]
-public sealed class RootScores
+internal sealed class RootScores
 {
     public float ScoreSum;
     public float MaxScore;

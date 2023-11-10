@@ -9,10 +9,10 @@ internal sealed class TrainedFinesse : BaseAction
     public override bool IncreasesQuality => true;
     public override int DurabilityCost => 0;
 
-    public override int CPCost(Simulator s) => 32;
-    public override int Efficiency(Simulator s) => 100;
+    public override int CPCost<S>(Simulator<S> s) => 32;
+    public override int Efficiency<S>(Simulator<S> s) => 100;
 
-    public override bool CanUse(Simulator s) =>
+    public override bool CanUse<S>(Simulator<S> s) =>
         s.GetEffectStrength(EffectType.InnerQuiet) == 10
         && base.CanUse(s);
 }

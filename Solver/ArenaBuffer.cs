@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 namespace Craftimizer.Solver;
 
 // Adapted from https://github.com/dtao/ConcurrentList/blob/4fcf1c76e93021a41af5abb2d61a63caeba2adad/ConcurrentList/ConcurrentList.cs
-public struct ArenaBuffer<T> where T : struct
+internal struct ArenaBuffer<T> where T : struct
 {
     // Technically 25, but it's very unlikely to actually get to there.
     // The benchmark reaches 20 at most, but here we have a little leeway just in case.

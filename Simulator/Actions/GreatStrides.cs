@@ -9,5 +9,5 @@ internal sealed class GreatStrides : BaseBuffAction
     public override EffectType Effect => EffectType.GreatStrides;
     public override byte Duration => 3;
 
-    public override int CPCost(Simulator s) => 32;
+    public override int CPCost<S>(Simulator<S> s) => 32;
 }

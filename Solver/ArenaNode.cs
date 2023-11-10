@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 
 namespace Craftimizer.Solver;
 
-public sealed class ArenaNode<T> where T : struct
+internal sealed class ArenaNode<T> where T : struct
 {
     public T State;
     public ArenaBuffer<T> Children;

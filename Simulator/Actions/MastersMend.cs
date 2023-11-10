@@ -8,8 +8,8 @@ internal sealed class MastersMend : BaseAction
 
     public override int DurabilityCost => 0;
 
-    public override int CPCost(Simulator s) => 88;
+    public override int CPCost<S>(Simulator<S> s) => 88;
 
-    public override void UseSuccess(Simulator s) =>
+    public override void UseSuccess<S>(Simulator<S> s) =>
         s.RestoreDurability(30);
 }

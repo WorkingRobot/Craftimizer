@@ -1,11 +1,12 @@
 namespace Craftimizer.Simulator;
 
-public class SimulatorNoRandom : Simulator
+public sealed class SimulatorNoRandom : ISimulator
 {
-    public SimulatorNoRandom(SimulationState state) : base(state)
-    {
-    }
+    private SimulatorNoRandom() { }
 
-    public sealed override bool RollSuccessRaw(float successRate) => successRate == 1;
-    public sealed override Condition GetNextRandomCondition() => Condition.Normal;
+    public static Condition GetNextRandomCondition<S>(Simulator<S> s) where S : ISimulator =>
+       Condition.Normal;
+
+    public static bool RollSuccessRaw<S>(Simulator<S> s, float successRate) where S : ISimulator =>
+       successRate == 1;
 }

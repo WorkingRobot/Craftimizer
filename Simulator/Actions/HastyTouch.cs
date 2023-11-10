@@ -8,7 +8,7 @@ internal sealed class HastyTouch : BaseAction
 
     public override bool IncreasesQuality => true;
 
-    public override int CPCost(Simulator s) => 0;
-    public override int Efficiency(Simulator s) => 100;
-    public override float SuccessRate(Simulator s) => 0.60f;
+    public override int CPCost<S>(Simulator<S> s) => 0;
+    public override int Efficiency<S>(Simulator<S> s) => 100;
+    public override float SuccessRate<S>(Simulator<S> s) => 0.60f;
 }

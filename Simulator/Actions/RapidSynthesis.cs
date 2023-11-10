@@ -8,8 +8,8 @@ internal sealed class RapidSynthesis : BaseAction
 
     public override bool IncreasesProgress => true;
 
-    public override int CPCost(Simulator s) => 0;
+    public override int CPCost<S>(Simulator<S> s) => 0;
     // Rapid Synthesis Mastery Trait
-    public override int Efficiency(Simulator s) => s.Input.Stats.Level >= 63 ? 500 : 250;
-    public override float SuccessRate(Simulator s) => 0.50f;
+    public override int Efficiency<S>(Simulator<S> s) => s.Input.Stats.Level >= 63 ? 500 : 250;
+    public override float SuccessRate<S>(Simulator<S> s) => 0.50f;
 }

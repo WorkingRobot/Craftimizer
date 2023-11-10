@@ -8,7 +8,7 @@ internal sealed class CarefulSynthesis : BaseAction
 
     public override bool IncreasesProgress => true;
 
-    public override int CPCost(Simulator s) => 7;
+    public override int CPCost<S>(Simulator<S> s) => 7;
     // Careful Synthesis Mastery Trait
-    public override int Efficiency(Simulator s) => s.Input.Stats.Level >= 82 ? 180 : 150;
+    public override int Efficiency<S>(Simulator<S> s) => s.Input.Stats.Level >= 82 ? 180 : 150;
 }

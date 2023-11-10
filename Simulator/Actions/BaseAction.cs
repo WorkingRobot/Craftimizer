@@ -21,14 +21,14 @@ public abstract class BaseAction
     public virtual bool IncreasesStepCount => true;
 
     // Instanced properties
-    public abstract int CPCost(Simulator s);
-    public virtual int Efficiency(Simulator s) => 0;
-    public virtual float SuccessRate(Simulator s) => 1f;
+    public abstract int CPCost<S>(Simulator<S> s) where S : ISimulator;
+    public virtual int Efficiency<S>(Simulator<S> s) where S : ISimulator => 0;
+    public virtual float SuccessRate<S>(Simulator<S> s) where S : ISimulator => 1f;
 
-    public virtual bool CanUse(Simulator s) =>
+    public virtual bool CanUse<S>(Simulator<S> s) where S : ISimulator =>
         s.Input.Stats.Level >= Level && s.CP >= CPCost(s);
 
-    public virtual void Use(Simulator s)
+    public virtual void Use<S>(Simulator<S> s) where S : ISimulator
     {
         if (s.RollSuccess(SuccessRate(s)))
             UseSuccess(s);
@@ -52,7 +52,7 @@ public abstract class BaseAction
             s.ActiveEffects.DecrementDuration();
     }
 
-    public virtual void UseSuccess(Simulator s)
+    public virtual void UseSuccess<S>(Simulator<S> s) where S : ISimulator
     {
         if (Efficiency(s) != 0f)
         {
@@ -63,7 +63,7 @@ public abstract class BaseAction
         }
     }
 
-    public virtual string GetTooltip(Simulator s, bool addUsability)
+    public virtual string GetTooltip<S>(Simulator<S> s, bool addUsability) where S : ISimulator
     {
         var builder = new StringBuilder();
         if (addUsability && !CanUse(s))

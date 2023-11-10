@@ -9,9 +9,9 @@ internal sealed class WasteNot : BaseBuffAction
     public override EffectType Effect => EffectType.WasteNot;
     public override byte Duration => 4;
 
-    public override int CPCost(Simulator s) => 56;
+    public override int CPCost<S>(Simulator<S> s) => 56;
 
-    public override void UseSuccess(Simulator s)
+    public override void UseSuccess<S>(Simulator<S> s)
     {
         base.UseSuccess(s);
         s.RemoveEffect(EffectType.WasteNot2);

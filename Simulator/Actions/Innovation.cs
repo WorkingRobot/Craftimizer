@@ -9,5 +9,5 @@ internal sealed class Innovation : BaseBuffAction
     public override EffectType Effect => EffectType.Innovation;
     public override byte Duration => 4;
 
-    public override int CPCost(Simulator s) => 18;
+    public override int CPCost<S>(Simulator<S> s) => 18;
 }

@@ -1,3 +1,5 @@
+using Craftimizer.Simulator.Actions;
+using System;
 using System.Runtime.InteropServices;
 
 namespace Craftimizer.Simulator;
@@ -43,5 +45,40 @@ public record struct SimulationState
         ActiveEffects = new();
         ActionCount = 0;
         ActionStates = new();
+    }
+
+    public (ActionResponse Response, CompletionState State, bool IsComplete) ExecuteOn<S>(ActionType action) where S : ISimulator
+    {
+        var sim = new Simulator<S>(ref this);
+        return (sim.Execute(action), sim.CompletionState, sim.IsComplete);
+    }
+
+    public readonly (ActionResponse Response, CompletionState State, bool IsComplete, SimulationState NewState) Execute<S>(ActionType action) where S : ISimulator
+    {
+        var self = this;
+        var (resp, state, complete) = self.ExecuteOn<S>(action);
+        return (resp, state, complete, self);
+    }
+
+    public (ActionResponse Response, CompletionState State, bool IsComplete, int FailedActionIdx) ExecuteMultipleOn<S>(IEnumerable<ActionType> actions) where S : ISimulator
+    {
+        var i = 0;
+        var complete = false;
+        var state = CompletionState.Incomplete;
+        foreach (var action in actions)
+        {
+            (var resp, state, complete) = ExecuteOn<S>(action);
+            if (resp != ActionResponse.UsedAction)
+                return (resp, state, complete, i);
+            i++;
+        }
+        return (ActionResponse.UsedAction, state, complete, -1);
+    }
+
+    public readonly (ActionResponse Response, CompletionState State, bool IsComplete, int FailedActionIdx, SimulationState NewState) ExecuteMultiple<S>(IEnumerable<ActionType> actions) where S : ISimulator
+    {
+        var self = this;
+        var (resp, state, complete, idx) = self.ExecuteMultipleOn<S>(actions);
+        return (resp, state, complete, idx, self);
     }
 }

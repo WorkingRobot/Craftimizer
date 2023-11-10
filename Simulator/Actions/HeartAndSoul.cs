@@ -11,10 +11,10 @@ internal sealed class HeartAndSoul : BaseBuffAction
 
     public override EffectType Effect => EffectType.HeartAndSoul;
 
-    public override int CPCost(Simulator s) => 0;
+    public override int CPCost<S>(Simulator<S> s) => 0;
 
-    public override bool CanUse(Simulator s) => s.Input.Stats.IsSpecialist && !s.ActionStates.UsedHeartAndSoul;
+    public override bool CanUse<S>(Simulator<S> s) => s.Input.Stats.IsSpecialist && !s.ActionStates.UsedHeartAndSoul;
 
-    public override string GetTooltip(Simulator s, bool addUsability) =>
+    public override string GetTooltip<S>(Simulator<S> s, bool addUsability) =>
         $"{GetBaseTooltip(s, addUsability)}Specialist Only";
 }

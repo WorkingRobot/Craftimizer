@@ -68,8 +68,7 @@ public class SimulatorTests
         int progress, int quality,
         int durability, int cp)
     {
-        var simulator = new SimulatorNoRandom(new(input));
-        var (_, state, _) = simulator.ExecuteMultiple(new(input), actions);
+        var (_, _, _, _, state) = new SimulationState(input).ExecuteMultiple<SimulatorNoRandom>(actions);
         Assert.AreEqual(progress, state.Progress);
         Assert.AreEqual(quality, state.Quality);
         Assert.AreEqual(durability, state.Durability);
@@ -170,7 +169,7 @@ public class SimulatorTests
             },
             0, 4064, 15, 332);
         Assert.AreEqual(10, state.ActiveEffects.InnerQuiet);
-        Assert.IsTrue(ActionType.TrainedFinesse.Base().CanUse(new SimulatorNoRandom(state)));
+        Assert.IsTrue(ActionType.TrainedFinesse.Base().CanUse(new Simulator<SimulatorNoRandom>(ref state)));
     }
 
     [TestMethod]

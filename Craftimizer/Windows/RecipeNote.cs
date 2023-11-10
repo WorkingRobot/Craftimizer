@@ -824,7 +824,6 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         var state = new SimulationState(input);
         var config = Service.Configuration.SimulatorSolverConfig;
         var mctsConfig = new MCTSConfig(config);
-        var simulator = new SimulatorNoRandom(state);
         List<Macro> macros = new(Service.Configuration.Macros);
 
         token.ThrowIfCancellationRequested();
@@ -835,9 +834,9 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             var bestSaved = macros
                 .Select(macro =>
                     {
-                        var (resp, outState, failedIdx) = simulator.ExecuteMultiple(state, macro.Actions);
+                        var (resp, completionState, _, failedIdx, outState) = state.ExecuteMultiple<SimulatorNoRandom>(macro.Actions);
                         outState.ActionCount = macro.Actions.Count;
-                        var score = SimulationNode.CalculateScoreForState(outState, simulator.CompletionState, mctsConfig) ?? 0;
+                        var score = SimulationNode.CalculateScoreForState(outState, completionState, mctsConfig) ?? 0;
                         if (resp != ActionResponse.SimulationComplete)
                         {
                             if (failedIdx != -1)

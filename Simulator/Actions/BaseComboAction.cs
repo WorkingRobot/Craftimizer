@@ -7,7 +7,7 @@ public abstract class BaseComboAction : BaseAction
 
     public sealed override ActionCategory Category => ActionCategory.Combo;
 
-    protected bool BaseCanUse(Simulator s) =>
+    protected bool BaseCanUse<S>(Simulator<S> s) where S : ISimulator =>
         base.CanUse(s);
 
     private static bool VerifyDurability2(int durabilityA, int durability, Effects effects)
@@ -24,9 +24,6 @@ public abstract class BaseComboAction : BaseAction
     }
 
     public static bool VerifyDurability2(SimulationState s, int durabilityA) =>
-        VerifyDurability2(durabilityA, s.Durability, s.ActiveEffects);
-
-    public static bool VerifyDurability2(Simulator s, int durabilityA) =>
         VerifyDurability2(durabilityA, s.Durability, s.ActiveEffects);
 
     public static bool VerifyDurability3(int durabilityA, int durabilityB, int durability, Effects effects)
@@ -53,9 +50,6 @@ public abstract class BaseComboAction : BaseAction
         // step (even before the Manipulation modifier), we can certainly do the next action.
         return true;
     }
-
-    public static bool VerifyDurability3(Simulator s, int durabilityA, int durabilityB) =>
-        VerifyDurability3(durabilityA, durabilityB, s.Durability, s.ActiveEffects);
 
     public static bool VerifyDurability3(SimulationState s, int durabilityA, int durabilityB) =>
         VerifyDurability3(durabilityA, durabilityB, s.Durability, s.ActiveEffects);

@@ -11,17 +11,17 @@ internal abstract class BaseComboAction<A, B> : BaseComboAction where A : BaseAc
     public override bool IncreasesProgress => ActionA.IncreasesProgress || ActionB.IncreasesProgress;
     public override bool IncreasesQuality => ActionA.IncreasesQuality || ActionB.IncreasesQuality;
 
-    public override int CPCost(Simulator s) => ActionA.CPCost(s) + ActionB.CPCost(s);
+    public override int CPCost<S>(Simulator<S> s) => ActionA.CPCost(s) + ActionB.CPCost(s);
 
-    public override bool CanUse(Simulator s) =>
+    public override bool CanUse<S>(Simulator<S> s) =>
         BaseCanUse(s) && VerifyDurability2(s, ActionA.DurabilityCost);
 
-    public override void Use(Simulator s)
+    public override void Use<S>(Simulator<S> s)
     {
         ActionA.Use(s);
         ActionB.Use(s);
     }
 
-    public override string GetTooltip(Simulator s, bool addUsability) =>
+    public override string GetTooltip<S>(Simulator<S> s, bool addUsability) =>
         $"{ActionA.GetTooltip(s, addUsability)}\n\n{ActionB.GetTooltip(s, addUsability)}";
 }

@@ -102,9 +102,12 @@ internal static class Program
             MaxStepCount = 30,
         };
 
-        var sim = new SimulatorNoRandom(new(input));
-        (_, var state) = sim.Execute(new(input), ActionType.MuscleMemory);
-        (_, state) = sim.Execute(state, ActionType.PrudentTouch);
+        var state = new SimulationState(input);
+        state.ExecuteMultiple<SimulatorNoRandom>(new[]
+        {
+            ActionType.MuscleMemory,
+            ActionType.PrudentTouch
+        });
         //(_, state) = sim.Execute(state, ActionType.Manipulation);
         //(_, state) = sim.Execute(state, ActionType.Veneration);
         //(_, state) = sim.Execute(state, ActionType.WasteNot);

@@ -37,6 +37,8 @@ public sealed class Solver : IDisposable
 
     public Solver(SolverConfig config, SimulationState state)
     {
+        state.Input.SolverData = config;
+
         Config = config;
         State = state;
 
@@ -116,7 +118,6 @@ public sealed class Solver : IDisposable
         var bestSims = new List<(float Score, SolverSolution Result)>();
 
         var state = State;
-        var sim = new Simulator(state, Config.MaxStepCount);
 
         var activeStates = new List<SolverSolution>() { new(Array.Empty<ActionType>(), state) };
 
@@ -185,8 +186,8 @@ public sealed class Solver : IDisposable
                 var chosenAction = solutionActions[0];
 
                 var newActions = new List<ActionType>(activeActions) { chosenAction };
-                var newState = sim.Execute(activeState, chosenAction).NewState;
-                if (sim.IsComplete)
+                var (_, _, complete, newState) = activeState.Execute<Simulator>(chosenAction);
+                if (complete)
                     bestSims.Add((maxScore, new(newActions, newState)));
                 else
                     newStates.Add(new(newActions, newState));
@@ -240,12 +241,12 @@ public sealed class Solver : IDisposable
     {
         var actions = new List<ActionType>();
         var state = State;
-        var sim = new Simulator(state, Config.MaxStepCount);
+        var complete = false;
         while (true)
         {
             Token.ThrowIfCancellationRequested();
 
-            if (sim.IsComplete)
+            if (complete)
                 break;
 
             using var semaphore = new SemaphoreSlim(0, Config.MaxThreadCount);
@@ -292,7 +293,7 @@ public sealed class Solver : IDisposable
             var chosenAction = solution.Actions[0];
             InvokeNewAction(chosenAction);
 
-            (_, state) = sim.Execute(state, chosenAction);
+            (_, _, complete) = state.ExecuteOn<Simulator>(chosenAction);
             actions.Add(chosenAction);
         }
 
@@ -303,12 +304,12 @@ public sealed class Solver : IDisposable
     {
         var actions = new List<ActionType>();
         var state = State;
-        var sim = new Simulator(state, Config.MaxStepCount);
+        var complete = false;
         while (true)
         {
             Token.ThrowIfCancellationRequested();
 
-            if (sim.IsComplete)
+            if (complete)
                 break;
 
             var solver = new MCTS(MCTSConfig, state);
@@ -331,7 +332,7 @@ public sealed class Solver : IDisposable
             var chosenAction = solution.Actions[0];
             InvokeNewAction(chosenAction);
 
-            (_, state) = sim.Execute(state, chosenAction);
+            (_, _, complete) = state.ExecuteOn<Simulator>(chosenAction);
             actions.Add(chosenAction);
         }
 

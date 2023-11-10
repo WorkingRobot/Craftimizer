@@ -11,5 +11,5 @@ internal sealed class FinalAppraisal : BaseBuffAction
     public override EffectType Effect => EffectType.FinalAppraisal;
     public override byte Duration => 5;
 
-    public override int CPCost(Simulator s) => 1;
+    public override int CPCost<S>(Simulator<S> s) => 1;
 }
