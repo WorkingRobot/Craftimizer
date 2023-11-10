@@ -109,7 +109,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: BenchmarkResults
-          path: BenchmarkDotNet.Artifacts/results
+          path: BenchmarkDotNet.Artifacts
 
       - name: Cache Benchmark Data
         uses: actions/cache@v1
@@ -121,7 +121,7 @@ jobs:
         uses: rhysd/github-action-benchmark@v1
         with:
           tool: benchmarkdotnet
-          output-file-path: BenchmarkDotNet.Artifacts/results/Craftimizer.Benchmark-report-full-compressed.json
+          output-file-path: BenchmarkDotNet.Artifacts/results/Craftimizer.Benchmark.Bench-report-full-compressed.json
           external-data-json-path: ./bench-cache/external.json
           github-token: ${{secrets.GITHUB_TOKEN}}
           comment-always: true
