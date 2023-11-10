@@ -105,6 +105,12 @@ jobs:
         run: |
           dotnet run --configuration Release --project Benchmark -- -e json html github csv -f * -d -m
 
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: BenchmarkResults
+          path: BenchmarkDotNet.Artifacts/results
+
       - name: Cache Benchmark Data
         uses: actions/cache@v1
         with:
@@ -121,9 +127,3 @@ jobs:
           comment-always: true
           alert-threshold: '150%'
           alert-comment-cc-users: '@${{github.actor}}'
-
-      - name: Upload Test Results
-        uses: actions/upload-artifact@v3
-        with:
-          name: BenchmarkResults
-          path: BenchmarkDotNet.Artifacts/results
