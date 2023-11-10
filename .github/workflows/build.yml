@@ -103,7 +103,7 @@ jobs:
 
       - name: Benchmark
         run: |
-          dotnet run --configuration Release --project Benchmark -- -e json html github csv -f * -d -m --counters BranchMispredictions
+          dotnet run --configuration Release --project Benchmark -- -e json html github csv -f * -d -m
 
       - name: Cache Benchmark Data
         uses: actions/cache@v1
