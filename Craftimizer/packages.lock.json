@@ -10,9 +10,9 @@
       },
       "Meziantou.Analyzer": {
         "type": "Direct",
-        "requested": "[2.0.92, )",
-        "resolved": "2.0.92",
-        "contentHash": "gVyPM2gDPfxvZ2rGUKzTNZsNhdgsetfYd+OKowKwMqZ9K00j1amUU+SnlRI26629EKK4cbJWJwHs00UPXRr0BA=="
+        "requested": "[2.0.106, )",
+        "resolved": "2.0.106",
+        "contentHash": "ygz0oT+Sfkn7Zfhf05iQkrLsrhH9+laOHsab8zq1okOVNjWGbQsXIBgeITF1DLEB/gVYgHHyVEK8YoNnhed/GQ=="
       },
       "craftimizer.simulator": {
         "type": "Project"
