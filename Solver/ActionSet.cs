@@ -9,7 +9,7 @@ public struct ActionSet
 {
     private uint bits;
 
-    public static readonly ActionType[] AcceptedActions = new[]
+    internal static ReadOnlySpan<ActionType> AcceptedActions => new[]
     {
         ActionType.StandardTouchCombo,
         ActionType.AdvancedTouchCombo,

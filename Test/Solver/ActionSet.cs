@@ -1,5 +1,3 @@
-using Craftimizer.Simulator.Actions;
-
 namespace Craftimizer.Test.Solver;
 
 [TestClass]
