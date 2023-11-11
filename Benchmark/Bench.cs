@@ -1,11 +1,13 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnostics.dotTrace;
+using BenchmarkDotNet.Jobs;
 using Craftimizer.Simulator;
 using Craftimizer.Solver;
 
 namespace Craftimizer.Benchmark;
 
-[SimpleJob(iterationCount: 10)]
+[SimpleJob(RuntimeMoniker.Net70, baseline: true)]
+[SimpleJob(RuntimeMoniker.Net80)]
 [MinColumn, Q1Column, Q3Column, MaxColumn]
 [DotTraceDiagnoser]
 public class Bench

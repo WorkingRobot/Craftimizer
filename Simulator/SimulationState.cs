@@ -44,4 +44,13 @@ public record struct SimulationState
         ActionCount = 0;
         ActionStates = new();
     }
+
+#if IS_DETERMINISTIC
+    public override readonly string ToString()
+    {
+        var b = new System.Text.StringBuilder();
+        PrintMembers(b);
+        return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(b.ToString())));
+    }
+#endif
 }
