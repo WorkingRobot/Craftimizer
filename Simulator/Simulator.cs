@@ -35,17 +35,17 @@ public class Simulator
 
     public IEnumerable<ActionType> AvailableActions => ActionUtils.AvailableActions(this);
 
-    public Simulator(SimulationState state)
+    public Simulator(in SimulationState state)
     {
         State = state;
     }
 
-    public void SetState(SimulationState state)
+    public void SetState(in SimulationState state)
     {
         State = state;
     }
 
-    public (ActionResponse Response, SimulationState NewState) Execute(SimulationState state, ActionType action)
+    public (ActionResponse Response, SimulationState NewState) Execute(in SimulationState state, ActionType action)
     {
         State = state;
         return (Execute(action), State);
@@ -75,7 +75,7 @@ public class Simulator
         return ActionResponse.UsedAction;
     }
 
-    public (ActionResponse Response, SimulationState NewState, int FailedActionIdx) ExecuteMultiple(SimulationState state, IEnumerable<ActionType> actions)
+    public (ActionResponse Response, SimulationState NewState, int FailedActionIdx) ExecuteMultiple(in SimulationState state, IEnumerable<ActionType> actions)
     {
         State = state;
         var i = 0;

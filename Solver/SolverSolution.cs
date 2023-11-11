@@ -9,7 +9,7 @@ public readonly record struct SolverSolution {
     public readonly IEnumerable<ActionType> ActionEnumerable { init => actions = SanitizeCombos(value).ToList(); }
     public readonly SimulationState State { get; init; }
 
-    public SolverSolution(IEnumerable<ActionType> actions, SimulationState state)
+    public SolverSolution(IEnumerable<ActionType> actions, in SimulationState state)
     {
         ActionEnumerable = actions;
         State = state;
