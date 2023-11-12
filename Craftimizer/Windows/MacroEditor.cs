@@ -21,6 +21,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using RandomSim = Craftimizer.Simulator.Simulator;
 using Sim = Craftimizer.Simulator.SimulatorNoRandom;
 
 namespace Craftimizer.Windows;
@@ -76,16 +77,77 @@ public sealed class MacroEditor : Window, IDisposable
     private List<int> HQIngredientCounts { get; set; }
     private int StartingQuality => RecipeData.CalculateStartingQuality(HQIngredientCounts);
 
+    private readonly record struct SimulationReliablity
+    {
+        public record struct ParamReliability
+        {
+            public int Max { get; private set; }
+            public int Min { get; private set; }
+            public float Average { get; private set; }
+
+            public ParamReliability()
+            {
+                Min = int.MaxValue;
+            }
+
+            public void Add(int value)
+            {
+                Max = Math.Max(Max, value);
+                Min = Math.Min(Min, value);
+                Average += value;
+            }
+
+            public void Finalize(int count)
+            {
+                if (count != 0)
+                    Average /= count;
+            }
+        }
+
+        public readonly ParamReliability Progress = new();
+        public readonly ParamReliability Quality = new();
+
+        // Param is either collectability, quality, or hq%, depending on the recipe
+        public readonly ParamReliability Param = new();
+
+        public SimulationReliablity(in SimulationState startState, IEnumerable<ActionType> actions, int iterCount, RecipeData recipeData)
+        {
+            Func<SimulationState, int> getParam;
+            if (recipeData.Recipe.ItemResult.Value!.IsCollectable)
+                getParam = s => s.Collectability;
+            else if (recipeData.Recipe.RequiredQuality > 0)
+                getParam = s => s.Quality;
+            else if (recipeData.RecipeInfo.MaxQuality > 0)
+                getParam = s => s.HQPercent;
+            else
+                getParam = s => 0;
+
+            for (var i = 0; i < iterCount; ++i)
+            {
+                var sim = new RandomSim(startState);
+                var (_, state, _) = sim.ExecuteMultiple(startState, actions);
+                Progress.Add(state.Progress);
+                Quality.Add(state.Quality);
+                Param.Add(getParam(state));
+            }
+            Progress.Finalize(iterCount);
+            Quality.Finalize(iterCount);
+            Param.Finalize(iterCount);
+        }
+    }
+
     private sealed record SimulatedActionStep
     {
         public ActionType Action { get; init; }
         // State *after* executing the action
         public ActionResponse Response { get; set; }
         public SimulationState State { get; set; }
+        public SimulationReliablity Reliability { get; set; }
     };
     private List<SimulatedActionStep> Macro { get; set; } = new();
     private SimulationState InitialState { get; set; }
     private SimulationState State => Macro.Count > 0 ? Macro[^1].State : InitialState;
+    private SimulationReliablity Reliability => Macro.Count > 0 ? Macro[^1].Reliability : new(InitialState, Array.Empty<ActionType>(), 0, RecipeData);
     private ActionType[] DefaultActions { get; }
     private Action<IEnumerable<ActionType>>? MacroSetter { get; set; }
 
@@ -971,23 +1033,23 @@ public sealed class MacroEditor : Window, IDisposable
                 ImGui.TableNextColumn();
                 var datas = new List<BarData>(3)
                 {
-                    new("Durability", Colors.Durability, State.Durability, RecipeData.RecipeInfo.MaxDurability, null, null),
-                    new("Condition", default, 0, 0, null, State.Condition)
+                    new("Durability", Colors.Durability, null, State.Durability, RecipeData.RecipeInfo.MaxDurability, null, null),
+                    new("Condition", default, null, 0, 0, null, State.Condition)
                 };
                 if (RecipeData.Recipe.ItemResult.Value!.IsCollectable)
-                    datas.Add(new("Collectability", Colors.HQ, State.Collectability, State.MaxCollectability, $"{State.Collectability}", null));
+                    datas.Add(new("Collectability", Colors.HQ, Reliability.Param, State.Collectability, State.MaxCollectability, $"{State.Collectability}", null));
                 else if (RecipeData.Recipe.RequiredQuality > 0)
-                    datas.Add(new("Quality %", Colors.HQ, State.Quality, RecipeData.Recipe.RequiredQuality, $"{(float)State.Quality / RecipeData.Recipe.RequiredQuality * 100:0}%", null));
+                    datas.Add(new("Quality %", Colors.HQ, Reliability.Param, State.Quality, RecipeData.Recipe.RequiredQuality, $"{(float)State.Quality / RecipeData.Recipe.RequiredQuality * 100:0}%", null));
                 else if (RecipeData.RecipeInfo.MaxQuality > 0)
-                    datas.Add(new("HQ %", Colors.HQ, State.HQPercent, 100, $"{State.HQPercent}%", null));
+                    datas.Add(new("HQ %", Colors.HQ, Reliability.Param, State.HQPercent, 100, $"{State.HQPercent}%", null));
                 DrawBars(datas);
 
                 ImGui.TableNextColumn();
                 datas = new List<BarData>(3)
                 {
-                    new("Progress", Colors.Progress, State.Progress, RecipeData.RecipeInfo.MaxProgress, null, null),
-                    new("Quality", Colors.Quality, State.Quality, RecipeData.RecipeInfo.MaxQuality, null, null),
-                    new("CP", Colors.CP, State.CP, CharacterStats.CP, null, null)
+                    new("Progress", Colors.Progress, Reliability.Progress, State.Progress, RecipeData.RecipeInfo.MaxProgress, null, null),
+                    new("Quality", Colors.Quality, Reliability.Quality, State.Quality, RecipeData.RecipeInfo.MaxQuality, null, null),
+                    new("CP", Colors.CP, null, State.CP, CharacterStats.CP, null, null)
                 };
                 if (RecipeData.RecipeInfo.MaxQuality <= 0)
                     datas.RemoveAt(1);
@@ -1034,7 +1096,7 @@ public sealed class MacroEditor : Window, IDisposable
         }
     }
 
-    private readonly record struct BarData(string Name, Vector4 Color, float Value, float Max, string? Caption, Condition? Condition);
+    private readonly record struct BarData(string Name, Vector4 Color, SimulationReliablity.ParamReliability? Reliability, float Value, float Max, string? Caption, Condition? Condition);
     private void DrawBars(IEnumerable<BarData> bars)
     {
         var spacing = ImGui.GetStyle().ItemSpacing.X;
@@ -1074,8 +1136,46 @@ public sealed class MacroEditor : Window, IDisposable
             }
             else
             {
-                using (var color = ImRaii.PushColor(ImGuiCol.PlotHistogram, bar.Color))
+                if (bar.Reliability is { } reliability)
+                {
+                    // blend rgb colors, assume alpha is always 1
+                    static Vector4 BlendColor(Vector4 A, Vector4 B)
+                    {
+                        return new(
+                            A.X * (1 - B.W) + B.X * B.W,
+                            A.Y * (1 - B.W) + B.Y * B.W,
+                            A.Z * (1 - B.W) + B.Z * B.W,
+                            1);
+                    }
+                    var relBars = new (float Value, Vector4 Color)[]
+                    {
+                        (bar.Value, bar.Color),
+                        (reliability.Average, BlendColor(bar.Color, new(.5f,.5f,.5f,.6f))),
+                        (reliability.Min, BlendColor(bar.Color, new(0,0,0,.6f))),
+                        (reliability.Max, BlendColor(bar.Color, new(1,1,1,.6f))),
+                    }.DistinctBy(v => Math.Clamp(v.Value, 0, bar.Max)).OrderByDescending(v => v.Value);
+                    var i = 0;
+                    var pos = ImGui.GetCursorPos();
+                    foreach (var relBar in relBars)
+                    {
+                        ImGui.SetCursorPos(pos);
+                        {
+                            using var frameColor = ImRaii.PushColor(ImGuiCol.FrameBg, Vector4.Zero, i != 0);
+                            using var color = ImRaii.PushColor(ImGuiCol.PlotHistogram, relBar.Color);
+                            ImGui.ProgressBar(Math.Clamp(relBar.Value / bar.Max, 0, 1), new(barSize, ImGui.GetFrameHeight()), string.Empty);
+                        }
+                        if (i++ == 0)
+                        {
+                            if (ImGui.IsItemHovered())
+                                ImGui.SetTooltip($"Min: {reliability.Min}\nAvg: {reliability.Average:0.##}\nMax: {reliability.Max}");
+                        }
+                    }
+                }
+                else
+                {
+                    using var color = ImRaii.PushColor(ImGuiCol.PlotHistogram, bar.Color);
                     ImGui.ProgressBar(Math.Clamp(bar.Value / bar.Max, 0, 1), new(barSize, ImGui.GetFrameHeight()), string.Empty);
+                }
                 ImGui.SameLine(0, spacing);
                 ImGui.AlignTextToFramePadding();
                 if (bar.Caption is { } caption)
@@ -1405,7 +1505,7 @@ public sealed class MacroEditor : Window, IDisposable
                 if (popupImportUrlMacro is { Name: var name, Actions: var actions })
                 {
                     Macro.Clear();
-                    foreach(var action in actions)
+                    foreach (var action in actions)
                         AddStep(action);
                     Service.PluginInterface.UiBuilder.AddNotification($"Imported macro \"{name}\"", "Craftimizer Macro Imported", NotificationType.Success);
 
@@ -1420,6 +1520,7 @@ public sealed class MacroEditor : Window, IDisposable
             popupImportUrlTokenSource = null;
         }
     }
+
     private void CalculateBestMacro()
     {
         SolverTokenSource?.Cancel();
@@ -1485,8 +1586,11 @@ public sealed class MacroEditor : Window, IDisposable
         InitialState = new SimulationState(new(CharacterStats, RecipeData.RecipeInfo, StartingQuality));
         var sim = new Sim(InitialState);
         var lastState = InitialState;
-        foreach (var step in Macro)
-            lastState = ((step.Response, step.State) = sim.Execute(lastState, step.Action)).State;
+        for (var i = 0; i < Macro.Count; i++)
+        {
+            lastState = ((Macro[i].Response, Macro[i].State) = sim.Execute(lastState, Macro[i].Action)).State;
+            Macro[i].Reliability = new(InitialState, Macro.Take(i + 1).Select(s => s.Action), Service.Configuration.ReliabilitySimulationCount, RecipeData);
+        }
     }
 
     private void AddStep(ActionType action, int index = -1, bool isSolver = false)
@@ -1503,6 +1607,7 @@ public sealed class MacroEditor : Window, IDisposable
             var sim = new Sim(State);
             var resp = sim.Execute(State, action);
             Macro.Add(new() { Action = action, Response = resp.Response, State = resp.NewState });
+            Macro[^1].Reliability = new(InitialState, Macro.Select(s => s.Action), Service.Configuration.ReliabilitySimulationCount, RecipeData);
         }
         else
         {
@@ -1510,9 +1615,14 @@ public sealed class MacroEditor : Window, IDisposable
             var sim = new Sim(state);
             var resp = sim.Execute(state, action);
             Macro.Insert(index, new() { Action = action, Response = resp.Response, State = resp.NewState });
+            Macro[index].Reliability = new(InitialState, Macro.Take(index + 1).Select(s => s.Action), Service.Configuration.ReliabilitySimulationCount, RecipeData);
+
             state = resp.NewState;
             for (var i = index + 1; i < Macro.Count; i++)
+            {
                 state = ((Macro[i].Response, Macro[i].State) = sim.Execute(state, Macro[i].Action)).State;
+                Macro[i].Reliability = new(InitialState, Macro.Take(i + 1).Select(s => s.Action), Service.Configuration.ReliabilitySimulationCount, RecipeData);
+            }
         }
     }
 
@@ -1529,7 +1639,10 @@ public sealed class MacroEditor : Window, IDisposable
         var state = index == 0 ? InitialState : Macro[index - 1].State;
         var sim = new Sim(state);
         for (var i = index; i < Macro.Count; i++)
+        {
             state = ((Macro[i].Response, Macro[i].State) = sim.Execute(state, Macro[i].Action)).State;
+            Macro[i].Reliability = new(InitialState, Macro.Take(i + 1).Select(s => s.Action), Service.Configuration.ReliabilitySimulationCount, RecipeData);
+        }
     }
 
     public void Dispose()
