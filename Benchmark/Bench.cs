@@ -3,6 +3,8 @@ using BenchmarkDotNet.Diagnostics.dotTrace;
 using BenchmarkDotNet.Jobs;
 using Craftimizer.Simulator;
 using Craftimizer.Solver;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Craftimizer.Benchmark;
 
@@ -12,6 +14,14 @@ namespace Craftimizer.Benchmark;
 [DotTraceDiagnoser]
 public class Bench
 {
+    public record struct SHAWrapper<T>(T Data) where T : notnull
+    {
+        public static implicit operator T(SHAWrapper<T> wrapper) => wrapper.Data;
+
+        public override readonly string ToString() =>
+            Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Data.ToString()!)));
+    }
+
     private static SimulationInput[] Inputs { get; } = new SimulationInput[] {
         // https://craftingway.app/rotation/loud-namazu-jVe9Y
         // Chondrite Saw
@@ -70,22 +80,22 @@ public class Bench
         })
     };
 
-    public static IEnumerable<SimulationState> States => Inputs.Select(i => new SimulationState(i));
+    public static IEnumerable<SHAWrapper<SimulationState>> States => Inputs.Select(i => new SHAWrapper<SimulationState>(new(i)));
 
-    public static IEnumerable<SolverConfig> Configs => new SolverConfig[]
+    public static IEnumerable<SHAWrapper<SolverConfig>> Configs => new SHAWrapper<SolverConfig>[]
     {
-        new()
+        new(new()
         {
             Algorithm = SolverAlgorithm.Stepwise,
             Iterations = 30_000,
-        }
+        })
     };
 
     [ParamsSource(nameof(States))]
-    public SimulationState State { get; set; }
+    public SHAWrapper<SimulationState> State { get; set; }
 
     [ParamsSource(nameof(Configs))]
-    public SolverConfig Config { get; set; }
+    public SHAWrapper<SolverConfig> Config { get; set; }
 
     [Benchmark]
     public async Task<float> Solve()

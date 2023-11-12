@@ -1,6 +1,7 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Craftimizer.Solver;
+using ObjectLayoutInspector;
 
 namespace Craftimizer.Benchmark;
 
@@ -63,8 +64,11 @@ internal static class Program
 
     private static async Task RunOther()
     {
-        //TypeLayout.PrintLayout<ArenaNode<SimulationNode>>(true);
-        //return;
+        TypeLayout.PrintLayout<SimulationState>(true);
+        TypeLayout.PrintLayout<Simulator.Simulator>(true);
+        TypeLayout.PrintLayout<BaseAction>(true);
+        TypeLayout.PrintLayout<SimulationNode>(true);
+        return;
 
         var input = new SimulationInput(
             new CharacterStats
