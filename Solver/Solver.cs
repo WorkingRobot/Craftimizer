@@ -35,7 +35,7 @@ public sealed class Solver : IDisposable
     // Always called when a new step is generated.
     public event NewActionDelegate? OnNewAction;
 
-    public Solver(SolverConfig config, SimulationState state)
+    public Solver(in SolverConfig config, in SimulationState state)
     {
         Config = config;
         State = state;

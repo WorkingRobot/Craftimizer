@@ -10,7 +10,7 @@ public abstract class BaseComboAction : BaseAction
     protected bool BaseCanUse(Simulator s) =>
         base.CanUse(s);
 
-    private static bool VerifyDurability2(int durabilityA, int durability, Effects effects)
+    private static bool VerifyDurability2(int durabilityA, int durability, in Effects effects)
     {
         var wasteNots = effects.HasEffect(EffectType.WasteNot) || effects.HasEffect(EffectType.WasteNot2);
         // -A
@@ -23,13 +23,10 @@ public abstract class BaseComboAction : BaseAction
         return true;
     }
 
-    public static bool VerifyDurability2(SimulationState s, int durabilityA) =>
-        VerifyDurability2(durabilityA, s.Durability, s.ActiveEffects);
-
     public static bool VerifyDurability2(Simulator s, int durabilityA) =>
         VerifyDurability2(durabilityA, s.Durability, s.ActiveEffects);
 
-    public static bool VerifyDurability3(int durabilityA, int durabilityB, int durability, Effects effects)
+    public static bool VerifyDurability3(int durabilityA, int durabilityB, int durability, in Effects effects)
     {
         var wasteNots = Math.Max(effects.GetDuration(EffectType.WasteNot), effects.GetDuration(EffectType.WasteNot2));
         var manips = effects.HasEffect(EffectType.Manipulation);
@@ -55,8 +52,5 @@ public abstract class BaseComboAction : BaseAction
     }
 
     public static bool VerifyDurability3(Simulator s, int durabilityA, int durabilityB) =>
-        VerifyDurability3(durabilityA, durabilityB, s.Durability, s.ActiveEffects);
-
-    public static bool VerifyDurability3(SimulationState s, int durabilityA, int durabilityB) =>
         VerifyDurability3(durabilityA, durabilityB, s.Durability, s.ActiveEffects);
 }

@@ -17,7 +17,7 @@ public sealed class MCTS
 
     public float MaxScore => rootScores.MaxScore;
 
-    public MCTS(MCTSConfig config, SimulationState state)
+    public MCTS(in MCTSConfig config, in SimulationState state)
     {
         this.config = config;
         var sim = new Simulator(state, config.MaxStepCount);
@@ -30,7 +30,7 @@ public sealed class MCTS
         rootScores = new();
     }
 
-    private static SimulationNode Execute(Simulator simulator, SimulationState state, ActionType action, bool strict)
+    private static SimulationNode Execute(Simulator simulator, in SimulationState state, ActionType action, bool strict)
     {
         (_, var newState) = simulator.Execute(state, action);
         return new(
@@ -61,7 +61,7 @@ public sealed class MCTS
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static (int arrayIdx, int subIdx) ChildMaxScore(ref NodeScoresBuffer scores)
+    private static (int arrayIdx, int subIdx) ChildMaxScore(in NodeScoresBuffer scores)
     {
         var length = scores.Count;
         var vecLength = Vector<float>.Count;
@@ -111,7 +111,7 @@ public sealed class MCTS
         float explorationConstant,
         float maxScoreWeightingConstant,
         int parentVisits,
-        ref NodeScoresBuffer scores)
+        in NodeScoresBuffer scores)
     {
         var length = scores.Count;
         var vecLength = Vector<float>.Count;
@@ -168,7 +168,7 @@ public sealed class MCTS
                 return node;
 
             // select the node with the highest score
-            var at = EvalBestChild(explorationConstant, maxScoreWeightingConstant, nodeVisits, ref node.ChildScores);
+            var at = EvalBestChild(explorationConstant, maxScoreWeightingConstant, nodeVisits, in node.ChildScores);
             nodeVisits = node.ChildScores.GetVisits(at);
             node = node.ChildAt(at)!;
         }
@@ -320,7 +320,7 @@ public sealed class MCTS
 
         while (node.Children.Count != 0)
         {
-            node = node.ChildAt(ChildMaxScore(ref node.ChildScores))!;
+            node = node.ChildAt(ChildMaxScore(in node.ChildScores))!;
 
             if (node.State.Action != null)
                 actions.Add(node.State.Action.Value);

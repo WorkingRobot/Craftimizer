@@ -1,5 +1,3 @@
-using Craftimizer.Simulator.Actions;
-using Craftimizer.Simulator;
 using System.Runtime.InteropServices;
 
 namespace Craftimizer.Solver;

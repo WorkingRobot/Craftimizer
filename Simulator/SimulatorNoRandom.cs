@@ -2,7 +2,7 @@ namespace Craftimizer.Simulator;
 
 public class SimulatorNoRandom : Simulator
 {
-    public SimulatorNoRandom(SimulationState state) : base(state)
+    public SimulatorNoRandom(in SimulationState state) : base(state)
     {
     }
 

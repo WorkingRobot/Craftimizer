@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 
 namespace Craftimizer.Solver;
 
@@ -21,7 +21,7 @@ public readonly record struct MCTSConfig
     public float ScoreCP { get; init; }
     public float ScoreSteps { get; init; }
 
-    public MCTSConfig(SolverConfig config)
+    public MCTSConfig(in SolverConfig config)
     {
         MaxStepCount = config.MaxStepCount;
         MaxRolloutStepCount = config.MaxRolloutStepCount;

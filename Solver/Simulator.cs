@@ -20,7 +20,7 @@ internal sealed class Simulator : SimulatorNoRandom
         }
     }
 
-    public Simulator(SimulationState state, int maxStepCount) : base(state)
+    public Simulator(in SimulationState state, int maxStepCount) : base(state)
     {
         this.maxStepCount = maxStepCount;
     }

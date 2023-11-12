@@ -19,7 +19,7 @@ public struct SimulationNode
 
     public readonly bool IsComplete => CompletionState != CompletionState.Incomplete;
 
-    public SimulationNode(SimulationState state, ActionType? action, CompletionState completionState, ActionSet actions)
+    public SimulationNode(in SimulationState state, ActionType? action, CompletionState completionState, ActionSet actions)
     {
         State = state;
         Action = action;
@@ -32,10 +32,10 @@ public struct SimulationNode
         CompletionState.NoMoreActions :
         simCompletionState;
 
-    public readonly float? CalculateScore(MCTSConfig config) =>
+    public readonly float? CalculateScore(in MCTSConfig config) =>
         CalculateScoreForState(State, SimulationCompletionState, config);
 
-    public static float? CalculateScoreForState(SimulationState state, CompletionState completionState, MCTSConfig config)
+    public static float? CalculateScoreForState(in SimulationState state, CompletionState completionState, MCTSConfig config)
     {
         if (completionState != CompletionState.ProgressComplete)
             return null;

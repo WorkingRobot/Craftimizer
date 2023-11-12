@@ -7,11 +7,11 @@ namespace Craftimizer.Solver;
 // Adapted from https://github.com/dtao/ConcurrentList/blob/4fcf1c76e93021a41af5abb2d61a63caeba2adad/ConcurrentList/ConcurrentList.cs
 public struct NodeScoresBuffer
 {
-    public sealed class ScoresBatch
+    public readonly struct ScoresBatch
     {
-        public Memory<float> ScoreSum;
-        public Memory<float> MaxScore;
-        public Memory<int> Visits;
+        public readonly Memory<float> ScoreSum;
+        public readonly Memory<float> MaxScore;
+        public readonly Memory<int> Visits;
 
         public ScoresBatch()
         {
@@ -40,9 +40,10 @@ public struct NodeScoresBuffer
 
         var idx = Count++;
 
-        var (arrayIdx, _) = GetArrayIndex(idx);
+        var (arrayIdx, subIdx) = GetArrayIndex(idx);
 
-        Data[arrayIdx] ??= new();
+        if (subIdx == 0)
+            Data[arrayIdx] = new();
     }
 
     public readonly void Visit((int arrayIdx, int subIdx) at, float score)
