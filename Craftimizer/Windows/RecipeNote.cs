@@ -216,7 +216,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         ImGui.Separator();
 
         var panelWidth = availWidth - ImGui.GetStyle().ItemSpacing.X * 2;
-        using (var panel = ImGuiUtils.GroupPanel("Best Saved Macro", panelWidth, out _))
+        using (var panel = ImRaii2.GroupPanel("Best Saved Macro", panelWidth, out _))
         {
             var stepsPanelWidthOffset = ImGui.GetContentRegionAvail().X - panelWidth;
             if (BestSavedMacro is { } savedMacro)
@@ -228,7 +228,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 DrawMacro(null, null, stepsPanelWidthOffset, true);
         }
 
-        using (var panel = ImGuiUtils.GroupPanel("Suggested Macro", panelWidth, out _))
+        using (var panel = ImRaii2.GroupPanel("Suggested Macro", panelWidth, out _))
         {
             var stepsPanelWidthOffset = ImGui.GetContentRegionAvail().X - panelWidth;
             if (BestSuggestedMacro is { } suggestedMacro)

@@ -79,31 +79,48 @@ public sealed class MacroEditor : Window, IDisposable
 
     private readonly record struct SimulationReliablity
     {
-        public record struct ParamReliability
+        public sealed class ParamReliability
         {
+            private List<int> DataList { get; }
+            private ImGuiUtils.ViolinData? ViolinData { get; set; }
+
             public int Max { get; private set; }
             public int Min { get; private set; }
+            public float Median { get; private set; }
             public float Average { get; private set; }
 
             public ParamReliability()
             {
-                Min = int.MaxValue;
+                DataList = new();
             }
 
             public void Add(int value)
             {
-                Max = Math.Max(Max, value);
-                Min = Math.Min(Min, value);
-                Average += value;
+                DataList.Add(value);
             }
 
-            public void Finalize(int count)
+            public void FinalizeData()
             {
-                if (count == 0)
-                    Average = Max = Min = 0;
+                if (DataList.Count == 0)
+                {
+                    Average = Median = Max = Min = 0;
+                    return;
+                }
+
+                Max = DataList.Max();
+                Min = DataList.Min();
+                if (DataList.Count % 2 == 0)
+                    Median = (float)DataList.Order().Skip(DataList.Count / 2 - 1).Take(2).Average();
                 else
-                    Average /= count;
+                    Median = DataList.Order().ElementAt(DataList.Count / 2);
+                Average = (float)DataList.Average();
             }
+
+            public ImGuiUtils.ViolinData? GetViolinData(float barMax, int resolution, double bandwidth) =>
+                ViolinData ??=
+                    Min != Max ?
+                        new(DataList, 0, barMax, resolution, bandwidth) :
+                        null;
         }
 
         public readonly ParamReliability Progress = new();
@@ -132,9 +149,9 @@ public sealed class MacroEditor : Window, IDisposable
                 Quality.Add(state.Quality);
                 Param.Add(getParam(state));
             }
-            Progress.Finalize(iterCount);
-            Quality.Finalize(iterCount);
-            Param.Finalize(iterCount);
+            Progress.FinalizeData();
+            Quality.FinalizeData();
+            Param.FinalizeData();
         }
     }
 
@@ -160,7 +177,8 @@ public sealed class MacroEditor : Window, IDisposable
         }
 
         public SimulationReliablity GetReliability(in SimulationState initialState, IEnumerable<ActionType> actionSet, RecipeData recipeData) =>
-            Reliability ??= new(initialState, actionSet, Service.Configuration.ReliabilitySimulationCount, recipeData);
+            Reliability ??=
+                new(initialState, actionSet, Service.Configuration.ReliabilitySimulationCount, recipeData);
     };
 
     private List<SimulatedActionStep> Macro { get; set; } = new();
@@ -195,7 +213,7 @@ public sealed class MacroEditor : Window, IDisposable
     private CancellationTokenSource? popupImportUrlTokenSource;
     private MacroImport.RetrievedMacro? popupImportUrlMacro;
 
-    public MacroEditor(CharacterStats characterStats, RecipeData recipeData, CrafterBuffs buffs, IEnumerable<ActionType> actions, Action<IEnumerable<ActionType>>? setter) : base("Craftimizer Macro Editor", WindowFlags, false)
+    public MacroEditor(CharacterStats characterStats, RecipeData recipeData, CrafterBuffs buffs, IEnumerable<ActionType> actions, Action<IEnumerable<ActionType>>? setter) : base("Craftimizer Macro Editor", WindowFlags)
     {
         CharacterStats = characterStats;
         RecipeData = recipeData;
@@ -1000,7 +1018,7 @@ public sealed class MacroEditor : Window, IDisposable
                 continue;
 
             var actions = category.GetActions();
-            using var panel = ImGuiUtils.GroupPanel(category.GetDisplayName(), -1, out var availSpace);
+            using var panel = ImRaii2.GroupPanel(category.GetDisplayName(), -1, out var availSpace);
             var itemsPerRow = (int)MathF.Floor((availSpace + spacing) / (imageSize + spacing));
             var itemCount = actions.Count;
             var iterCount = (int)(Math.Ceiling((float)itemCount / itemsPerRow) * itemsPerRow);
@@ -1076,7 +1094,7 @@ public sealed class MacroEditor : Window, IDisposable
             }
         }
 
-        using (var panel = ImGuiUtils.GroupPanel("Buffs", -1, out _))
+        using (var panel = ImRaii2.GroupPanel("Buffs", -1, out _))
         {
             using var _font = ImRaii.PushFont(AxisFont.ImFont);
 
@@ -1134,7 +1152,7 @@ public sealed class MacroEditor : Window, IDisposable
         var barSize = totalSize - textSize - spacing;
         foreach (var bar in bars)
         {
-            using var panel = ImGuiUtils.GroupPanel(bar.Name, totalSize, out _);
+            using var panel = ImRaii2.GroupPanel(bar.Name, totalSize, out _);
             if (bar.Condition is { } condition)
             {
                 using (var g = ImRaii.Group())
@@ -1155,45 +1173,25 @@ public sealed class MacroEditor : Window, IDisposable
             }
             else
             {
-                if (bar.Reliability is { } reliability)
-                {
-                    // blend rgb colors, assume alpha is always 1
-                    static Vector4 BlendColor(Vector4 A, Vector4 B)
-                    {
-                        return new(
-                            A.X * (1 - B.W) + B.X * B.W,
-                            A.Y * (1 - B.W) + B.Y * B.W,
-                            A.Z * (1 - B.W) + B.Z * B.W,
-                            1);
-                    }
-                    var relBars = new (float Value, Vector4 Color)[]
-                    {
-                        (bar.Value, bar.Color),
-                        (reliability.Average, BlendColor(bar.Color, new(.5f,.5f,.5f,.6f))),
-                        (reliability.Min, BlendColor(bar.Color, new(0,0,0,.6f))),
-                        (reliability.Max, BlendColor(bar.Color, new(1,1,1,.6f))),
-                    }.DistinctBy(v => Math.Clamp(v.Value, 0, bar.Max)).OrderByDescending(v => v.Value);
-                    var i = 0;
-                    var pos = ImGui.GetCursorPos();
-                    foreach (var relBar in relBars)
-                    {
-                        ImGui.SetCursorPos(pos);
-                        {
-                            using var frameColor = ImRaii.PushColor(ImGuiCol.FrameBg, Vector4.Zero, i != 0);
-                            using var color = ImRaii.PushColor(ImGuiCol.PlotHistogram, relBar.Color);
-                            ImGui.ProgressBar(Math.Clamp(relBar.Value / bar.Max, 0, 1), new(barSize, ImGui.GetFrameHeight()), string.Empty);
-                        }
-                        if (i++ == 0)
-                        {
-                            if (ImGui.IsItemHovered())
-                                ImGui.SetTooltip($"Min: {reliability.Min}\nAvg: {reliability.Average:0.##}\nMax: {reliability.Max}");
-                        }
-                    }
-                }
-                else
-                {
-                    using var color = ImRaii.PushColor(ImGuiCol.PlotHistogram, bar.Color);
+                var pos = ImGui.GetCursorPos();
+                using (var color = ImRaii.PushColor(ImGuiCol.PlotHistogram, bar.Color))
                     ImGui.ProgressBar(Math.Clamp(bar.Value / bar.Max, 0, 1), new(barSize, ImGui.GetFrameHeight()), string.Empty);
+                if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenOverlapped))
+                {
+                    if (bar.Reliability is { } reliability)
+                    {
+                        if (reliability.GetViolinData(bar.Max, (int)(barSize / 2), 0.02) is { } violinData)
+                        {
+                            ImGui.SetCursorPos(pos);
+                            ImGuiUtils.ViolinPlot(violinData, new(barSize, ImGui.GetFrameHeight()));
+                            if (ImGui.IsItemHovered())
+                                ImGui.SetTooltip(
+                                    $"Min: {reliability.Min}\n" +
+                                    $"Med: {reliability.Median:0.##}\n" +
+                                    $"Avg: {reliability.Average:0.##}\n" +
+                                    $"Max: {reliability.Max}");
+                        }
+                    }
                 }
                 ImGui.SameLine(0, spacing);
                 ImGui.AlignTextToFramePadding();
@@ -1217,7 +1215,7 @@ public sealed class MacroEditor : Window, IDisposable
         var imageSize = ImGui.GetFrameHeight() * 2;
         var lastState = InitialState;
 
-        using var panel = ImGuiUtils.GroupPanel("Macro", -1, out var availSpace);
+        using var panel = ImRaii2.GroupPanel("Macro", -1, out var availSpace);
         ImGui.Dummy(new(0, imageSize));
         ImGui.SameLine(0, 0);
 
@@ -1412,7 +1410,7 @@ public sealed class MacroEditor : Window, IDisposable
         {
             bool submittedText, submittedUrl;
 
-            using (var panel = ImGuiUtils.GroupPanel("##text", -1, out var availWidth))
+            using (var panel = ImRaii2.GroupPanel("##text", -1, out var availWidth))
             {
                 ImGui.AlignTextToFramePadding();
                 ImGuiUtils.TextCentered("Paste your macro here");
@@ -1424,7 +1422,7 @@ public sealed class MacroEditor : Window, IDisposable
                     submittedText = ImGui.Button("Import", new(availWidth, 0));
             }
 
-            using (var panel = ImGuiUtils.GroupPanel("##url", -1, out var availWidth))
+            using (var panel = ImRaii2.GroupPanel("##url", -1, out var availWidth))
             {
                 var availOffset = ImGui.GetContentRegionAvail().X - availWidth;
 

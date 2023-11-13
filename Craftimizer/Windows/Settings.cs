@@ -191,7 +191,7 @@ public sealed class Settings : Window, IDisposable
             ImGui.SetTooltip("Disabled temporarily for testing");
 
         DrawOption(
-            "Show Only One Macro Stat",
+            "Show Only One Macro Stat in Crafting Log",
             "Only one stat will be shown for a macro. If a craft will be finished, quality\n" +
             "is shown. Otherwise, progress is shown. Durability and remaining CP will be\n" +
             "hidden.",
@@ -200,9 +200,21 @@ public sealed class Settings : Window, IDisposable
             ref isDirty
         );
 
+        DrawOption(
+            "Reliability Trial Count",
+            "When testing for reliability of a macro in the editor, this many trials will be\n" +
+            "run. You should set this value to at least 100 to get a reliable spread of data.\n" +
+            "If it's too low, you may not find an outlier, and the average might be skewed.",
+            Config.ReliabilitySimulationCount,
+            5,
+            5000,
+            v => Config.ReliabilitySimulationCount = v,
+            ref isDirty
+        );
+
         ImGuiHelpers.ScaledDummy(5);
 
-        using (var panel = ImGuiUtils.GroupPanel("Copying Settings", -1, out _))
+        using (var panel = ImRaii2.GroupPanel("Copying Settings", -1, out _))
         {
             DrawOption(
                 "Macro Copy Method",
@@ -380,7 +392,7 @@ public sealed class Settings : Window, IDisposable
 
         var config = configRef;
 
-        using (var panel = ImGuiUtils.GroupPanel("General", -1, out _))
+        using (var panel = ImRaii2.GroupPanel("General", -1, out _))
         {
             if (ImGui.Button("Reset to Default", OptionButtonSize))
             {
@@ -501,7 +513,7 @@ public sealed class Settings : Window, IDisposable
                 );
         }
 
-        using (var panel = ImGuiUtils.GroupPanel("Advanced", -1, out _))
+        using (var panel = ImRaii2.GroupPanel("Advanced", -1, out _))
         {
             DrawOption(
                 "Score Storage Threshold",
@@ -538,7 +550,7 @@ public sealed class Settings : Window, IDisposable
             );
         }
 
-        using (var panel = ImGuiUtils.GroupPanel("Score Weights (Advanced)", -1, out _))
+        using (var panel = ImRaii2.GroupPanel("Score Weights (Advanced)", -1, out _))
         {
             ImGui.TextWrapped("All values should add up to 1. Otherwise, the Score Storage Threshold should be changed.");
             ImGuiHelpers.ScaledDummy(10);

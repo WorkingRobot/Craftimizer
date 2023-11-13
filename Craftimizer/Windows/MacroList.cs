@@ -111,7 +111,7 @@ public sealed class MacroList : Window, IDisposable
 
         var stateNullable = GetMacroState(macro);
 
-        using var panel = ImGuiUtils.GroupPanel(macro.Name, -1, out var availWidth);
+        using var panel = ImRaii2.GroupPanel(macro.Name, -1, out var availWidth);
         var stepsAvailWidthOffset = ImGui.GetContentRegionAvail().X - availWidth;
         var spacing = ImGui.GetStyle().ItemSpacing.Y;
         var miniRowHeight = (windowHeight - spacing) / 2f;
