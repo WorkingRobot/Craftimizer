@@ -99,7 +99,9 @@ public sealed class MacroEditor : Window, IDisposable
 
             public void Finalize(int count)
             {
-                if (count != 0)
+                if (count == 0)
+                    Average = Max = Min = 0;
+                else
                     Average /= count;
             }
         }
@@ -138,16 +140,33 @@ public sealed class MacroEditor : Window, IDisposable
 
     private sealed record SimulatedActionStep
     {
-        public ActionType Action { get; init; }
+        public ActionType Action { get; }
         // State *after* executing the action
-        public ActionResponse Response { get; set; }
-        public SimulationState State { get; set; }
-        public SimulationReliablity Reliability { get; set; }
+        public ActionResponse Response { get; private set; }
+        public SimulationState State { get; private set; }
+        private SimulationReliablity? Reliability { get; set; }
+
+        public SimulatedActionStep(ActionType action, Sim sim, in SimulationState lastState, out SimulationState newState)
+        {
+            Action = action;
+            newState = Recalculate(sim, lastState);
+        }
+
+        public SimulationState Recalculate(Sim sim, in SimulationState lastState)
+        {
+            (Response, State) = sim.Execute(lastState, Action);
+            Reliability = null;
+            return State;
+        }
+
+        public SimulationReliablity GetReliability(in SimulationState initialState, IEnumerable<ActionType> actionSet, RecipeData recipeData) =>
+            Reliability ??= new(initialState, actionSet, Service.Configuration.ReliabilitySimulationCount, recipeData);
     };
+
     private List<SimulatedActionStep> Macro { get; set; } = new();
     private SimulationState InitialState { get; set; }
     private SimulationState State => Macro.Count > 0 ? Macro[^1].State : InitialState;
-    private SimulationReliablity Reliability => Macro.Count > 0 ? Macro[^1].Reliability : new(InitialState, Array.Empty<ActionType>(), 0, RecipeData);
+    private SimulationReliablity Reliability => Macro.Count > 0 ? Macro[^1].GetReliability(InitialState, Macro.Select(m => m.Action), RecipeData) : new(InitialState, Array.Empty<ActionType>(), 0, RecipeData);
     private ActionType[] DefaultActions { get; }
     private Action<IEnumerable<ActionType>>? MacroSetter { get; set; }
 
@@ -1587,10 +1606,7 @@ public sealed class MacroEditor : Window, IDisposable
         var sim = new Sim(InitialState);
         var lastState = InitialState;
         for (var i = 0; i < Macro.Count; i++)
-        {
-            lastState = ((Macro[i].Response, Macro[i].State) = sim.Execute(lastState, Macro[i].Action)).State;
-            Macro[i].Reliability = new(InitialState, Macro.Take(i + 1).Select(s => s.Action), Service.Configuration.ReliabilitySimulationCount, RecipeData);
-        }
+            lastState = Macro[i].Recalculate(sim, lastState);
     }
 
     private void AddStep(ActionType action, int index = -1, bool isSolver = false)
@@ -1605,24 +1621,16 @@ public sealed class MacroEditor : Window, IDisposable
         if (index == -1)
         {
             var sim = new Sim(State);
-            var resp = sim.Execute(State, action);
-            Macro.Add(new() { Action = action, Response = resp.Response, State = resp.NewState });
-            Macro[^1].Reliability = new(InitialState, Macro.Select(s => s.Action), Service.Configuration.ReliabilitySimulationCount, RecipeData);
+            Macro.Add(new(action, sim, State, out _));
         }
         else
         {
             var state = index == 0 ? InitialState : Macro[index - 1].State;
             var sim = new Sim(state);
-            var resp = sim.Execute(state, action);
-            Macro.Insert(index, new() { Action = action, Response = resp.Response, State = resp.NewState });
-            Macro[index].Reliability = new(InitialState, Macro.Take(index + 1).Select(s => s.Action), Service.Configuration.ReliabilitySimulationCount, RecipeData);
-
-            state = resp.NewState;
+            Macro.Insert(index, new(action, sim, state, out state));
+            
             for (var i = index + 1; i < Macro.Count; i++)
-            {
-                state = ((Macro[i].Response, Macro[i].State) = sim.Execute(state, Macro[i].Action)).State;
-                Macro[i].Reliability = new(InitialState, Macro.Take(i + 1).Select(s => s.Action), Service.Configuration.ReliabilitySimulationCount, RecipeData);
-            }
+                state = Macro[i].Recalculate(sim, state);
         }
     }
 
@@ -1639,10 +1647,7 @@ public sealed class MacroEditor : Window, IDisposable
         var state = index == 0 ? InitialState : Macro[index - 1].State;
         var sim = new Sim(state);
         for (var i = index; i < Macro.Count; i++)
-        {
-            state = ((Macro[i].Response, Macro[i].State) = sim.Execute(state, Macro[i].Action)).State;
-            Macro[i].Reliability = new(InitialState, Macro.Take(i + 1).Select(s => s.Action), Service.Configuration.ReliabilitySimulationCount, RecipeData);
-        }
+            state = Macro[i].Recalculate(sim, state);
     }
 
     public void Dispose()
