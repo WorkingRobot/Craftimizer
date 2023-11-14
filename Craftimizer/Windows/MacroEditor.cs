@@ -1155,10 +1155,13 @@ public sealed class MacroEditor : Window, IDisposable
             using var panel = ImRaii2.GroupPanel(bar.Name, totalSize, out _);
             if (bar.Condition is { } condition)
             {
+                var pos = ImGui.GetCursorPos();
                 using (var g = ImRaii.Group())
                 {
+                    var availSize = totalSize - (spacing + ImGui.GetFrameHeight());
                     var size = ImGui.GetFrameHeight() + spacing + ImGui.CalcTextSize(condition.Name()).X;
-                    ImGuiUtils.AlignCentered(size, totalSize);
+
+                    ImGuiUtils.AlignCentered(size, availSize);
                     ImGui.GetWindowDrawList().AddCircleFilled(
                         ImGui.GetCursorScreenPos() + new Vector2(ImGui.GetFrameHeight() / 2),
                         ImGui.GetFrameHeight() / 2,
@@ -1170,6 +1173,23 @@ public sealed class MacroEditor : Window, IDisposable
                 }
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip(condition.Description(CharacterStats.HasSplendorousBuff));
+
+                ImGui.SetCursorPos(pos);
+                ImGuiUtils.AlignRight(ImGui.GetFrameHeight(), totalSize);
+
+                using (var disabled = ImRaii.Disabled(SolverRunning))
+                {
+                    using var tint = ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled), !Service.Configuration.ConditionRandomness);
+                    if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Dice))
+                    {
+                        Service.Configuration.ConditionRandomness ^= true;
+                        Service.Configuration.Save();
+
+                        RecalculateState();
+                    }
+                }
+                if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+                    ImGui.SetTooltip("Condition Randomness");
             }
             else
             {
@@ -1545,6 +1565,14 @@ public sealed class MacroEditor : Window, IDisposable
         SolverException = null;
 
         RevertPreviousMacro();
+
+        if (Service.Configuration.ConditionRandomness)
+        {
+            Service.Configuration.ConditionRandomness = false;
+            Service.Configuration.Save();
+            RecalculateState();
+        }
+
         SolverStartStepCount = Macro.Count;
 
         var token = SolverTokenSource.Token;
@@ -1607,7 +1635,7 @@ public sealed class MacroEditor : Window, IDisposable
             lastState = Macro[i].Recalculate(sim, lastState);
     }
 
-    private Sim CreateSim(in SimulationState state) =>
+    private static Sim CreateSim(in SimulationState state) =>
         Service.Configuration.ConditionRandomness ? new Sim(state) : new SimNoRandom(state);
 
     private void AddStep(ActionType action, int index = -1, bool isSolver = false)
