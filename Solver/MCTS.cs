@@ -15,6 +15,9 @@ public sealed class MCTS
     private readonly Node rootNode;
     private readonly RootScores rootScores;
 
+    public const int ProgressUpdateFrequency = 1 << 10;
+    private const int StaleProgressThreshold = 1 << 12;
+
     public float MaxScore => rootScores.MaxScore;
 
     public MCTS(in MCTSConfig config, in SimulationState state)
@@ -278,11 +281,11 @@ public sealed class MCTS
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Search(int iterations, CancellationToken token)
+    public void Search(int iterations, CancellationToken token, Action? progressCallback)
     {
         Simulator simulator = new(config.MaxStepCount);
         var random = rootNode.State.State.Input.Random;
-        var n = 0;
+        var staleCounter = 0;
         for (var i = 0; i < iterations || MaxScore == 0; i++)
         {
             token.ThrowIfCancellationRequested();
@@ -293,9 +296,9 @@ public sealed class MCTS
             {
                 if (endNode == selectedNode)
                 {
-                    if (n++ > 5000)
+                    if (staleCounter++ >= StaleProgressThreshold)
                     {
-                        n = 0;
+                        staleCounter = 0;
                         if (AllNodesComplete())
                         {
                             //Console.WriteLine("All nodes solved for. Can't find a valid solution.");
@@ -305,10 +308,13 @@ public sealed class MCTS
                     }
                 }
                 else
-                    n = 0;
+                    staleCounter = 0;
             }
 
             Backpropagate(endNode, score);
+
+            if ((i & (ProgressUpdateFrequency - 1)) == ProgressUpdateFrequency - 1)
+                progressCallback?.Invoke();
         }
     }
 

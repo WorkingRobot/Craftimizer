@@ -19,8 +19,13 @@ public sealed class Solver : IDisposable
     private MCTSConfig MCTSConfig => new(Config);
     private Task? CompletionTask { get; set; }
 
+    private int progressSequence;
+    private int progress;
+    private int maxProgress;
+
     public delegate void LogDelegate(string text);
     public delegate void WorkerProgressDelegate(SolverSolution solution, float score);
+    public delegate void ProgressDelegate(int sequence, int value, int maxValue);
     public delegate void NewActionDelegate(ActionType action);
     public delegate void SolutionDelegate(SolverSolution solution);
 
@@ -31,6 +36,11 @@ public sealed class Solver : IDisposable
     // Solution contains the best terminal state, and its actions to get there exclude the ones provided by OnNewAction.
     // For example, to get to the terminal state, execute all OnNewAction actions, then execute all Solution actions.
     public event WorkerProgressDelegate? OnWorkerProgress;
+
+    // Always called in some form in every algorithm.
+    // In iterative algorithms, the sequence can increment and reset the value back to 0.
+    // In other algorithms, the sequence is always 0 and the value increases monotonically.
+    public event ProgressDelegate? OnProgress;
 
     // Always called when a new step is generated.
     public event NewActionDelegate? OnNewAction;
@@ -63,6 +73,7 @@ public sealed class Solver : IDisposable
     {
         Token.ThrowIfCancellationRequested();
 
+        progressSequence = progress = 0;
         Solution = await SearchFunc().ConfigureAwait(false);
     }
 
@@ -110,8 +121,35 @@ public sealed class Solver : IDisposable
             OnNewAction?.Invoke(sanitizedAction);
     }
 
+    private void IncrementProgress() =>
+        IncrementProgressBy(MCTS.ProgressUpdateFrequency);
+
+    private void IncrementRemainingProgress(int iterations) =>
+        IncrementProgressBy(iterations & MCTS.ProgressUpdateFrequency);
+
+    private void IncrementProgressBy(int value)
+    {
+        OnProgress?.Invoke(progressSequence, Interlocked.Add(ref progress, value), maxProgress);
+    }
+
+    private void IncrementProgressSequence()
+    {
+        Interlocked.Exchange(ref progress, 0);
+        progressSequence++;
+        OnProgress?.Invoke(progressSequence, 0, maxProgress);
+    }
+
+    private void SearchWithIncrement(MCTS mcts, int iterations)
+    {
+        mcts.Search(iterations, Token, IncrementProgress);
+        IncrementRemainingProgress(iterations);
+    }
+
     private async Task<SolverSolution> SearchStepwiseFurcated()
     {
+        var iterCount = Config.Iterations / Config.ForkCount;
+        maxProgress = iterCount * Config.ForkCount;
+
         var definiteActionCount = 0;
         var bestSims = new List<(float Score, SolverSolution Result)>();
 
@@ -136,7 +174,7 @@ public sealed class Solver : IDisposable
                         await semaphore.WaitAsync(Token).ConfigureAwait(false);
                         try
                         {
-                            solver.Search(Config.Iterations / Config.ForkCount, Token);
+                            SearchWithIncrement(solver, iterCount);
                         }
                         finally
                         {
@@ -223,6 +261,8 @@ public sealed class Solver : IDisposable
                 }
             }
 
+            IncrementProgressSequence();
+
             activeStates = newStates;
         }
 
@@ -238,6 +278,9 @@ public sealed class Solver : IDisposable
 
     private async Task<SolverSolution> SearchStepwiseForked()
     {
+        var iterCount = Config.Iterations / Config.ForkCount;
+        maxProgress = iterCount * Config.ForkCount;
+
         var actions = new List<ActionType>();
         var state = State;
         var sim = new Simulator(Config.MaxStepCount) { State = state };
@@ -258,7 +301,7 @@ public sealed class Solver : IDisposable
                     await semaphore.WaitAsync(Token).ConfigureAwait(false);
                     try
                     {
-                        solver.Search(Config.Iterations / Config.ForkCount, Token);
+                        SearchWithIncrement(solver, iterCount);
                     }
                     finally
                     {
@@ -294,6 +337,8 @@ public sealed class Solver : IDisposable
 
             (_, state) = sim.Execute(state, chosenAction);
             actions.Add(chosenAction);
+
+            IncrementProgressSequence();
         }
 
         return new(actions, state);
@@ -301,6 +346,8 @@ public sealed class Solver : IDisposable
 
     private Task<SolverSolution> SearchStepwise()
     {
+        maxProgress = Config.Iterations;
+
         var actions = new List<ActionType>();
         var state = State;
         var sim = new Simulator(Config.MaxStepCount) { State = state };
@@ -314,7 +361,7 @@ public sealed class Solver : IDisposable
             var solver = new MCTS(MCTSConfig, state);
 
             var s = Stopwatch.StartNew();
-            solver.Search(Config.Iterations, Token);
+            SearchWithIncrement(solver, Config.Iterations);
             s.Stop();
             OnLog?.Invoke($"{s.Elapsed.TotalMilliseconds:0.00}ms {Config.Iterations / s.Elapsed.TotalSeconds / 1000:0.00} kI/s");
 
@@ -333,6 +380,8 @@ public sealed class Solver : IDisposable
 
             (_, state) = sim.Execute(state, chosenAction);
             actions.Add(chosenAction);
+
+            IncrementProgressSequence();
         }
 
         return Task.FromResult(new SolverSolution(actions, state));
@@ -340,6 +389,9 @@ public sealed class Solver : IDisposable
 
     private async Task<SolverSolution> SearchOneshotForked()
     {
+        var iterCount = Config.Iterations / Config.ForkCount;
+        maxProgress = iterCount * Config.ForkCount;
+
         using var semaphore = new SemaphoreSlim(0, Config.MaxThreadCount);
         var tasks = new Task<(float MaxScore, SolverSolution Solution)>[Config.ForkCount];
         for (var i = 0; i < Config.ForkCount; ++i)
@@ -349,7 +401,7 @@ public sealed class Solver : IDisposable
                 await semaphore.WaitAsync(Token).ConfigureAwait(false);
                 try
                 {
-                    solver.Search(Config.Iterations / Config.ForkCount, Token);
+                    SearchWithIncrement(solver, iterCount);
                 }
                 finally
                 {
@@ -375,8 +427,10 @@ public sealed class Solver : IDisposable
 
     private Task<SolverSolution> SearchOneshot()
     {
+        maxProgress = Config.Iterations;
+
         var solver = new MCTS(MCTSConfig, State);
-        solver.Search(Config.Iterations, Token);
+        SearchWithIncrement(solver, Config.Iterations);
         var solution = solver.Solution();
         foreach (var action in solution.Actions)
             InvokeNewAction(action);

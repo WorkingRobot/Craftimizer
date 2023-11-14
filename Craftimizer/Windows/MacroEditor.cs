@@ -196,6 +196,8 @@ public sealed class MacroEditor : Window, IDisposable
     private int? SolverStartStepCount { get; set; }
     private object? SolverQueueLock { get; set; }
     private List<SimulatedActionStep>? SolverQueuedSteps { get; set; }
+    private int solverProgress;
+    private int maxSolverProgress;
     private bool SolverRunning => SolverTokenSource != null;
 
     private IDalamudTextureWrap ExpertBadge { get; }
@@ -1269,7 +1271,7 @@ public sealed class MacroEditor : Window, IDisposable
         ImGui.Dummy(new(0, imageSize));
         ImGui.SameLine(0, 0);
 
-        var macroActionsHeight = ImGui.GetFrameHeightWithSpacing();
+        var macroActionsHeight = ImGui.GetFrameHeightWithSpacing() * (1 + (SolverRunning ? 1 : 0));
         var childHeight = ImGui.GetContentRegionAvail().Y - ImGui.GetStyle().ItemSpacing.Y * 2 - ImGui.GetStyle().CellPadding.Y - macroActionsHeight - ImGui.GetStyle().ItemSpacing.Y * 2;
 
         using (var child = ImRaii.Child("##macroActions", new(availSpace, childHeight)))
@@ -1308,6 +1310,19 @@ public sealed class MacroEditor : Window, IDisposable
         ImGui.Dummy(default);
         ImGui.GetWindowDrawList().AddLine(pos, pos + new Vector2(availSpace, 0), ImGui.GetColorU32(ImGuiCol.Border));
         ImGui.Dummy(default);
+        if (SolverRunning)
+        {
+            var percentWidth = ImGui.CalcTextSize("100%").X;
+            var progressWidth = availSpace - percentWidth - spacing;
+            var fraction = Math.Clamp((float)solverProgress / maxSolverProgress, 0, 1);
+            using (var color = ImRaii.PushColor(ImGuiCol.PlotHistogram, ImGuiColors.DalamudGrey3))
+                ImGui.ProgressBar(fraction, new(progressWidth, ImGui.GetFrameHeight()), string.Empty);
+            if (ImGui.IsItemHovered())
+                ImGui.SetTooltip($"Solver Progress: {solverProgress} / {maxSolverProgress}");
+            ImGui.SameLine(0, spacing);
+            ImGui.AlignTextToFramePadding();
+            ImGuiUtils.TextRight($"{fraction * 100:0}%", percentWidth);
+        }
         DrawMacroActions(availSpace);
     }
 
@@ -1602,6 +1617,7 @@ public sealed class MacroEditor : Window, IDisposable
         }
         SolverQueueLock = new();
         SolverQueuedSteps ??= new();
+        solverProgress = 0;
 
         RevertPreviousMacro();
 
@@ -1648,6 +1664,7 @@ public sealed class MacroEditor : Window, IDisposable
         var solver = new Solver.Solver(config, state) { Token = token };
         solver.OnLog += Log.Debug;
         solver.OnNewAction += QueueSolverStep;
+        solver.OnProgress += (s, p, m) => { Interlocked.Exchange(ref solverProgress, p); Interlocked.Exchange(ref maxSolverProgress, m); };
         solver.Start();
         _ = solver.GetTask().GetAwaiter().GetResult();
 
