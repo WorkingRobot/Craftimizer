@@ -19,27 +19,21 @@ public sealed class Solver : IDisposable
     private MCTSConfig MCTSConfig => new(Config);
     private Task? CompletionTask { get; set; }
 
-    private int progressSequence;
     private int progress;
     private int maxProgress;
 
     public delegate void LogDelegate(string text);
     public delegate void WorkerProgressDelegate(SolverSolution solution, float score);
-    public delegate void ProgressDelegate(int sequence, int value, int maxValue);
+    public delegate void ProgressDelegate(int value, int maxValue);
     public delegate void NewActionDelegate(ActionType action);
     public delegate void SolutionDelegate(SolverSolution solution);
 
     // Print to console or plugin log.
     public event LogDelegate? OnLog;
 
-    // Isn't always called. This is just meant to show as an indicator to the user.
-    // Solution contains the best terminal state, and its actions to get there exclude the ones provided by OnNewAction.
-    // For example, to get to the terminal state, execute all OnNewAction actions, then execute all Solution actions.
-    public event WorkerProgressDelegate? OnWorkerProgress;
-
     // Always called in some form in every algorithm.
-    // In iterative algorithms, the sequence can increment and reset the value back to 0.
-    // In other algorithms, the sequence is always 0 and the value increases monotonically.
+    // In iterative algorithms, the value can be reset back to 0.
+    // In other algorithms, the value increases monotonically.
     public event ProgressDelegate? OnProgress;
 
     // Always called when a new step is generated.
@@ -73,7 +67,7 @@ public sealed class Solver : IDisposable
     {
         Token.ThrowIfCancellationRequested();
 
-        progressSequence = progress = 0;
+        progress = 0;
         Solution = await SearchFunc().ConfigureAwait(false);
     }
 
@@ -129,14 +123,13 @@ public sealed class Solver : IDisposable
 
     private void IncrementProgressBy(int value)
     {
-        OnProgress?.Invoke(progressSequence, Interlocked.Add(ref progress, value), maxProgress);
+        OnProgress?.Invoke(Interlocked.Add(ref progress, value), maxProgress);
     }
 
     private void IncrementProgressSequence()
     {
         Interlocked.Exchange(ref progress, 0);
-        progressSequence++;
-        OnProgress?.Invoke(progressSequence, 0, maxProgress);
+        OnProgress?.Invoke(0, maxProgress);
     }
 
     private void SearchWithIncrement(MCTS mcts, int iterations)
@@ -185,8 +178,6 @@ public sealed class Solver : IDisposable
                             catch (ObjectDisposedException) { }
                         }
                         var solution = solver.Solution();
-                        var progressActions = activeStates[stateIdx].Actions.Concat(solution.Actions).Skip(definiteActionCount).ToList();
-                        OnWorkerProgress?.Invoke(solution with { Actions = progressActions }, solver.MaxScore);
                         return (solver.MaxScore, stateIdx, solution);
                     }, Token);
             }
@@ -312,7 +303,6 @@ public sealed class Solver : IDisposable
                         catch (ObjectDisposedException) { }
                     }
                     var solution = solver.Solution();
-                    OnWorkerProgress?.Invoke(solution, solver.MaxScore);
                     return (solver.MaxScore, solution);
                 }, Token);
             semaphore.Release(Config.MaxThreadCount);
@@ -412,7 +402,6 @@ public sealed class Solver : IDisposable
                     catch (ObjectDisposedException) { }
                 }
                 var solution = solver.Solution();
-                OnWorkerProgress?.Invoke(solution, solver.MaxScore);
                 return (solver.MaxScore, solution);
             }, Token);
         semaphore.Release(Config.MaxThreadCount);

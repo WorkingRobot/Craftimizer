@@ -183,7 +183,7 @@ public sealed class MacroEditor : Window, IDisposable
             Reliability ??=
                 new(initialState, actionSet, Service.Configuration.ReliabilitySimulationCount, recipeData);
     };
-    
+
     private List<SimulatedActionStep> Macro { get; set; } = new();
     private SimulationState InitialState { get; set; }
     private SimulationState State => Macro.Count > 0 ? Macro[^1].State : InitialState;
@@ -1664,7 +1664,11 @@ public sealed class MacroEditor : Window, IDisposable
         var solver = new Solver.Solver(config, state) { Token = token };
         solver.OnLog += Log.Debug;
         solver.OnNewAction += QueueSolverStep;
-        solver.OnProgress += (s, p, m) => { Interlocked.Exchange(ref solverProgress, p); Interlocked.Exchange(ref maxSolverProgress, m); };
+        solver.OnProgress += (p, m) =>
+        {
+            Interlocked.Exchange(ref solverProgress, p);
+            Interlocked.Exchange(ref maxSolverProgress, m);
+        };
         solver.Start();
         _ = solver.GetTask().GetAwaiter().GetResult();
 
@@ -1716,7 +1720,7 @@ public sealed class MacroEditor : Window, IDisposable
             var state = index == 0 ? InitialState : Macro[index - 1].State;
             var sim = CreateSim();
             Macro.Insert(index, new(action, sim, state, out state));
-            
+
             for (var i = index + 1; i < Macro.Count; i++)
                 state = Macro[i].Recalculate(sim, state);
         }
