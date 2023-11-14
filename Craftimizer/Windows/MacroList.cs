@@ -197,23 +197,23 @@ public sealed class MacroList : Window, IDisposable
 
             ImGui.TableNextColumn();
             {
-                if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Paste, new(miniRowHeight)))
+                if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Paste, miniRowHeight))
                     Service.Plugin.CopyMacro(macro.Actions);
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip("Copy to Clipboard");
                 ImGui.SameLine();
-                if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Trash, new(miniRowHeight)) && ImGui.GetIO().KeyShift)
+                if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Trash, miniRowHeight) && ImGui.GetIO().KeyShift)
                     Service.Configuration.RemoveMacro(macro);
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip("Delete (Hold Shift)");
 
-                if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.PencilAlt, new(miniRowHeight)))
+                if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.PencilAlt, miniRowHeight))
                     ShowRenamePopup(macro);
                 DrawRenamePopup(macro);
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip("Rename");
                 ImGui.SameLine();
-                if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Edit, new(miniRowHeight)))
+                if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Edit, miniRowHeight))
                     OpenEditor(macro);
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip("Open in Simulator");

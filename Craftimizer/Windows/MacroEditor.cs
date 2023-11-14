@@ -1314,14 +1314,14 @@ public sealed class MacroEditor : Window, IDisposable
                                  "can vary wildly depending on the solver's settings.");
         }
         ImGui.SameLine();
-        if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Paste, new(height)))
+        if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Paste))
             Service.Plugin.CopyMacro(Macro.Select(s => s.Action).ToArray());
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip("Copy to Clipboard");
         ImGui.SameLine();
         using (var _disabled = ImRaii.Disabled(SolverRunning))
         {
-            if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.FileImport, new(height)))
+            if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.FileImport))
                 ShowImportPopup();
         }
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
@@ -1332,7 +1332,7 @@ public sealed class MacroEditor : Window, IDisposable
         {
             using (var _disabled = ImRaii.Disabled(SolverRunning))
             {
-                if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Undo, new(height)))
+                if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Undo))
                 {
                     SolverStartStepCount = null;
                     Macro.Clear();
@@ -1346,7 +1346,7 @@ public sealed class MacroEditor : Window, IDisposable
         ImGui.SameLine();
         using (var _disabled = ImRaii.Disabled(SolverRunning))
         {
-            if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Trash, new(height)))
+            if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Trash))
             {
                 SolverStartStepCount = null;
                 Macro.Clear();

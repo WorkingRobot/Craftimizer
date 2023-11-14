@@ -507,10 +507,50 @@ internal static class ImGuiUtils
         return ImGuiExtras.InputTextEx(label, hint, ref input, maxLength, size, flags | Multiline, callback, user_data);
     }
 
-    public static bool IconButtonSized(FontAwesomeIcon icon, Vector2 size)
+    private static Vector2 GetIconSize(FontAwesomeIcon icon)
     {
         using var font = ImRaii.PushFont(UiBuilder.IconFont);
-        var ret = ImGui.Button(icon.ToIconString(), size);
+        return ImGui.CalcTextSize(icon.ToIconString());
+    }
+
+    private static void DrawCenteredIcon(FontAwesomeIcon icon, Vector2 offset, Vector2 size)
+    {
+        var iconSize = GetIconSize(icon);
+
+        float scale;
+        Vector2 iconOffset;
+        if (iconSize.X > iconSize.Y)
+        {
+            scale = size.X / iconSize.X;
+            iconOffset = new(0, (size.Y - (iconSize.Y * scale)) / 2f);
+        }
+        else if (iconSize.Y > iconSize.X)
+        {
+            scale = size.Y / iconSize.Y;
+            iconOffset = new((size.X - (iconSize.X * scale)) / 2f, 0);
+        }
+        else
+        {
+            scale = size.X / iconSize.X;
+            iconOffset = Vector2.Zero;
+        }
+
+        ImGui.GetWindowDrawList().AddText(UiBuilder.IconFont, UiBuilder.IconFont.FontSize * scale, offset + iconOffset, ImGui.GetColorU32(ImGuiCol.Text), icon.ToIconString());
+    }
+
+    public static bool IconButtonSquare(FontAwesomeIcon icon, float size = -1)
+    {
+        var ret = false;
+
+        var buttonSize = new Vector2(size == -1 ? ImGui.GetFrameHeight() : size);
+        var pos = ImGui.GetCursorScreenPos();
+        var spacing = new Vector2(ImGui.GetStyle().FramePadding.Y);
+
+        if (ImGui.Button($"###{icon.ToIconString()}", buttonSize))
+            ret = true;
+
+        DrawCenteredIcon(icon, pos + spacing, buttonSize - spacing * 2);
+
         return ret;
     }
 
