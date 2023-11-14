@@ -253,7 +253,7 @@ internal static class ImGuiUtils
             var samplesList = samples.AsParallel().Select(s => (double)s).ToArray();
             _ = Task.Run(() => {
                 var s = Stopwatch.StartNew();
-                var data = ParallelEnumerable.Range(0, resolution)
+                var data = ParallelEnumerable.Range(0, resolution + 1)
                     .Select(n => Lerp(min, max, n / (float)resolution))
                     .Select(n => (n, (float)KernelDensity.EstimateGaussian(n, bandwidth, samplesList)))
                     .Select(n => new Point(n.n, n.Item2, -n.Item2));
@@ -268,10 +268,9 @@ internal static class ImGuiUtils
     {
         using var padding = ImRaii2.PushStyle(ImPlotStyleVar.PlotPadding, Vector2.Zero);
         using var plotBg = ImRaii2.PushColor(ImPlotCol.PlotBg, Vector4.Zero);
-        using var frameBg = ImRaii2.PushColor(ImPlotCol.FrameBg, Vector4.Zero);
         using var fill = ImRaii2.PushColor(ImPlotCol.Fill, Vector4.One.WithAlpha(.5f));
 
-        using var plot = ImRaii2.Plot("##violin", size, ImPlotFlags.CanvasOnly);
+        using var plot = ImRaii2.Plot("##violin", size, ImPlotFlags.CanvasOnly | ImPlotFlags.NoInputs | ImPlotFlags.NoChild | ImPlotFlags.NoFrame);
         if (plot)
         {
             ImPlot.SetupAxes(null, null, ImPlotAxisFlags.NoDecorations, ImPlotAxisFlags.NoDecorations | ImPlotAxisFlags.AutoFit);
@@ -280,7 +279,8 @@ internal static class ImGuiUtils
 
             if (data.Data is { } points && !points.IsEmpty)
             {
-                unsafe {
+                unsafe
+                {
                     var label_id = stackalloc byte[] { (byte)'\0' };
                     fixed (ViolinData.Point* p = points)
                     {

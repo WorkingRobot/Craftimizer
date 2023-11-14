@@ -1180,7 +1180,7 @@ public sealed class MacroEditor : Window, IDisposable
                 {
                     if (bar.Reliability is { } reliability)
                     {
-                        if (reliability.GetViolinData(bar.Max, (int)(barSize / 2), 0.02) is { } violinData)
+                        if (reliability.GetViolinData(bar.Max, (int)(barSize / 5), 0.02) is { } violinData)
                         {
                             ImGui.SetCursorPos(pos);
                             ImGuiUtils.ViolinPlot(violinData, new(barSize, ImGui.GetFrameHeight()));
