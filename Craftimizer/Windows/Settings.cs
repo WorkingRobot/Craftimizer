@@ -641,25 +641,6 @@ public sealed class Settings : Window, IDisposable
 
         var isDirty = false;
 
-        using (var g = ImRaii.Group())
-        {
-            using var d = ImRaii.Disabled();
-            DrawOption(
-                "Condition Randomness",
-                "Allows the simulator condition to fluctuate randomly like a real craft.\n" +
-                "Turns off when generating a macro.",
-                Config.ConditionRandomness,
-                v => Config.ConditionRandomness = v,
-                ref isDirty
-            );
-        }
-        if (ImGui.IsItemHovered())
-            ImGui.SetTooltip("Disabled temporarily for testing");
-
-        ImGuiHelpers.ScaledDummy(5);
-        ImGui.Separator();
-        ImGuiHelpers.ScaledDummy(5);
-
         var solverConfig = Config.SimulatorSolverConfig;
         DrawSolverConfig(ref solverConfig, SolverConfig.SimulatorDefault, out var isSolverDirty);
         if (isSolverDirty)

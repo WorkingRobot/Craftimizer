@@ -1217,7 +1217,9 @@ public sealed class MacroEditor : Window, IDisposable
                     }
                 }
                 if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-                    ImGui.SetTooltip("Condition Randomness");
+                    ImGui.SetTooltip("Condition Randomness\n" +
+                        "Allows the condition to fluctuate randomly like a real craft.\n" +
+                        "Turns off when generating a macro.");
             }
             else
             {
