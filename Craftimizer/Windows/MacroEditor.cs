@@ -143,7 +143,7 @@ public sealed class MacroEditor : Window, IDisposable
 
             for (var i = 0; i < iterCount; ++i)
             {
-                var sim = new Sim(startState);
+                var sim = new Sim();
                 var (_, state, _) = sim.ExecuteMultiple(startState, actions);
                 Progress.Add(state.Progress);
                 Quality.Add(state.Quality);
@@ -1018,7 +1018,7 @@ public sealed class MacroEditor : Window, IDisposable
 
     private void DrawActionHotbars()
     {
-        var sim = CreateSim(State);
+        var sim = CreateSim();
 
         var imageSize = ImGui.GetFrameHeight() * 2;
         var spacing = ImGui.GetStyle().ItemSpacing.Y;
@@ -1283,7 +1283,7 @@ public sealed class MacroEditor : Window, IDisposable
                 }
                 if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
                 {
-                    var sim = CreateSim(lastState);
+                    var sim = CreateSim();
                     ImGui.SetTooltip($"{action.GetName(RecipeData!.ClassJob)}\n{actionBase.GetTooltip(sim, true)}");
                 }
                 lastState = state;
@@ -1644,14 +1644,14 @@ public sealed class MacroEditor : Window, IDisposable
     private void RecalculateState()
     {
         InitialState = new SimulationState(new(CharacterStats, RecipeData.RecipeInfo, StartingQuality));
-        var sim = CreateSim(InitialState);
+        var sim = CreateSim();
         var lastState = InitialState;
         for (var i = 0; i < Macro.Count; i++)
             lastState = Macro[i].Recalculate(sim, lastState);
     }
 
-    private static Sim CreateSim(in SimulationState state) =>
-        Service.Configuration.ConditionRandomness ? new Sim(state) : new SimNoRandom(state);
+    private static Sim CreateSim() =>
+        Service.Configuration.ConditionRandomness ? new Sim() : new SimNoRandom();
 
     private void AddStep(ActionType action, int index = -1, bool isSolver = false)
     {
@@ -1664,13 +1664,13 @@ public sealed class MacroEditor : Window, IDisposable
 
         if (index == -1)
         {
-            var sim = CreateSim(State);
+            var sim = CreateSim();
             Macro.Add(new(action, sim, State, out _));
         }
         else
         {
             var state = index == 0 ? InitialState : Macro[index - 1].State;
-            var sim = CreateSim(state);
+            var sim = CreateSim();
             Macro.Insert(index, new(action, sim, state, out state));
             
             for (var i = index + 1; i < Macro.Count; i++)
@@ -1689,7 +1689,7 @@ public sealed class MacroEditor : Window, IDisposable
         Macro.RemoveAt(index);
 
         var state = index == 0 ? InitialState : Macro[index - 1].State;
-        var sim = CreateSim(state);
+        var sim = CreateSim();
         for (var i = index; i < Macro.Count; i++)
             state = Macro[i].Recalculate(sim, state);
     }

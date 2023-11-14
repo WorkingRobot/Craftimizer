@@ -20,7 +20,7 @@ public sealed class MCTS
     public MCTS(in MCTSConfig config, in SimulationState state)
     {
         this.config = config;
-        var sim = new Simulator(state, config.MaxStepCount);
+        var sim = new Simulator(config.MaxStepCount);
         rootNode = new(new(
             state,
             null,
@@ -280,7 +280,7 @@ public sealed class MCTS
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Search(int iterations, CancellationToken token)
     {
-        Simulator simulator = new(rootNode.State.State, config.MaxStepCount);
+        Simulator simulator = new(config.MaxStepCount);
         var random = rootNode.State.State.Input.Random;
         var n = 0;
         for (var i = 0; i < iterations || MaxScore == 0; i++)

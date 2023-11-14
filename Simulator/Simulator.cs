@@ -35,16 +35,6 @@ public class Simulator
 
     public IEnumerable<ActionType> AvailableActions => ActionUtils.AvailableActions(this);
 
-    public Simulator(in SimulationState state)
-    {
-        State = state;
-    }
-
-    public void SetState(in SimulationState state)
-    {
-        State = state;
-    }
-
     public (ActionResponse Response, SimulationState NewState) Execute(in SimulationState state, ActionType action)
     {
         State = state;
