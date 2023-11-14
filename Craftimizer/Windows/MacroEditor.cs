@@ -1018,7 +1018,7 @@ public sealed class MacroEditor : Window, IDisposable
 
     private void DrawActionHotbars()
     {
-        var sim = CreateSim();
+        var sim = CreateSim(State);
 
         var imageSize = ImGui.GetFrameHeight() * 2;
         var spacing = ImGui.GetStyle().ItemSpacing.Y;
@@ -1283,8 +1283,7 @@ public sealed class MacroEditor : Window, IDisposable
                 }
                 if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
                 {
-                    var sim = CreateSim();
-                    ImGui.SetTooltip($"{action.GetName(RecipeData!.ClassJob)}\n{actionBase.GetTooltip(sim, true)}");
+                    ImGui.SetTooltip($"{action.GetName(RecipeData!.ClassJob)}\n{actionBase.GetTooltip(CreateSim(lastState), true)}");
                 }
                 lastState = state;
             }
@@ -1652,6 +1651,9 @@ public sealed class MacroEditor : Window, IDisposable
 
     private static Sim CreateSim() =>
         Service.Configuration.ConditionRandomness ? new Sim() : new SimNoRandom();
+
+    private static Sim CreateSim(in SimulationState state) =>
+        Service.Configuration.ConditionRandomness ? new Sim() { State = state } : new SimNoRandom() { State = state };
 
     private void AddStep(ActionType action, int index = -1, bool isSolver = false)
     {

@@ -20,7 +20,7 @@ public sealed class MCTS
     public MCTS(in MCTSConfig config, in SimulationState state)
     {
         this.config = config;
-        var sim = new Simulator(config.MaxStepCount);
+        var sim = new Simulator(config.MaxStepCount) { State = state };
         rootNode = new(new(
             state,
             null,
