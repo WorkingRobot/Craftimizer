@@ -21,8 +21,8 @@ using System.Numerics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using RandomSim = Craftimizer.Simulator.Simulator;
-using Sim = Craftimizer.Simulator.SimulatorNoRandom;
+using Sim = Craftimizer.Simulator.Simulator;
+using SimNoRandom = Craftimizer.Simulator.SimulatorNoRandom;
 
 namespace Craftimizer.Windows;
 
@@ -143,7 +143,7 @@ public sealed class MacroEditor : Window, IDisposable
 
             for (var i = 0; i < iterCount; ++i)
             {
-                var sim = new RandomSim(startState);
+                var sim = new Sim(startState);
                 var (_, state, _) = sim.ExecuteMultiple(startState, actions);
                 Progress.Add(state.Progress);
                 Quality.Add(state.Quality);
@@ -1003,7 +1003,7 @@ public sealed class MacroEditor : Window, IDisposable
 
     private void DrawActionHotbars()
     {
-        var sim = new Sim(State);
+        var sim = CreateSim(State);
 
         var imageSize = ImGui.GetFrameHeight() * 2;
         var spacing = ImGui.GetStyle().ItemSpacing.Y;
@@ -1248,7 +1248,7 @@ public sealed class MacroEditor : Window, IDisposable
                 }
                 if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
                 {
-                    var sim = new Sim(lastState);
+                    var sim = CreateSim(lastState);
                     ImGui.SetTooltip($"{action.GetName(RecipeData!.ClassJob)}\n{actionBase.GetTooltip(sim, true)}");
                 }
                 lastState = state;
@@ -1601,11 +1601,14 @@ public sealed class MacroEditor : Window, IDisposable
     private void RecalculateState()
     {
         InitialState = new SimulationState(new(CharacterStats, RecipeData.RecipeInfo, StartingQuality));
-        var sim = new Sim(InitialState);
+        var sim = CreateSim(InitialState);
         var lastState = InitialState;
         for (var i = 0; i < Macro.Count; i++)
             lastState = Macro[i].Recalculate(sim, lastState);
     }
+
+    private Sim CreateSim(in SimulationState state) =>
+        Service.Configuration.ConditionRandomness ? new Sim(state) : new SimNoRandom(state);
 
     private void AddStep(ActionType action, int index = -1, bool isSolver = false)
     {
@@ -1618,13 +1621,13 @@ public sealed class MacroEditor : Window, IDisposable
 
         if (index == -1)
         {
-            var sim = new Sim(State);
+            var sim = CreateSim(State);
             Macro.Add(new(action, sim, State, out _));
         }
         else
         {
             var state = index == 0 ? InitialState : Macro[index - 1].State;
-            var sim = new Sim(state);
+            var sim = CreateSim(state);
             Macro.Insert(index, new(action, sim, state, out state));
             
             for (var i = index + 1; i < Macro.Count; i++)
@@ -1643,7 +1646,7 @@ public sealed class MacroEditor : Window, IDisposable
         Macro.RemoveAt(index);
 
         var state = index == 0 ? InitialState : Macro[index - 1].State;
-        var sim = new Sim(state);
+        var sim = CreateSim(state);
         for (var i = index; i < Macro.Count; i++)
             state = Macro[i].Recalculate(sim, state);
     }
