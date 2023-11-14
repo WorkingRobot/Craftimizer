@@ -200,8 +200,6 @@ public class SimulatorTests
     [TestMethod]
     public void TestCompletedCraft2()
     {
-        Console.WriteLine($"{Input2.BaseProgressGain} {Input2.BaseProgressGain * (3.6f * 2.5f)}");
-        Console.WriteLine($"{(int)(Input2.BaseProgressGain * (3.6f * 2.5f))} {(int)MathF.Floor(Input2.BaseProgressGain * (3.6f * 2.5f))}");
         AssertCraft(
             Input2,
             new[] {

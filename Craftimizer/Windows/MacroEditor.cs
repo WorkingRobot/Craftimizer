@@ -196,8 +196,7 @@ public sealed class MacroEditor : Window, IDisposable
     private int? SolverStartStepCount { get; set; }
     private object? SolverQueueLock { get; set; }
     private List<SimulatedActionStep>? SolverQueuedSteps { get; set; }
-    private int solverProgress;
-    private int maxSolverProgress;
+    private Solver.Solver? SolverObject { get; set; }
     private bool SolverRunning => SolverTokenSource != null;
 
     private IDalamudTextureWrap ExpertBadge { get; }
@@ -1310,15 +1309,15 @@ public sealed class MacroEditor : Window, IDisposable
         ImGui.Dummy(default);
         ImGui.GetWindowDrawList().AddLine(pos, pos + new Vector2(availSpace, 0), ImGui.GetColorU32(ImGuiCol.Border));
         ImGui.Dummy(default);
-        if (SolverRunning)
+        if (SolverRunning && SolverObject is { } solver)
         {
             var percentWidth = ImGui.CalcTextSize("100%").X;
             var progressWidth = availSpace - percentWidth - spacing;
-            var fraction = Math.Clamp((float)solverProgress / maxSolverProgress, 0, 1);
+            var fraction = Math.Clamp((float)solver.ProgressValue / solver.ProgressMax, 0, 1);
             using (var color = ImRaii.PushColor(ImGuiCol.PlotHistogram, ImGuiColors.DalamudGrey3))
                 ImGui.ProgressBar(fraction, new(progressWidth, ImGui.GetFrameHeight()), string.Empty);
             if (ImGui.IsItemHovered())
-                ImGui.SetTooltip($"Solver Progress: {solverProgress} / {maxSolverProgress}");
+                ImGui.SetTooltip($"Solver Progress: {solver.ProgressValue} / {solver.ProgressMax}");
             ImGui.SameLine(0, spacing);
             ImGui.AlignTextToFramePadding();
             ImGuiUtils.TextRight($"{fraction * 100:0}%", percentWidth);
@@ -1617,7 +1616,6 @@ public sealed class MacroEditor : Window, IDisposable
         }
         SolverQueueLock = new();
         SolverQueuedSteps ??= new();
-        solverProgress = 0;
 
         RevertPreviousMacro();
 
@@ -1636,7 +1634,10 @@ public sealed class MacroEditor : Window, IDisposable
         _ = task.ContinueWith(t =>
         {
             if (token == SolverTokenSource.Token)
+            {
                 SolverTokenSource = null;
+                SolverObject = null;
+            }
         });
         _ = task.ContinueWith(t =>
         {
@@ -1661,16 +1662,13 @@ public sealed class MacroEditor : Window, IDisposable
 
         token.ThrowIfCancellationRequested();
 
-        var solver = new Solver.Solver(config, state) { Token = token };
-        solver.OnLog += Log.Debug;
-        solver.OnNewAction += QueueSolverStep;
-        solver.OnProgress += (p, m) =>
+        using (SolverObject = new Solver.Solver(config, state) { Token = token })
         {
-            Interlocked.Exchange(ref solverProgress, p);
-            Interlocked.Exchange(ref maxSolverProgress, m);
-        };
-        solver.Start();
-        _ = solver.GetTask().GetAwaiter().GetResult();
+            SolverObject.OnLog += Log.Debug;
+            SolverObject.OnNewAction += QueueSolverStep;
+            SolverObject.Start();
+            _ = SolverObject.GetTask().GetAwaiter().GetResult();
+        }
 
         token.ThrowIfCancellationRequested();
     }

@@ -281,12 +281,13 @@ public sealed class MCTS
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Search(int iterations, CancellationToken token, Action? progressCallback)
+    public void Search(int iterations, ref int progress, CancellationToken token)
     {
         Simulator simulator = new(config.MaxStepCount);
         var random = rootNode.State.State.Input.Random;
         var staleCounter = 0;
-        for (var i = 0; i < iterations || MaxScore == 0; i++)
+        var i = 0;
+        for (; i < iterations || MaxScore == 0; i++)
         {
             token.ThrowIfCancellationRequested();
 
@@ -314,8 +315,9 @@ public sealed class MCTS
             Backpropagate(endNode, score);
 
             if ((i & (ProgressUpdateFrequency - 1)) == ProgressUpdateFrequency - 1)
-                progressCallback?.Invoke();
+                Interlocked.Add(ref progress, ProgressUpdateFrequency);
         }
+        Interlocked.Add(ref progress, i & (ProgressUpdateFrequency - 1));
     }
 
     [Pure]
