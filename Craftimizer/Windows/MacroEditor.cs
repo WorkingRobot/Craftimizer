@@ -397,24 +397,39 @@ public sealed class MacroEditor : Window, IDisposable
                 var imageButtonPadding = (int)(ImGui.GetStyle().FramePadding.Y / 2f);
                 var imageButtonSize = imageSize - imageButtonPadding * 2;
                 {
-                    var v = CharacterStats.HasSplendorousBuff;
-                    var tint = v ? Vector4.One : disabledTint;
-                    if (ImGui.ImageButton(SplendorousBadge.ImGuiHandle, new Vector2(imageButtonSize), default, Vector2.One, imageButtonPadding, default, tint))
-                        CharacterStats = CharacterStats with { HasSplendorousBuff = !v };
-                    if (ImGui.IsItemHovered())
+                    var splendorousLevel = 90;
+                    if (CharacterStats.HasSplendorousBuff && splendorousLevel > CharacterStats.Level)
+                        CharacterStats = CharacterStats with { HasSplendorousBuff = false };
+
+                    using (var d = ImRaii.Disabled(splendorousLevel > CharacterStats.Level))
+                    {
+                        var v = CharacterStats.HasSplendorousBuff;
+                        var tint = v ? Vector4.One : disabledTint;
+                        if (ImGui.ImageButton(SplendorousBadge.ImGuiHandle, new Vector2(imageButtonSize), default, Vector2.One, imageButtonPadding, default, tint))
+                            CharacterStats = CharacterStats with { HasSplendorousBuff = !v };
+                    }
+                    if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
                         ImGui.SetTooltip(CharacterStats.HasSplendorousBuff ? $"Splendorous Tool" : "No Splendorous Tool");
                 }
                 ImGui.SameLine(0, 5);
                 bool? newIsSpecialist = null;
                 {
                     var v = CharacterStats.IsSpecialist;
-                    var tint = new Vector4(0.99f, 0.97f, 0.62f, 1f) * (v ? Vector4.One : disabledTint);
-                    if (ImGui.ImageButton(SpecialistBadge.ImGuiHandle, new Vector2(imageButtonSize), default, Vector2.One, imageButtonPadding, default, tint))
+
+                    var specialistLevel = 55;
+                    if (CharacterStats.IsSpecialist && specialistLevel > CharacterStats.Level)
+                        newIsSpecialist = v = false;
+
+                    using (var d = ImRaii.Disabled(specialistLevel > CharacterStats.Level))
                     {
-                        v = !v;
-                        newIsSpecialist = v;
+                        var tint = new Vector4(0.99f, 0.97f, 0.62f, 1f) * (v ? Vector4.One : disabledTint);
+                        if (ImGui.ImageButton(SpecialistBadge.ImGuiHandle, new Vector2(imageButtonSize), default, Vector2.One, imageButtonPadding, default, tint))
+                        {
+                            v = !v;
+                            newIsSpecialist = v;
+                        }
                     }
-                    if (ImGui.IsItemHovered())
+                    if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
                         ImGui.SetTooltip(v ? $"Specialist" : "Not a Specialist");
                 }
                 ImGui.SameLine(0, 5);
