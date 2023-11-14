@@ -135,7 +135,10 @@ public sealed class MacroEditor : Window, IDisposable
             if (recipeData.Recipe.ItemResult.Value!.IsCollectable)
                 getParam = s => s.Collectability;
             else if (recipeData.Recipe.RequiredQuality > 0)
-                getParam = s => s.Quality;
+            {
+                var reqQual = recipeData.Recipe.RequiredQuality;
+                getParam = s => (int)((float)s.Quality / reqQual * 100);
+            }
             else if (recipeData.RecipeInfo.MaxQuality > 0)
                 getParam = s => s.HQPercent;
             else
@@ -1098,9 +1101,12 @@ public sealed class MacroEditor : Window, IDisposable
                 if (RecipeData.Recipe.ItemResult.Value!.IsCollectable)
                     datas.Add(new("Collectability", Colors.HQ, Reliability.Param, State.Collectability, State.MaxCollectability, $"{State.Collectability}", null));
                 else if (RecipeData.Recipe.RequiredQuality > 0)
-                    datas.Add(new("Quality %", Colors.HQ, Reliability.Param, State.Quality, RecipeData.Recipe.RequiredQuality, $"{(float)State.Quality / RecipeData.Recipe.RequiredQuality * 100:0}%", null));
+                {
+                    var qualityPercent = (float)State.Quality / RecipeData.Recipe.RequiredQuality * 100;
+                    datas.Add(new("Quality %%", Colors.HQ, Reliability.Param, qualityPercent, 100, $"{qualityPercent:0}%", null));
+                }
                 else if (RecipeData.RecipeInfo.MaxQuality > 0)
-                    datas.Add(new("HQ %", Colors.HQ, Reliability.Param, State.HQPercent, 100, $"{State.HQPercent}%", null));
+                    datas.Add(new("HQ %%", Colors.HQ, Reliability.Param, State.HQPercent, 100, $"{State.HQPercent}%", null));
                 DrawBars(datas);
 
                 ImGui.TableNextColumn();
@@ -1194,7 +1200,7 @@ public sealed class MacroEditor : Window, IDisposable
                     ImGui.Text(condition.Name());
                 }
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip(condition.Description(CharacterStats.HasSplendorousBuff));
+                    ImGui.SetTooltip(condition.Description(CharacterStats.HasSplendorousBuff).Replace("%", "%%"));
 
                 ImGui.SetCursorPos(pos);
                 ImGuiUtils.AlignRight(ImGui.GetFrameHeight(), totalSize);
