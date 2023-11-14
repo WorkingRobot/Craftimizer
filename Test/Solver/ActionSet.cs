@@ -83,16 +83,16 @@ public class ActionSetTests
         set.AddAction(ActionType.BasicSynthesis);
         set.AddAction(ActionType.ByregotsBlessing);
         set.AddAction(ActionType.DelicateSynthesis);
-        set.AddAction(ActionType.FocusedTouch);
+        set.AddAction(ActionType.Reflect);
 
         Assert.AreEqual(4, set.Count);
 
         Assert.AreEqual(ActionType.DelicateSynthesis, set.ElementAt(0));
-        Assert.AreEqual(ActionType.FocusedTouch, set.ElementAt(1));
+        Assert.AreEqual(ActionType.Reflect, set.ElementAt(1));
         Assert.AreEqual(ActionType.ByregotsBlessing, set.ElementAt(2));
         Assert.AreEqual(ActionType.BasicSynthesis, set.ElementAt(3));
 
-        set.RemoveAction(ActionType.FocusedTouch);
+        set.RemoveAction(ActionType.Reflect);
 
         Assert.AreEqual(3, set.Count);
 
