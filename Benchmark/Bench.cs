@@ -3,8 +3,6 @@ using BenchmarkDotNet.Diagnostics.dotTrace;
 using BenchmarkDotNet.Jobs;
 using Craftimizer.Simulator;
 using Craftimizer.Solver;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Craftimizer.Benchmark;
 
@@ -14,12 +12,12 @@ namespace Craftimizer.Benchmark;
 [DotTraceDiagnoser]
 public class Bench
 {
-    public record struct SHAWrapper<T>(T Data) where T : notnull
+    public record struct HashWrapper<T>(T Data) where T : notnull
     {
-        public static implicit operator T(SHAWrapper<T> wrapper) => wrapper.Data;
+        public static implicit operator T(HashWrapper<T> wrapper) => wrapper.Data;
 
         public override readonly string ToString() =>
-            Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Data.ToString()!)));
+            $"{HashCode.Combine(Data.ToString()!):X8}";
     }
 
     private static SimulationInput[] Inputs { get; } = new SimulationInput[] {
@@ -80,9 +78,9 @@ public class Bench
         })
     };
 
-    public static IEnumerable<SHAWrapper<SimulationState>> States => Inputs.Select(i => new SHAWrapper<SimulationState>(new(i)));
+    public static IEnumerable<HashWrapper<SimulationState>> States => Inputs.Select(i => new HashWrapper<SimulationState>(new(i)));
 
-    public static IEnumerable<SHAWrapper<SolverConfig>> Configs => new SHAWrapper<SolverConfig>[]
+    public static IEnumerable<HashWrapper<SolverConfig>> Configs => new HashWrapper<SolverConfig>[]
     {
         new(new()
         {
@@ -92,10 +90,10 @@ public class Bench
     };
 
     [ParamsSource(nameof(States))]
-    public SHAWrapper<SimulationState> State { get; set; }
+    public HashWrapper<SimulationState> State { get; set; }
 
     [ParamsSource(nameof(Configs))]
-    public SHAWrapper<SolverConfig> Config { get; set; }
+    public HashWrapper<SolverConfig> Config { get; set; }
 
     [Benchmark]
     public async Task<float> Solve()
