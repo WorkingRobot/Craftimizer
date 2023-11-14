@@ -24,8 +24,6 @@ public struct ActionSet
         ActionType.DelicateSynthesis,
         ActionType.PreparatoryTouch,
         ActionType.Reflect,
-        ActionType.FocusedTouch,
-        ActionType.FocusedSynthesis,
         ActionType.PrudentTouch,
         ActionType.Manipulation,
         ActionType.MuscleMemory,
@@ -37,7 +35,6 @@ public struct ActionSet
         ActionType.StandardTouch,
         ActionType.Veneration,
         ActionType.WasteNot,
-        ActionType.Observe,
         ActionType.MastersMend,
         ActionType.BasicTouch,
     };
