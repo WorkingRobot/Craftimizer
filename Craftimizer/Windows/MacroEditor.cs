@@ -180,7 +180,7 @@ public sealed class MacroEditor : Window, IDisposable
             Reliability ??=
                 new(initialState, actionSet, Service.Configuration.ReliabilitySimulationCount, recipeData);
     };
-
+    
     private List<SimulatedActionStep> Macro { get; set; } = new();
     private SimulationState InitialState { get; set; }
     private SimulationState State => Macro.Count > 0 ? Macro[^1].State : InitialState;
@@ -191,6 +191,8 @@ public sealed class MacroEditor : Window, IDisposable
     private CancellationTokenSource? SolverTokenSource { get; set; }
     private Exception? SolverException { get; set; }
     private int? SolverStartStepCount { get; set; }
+    private object? SolverQueueLock { get; set; }
+    private List<SimulatedActionStep>? SolverQueuedSteps { get; set; }
     private bool SolverRunning => SolverTokenSource != null;
 
     private IDalamudTextureWrap ExpertBadge { get; }
@@ -253,6 +255,11 @@ public sealed class MacroEditor : Window, IDisposable
     public override void OnClose()
     {
         SolverTokenSource?.Cancel();
+    }
+
+    public override void Update()
+    {
+        TryFlushSolvedSteps();
     }
 
     public override void Draw()
@@ -1577,6 +1584,16 @@ public sealed class MacroEditor : Window, IDisposable
         SolverTokenSource?.Cancel();
         SolverTokenSource = new();
         SolverException = null;
+        if (SolverQueueLock is { })
+        {
+            lock (SolverQueueLock)
+            {
+                SolverQueuedSteps!.Clear();
+                SolverQueueLock = null;
+            }
+        }
+        SolverQueueLock = new();
+        SolverQueuedSteps ??= new();
 
         RevertPreviousMacro();
 
@@ -1622,7 +1639,7 @@ public sealed class MacroEditor : Window, IDisposable
 
         var solver = new Solver.Solver(config, state) { Token = token };
         solver.OnLog += Log.Debug;
-        solver.OnNewAction += a => AddStep(a, isSolver: true);
+        solver.OnNewAction += QueueSolverStep;
         solver.Start();
         _ = solver.GetTask().GetAwaiter().GetResult();
 
@@ -1655,11 +1672,11 @@ public sealed class MacroEditor : Window, IDisposable
     private static Sim CreateSim(in SimulationState state) =>
         Service.Configuration.ConditionRandomness ? new Sim() { State = state } : new SimNoRandom() { State = state };
 
-    private void AddStep(ActionType action, int index = -1, bool isSolver = false)
+    private void AddStep(ActionType action, int index = -1)
     {
         if (index < -1 || index >= Macro.Count)
             throw new ArgumentOutOfRangeException(nameof(index));
-        if (!isSolver && SolverRunning)
+        if (SolverRunning)
             throw new InvalidOperationException("Cannot add steps while solver is running");
         if (!SolverRunning)
             SolverStartStepCount = null;
@@ -1677,6 +1694,38 @@ public sealed class MacroEditor : Window, IDisposable
             
             for (var i = index + 1; i < Macro.Count; i++)
                 state = Macro[i].Recalculate(sim, state);
+        }
+    }
+
+    private void QueueSolverStep(ActionType action)
+    {
+        if (!SolverRunning)
+            throw new InvalidOperationException("Cannot queue steps while solver isn't running");
+        lock (SolverQueueLock!)
+        {
+            var lastState = SolverQueuedSteps!.Count > 0 ? SolverQueuedSteps[^1].State : State;
+            SolverQueuedSteps.Add(new(action, CreateSim(), lastState, out _));
+        }
+    }
+
+    private void TryFlushSolvedSteps()
+    {
+        if (SolverQueueLock == null)
+            return;
+
+        lock (SolverQueueLock!)
+        {
+            if (SolverQueuedSteps!.Count > 0)
+            {
+                Macro.AddRange(SolverQueuedSteps);
+                SolverQueuedSteps.Clear();
+            }
+
+            if (!SolverRunning)
+            {
+                SolverQueuedSteps.Clear();
+                SolverQueueLock = null;
+            }
         }
     }
 
