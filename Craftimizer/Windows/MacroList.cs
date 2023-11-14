@@ -111,7 +111,7 @@ public sealed class MacroList : Window, IDisposable
 
         var stateNullable = GetMacroState(macro);
 
-        using var panel = ImGuiUtils.GroupPanel(macro.Name, -1, out var availWidth);
+        using var panel = ImRaii2.GroupPanel(macro.Name, -1, out var availWidth);
         var stepsAvailWidthOffset = ImGui.GetContentRegionAvail().X - availWidth;
         var spacing = ImGui.GetStyle().ItemSpacing.Y;
         var miniRowHeight = (windowHeight - spacing) / 2f;
@@ -197,23 +197,23 @@ public sealed class MacroList : Window, IDisposable
 
             ImGui.TableNextColumn();
             {
-                if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Paste, new(miniRowHeight)))
+                if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Paste, miniRowHeight))
                     Service.Plugin.CopyMacro(macro.Actions);
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip("Copy to Clipboard");
                 ImGui.SameLine();
-                if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Trash, new(miniRowHeight)) && ImGui.GetIO().KeyShift)
+                if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Trash, miniRowHeight) && ImGui.GetIO().KeyShift)
                     Service.Configuration.RemoveMacro(macro);
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip("Delete (Hold Shift)");
 
-                if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.PencilAlt, new(miniRowHeight)))
+                if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.PencilAlt, miniRowHeight))
                     ShowRenamePopup(macro);
                 DrawRenamePopup(macro);
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip("Rename");
                 ImGui.SameLine();
-                if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Edit, new(miniRowHeight)))
+                if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Edit, miniRowHeight))
                     OpenEditor(macro);
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip("Open in Simulator");
@@ -329,7 +329,7 @@ public sealed class MacroList : Window, IDisposable
             return state;
 
         state = new SimulationState(new(CharacterStats, RecipeData.RecipeInfo));
-        var sim = new Sim(state);
+        var sim = new Sim();
         (_, state, _) = sim.ExecuteMultiple(state, macro.Actions);
         return MacroStateCache[macro] = state;
     }

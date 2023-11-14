@@ -20,7 +20,7 @@ internal sealed class Simulator : SimulatorNoRandom
         }
     }
 
-    public Simulator(in SimulationState state, int maxStepCount) : base(state)
+    public Simulator(int maxStepCount)
     {
         this.maxStepCount = maxStepCount;
     }
@@ -42,21 +42,11 @@ internal sealed class Simulator : SimulatorNoRandom
         if (Quality >= Input.Recipe.MaxQuality && baseAction.IncreasesQuality)
             return false;
 
-        if (action == ActionType.Observe &&
-            ActionStates.Observed)
-            return false;
-
         if (strict)
         {
             // always use Trained Eye if it's available
             if (action == ActionType.TrainedEye)
                 return baseAction.CanUse(this);
-
-            // only allow Focused moves after Observe
-            if (ActionStates.Observed &&
-                action != ActionType.FocusedSynthesis &&
-                action != ActionType.FocusedTouch)
-                return false;
 
             // don't allow quality moves under Muscle Memory for difficult crafts
             if (Input.Recipe.ClassJobLevel == 90 &&
@@ -114,10 +104,6 @@ internal sealed class Simulator : SimulatorNoRandom
 
             if ((action == ActionType.WasteNot || action == ActionType.WasteNot2) &&
                 (HasEffect(EffectType.WasteNot) || HasEffect(EffectType.WasteNot2)))
-                return false;
-
-            if (action == ActionType.Observe &&
-                CP < 12)
                 return false;
 
             if (action == ActionType.MastersMend &&

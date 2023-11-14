@@ -6,20 +6,22 @@ namespace Craftimizer.Simulator;
 
 public class Simulator
 {
-    protected SimulationState State;
+    public SimulationState State { init => state = value; }
 
-    public SimulationInput Input => State.Input;
-    public ref int ActionCount => ref State.ActionCount;
-    public ref int StepCount => ref State.StepCount;
-    public ref int Progress => ref State.Progress;
-    public ref int Quality => ref State.Quality;
-    public ref int Durability => ref State.Durability;
-    public ref int CP => ref State.CP;
-    public ref Condition Condition => ref State.Condition;
-    public ref Effects ActiveEffects => ref State.ActiveEffects;
-    public ref ActionStates ActionStates => ref State.ActionStates;
+    private SimulationState state;
 
-    public bool IsFirstStep => State.StepCount == 0;
+    public SimulationInput Input => state.Input;
+    public ref int ActionCount => ref state.ActionCount;
+    public ref int StepCount => ref state.StepCount;
+    public ref int Progress => ref state.Progress;
+    public ref int Quality => ref state.Quality;
+    public ref int Durability => ref state.Durability;
+    public ref int CP => ref state.CP;
+    public ref Condition Condition => ref state.Condition;
+    public ref Effects ActiveEffects => ref state.ActiveEffects;
+    public ref ActionStates ActionStates => ref state.ActionStates;
+
+    public bool IsFirstStep => state.StepCount == 0;
 
     public virtual CompletionState CompletionState {
         get
@@ -35,20 +37,10 @@ public class Simulator
 
     public IEnumerable<ActionType> AvailableActions => ActionUtils.AvailableActions(this);
 
-    public Simulator(in SimulationState state)
-    {
-        State = state;
-    }
-
-    public void SetState(in SimulationState state)
-    {
-        State = state;
-    }
-
     public (ActionResponse Response, SimulationState NewState) Execute(in SimulationState state, ActionType action)
     {
-        State = state;
-        return (Execute(action), State);
+        this.state = state;
+        return (Execute(action), this.state);
     }
 
     private ActionResponse Execute(ActionType action)
@@ -77,16 +69,16 @@ public class Simulator
 
     public (ActionResponse Response, SimulationState NewState, int FailedActionIdx) ExecuteMultiple(in SimulationState state, IEnumerable<ActionType> actions)
     {
-        State = state;
+        this.state = state;
         var i = 0;
         foreach(var action in actions)
         {
             var resp = Execute(action);
             if (resp != ActionResponse.UsedAction)
-                return (resp, State, i);
+                return (resp, this.state, i);
             i++;
         }
-        return (ActionResponse.UsedAction, State, -1);
+        return (ActionResponse.UsedAction, this.state, -1);
     }
 
     [Pure]

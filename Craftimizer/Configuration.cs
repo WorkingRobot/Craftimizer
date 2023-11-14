@@ -82,6 +82,7 @@ public class Configuration : IPluginConfiguration
     private List<Macro> macros { get; set; } = new();
     [JsonIgnore]
     public IReadOnlyList<Macro> Macros => macros;
+    public int ReliabilitySimulationCount { get; set; } = 500;
     public bool ConditionRandomness { get; set; } = true;
     public SolverConfig SimulatorSolverConfig { get; set; } = SolverConfig.SimulatorDefault;
     public SolverConfig SynthHelperSolverConfig { get; set; } = SolverConfig.SynthHelperDefault;

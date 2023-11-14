@@ -21,7 +21,8 @@ using System.Numerics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Sim = Craftimizer.Simulator.SimulatorNoRandom;
+using Sim = Craftimizer.Simulator.Simulator;
+using SimNoRandom = Craftimizer.Simulator.SimulatorNoRandom;
 
 namespace Craftimizer.Windows;
 
@@ -76,22 +77,125 @@ public sealed class MacroEditor : Window, IDisposable
     private List<int> HQIngredientCounts { get; set; }
     private int StartingQuality => RecipeData.CalculateStartingQuality(HQIngredientCounts);
 
+    private readonly record struct SimulationReliablity
+    {
+        public sealed class ParamReliability
+        {
+            private List<int> DataList { get; }
+            private ImGuiUtils.ViolinData? ViolinData { get; set; }
+
+            public int Max { get; private set; }
+            public int Min { get; private set; }
+            public float Median { get; private set; }
+            public float Average { get; private set; }
+
+            public ParamReliability()
+            {
+                DataList = new();
+            }
+
+            public void Add(int value)
+            {
+                DataList.Add(value);
+            }
+
+            public void FinalizeData()
+            {
+                if (DataList.Count == 0)
+                {
+                    Average = Median = Max = Min = 0;
+                    return;
+                }
+
+                Max = DataList.Max();
+                Min = DataList.Min();
+                if (DataList.Count % 2 == 0)
+                    Median = (float)DataList.Order().Skip(DataList.Count / 2 - 1).Take(2).Average();
+                else
+                    Median = DataList.Order().ElementAt(DataList.Count / 2);
+                Average = (float)DataList.Average();
+            }
+
+            public ImGuiUtils.ViolinData? GetViolinData(float barMax, int resolution, double bandwidth) =>
+                ViolinData ??=
+                    Min != Max ?
+                        new(DataList, 0, barMax, resolution, bandwidth) :
+                        null;
+        }
+
+        public readonly ParamReliability Progress = new();
+        public readonly ParamReliability Quality = new();
+
+        // Param is either collectability, quality, or hq%, depending on the recipe
+        public readonly ParamReliability Param = new();
+
+        public SimulationReliablity(in SimulationState startState, IEnumerable<ActionType> actions, int iterCount, RecipeData recipeData)
+        {
+            Func<SimulationState, int> getParam;
+            if (recipeData.Recipe.ItemResult.Value!.IsCollectable)
+                getParam = s => s.Collectability;
+            else if (recipeData.Recipe.RequiredQuality > 0)
+            {
+                var reqQual = recipeData.Recipe.RequiredQuality;
+                getParam = s => (int)((float)s.Quality / reqQual * 100);
+            }
+            else if (recipeData.RecipeInfo.MaxQuality > 0)
+                getParam = s => s.HQPercent;
+            else
+                getParam = s => 0;
+
+            for (var i = 0; i < iterCount; ++i)
+            {
+                var sim = new Sim();
+                var (_, state, _) = sim.ExecuteMultiple(startState, actions);
+                Progress.Add(state.Progress);
+                Quality.Add(state.Quality);
+                Param.Add(getParam(state));
+            }
+            Progress.FinalizeData();
+            Quality.FinalizeData();
+            Param.FinalizeData();
+        }
+    }
+
     private sealed record SimulatedActionStep
     {
-        public ActionType Action { get; init; }
+        public ActionType Action { get; }
         // State *after* executing the action
-        public ActionResponse Response { get; set; }
-        public SimulationState State { get; set; }
+        public ActionResponse Response { get; private set; }
+        public SimulationState State { get; private set; }
+        private SimulationReliablity? Reliability { get; set; }
+
+        public SimulatedActionStep(ActionType action, Sim sim, in SimulationState lastState, out SimulationState newState)
+        {
+            Action = action;
+            newState = Recalculate(sim, lastState);
+        }
+
+        public SimulationState Recalculate(Sim sim, in SimulationState lastState)
+        {
+            (Response, State) = sim.Execute(lastState, Action);
+            Reliability = null;
+            return State;
+        }
+
+        public SimulationReliablity GetReliability(in SimulationState initialState, IEnumerable<ActionType> actionSet, RecipeData recipeData) =>
+            Reliability ??=
+                new(initialState, actionSet, Service.Configuration.ReliabilitySimulationCount, recipeData);
     };
+    
     private List<SimulatedActionStep> Macro { get; set; } = new();
     private SimulationState InitialState { get; set; }
     private SimulationState State => Macro.Count > 0 ? Macro[^1].State : InitialState;
+    private SimulationReliablity Reliability => Macro.Count > 0 ? Macro[^1].GetReliability(InitialState, Macro.Select(m => m.Action), RecipeData) : new(InitialState, Array.Empty<ActionType>(), 0, RecipeData);
     private ActionType[] DefaultActions { get; }
     private Action<IEnumerable<ActionType>>? MacroSetter { get; set; }
 
     private CancellationTokenSource? SolverTokenSource { get; set; }
     private Exception? SolverException { get; set; }
     private int? SolverStartStepCount { get; set; }
+    private object? SolverQueueLock { get; set; }
+    private List<SimulatedActionStep>? SolverQueuedSteps { get; set; }
     private bool SolverRunning => SolverTokenSource != null;
 
     private IDalamudTextureWrap ExpertBadge { get; }
@@ -114,7 +218,7 @@ public sealed class MacroEditor : Window, IDisposable
     private CancellationTokenSource? popupImportUrlTokenSource;
     private MacroImport.RetrievedMacro? popupImportUrlMacro;
 
-    public MacroEditor(CharacterStats characterStats, RecipeData recipeData, CrafterBuffs buffs, IEnumerable<ActionType> actions, Action<IEnumerable<ActionType>>? setter) : base("Craftimizer Macro Editor", WindowFlags, false)
+    public MacroEditor(CharacterStats characterStats, RecipeData recipeData, CrafterBuffs buffs, IEnumerable<ActionType> actions, Action<IEnumerable<ActionType>>? setter) : base("Craftimizer Macro Editor", WindowFlags)
     {
         CharacterStats = characterStats;
         RecipeData = recipeData;
@@ -154,6 +258,11 @@ public sealed class MacroEditor : Window, IDisposable
     public override void OnClose()
     {
         SolverTokenSource?.Cancel();
+    }
+
+    public override void Update()
+    {
+        TryFlushSolvedSteps();
     }
 
     public override void Draw()
@@ -298,24 +407,39 @@ public sealed class MacroEditor : Window, IDisposable
                 var imageButtonPadding = (int)(ImGui.GetStyle().FramePadding.Y / 2f);
                 var imageButtonSize = imageSize - imageButtonPadding * 2;
                 {
-                    var v = CharacterStats.HasSplendorousBuff;
-                    var tint = v ? Vector4.One : disabledTint;
-                    if (ImGui.ImageButton(SplendorousBadge.ImGuiHandle, new Vector2(imageButtonSize), default, Vector2.One, imageButtonPadding, default, tint))
-                        CharacterStats = CharacterStats with { HasSplendorousBuff = !v };
-                    if (ImGui.IsItemHovered())
+                    var splendorousLevel = 90;
+                    if (CharacterStats.HasSplendorousBuff && splendorousLevel > CharacterStats.Level)
+                        CharacterStats = CharacterStats with { HasSplendorousBuff = false };
+
+                    using (var d = ImRaii.Disabled(splendorousLevel > CharacterStats.Level))
+                    {
+                        var v = CharacterStats.HasSplendorousBuff;
+                        var tint = v ? Vector4.One : disabledTint;
+                        if (ImGui.ImageButton(SplendorousBadge.ImGuiHandle, new Vector2(imageButtonSize), default, Vector2.One, imageButtonPadding, default, tint))
+                            CharacterStats = CharacterStats with { HasSplendorousBuff = !v };
+                    }
+                    if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
                         ImGui.SetTooltip(CharacterStats.HasSplendorousBuff ? $"Splendorous Tool" : "No Splendorous Tool");
                 }
                 ImGui.SameLine(0, 5);
                 bool? newIsSpecialist = null;
                 {
                     var v = CharacterStats.IsSpecialist;
-                    var tint = new Vector4(0.99f, 0.97f, 0.62f, 1f) * (v ? Vector4.One : disabledTint);
-                    if (ImGui.ImageButton(SpecialistBadge.ImGuiHandle, new Vector2(imageButtonSize), default, Vector2.One, imageButtonPadding, default, tint))
+
+                    var specialistLevel = 55;
+                    if (CharacterStats.IsSpecialist && specialistLevel > CharacterStats.Level)
+                        newIsSpecialist = v = false;
+
+                    using (var d = ImRaii.Disabled(specialistLevel > CharacterStats.Level))
                     {
-                        v = !v;
-                        newIsSpecialist = v;
+                        var tint = new Vector4(0.99f, 0.97f, 0.62f, 1f) * (v ? Vector4.One : disabledTint);
+                        if (ImGui.ImageButton(SpecialistBadge.ImGuiHandle, new Vector2(imageButtonSize), default, Vector2.One, imageButtonPadding, default, tint))
+                        {
+                            v = !v;
+                            newIsSpecialist = v;
+                        }
                     }
-                    if (ImGui.IsItemHovered())
+                    if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
                         ImGui.SetTooltip(v ? $"Specialist" : "Not a Specialist");
                 }
                 ImGui.SameLine(0, 5);
@@ -904,7 +1028,7 @@ public sealed class MacroEditor : Window, IDisposable
 
     private void DrawActionHotbars()
     {
-        var sim = new Sim(State);
+        var sim = CreateSim(State);
 
         var imageSize = ImGui.GetFrameHeight() * 2;
         var spacing = ImGui.GetStyle().ItemSpacing.Y;
@@ -919,7 +1043,7 @@ public sealed class MacroEditor : Window, IDisposable
                 continue;
 
             var actions = category.GetActions();
-            using var panel = ImGuiUtils.GroupPanel(category.GetDisplayName(), -1, out var availSpace);
+            using var panel = ImRaii2.GroupPanel(category.GetDisplayName(), -1, out var availSpace);
             var itemsPerRow = (int)MathF.Floor((availSpace + spacing) / (imageSize + spacing));
             var itemCount = actions.Count;
             var iterCount = (int)(Math.Ceiling((float)itemCount / itemsPerRow) * itemsPerRow);
@@ -971,23 +1095,26 @@ public sealed class MacroEditor : Window, IDisposable
                 ImGui.TableNextColumn();
                 var datas = new List<BarData>(3)
                 {
-                    new("Durability", Colors.Durability, State.Durability, RecipeData.RecipeInfo.MaxDurability, null, null),
-                    new("Condition", default, 0, 0, null, State.Condition)
+                    new("Durability", Colors.Durability, null, State.Durability, RecipeData.RecipeInfo.MaxDurability, null, null),
+                    new("Condition", default, null, 0, 0, null, State.Condition)
                 };
                 if (RecipeData.Recipe.ItemResult.Value!.IsCollectable)
-                    datas.Add(new("Collectability", Colors.HQ, State.Collectability, State.MaxCollectability, $"{State.Collectability}", null));
+                    datas.Add(new("Collectability", Colors.HQ, Reliability.Param, State.Collectability, State.MaxCollectability, $"{State.Collectability}", null));
                 else if (RecipeData.Recipe.RequiredQuality > 0)
-                    datas.Add(new("Quality %", Colors.HQ, State.Quality, RecipeData.Recipe.RequiredQuality, $"{(float)State.Quality / RecipeData.Recipe.RequiredQuality * 100:0}%", null));
+                {
+                    var qualityPercent = (float)State.Quality / RecipeData.Recipe.RequiredQuality * 100;
+                    datas.Add(new("Quality %%", Colors.HQ, Reliability.Param, qualityPercent, 100, $"{qualityPercent:0}%", null));
+                }
                 else if (RecipeData.RecipeInfo.MaxQuality > 0)
-                    datas.Add(new("HQ %", Colors.HQ, State.HQPercent, 100, $"{State.HQPercent}%", null));
+                    datas.Add(new("HQ %%", Colors.HQ, Reliability.Param, State.HQPercent, 100, $"{State.HQPercent}%", null));
                 DrawBars(datas);
 
                 ImGui.TableNextColumn();
                 datas = new List<BarData>(3)
                 {
-                    new("Progress", Colors.Progress, State.Progress, RecipeData.RecipeInfo.MaxProgress, null, null),
-                    new("Quality", Colors.Quality, State.Quality, RecipeData.RecipeInfo.MaxQuality, null, null),
-                    new("CP", Colors.CP, State.CP, CharacterStats.CP, null, null)
+                    new("Progress", Colors.Progress, Reliability.Progress, State.Progress, RecipeData.RecipeInfo.MaxProgress, null, null),
+                    new("Quality", Colors.Quality, Reliability.Quality, State.Quality, RecipeData.RecipeInfo.MaxQuality, null, null),
+                    new("CP", Colors.CP, null, State.CP, CharacterStats.CP, null, null)
                 };
                 if (RecipeData.RecipeInfo.MaxQuality <= 0)
                     datas.RemoveAt(1);
@@ -995,7 +1122,7 @@ public sealed class MacroEditor : Window, IDisposable
             }
         }
 
-        using (var panel = ImGuiUtils.GroupPanel("Buffs", -1, out _))
+        using (var panel = ImRaii2.GroupPanel("Buffs", -1, out _))
         {
             using var _font = ImRaii.PushFont(AxisFont.ImFont);
 
@@ -1034,7 +1161,7 @@ public sealed class MacroEditor : Window, IDisposable
         }
     }
 
-    private readonly record struct BarData(string Name, Vector4 Color, float Value, float Max, string? Caption, Condition? Condition);
+    private readonly record struct BarData(string Name, Vector4 Color, SimulationReliablity.ParamReliability? Reliability, float Value, float Max, string? Caption, Condition? Condition);
     private void DrawBars(IEnumerable<BarData> bars)
     {
         var spacing = ImGui.GetStyle().ItemSpacing.X;
@@ -1053,13 +1180,16 @@ public sealed class MacroEditor : Window, IDisposable
         var barSize = totalSize - textSize - spacing;
         foreach (var bar in bars)
         {
-            using var panel = ImGuiUtils.GroupPanel(bar.Name, totalSize, out _);
+            using var panel = ImRaii2.GroupPanel(bar.Name, totalSize, out _);
             if (bar.Condition is { } condition)
             {
+                var pos = ImGui.GetCursorPos();
                 using (var g = ImRaii.Group())
                 {
+                    var availSize = totalSize - (spacing + ImGui.GetFrameHeight());
                     var size = ImGui.GetFrameHeight() + spacing + ImGui.CalcTextSize(condition.Name()).X;
-                    ImGuiUtils.AlignCentered(size, totalSize);
+
+                    ImGuiUtils.AlignCentered(size, availSize);
                     ImGui.GetWindowDrawList().AddCircleFilled(
                         ImGui.GetCursorScreenPos() + new Vector2(ImGui.GetFrameHeight() / 2),
                         ImGui.GetFrameHeight() / 2,
@@ -1070,12 +1200,49 @@ public sealed class MacroEditor : Window, IDisposable
                     ImGui.Text(condition.Name());
                 }
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip(condition.Description(CharacterStats.HasSplendorousBuff));
+                    ImGui.SetTooltip(condition.Description(CharacterStats.HasSplendorousBuff).Replace("%", "%%"));
+
+                ImGui.SetCursorPos(pos);
+                ImGuiUtils.AlignRight(ImGui.GetFrameHeight(), totalSize);
+
+                using (var disabled = ImRaii.Disabled(SolverRunning))
+                {
+                    using var tint = ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled), !Service.Configuration.ConditionRandomness);
+                    if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Dice))
+                    {
+                        Service.Configuration.ConditionRandomness ^= true;
+                        Service.Configuration.Save();
+
+                        RecalculateState();
+                    }
+                }
+                if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+                    ImGui.SetTooltip("Condition Randomness\n" +
+                        "Allows the condition to fluctuate randomly like a real craft.\n" +
+                        "Turns off when generating a macro.");
             }
             else
             {
+                var pos = ImGui.GetCursorPos();
                 using (var color = ImRaii.PushColor(ImGuiCol.PlotHistogram, bar.Color))
                     ImGui.ProgressBar(Math.Clamp(bar.Value / bar.Max, 0, 1), new(barSize, ImGui.GetFrameHeight()), string.Empty);
+                if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenOverlapped))
+                {
+                    if (bar.Reliability is { } reliability)
+                    {
+                        if (reliability.GetViolinData(bar.Max, (int)(barSize / 5), 0.02) is { } violinData)
+                        {
+                            ImGui.SetCursorPos(pos);
+                            ImGuiUtils.ViolinPlot(violinData, new(barSize, ImGui.GetFrameHeight()));
+                            if (ImGui.IsItemHovered())
+                                ImGui.SetTooltip(
+                                    $"Min: {reliability.Min}\n" +
+                                    $"Med: {reliability.Median:0.##}\n" +
+                                    $"Avg: {reliability.Average:0.##}\n" +
+                                    $"Max: {reliability.Max}");
+                        }
+                    }
+                }
                 ImGui.SameLine(0, spacing);
                 ImGui.AlignTextToFramePadding();
                 if (bar.Caption is { } caption)
@@ -1098,7 +1265,7 @@ public sealed class MacroEditor : Window, IDisposable
         var imageSize = ImGui.GetFrameHeight() * 2;
         var lastState = InitialState;
 
-        using var panel = ImGuiUtils.GroupPanel("Macro", -1, out var availSpace);
+        using var panel = ImRaii2.GroupPanel("Macro", -1, out var availSpace);
         ImGui.Dummy(new(0, imageSize));
         ImGui.SameLine(0, 0);
 
@@ -1131,8 +1298,7 @@ public sealed class MacroEditor : Window, IDisposable
                 }
                 if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
                 {
-                    var sim = new Sim(lastState);
-                    ImGui.SetTooltip($"{action.GetName(RecipeData!.ClassJob)}\n{actionBase.GetTooltip(sim, true)}");
+                    ImGui.SetTooltip($"{action.GetName(RecipeData!.ClassJob)}\n{actionBase.GetTooltip(CreateSim(lastState), true)}");
                 }
                 lastState = state;
             }
@@ -1197,14 +1363,14 @@ public sealed class MacroEditor : Window, IDisposable
                                  "can vary wildly depending on the solver's settings.");
         }
         ImGui.SameLine();
-        if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Paste, new(height)))
+        if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Paste))
             Service.Plugin.CopyMacro(Macro.Select(s => s.Action).ToArray());
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip("Copy to Clipboard");
         ImGui.SameLine();
         using (var _disabled = ImRaii.Disabled(SolverRunning))
         {
-            if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.FileImport, new(height)))
+            if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.FileImport))
                 ShowImportPopup();
         }
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
@@ -1215,7 +1381,7 @@ public sealed class MacroEditor : Window, IDisposable
         {
             using (var _disabled = ImRaii.Disabled(SolverRunning))
             {
-                if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Undo, new(height)))
+                if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Undo))
                 {
                     SolverStartStepCount = null;
                     Macro.Clear();
@@ -1229,7 +1395,7 @@ public sealed class MacroEditor : Window, IDisposable
         ImGui.SameLine();
         using (var _disabled = ImRaii.Disabled(SolverRunning))
         {
-            if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Trash, new(height)))
+            if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Trash))
             {
                 SolverStartStepCount = null;
                 Macro.Clear();
@@ -1293,7 +1459,7 @@ public sealed class MacroEditor : Window, IDisposable
         {
             bool submittedText, submittedUrl;
 
-            using (var panel = ImGuiUtils.GroupPanel("##text", -1, out var availWidth))
+            using (var panel = ImRaii2.GroupPanel("##text", -1, out var availWidth))
             {
                 ImGui.AlignTextToFramePadding();
                 ImGuiUtils.TextCentered("Paste your macro here");
@@ -1305,7 +1471,7 @@ public sealed class MacroEditor : Window, IDisposable
                     submittedText = ImGui.Button("Import", new(availWidth, 0));
             }
 
-            using (var panel = ImGuiUtils.GroupPanel("##url", -1, out var availWidth))
+            using (var panel = ImRaii2.GroupPanel("##url", -1, out var availWidth))
             {
                 var availOffset = ImGui.GetContentRegionAvail().X - availWidth;
 
@@ -1405,7 +1571,7 @@ public sealed class MacroEditor : Window, IDisposable
                 if (popupImportUrlMacro is { Name: var name, Actions: var actions })
                 {
                     Macro.Clear();
-                    foreach(var action in actions)
+                    foreach (var action in actions)
                         AddStep(action);
                     Service.PluginInterface.UiBuilder.AddNotification($"Imported macro \"{name}\"", "Craftimizer Macro Imported", NotificationType.Success);
 
@@ -1420,13 +1586,32 @@ public sealed class MacroEditor : Window, IDisposable
             popupImportUrlTokenSource = null;
         }
     }
+
     private void CalculateBestMacro()
     {
         SolverTokenSource?.Cancel();
         SolverTokenSource = new();
         SolverException = null;
+        if (SolverQueueLock is { })
+        {
+            lock (SolverQueueLock)
+            {
+                SolverQueuedSteps!.Clear();
+                SolverQueueLock = null;
+            }
+        }
+        SolverQueueLock = new();
+        SolverQueuedSteps ??= new();
 
         RevertPreviousMacro();
+
+        if (Service.Configuration.ConditionRandomness)
+        {
+            Service.Configuration.ConditionRandomness = false;
+            Service.Configuration.Save();
+            RecalculateState();
+        }
+
         SolverStartStepCount = Macro.Count;
 
         var token = SolverTokenSource.Token;
@@ -1462,7 +1647,7 @@ public sealed class MacroEditor : Window, IDisposable
 
         var solver = new Solver.Solver(config, state) { Token = token };
         solver.OnLog += Log.Debug;
-        solver.OnNewAction += a => AddStep(a, isSolver: true);
+        solver.OnNewAction += QueueSolverStep;
         solver.Start();
         _ = solver.GetTask().GetAwaiter().GetResult();
 
@@ -1483,36 +1668,72 @@ public sealed class MacroEditor : Window, IDisposable
     private void RecalculateState()
     {
         InitialState = new SimulationState(new(CharacterStats, RecipeData.RecipeInfo, StartingQuality));
-        var sim = new Sim(InitialState);
+        var sim = CreateSim();
         var lastState = InitialState;
-        foreach (var step in Macro)
-            lastState = ((step.Response, step.State) = sim.Execute(lastState, step.Action)).State;
+        for (var i = 0; i < Macro.Count; i++)
+            lastState = Macro[i].Recalculate(sim, lastState);
     }
 
-    private void AddStep(ActionType action, int index = -1, bool isSolver = false)
+    private static Sim CreateSim() =>
+        Service.Configuration.ConditionRandomness ? new Sim() : new SimNoRandom();
+
+    private static Sim CreateSim(in SimulationState state) =>
+        Service.Configuration.ConditionRandomness ? new Sim() { State = state } : new SimNoRandom() { State = state };
+
+    private void AddStep(ActionType action, int index = -1)
     {
         if (index < -1 || index >= Macro.Count)
             throw new ArgumentOutOfRangeException(nameof(index));
-        if (!isSolver && SolverRunning)
+        if (SolverRunning)
             throw new InvalidOperationException("Cannot add steps while solver is running");
         if (!SolverRunning)
             SolverStartStepCount = null;
 
         if (index == -1)
         {
-            var sim = new Sim(State);
-            var resp = sim.Execute(State, action);
-            Macro.Add(new() { Action = action, Response = resp.Response, State = resp.NewState });
+            var sim = CreateSim();
+            Macro.Add(new(action, sim, State, out _));
         }
         else
         {
             var state = index == 0 ? InitialState : Macro[index - 1].State;
-            var sim = new Sim(state);
-            var resp = sim.Execute(state, action);
-            Macro.Insert(index, new() { Action = action, Response = resp.Response, State = resp.NewState });
-            state = resp.NewState;
+            var sim = CreateSim();
+            Macro.Insert(index, new(action, sim, state, out state));
+            
             for (var i = index + 1; i < Macro.Count; i++)
-                state = ((Macro[i].Response, Macro[i].State) = sim.Execute(state, Macro[i].Action)).State;
+                state = Macro[i].Recalculate(sim, state);
+        }
+    }
+
+    private void QueueSolverStep(ActionType action)
+    {
+        if (!SolverRunning)
+            throw new InvalidOperationException("Cannot queue steps while solver isn't running");
+        lock (SolverQueueLock!)
+        {
+            var lastState = SolverQueuedSteps!.Count > 0 ? SolverQueuedSteps[^1].State : State;
+            SolverQueuedSteps.Add(new(action, CreateSim(), lastState, out _));
+        }
+    }
+
+    private void TryFlushSolvedSteps()
+    {
+        if (SolverQueueLock == null)
+            return;
+
+        lock (SolverQueueLock!)
+        {
+            if (SolverQueuedSteps!.Count > 0)
+            {
+                Macro.AddRange(SolverQueuedSteps);
+                SolverQueuedSteps.Clear();
+            }
+
+            if (!SolverRunning)
+            {
+                SolverQueuedSteps.Clear();
+                SolverQueueLock = null;
+            }
         }
     }
 
@@ -1527,9 +1748,9 @@ public sealed class MacroEditor : Window, IDisposable
         Macro.RemoveAt(index);
 
         var state = index == 0 ? InitialState : Macro[index - 1].State;
-        var sim = new Sim(state);
+        var sim = CreateSim();
         for (var i = index; i < Macro.Count; i++)
-            state = ((Macro[i].Response, Macro[i].State) = sim.Execute(state, Macro[i].Action)).State;
+            state = Macro[i].Recalculate(sim, state);
     }
 
     public void Dispose()

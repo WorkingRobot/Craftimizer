@@ -2,12 +2,16 @@ using Craftimizer.Utils;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
+using ImPlotNET;
+using MathNet.Numerics.Statistics;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -130,37 +134,6 @@ internal static class ImGuiUtils
         ImGui.PopID();
     }
 
-    private struct EndUnconditionally : ImRaii.IEndObject, IDisposable
-    {
-        private Action EndAction { get; }
-
-        public bool Success { get; }
-
-        public bool Disposed { get; private set; }
-
-        public EndUnconditionally(Action endAction, bool success)
-        {
-            EndAction = endAction;
-            Success = success;
-            Disposed = false;
-        }
-
-        public void Dispose()
-        {
-            if (!Disposed)
-            {
-                EndAction();
-                Disposed = true;
-            }
-        }
-    }
-
-    public static ImRaii.IEndObject GroupPanel(string name, float width, out float internalWidth)
-    {
-        internalWidth = BeginGroupPanel(name, width);
-        return new EndUnconditionally(EndGroupPanel, true);
-    }
-
     private static Vector2 UnitCircle(float theta)
     {
         var (s, c) = MathF.SinCos(theta);
@@ -168,6 +141,7 @@ internal static class ImGuiUtils
         return new Vector2(c, -s);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static float Lerp(float a, float b, float t) =>
         MathF.FusedMultiplyAdd(b - a, t, a);
 
@@ -249,6 +223,72 @@ internal static class ImGuiUtils
     public static void ArcProgress(float value, float radiusInner, float radiusOuter, uint backgroundColor, uint filledColor)
     {
         Arc(MathF.PI / 2, MathF.PI / 2 - MathF.Tau * Math.Clamp(value, 0, 1), radiusInner, radiusOuter, backgroundColor, filledColor);
+    }
+
+    public sealed class ViolinData
+    {
+        [StructLayout(LayoutKind.Sequential)]
+        public struct Point
+        {
+            public float X, Y, Y2;
+
+            public Point(float x, float y, float y2)
+            {
+                X = x;
+                Y = y;
+                Y2 = y2;
+            }
+        }
+
+        public ReadOnlySpan<Point> Data => (DataArray ?? Array.Empty<Point>()).AsSpan();
+        private Point[]? DataArray { get; set; }
+        public readonly float Min;
+        public readonly float Max;
+
+        public ViolinData(IEnumerable<int> samples, float min, float max, int resolution, double bandwidth)
+        {
+            Min = min;
+            Max = max;
+            bandwidth *= Max - Min;
+            var samplesList = samples.AsParallel().Select(s => (double)s).ToArray();
+            _ = Task.Run(() => {
+                var s = Stopwatch.StartNew();
+                var data = ParallelEnumerable.Range(0, resolution + 1)
+                    .Select(n => Lerp(min, max, n / (float)resolution))
+                    .Select(n => (n, (float)KernelDensity.EstimateGaussian(n, bandwidth, samplesList)))
+                    .Select(n => new Point(n.n, n.Item2, -n.Item2));
+                DataArray = data.ToArray();
+                s.Stop();
+                Log.Debug($"Violin plot processing took {s.Elapsed.TotalMilliseconds:0.00}ms");
+            });
+        }
+    }
+
+    public static void ViolinPlot(in ViolinData data, Vector2 size)
+    {
+        using var padding = ImRaii2.PushStyle(ImPlotStyleVar.PlotPadding, Vector2.Zero);
+        using var plotBg = ImRaii2.PushColor(ImPlotCol.PlotBg, Vector4.Zero);
+        using var fill = ImRaii2.PushColor(ImPlotCol.Fill, Vector4.One.WithAlpha(.5f));
+
+        using var plot = ImRaii2.Plot("##violin", size, ImPlotFlags.CanvasOnly | ImPlotFlags.NoInputs | ImPlotFlags.NoChild | ImPlotFlags.NoFrame);
+        if (plot)
+        {
+            ImPlot.SetupAxes(null, null, ImPlotAxisFlags.NoDecorations, ImPlotAxisFlags.NoDecorations | ImPlotAxisFlags.AutoFit);
+            ImPlot.SetupAxisLimits(ImAxis.X1, data.Min, data.Max, ImPlotCond.Always);
+            ImPlot.SetupFinish();
+
+            if (data.Data is { } points && !points.IsEmpty)
+            {
+                unsafe
+                {
+                    var label_id = stackalloc byte[] { (byte)'\0' };
+                    fixed (ViolinData.Point* p = points)
+                    {
+                        ImPlotNative.ImPlot_PlotShaded_FloatPtrFloatPtrFloatPtr(label_id, &p->X, &p->Y, &p->Y2, points.Length, ImPlotShadedFlags.None, 0, sizeof(ViolinData.Point));
+                    }
+                }
+            }
+        }
     }
 
     private sealed class SearchableComboData<T> where T : class
@@ -467,10 +507,50 @@ internal static class ImGuiUtils
         return ImGuiExtras.InputTextEx(label, hint, ref input, maxLength, size, flags | Multiline, callback, user_data);
     }
 
-    public static bool IconButtonSized(FontAwesomeIcon icon, Vector2 size)
+    private static Vector2 GetIconSize(FontAwesomeIcon icon)
     {
         using var font = ImRaii.PushFont(UiBuilder.IconFont);
-        var ret = ImGui.Button(icon.ToIconString(), size);
+        return ImGui.CalcTextSize(icon.ToIconString());
+    }
+
+    private static void DrawCenteredIcon(FontAwesomeIcon icon, Vector2 offset, Vector2 size)
+    {
+        var iconSize = GetIconSize(icon);
+
+        float scale;
+        Vector2 iconOffset;
+        if (iconSize.X > iconSize.Y)
+        {
+            scale = size.X / iconSize.X;
+            iconOffset = new(0, (size.Y - (iconSize.Y * scale)) / 2f);
+        }
+        else if (iconSize.Y > iconSize.X)
+        {
+            scale = size.Y / iconSize.Y;
+            iconOffset = new((size.X - (iconSize.X * scale)) / 2f, 0);
+        }
+        else
+        {
+            scale = size.X / iconSize.X;
+            iconOffset = Vector2.Zero;
+        }
+
+        ImGui.GetWindowDrawList().AddText(UiBuilder.IconFont, UiBuilder.IconFont.FontSize * scale, offset + iconOffset, ImGui.GetColorU32(ImGuiCol.Text), icon.ToIconString());
+    }
+
+    public static bool IconButtonSquare(FontAwesomeIcon icon, float size = -1)
+    {
+        var ret = false;
+
+        var buttonSize = new Vector2(size == -1 ? ImGui.GetFrameHeight() : size);
+        var pos = ImGui.GetCursorScreenPos();
+        var spacing = new Vector2(ImGui.GetStyle().FramePadding.Y);
+
+        if (ImGui.Button($"###{icon.ToIconString()}", buttonSize))
+            ret = true;
+
+        DrawCenteredIcon(icon, pos + spacing, buttonSize - spacing * 2);
+
         return ret;
     }
 

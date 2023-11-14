@@ -216,7 +216,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         ImGui.Separator();
 
         var panelWidth = availWidth - ImGui.GetStyle().ItemSpacing.X * 2;
-        using (var panel = ImGuiUtils.GroupPanel("Best Saved Macro", panelWidth, out _))
+        using (var panel = ImRaii2.GroupPanel("Best Saved Macro", panelWidth, out _))
         {
             var stepsPanelWidthOffset = ImGui.GetContentRegionAvail().X - panelWidth;
             if (BestSavedMacro is { } savedMacro)
@@ -228,7 +228,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 DrawMacro(null, null, stepsPanelWidthOffset, true);
         }
 
-        using (var panel = ImGuiUtils.GroupPanel("Suggested Macro", panelWidth, out _))
+        using (var panel = ImRaii2.GroupPanel("Suggested Macro", panelWidth, out _))
         {
             var stepsPanelWidthOffset = ImGui.GetContentRegionAvail().X - panelWidth;
             if (BestSuggestedMacro is { } suggestedMacro)
@@ -644,11 +644,11 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             
             ImGui.TableNextColumn();
             {
-                if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Edit, new(miniRowHeight)))
+                if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Edit, miniRowHeight))
                     Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), macro.Actions, setter);
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip("Open in Simulator");
-                if (ImGuiUtils.IconButtonSized(FontAwesomeIcon.Paste, new(miniRowHeight)))
+                if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Paste, miniRowHeight))
                     Service.Plugin.CopyMacro(macro.Actions);
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip("Copy to Clipboard");
@@ -824,7 +824,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         var state = new SimulationState(input);
         var config = Service.Configuration.SimulatorSolverConfig;
         var mctsConfig = new MCTSConfig(config);
-        var simulator = new SimulatorNoRandom(state);
+        var simulator = new SimulatorNoRandom();
         List<Macro> macros = new(Service.Configuration.Macros);
 
         token.ThrowIfCancellationRequested();

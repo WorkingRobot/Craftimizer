@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace Craftimizer;
+namespace Craftimizer.Plugin;
 
 internal static unsafe class ImGuiExtras
 {

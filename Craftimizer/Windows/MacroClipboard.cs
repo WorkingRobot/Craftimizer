@@ -36,7 +36,7 @@ public sealed class MacroClipboard : Window, IDisposable
     private void DrawMacro(int idx, string macro)
     {
         using var id = ImRaii.PushId(idx);
-        using var panel = ImGuiUtils.GroupPanel($"Macro {idx + 1}", -1, out var availWidth);
+        using var panel = ImRaii2.GroupPanel($"Macro {idx + 1}", -1, out var availWidth);
 
         var cursor = ImGui.GetCursorPos();
 
@@ -49,7 +49,7 @@ public sealed class MacroClipboard : Window, IDisposable
         ImGui.SetCursorPos(buttonCursor);
         {
             using var color = ImRaii.PushColor(ImGuiCol.Button, ImGui.GetColorU32(buttonActive ? ImGuiCol.ButtonActive : ImGuiCol.ButtonHovered), buttonHovered);
-            ImGuiUtils.IconButtonSized(FontAwesomeIcon.Paste, new(ImGui.GetFrameHeight()));
+            ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Paste);
             if (buttonClicked)
             {
                 ImGui.SetClipboardText(macro);
