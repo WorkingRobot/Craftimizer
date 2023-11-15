@@ -14,6 +14,7 @@ using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
+using FFXIVClientStructs.FFXIV.Client.UI.Shell;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
@@ -85,34 +86,6 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         Service.WindowSystem.AddWindow(this);
     }
 
-    private bool wasInCraftAction;
-    public override void Update()
-    {
-        Addon = (AddonSynthesis*)Service.GameGui.GetAddonByName("Synthesis");
-
-        if (Addon != null)
-        {
-            var agent = AgentRecipeNote.Instance();
-            var recipeId = (ushort)agent->ActiveCraftRecipeId;
-
-            if (agent->ActiveCraftRecipeId == 0)
-                IsCrafting = false;
-            else if (!IsCrafting)
-            {
-                IsCrafting = true;
-                OnStartCrafting(recipeId);
-            }
-        }
-        else
-            IsCrafting = false;
-
-        Macro.FlushQueue();
-
-        var isInCraftAction = Service.Condition[ConditionFlag.Crafting40];
-        if (!isInCraftAction && wasInCraftAction)
-            OnFinishedUsingAction();
-        wasInCraftAction = isInCraftAction;
-    }
 
     private bool wasOpen;
     public override bool DrawConditions()
@@ -121,27 +94,56 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         if (isOpen != wasOpen)
         {
             if (wasOpen)
+            {
+                IsCrafting = false;
                 HelperTaskTokenSource?.Cancel();
+            }
         }
 
         wasOpen = isOpen;
         return isOpen;
     }
 
+    private bool wasInCraftAction;
     private bool ShouldDraw()
     {
         if (Service.ClientState.LocalPlayer == null)
             return false;
 
-        if (Addon == null)
+        if (!Service.Configuration.EnableSynthHelper)
             return false;
 
-        if (!IsCrafting)
+        if (Service.Configuration.DisableSynthHelperOnMacro &&
+            RaptureShellModule.Instance()->MacroCurrentLine >= 0)
+            return false;
+
+        Addon = (AddonSynthesis*)Service.GameGui.GetAddonByName("Synthesis");
+
+        if (Addon == null)
             return false;
 
         // Check if Synthesis addon is visible
         if (Addon->AtkUnitBase.WindowNode == null)
             return false;
+
+        var agent = AgentRecipeNote.Instance();
+        var recipeId = (ushort)agent->ActiveCraftRecipeId;
+
+        if (agent->ActiveCraftRecipeId == 0)
+            return false;
+
+        if (!IsCrafting)
+        {
+            IsCrafting = true;
+            OnStartCrafting(recipeId);
+        }
+
+        Macro.FlushQueue();
+
+        var isInCraftAction = Service.Condition[ConditionFlag.Crafting40];
+        if (!isInCraftAction && wasInCraftAction)
+            OnFinishedUsingAction();
+        wasInCraftAction = isInCraftAction;
 
         return true;
     }

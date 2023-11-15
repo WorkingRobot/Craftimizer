@@ -657,6 +657,14 @@ public sealed class Settings : Window, IDisposable
         var isDirty = false;
 
         DrawOption(
+            "Disable when running macro",
+            "Disables itself when an in-game macro is running.",
+            Config.DisableSynthHelperOnMacro,
+            v => Config.DisableSynthHelperOnMacro = v,
+            ref isDirty
+        );
+
+        DrawOption(
             "Step Count",
             "The number of future actions to solve for during an in-game craft.",
             Config.SynthHelperStepCount,

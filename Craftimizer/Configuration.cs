@@ -90,6 +90,7 @@ public class Configuration : IPluginConfiguration
     [JsonConverter(typeof(PopulateConverter))]
     public SolverConfig SynthHelperSolverConfig { get; set; } = SolverConfig.SynthHelperDefault;
     public bool EnableSynthHelper { get; set; } = true;
+    public bool DisableSynthHelperOnMacro { get; set; } = true;
     public bool ShowOptimalMacroStat { get; set; } = true;
     public int SynthHelperStepCount { get; set; } = 5;
 
