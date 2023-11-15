@@ -102,6 +102,11 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         {
             if (wasOpen)
                 BestMacroTokenSource?.Cancel();
+            else
+            {
+                if (!BestSuggestedMacro.HasValue && CraftStatus == CraftableStatus.OK && BestMacroTokenSource == null)
+                    CalculateBestMacros();
+            }
         }
 
         wasOpen = isOpen;
@@ -172,7 +177,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             statsChanged = true;
         }
 
-        if ((statsChanged || (BestMacroTokenSource?.IsCancellationRequested ?? false)) && CraftStatus == CraftableStatus.OK)
+        if (statsChanged && CraftStatus == CraftableStatus.OK)
             CalculateBestMacros();
 
         return true;
