@@ -1554,7 +1554,7 @@ public sealed class MacroEditor : Window, IDisposable
         using (SolverObject = new Solver.Solver(config, state) { Token = token })
         {
             SolverObject.OnLog += Log.Debug;
-            SolverObject.OnNewAction += Macro.Enqueue;
+            SolverObject.OnNewAction += a => Macro.Enqueue(a);
             SolverObject.Start();
             _ = SolverObject.GetTask().GetAwaiter().GetResult();
         }

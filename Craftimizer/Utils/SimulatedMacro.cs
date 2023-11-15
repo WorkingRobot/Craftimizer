@@ -192,12 +192,13 @@ internal sealed class SimulatedMacro
             state = Macro[i].Recalculate(sim, state);
     }
 
-    public void Enqueue(ActionType action)
+    public int Enqueue(ActionType action)
     {
         lock (QueueLock)
         {
             var lastState = QueuedSteps.Count > 0 ? QueuedSteps[^1].State : State;
             QueuedSteps.Add(new(action, CreateSim(), lastState, out _));
+            return QueuedSteps.Count + Macro.Count;
         }
     }
 

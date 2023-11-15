@@ -155,8 +155,8 @@ public sealed class Settings : Window, IDisposable
         {
             DrawTabGeneral();
             DrawTabSimulator();
-            //if (Config.EnableSynthHelper)
-            //    DrawTabSynthHelper();
+            if (Config.EnableSynthHelper)
+                DrawTabSynthHelper();
             DrawTabAbout();
 
             ImGui.EndTabBar();
@@ -173,22 +173,15 @@ public sealed class Settings : Window, IDisposable
 
         var isDirty = false;
 
-
-        using (var g = ImRaii.Group())
-        {
-            using var d = ImRaii.Disabled();
-            DrawOption(
-                "Enable Synthesis Helper",
-                "Adds a helper next to your synthesis window to help solve for the best craft.\n" +
-                "Extremely useful for expert recipes, where the condition can greatly affect\n" +
-                "which actions you take.",
-                Config.EnableSynthHelper,
-                v => Config.EnableSynthHelper = v,
-                ref isDirty
-            );
-        }
-        if (ImGui.IsItemHovered())
-            ImGui.SetTooltip("Disabled temporarily for testing");
+        DrawOption(
+            "Enable Synthesis Helper",
+            "Adds a helper next to your synthesis window to help solve for the best craft.\n" +
+            "Extremely useful for expert recipes, where the condition can greatly affect\n" +
+            "which actions you take.",
+            Config.EnableSynthHelper,
+            v => Config.EnableSynthHelper = v,
+            ref isDirty
+        );
 
         DrawOption(
             "Show Only One Macro Stat in Crafting Log",

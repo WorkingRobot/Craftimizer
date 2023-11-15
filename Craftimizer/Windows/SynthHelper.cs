@@ -153,7 +153,6 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         var pos = new Vector2(unit.X, unit.Y);
         var size = new Vector2(unit.WindowNode->AtkResNode.Width, unit.WindowNode->AtkResNode.Height) * scale;
 
-        var node = unit.GetNodeById(46);
         var offset = 5;
 
         Position = ImGuiHelpers.MainViewport.Pos + pos + new Vector2(size.X, offset * scale);
@@ -206,7 +205,6 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             }
             if (ImGui.ImageButton(action.GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(imageSize), default, Vector2.One, 0, default, failedAction ? new(1, 1, 1, ImGui.GetStyle().DisabledAlpha) : Vector4.One))
             {
-                Log.Debug($"Clicked {action.GetName(RecipeData.ClassJob)} [{i}]");
                 if (i == 0)
                     Chat.SendMessage($"/ac \"{action.GetName(RecipeData.ClassJob)}\"");
             }
@@ -220,7 +218,8 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             lastState = state;
         }
 
-        for (var i = 0; i < 2; ++i)
+        var rows = (int)Math.Max(1, MathF.Ceiling(Service.Configuration.SynthHelperStepCount / itemsPerRow));
+        for (var i = 0; i < rows; ++i)
         {
             if (Macro.Count <= i * itemsPerRow)
                 ImGui.Dummy(new(0, imageSize));
@@ -524,12 +523,18 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         using (HelperTaskObject = new Solver.Solver(config, state) { Token = token })
         {
             HelperTaskObject.OnLog += Log.Debug;
-            HelperTaskObject.OnNewAction += Macro.Enqueue;
+            HelperTaskObject.OnNewAction += EnqueueAction;
             HelperTaskObject.Start();
             _ = HelperTaskObject.GetTask().GetAwaiter().GetResult();
         }
 
         token.ThrowIfCancellationRequested();
+    }
+
+    private void EnqueueAction(ActionType action)
+    {
+        if (Macro.Enqueue(action) >= Service.Configuration.SynthHelperStepCount)
+            HelperTaskTokenSource?.Cancel();
     }
 
     private static Sim CreateSim(in SimulationState state) =>

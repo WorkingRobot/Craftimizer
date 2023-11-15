@@ -64,9 +64,6 @@ public readonly record struct SolverConfig
 
     public static readonly SolverConfig SynthHelperDefault = new SolverConfig() with
     {
-        Iterations = 300000,
-        ForkCount = Environment.ProcessorCount - 1, // Keep one for the game thread
-        FurcatedActionCount = Environment.ProcessorCount / 2,
-        Algorithm = SolverAlgorithm.StepwiseForked
+        // Add properties if necessary
     };
 }
