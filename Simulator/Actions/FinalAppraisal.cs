@@ -9,7 +9,9 @@ internal sealed class FinalAppraisal : BaseBuffAction
     public override bool IncreasesStepCount => false;
 
     public override EffectType Effect => EffectType.FinalAppraisal;
-    public override byte Duration => 5;
+    // This is set to 4 since IncreaseStepCount is false.
+    // Usually it adds 1 extra duration and then it would tick it down, but IncreaseStepCount prevents that.
+    public override byte Duration => 4;
 
     public override int CPCost(Simulator s) => 1;
 }
