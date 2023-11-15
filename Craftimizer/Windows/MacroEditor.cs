@@ -77,125 +77,16 @@ public sealed class MacroEditor : Window, IDisposable
     private List<int> HQIngredientCounts { get; set; }
     private int StartingQuality => RecipeData.CalculateStartingQuality(HQIngredientCounts);
 
-    private readonly record struct SimulationReliablity
-    {
-        public sealed class ParamReliability
-        {
-            private List<int> DataList { get; }
-            private ImGuiUtils.ViolinData? ViolinData { get; set; }
+    private SimulatedMacro Macro { get; set; } = new();
+    private SimulationState State => Macro.State;
+    private SimulatedMacro.Reliablity Reliability => Macro.GetReliability(RecipeData);
 
-            public int Max { get; private set; }
-            public int Min { get; private set; }
-            public float Median { get; private set; }
-            public float Average { get; private set; }
-
-            public ParamReliability()
-            {
-                DataList = new();
-            }
-
-            public void Add(int value)
-            {
-                DataList.Add(value);
-            }
-
-            public void FinalizeData()
-            {
-                if (DataList.Count == 0)
-                {
-                    Average = Median = Max = Min = 0;
-                    return;
-                }
-
-                Max = DataList.Max();
-                Min = DataList.Min();
-                if (DataList.Count % 2 == 0)
-                    Median = (float)DataList.Order().Skip(DataList.Count / 2 - 1).Take(2).Average();
-                else
-                    Median = DataList.Order().ElementAt(DataList.Count / 2);
-                Average = (float)DataList.Average();
-            }
-
-            public ImGuiUtils.ViolinData? GetViolinData(float barMax, int resolution, double bandwidth) =>
-                ViolinData ??=
-                    Min != Max ?
-                        new(DataList, 0, barMax, resolution, bandwidth) :
-                        null;
-        }
-
-        public readonly ParamReliability Progress = new();
-        public readonly ParamReliability Quality = new();
-
-        // Param is either collectability, quality, or hq%, depending on the recipe
-        public readonly ParamReliability Param = new();
-
-        public SimulationReliablity(in SimulationState startState, IEnumerable<ActionType> actions, int iterCount, RecipeData recipeData)
-        {
-            Func<SimulationState, int> getParam;
-            if (recipeData.Recipe.ItemResult.Value!.IsCollectable)
-                getParam = s => s.Collectability;
-            else if (recipeData.Recipe.RequiredQuality > 0)
-            {
-                var reqQual = recipeData.Recipe.RequiredQuality;
-                getParam = s => (int)((float)s.Quality / reqQual * 100);
-            }
-            else if (recipeData.RecipeInfo.MaxQuality > 0)
-                getParam = s => s.HQPercent;
-            else
-                getParam = s => 0;
-
-            for (var i = 0; i < iterCount; ++i)
-            {
-                var sim = new Sim();
-                var (_, state, _) = sim.ExecuteMultiple(startState, actions);
-                Progress.Add(state.Progress);
-                Quality.Add(state.Quality);
-                Param.Add(getParam(state));
-            }
-            Progress.FinalizeData();
-            Quality.FinalizeData();
-            Param.FinalizeData();
-        }
-    }
-
-    private sealed record SimulatedActionStep
-    {
-        public ActionType Action { get; }
-        // State *after* executing the action
-        public ActionResponse Response { get; private set; }
-        public SimulationState State { get; private set; }
-        private SimulationReliablity? Reliability { get; set; }
-
-        public SimulatedActionStep(ActionType action, Sim sim, in SimulationState lastState, out SimulationState newState)
-        {
-            Action = action;
-            newState = Recalculate(sim, lastState);
-        }
-
-        public SimulationState Recalculate(Sim sim, in SimulationState lastState)
-        {
-            (Response, State) = sim.Execute(lastState, Action);
-            Reliability = null;
-            return State;
-        }
-
-        public SimulationReliablity GetReliability(in SimulationState initialState, IEnumerable<ActionType> actionSet, RecipeData recipeData) =>
-            Reliability ??=
-                new(initialState, actionSet, Service.Configuration.ReliabilitySimulationCount, recipeData);
-    };
-
-    private List<SimulatedActionStep> Macro { get; set; } = new();
-    private SimulationState InitialState { get; set; }
-    private SimulationState State => Macro.Count > 0 ? Macro[^1].State : InitialState;
-    private SimulationReliablity Reliability => Macro.Count > 0 ? Macro[^1].GetReliability(InitialState, Macro.Select(m => m.Action), RecipeData) : new(InitialState, Array.Empty<ActionType>(), 0, RecipeData);
     private ActionType[] DefaultActions { get; }
     private Action<IEnumerable<ActionType>>? MacroSetter { get; set; }
 
     private CancellationTokenSource? SolverTokenSource { get; set; }
     private Exception? SolverException { get; set; }
     private int? SolverStartStepCount { get; set; }
-    private object? SolverQueueLock { get; set; }
-    private List<SimulatedActionStep>? SolverQueuedSteps { get; set; }
     private Solver.Solver? SolverObject { get; set; }
     private bool SolverRunning => SolverTokenSource != null;
 
@@ -263,7 +154,7 @@ public sealed class MacroEditor : Window, IDisposable
 
     public override void Update()
     {
-        TryFlushSolvedSteps();
+        Macro.FlushQueue();
     }
 
     public override void Draw()
@@ -1100,14 +991,14 @@ public sealed class MacroEditor : Window, IDisposable
                     new("Condition", default, null, 0, 0, null, State.Condition)
                 };
                 if (RecipeData.Recipe.ItemResult.Value!.IsCollectable)
-                    datas.Add(new("Collectability", Colors.HQ, Reliability.Param, State.Collectability, State.MaxCollectability, $"{State.Collectability}", null));
+                    datas.Add(new("Collectability", Colors.HQ, Reliability.ParamScore, State.Collectability, State.MaxCollectability, $"{State.Collectability}", null));
                 else if (RecipeData.Recipe.RequiredQuality > 0)
                 {
                     var qualityPercent = (float)State.Quality / RecipeData.Recipe.RequiredQuality * 100;
-                    datas.Add(new("Quality %%", Colors.HQ, Reliability.Param, qualityPercent, 100, $"{qualityPercent:0}%", null));
+                    datas.Add(new("Quality %%", Colors.HQ, Reliability.ParamScore, qualityPercent, 100, $"{qualityPercent:0}%", null));
                 }
                 else if (RecipeData.RecipeInfo.MaxQuality > 0)
-                    datas.Add(new("HQ %%", Colors.HQ, Reliability.Param, State.HQPercent, 100, $"{State.HQPercent}%", null));
+                    datas.Add(new("HQ %%", Colors.HQ, Reliability.ParamScore, State.HQPercent, 100, $"{State.HQPercent}%", null));
                 DrawBars(datas);
 
                 ImGui.TableNextColumn();
@@ -1162,7 +1053,7 @@ public sealed class MacroEditor : Window, IDisposable
         }
     }
 
-    private readonly record struct BarData(string Name, Vector4 Color, SimulationReliablity.ParamReliability? Reliability, float Value, float Max, string? Caption, Condition? Condition);
+    private readonly record struct BarData(string Name, Vector4 Color, SimulatedMacro.Reliablity.Param? Reliability, float Value, float Max, string? Caption, Condition? Condition);
     private void DrawBars(IEnumerable<BarData> bars)
     {
         var spacing = ImGui.GetStyle().ItemSpacing.X;
@@ -1264,7 +1155,7 @@ public sealed class MacroEditor : Window, IDisposable
     {
         var spacing = ImGui.GetStyle().ItemSpacing.X;
         var imageSize = ImGui.GetFrameHeight() * 2;
-        var lastState = InitialState;
+        var lastState = Macro.InitialState;
 
         using var panel = ImRaii2.GroupPanel("Macro", -1, out var availSpace);
         ImGui.Dummy(new(0, imageSize));
@@ -1378,7 +1269,7 @@ public sealed class MacroEditor : Window, IDisposable
         }
         ImGui.SameLine();
         if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Paste))
-            Service.Plugin.CopyMacro(Macro.Select(s => s.Action).ToArray());
+            Service.Plugin.CopyMacro(Macro.Actions.ToArray());
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip("Copy to Clipboard");
         ImGui.SameLine();
@@ -1438,7 +1329,7 @@ public sealed class MacroEditor : Window, IDisposable
             {
                 if (!string.IsNullOrWhiteSpace(popupSaveAsMacroName))
                 {
-                    var newMacro = new Macro() { Name = popupSaveAsMacroName, Actions = Macro.Select(s => s.Action).ToArray() };
+                    var newMacro = new Macro() { Name = popupSaveAsMacroName, Actions = Macro.Actions.ToArray() };
                     Service.Configuration.AddMacro(newMacro);
                     MacroSetter = actions =>
                     {
@@ -1606,16 +1497,7 @@ public sealed class MacroEditor : Window, IDisposable
         SolverTokenSource?.Cancel();
         SolverTokenSource = new();
         SolverException = null;
-        if (SolverQueueLock is { })
-        {
-            lock (SolverQueueLock)
-            {
-                SolverQueuedSteps!.Clear();
-                SolverQueueLock = null;
-            }
-        }
-        SolverQueueLock = new();
-        SolverQueuedSteps ??= new();
+        Macro.ClearQueue();
 
         RevertPreviousMacro();
 
@@ -1665,7 +1547,7 @@ public sealed class MacroEditor : Window, IDisposable
         using (SolverObject = new Solver.Solver(config, state) { Token = token })
         {
             SolverObject.OnLog += Log.Debug;
-            SolverObject.OnNewAction += QueueSolverStep;
+            SolverObject.OnNewAction += Macro.Enqueue;
             SolverObject.Start();
             _ = SolverObject.GetTask().GetAwaiter().GetResult();
         }
@@ -1681,95 +1563,34 @@ public sealed class MacroEditor : Window, IDisposable
 
     private void SaveMacro()
     {
-        MacroSetter?.Invoke(Macro.Select(s => s.Action));
+        MacroSetter?.Invoke(Macro.Actions);
     }
 
     private void RecalculateState()
     {
-        InitialState = new SimulationState(new(CharacterStats, RecipeData.RecipeInfo, StartingQuality));
-        var sim = CreateSim();
-        var lastState = InitialState;
-        for (var i = 0; i < Macro.Count; i++)
-            lastState = Macro[i].Recalculate(sim, lastState);
+        Macro.InitialState = new SimulationState(new(CharacterStats, RecipeData.RecipeInfo, StartingQuality));
     }
-
-    private static Sim CreateSim() =>
-        Service.Configuration.ConditionRandomness ? new Sim() : new SimNoRandom();
 
     private static Sim CreateSim(in SimulationState state) =>
         Service.Configuration.ConditionRandomness ? new Sim() { State = state } : new SimNoRandom() { State = state };
 
-    private void AddStep(ActionType action, int index = -1)
+    private void AddStep(ActionType action)
     {
-        if (index < -1 || index >= Macro.Count)
-            throw new ArgumentOutOfRangeException(nameof(index));
         if (SolverRunning)
             throw new InvalidOperationException("Cannot add steps while solver is running");
         if (!SolverRunning)
             SolverStartStepCount = null;
 
-        if (index == -1)
-        {
-            var sim = CreateSim();
-            Macro.Add(new(action, sim, State, out _));
-        }
-        else
-        {
-            var state = index == 0 ? InitialState : Macro[index - 1].State;
-            var sim = CreateSim();
-            Macro.Insert(index, new(action, sim, state, out state));
-
-            for (var i = index + 1; i < Macro.Count; i++)
-                state = Macro[i].Recalculate(sim, state);
-        }
-    }
-
-    private void QueueSolverStep(ActionType action)
-    {
-        if (!SolverRunning)
-            throw new InvalidOperationException("Cannot queue steps while solver isn't running");
-        lock (SolverQueueLock!)
-        {
-            var lastState = SolverQueuedSteps!.Count > 0 ? SolverQueuedSteps[^1].State : State;
-            SolverQueuedSteps.Add(new(action, CreateSim(), lastState, out _));
-        }
-    }
-
-    private void TryFlushSolvedSteps()
-    {
-        if (SolverQueueLock == null)
-            return;
-
-        lock (SolverQueueLock!)
-        {
-            if (SolverQueuedSteps!.Count > 0)
-            {
-                Macro.AddRange(SolverQueuedSteps);
-                SolverQueuedSteps.Clear();
-            }
-
-            if (!SolverRunning)
-            {
-                SolverQueuedSteps.Clear();
-                SolverQueueLock = null;
-            }
-        }
+        Macro.Add(action);
     }
 
     private void RemoveStep(int index)
     {
-        if (index < 0 || index >= Macro.Count)
-            throw new ArgumentOutOfRangeException(nameof(index));
         if (SolverRunning)
             throw new InvalidOperationException("Cannot remove steps while solver is running");
         SolverStartStepCount = null;
 
         Macro.RemoveAt(index);
-
-        var state = index == 0 ? InitialState : Macro[index - 1].State;
-        var sim = CreateSim();
-        for (var i = index; i < Macro.Count; i++)
-            state = Macro[i].Recalculate(sim, state);
     }
 
     public void Dispose()
