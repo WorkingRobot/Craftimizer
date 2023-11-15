@@ -518,7 +518,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
     private void CalculateBestMacroTask(SimulationState state, CancellationToken token)
     {
-        var config = Service.Configuration.SimulatorSolverConfig;
+        var config = Service.Configuration.SynthHelperSolverConfig;
 
         token.ThrowIfCancellationRequested();
 
