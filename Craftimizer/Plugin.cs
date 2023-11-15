@@ -26,6 +26,7 @@ public sealed class Plugin : IDalamudPlugin
     public WindowSystem WindowSystem { get; }
     public Settings SettingsWindow { get; }
     public RecipeNote RecipeNoteWindow { get; }
+    public SynthHelper SynthHelperWindow { get; }
     public MacroList ListWindow { get; private set; }
     public MacroEditor? EditorWindow { get; private set; }
     public MacroClipboard? ClipboardWindow { get; private set; }
@@ -51,6 +52,7 @@ public sealed class Plugin : IDalamudPlugin
 
         SettingsWindow = new();
         RecipeNoteWindow = new();
+        SynthHelperWindow = new();
         ListWindow = new();
 
         // Trigger static constructors so a huge hitch doesn't occur on first RecipeNote frame.
@@ -157,6 +159,7 @@ public sealed class Plugin : IDalamudPlugin
         Service.CommandManager.RemoveHandler("/crafteditor");
         SettingsWindow.Dispose();
         RecipeNoteWindow.Dispose();
+        SynthHelperWindow.Dispose();
         ListWindow.Dispose();
         EditorWindow?.Dispose();
         ClipboardWindow?.Dispose();
