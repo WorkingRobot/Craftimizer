@@ -985,32 +985,75 @@ public sealed class MacroEditor : Window, IDisposable
                 ImGui.TableSetupColumn("col2", ImGuiTableColumnFlags.WidthStretch, 2);
 
                 ImGui.TableNextColumn();
-                var datas = new List<BarData>(3)
+                void DrawCondition(DynamicBars.DrawerParams drawerParams)
                 {
-                    new("Durability", Colors.Durability, null, State.Durability, RecipeData.RecipeInfo.MaxDurability, null, null),
-                    new("Condition", default, null, 0, 0, null, State.Condition)
+                    var (totalSize, spacing) = drawerParams;
+                    var condition = State.Condition;
+
+                    var pos = ImGui.GetCursorPos();
+                    using (var g = ImRaii.Group())
+                    {
+                        var availSize = totalSize - (spacing + ImGui.GetFrameHeight());
+                        var size = ImGui.GetFrameHeight() + spacing + ImGui.CalcTextSize(condition.Name()).X;
+
+                        ImGuiUtils.AlignCentered(size, availSize);
+                        ImGui.GetWindowDrawList().AddCircleFilled(
+                            ImGui.GetCursorScreenPos() + new Vector2(ImGui.GetFrameHeight() / 2),
+                            ImGui.GetFrameHeight() / 2,
+                            ImGui.ColorConvertFloat4ToU32(new Vector4(.35f, .35f, .35f, 0) + condition.GetColor(DateTime.UtcNow.TimeOfDay)));
+                        ImGui.Dummy(new(ImGui.GetFrameHeight()));
+                        ImGui.SameLine(0, spacing);
+                        ImGui.AlignTextToFramePadding();
+                        ImGui.Text(condition.Name());
+                    }
+                    if (ImGui.IsItemHovered())
+                        ImGui.SetTooltip(condition.Description(CharacterStats.HasSplendorousBuff).Replace("%", "%%"));
+
+                    ImGui.SetCursorPos(pos);
+                    ImGuiUtils.AlignRight(ImGui.GetFrameHeight(), totalSize);
+
+                    using (var disabled = ImRaii.Disabled(SolverRunning))
+                    {
+                        using var tint = ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled), !Service.Configuration.ConditionRandomness);
+                        if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Dice))
+                        {
+                            Service.Configuration.ConditionRandomness ^= true;
+                            Service.Configuration.Save();
+
+                            RecalculateState();
+                        }
+                    }
+                    if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+                        ImGui.SetTooltip("Condition Randomness\n" +
+                            "Allows the condition to fluctuate randomly like a real craft.\n" +
+                            "Turns off when generating a macro.");
+                }
+                var datas = new List<DynamicBars.BarData>(3)
+                {
+                    new("Durability", Colors.Durability, State.Durability, RecipeData.RecipeInfo.MaxDurability),
+                    new("Condition", DrawCondition)
                 };
                 if (RecipeData.Recipe.ItemResult.Value!.IsCollectable)
-                    datas.Add(new("Collectability", Colors.HQ, Reliability.ParamScore, State.Collectability, State.MaxCollectability, $"{State.Collectability}", null));
+                    datas.Add(new("Collectability", Colors.HQ, Reliability.ParamScore, State.Collectability, State.MaxCollectability, $"{State.Collectability}"));
                 else if (RecipeData.Recipe.RequiredQuality > 0)
                 {
                     var qualityPercent = (float)State.Quality / RecipeData.Recipe.RequiredQuality * 100;
-                    datas.Add(new("Quality %%", Colors.HQ, Reliability.ParamScore, qualityPercent, 100, $"{qualityPercent:0}%", null));
+                    datas.Add(new("Quality %%", Colors.HQ, Reliability.ParamScore, qualityPercent, 100, $"{qualityPercent:0}%"));
                 }
                 else if (RecipeData.RecipeInfo.MaxQuality > 0)
-                    datas.Add(new("HQ %%", Colors.HQ, Reliability.ParamScore, State.HQPercent, 100, $"{State.HQPercent}%", null));
-                DrawBars(datas);
+                    datas.Add(new("HQ %%", Colors.HQ, Reliability.ParamScore, State.HQPercent, 100, $"{State.HQPercent}%"));
+                DynamicBars.Draw(datas);
 
                 ImGui.TableNextColumn();
-                datas = new List<BarData>(3)
+                datas = new List<DynamicBars.BarData>(3)
                 {
-                    new("Progress", Colors.Progress, Reliability.Progress, State.Progress, RecipeData.RecipeInfo.MaxProgress, null, null),
-                    new("Quality", Colors.Quality, Reliability.Quality, State.Quality, RecipeData.RecipeInfo.MaxQuality, null, null),
-                    new("CP", Colors.CP, null, State.CP, CharacterStats.CP, null, null)
+                    new("Progress", Colors.Progress, Reliability.Progress, State.Progress, RecipeData.RecipeInfo.MaxProgress),
+                    new("Quality", Colors.Quality, Reliability.Quality, State.Quality, RecipeData.RecipeInfo.MaxQuality),
+                    new("CP", Colors.CP, State.CP, CharacterStats.CP)
                 };
                 if (RecipeData.RecipeInfo.MaxQuality <= 0)
                     datas.RemoveAt(1);
-                DrawBars(datas);
+                DynamicBars.Draw(datas);
             }
         }
 
@@ -1075,43 +1118,7 @@ public sealed class MacroEditor : Window, IDisposable
             using var panel = ImRaii2.GroupPanel(bar.Name, totalSize, out _);
             if (bar.Condition is { } condition)
             {
-                var pos = ImGui.GetCursorPos();
-                using (var g = ImRaii.Group())
-                {
-                    var availSize = totalSize - (spacing + ImGui.GetFrameHeight());
-                    var size = ImGui.GetFrameHeight() + spacing + ImGui.CalcTextSize(condition.Name()).X;
-
-                    ImGuiUtils.AlignCentered(size, availSize);
-                    ImGui.GetWindowDrawList().AddCircleFilled(
-                        ImGui.GetCursorScreenPos() + new Vector2(ImGui.GetFrameHeight() / 2),
-                        ImGui.GetFrameHeight() / 2,
-                        ImGui.ColorConvertFloat4ToU32(new Vector4(.35f, .35f, .35f, 0) + condition.GetColor(DateTime.UtcNow.TimeOfDay)));
-                    ImGui.Dummy(new(ImGui.GetFrameHeight()));
-                    ImGui.SameLine(0, spacing);
-                    ImGui.AlignTextToFramePadding();
-                    ImGui.Text(condition.Name());
-                }
-                if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip(condition.Description(CharacterStats.HasSplendorousBuff).Replace("%", "%%"));
-
-                ImGui.SetCursorPos(pos);
-                ImGuiUtils.AlignRight(ImGui.GetFrameHeight(), totalSize);
-
-                using (var disabled = ImRaii.Disabled(SolverRunning))
-                {
-                    using var tint = ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled), !Service.Configuration.ConditionRandomness);
-                    if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Dice))
-                    {
-                        Service.Configuration.ConditionRandomness ^= true;
-                        Service.Configuration.Save();
-
-                        RecalculateState();
-                    }
-                }
-                if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-                    ImGui.SetTooltip("Condition Randomness\n" +
-                        "Allows the condition to fluctuate randomly like a real craft.\n" +
-                        "Turns off when generating a macro.");
+                
             }
             else
             {
