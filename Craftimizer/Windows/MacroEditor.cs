@@ -144,6 +144,17 @@ public sealed class MacroEditor : Window, IDisposable
 
         SizeConstraints = new() { MinimumSize = new(821, 750), MaximumSize = new(float.PositiveInfinity) };
 
+        TitleBarButtons = new()
+        {
+            new()
+            {
+                Icon = FontAwesomeIcon.Cog,
+                IconOffset = new(2.5f, 1),
+                Click = _ => Service.Plugin.OpenSettingsWindow(),
+                ShowTooltip = () => ImGui.SetTooltip("Open Craftimizer Settings")
+            }
+        };
+
         Service.WindowSystem.AddWindow(this);
     }
 
