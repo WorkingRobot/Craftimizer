@@ -13,6 +13,12 @@ internal static unsafe class ImGuiExtras
     [DllImport("cimgui", CallingConvention = CallingConvention.Cdecl)]
     private static extern unsafe byte igInputTextEx(byte* label, byte* hint, byte* buf, int buf_size, Vector2 size, ImGuiInputTextFlags flags, ImGuiInputTextCallback? callback, void* user_data);
 
+    [DllImport("cimgui", CallingConvention = CallingConvention.Cdecl)]
+    private static extern bool igItemAdd(Vector4 bb, uint id, Vector4* navBb, uint flags);
+
+    [DllImport("cimgui", CallingConvention = CallingConvention.Cdecl)]
+    private static extern bool igButtonBehavior(Vector4 bb, uint id, bool* outHovered, bool* outHeld, ImGuiButtonFlags flags);
+
     // https://github.com/ImGuiNET/ImGui.NET/blob/069363672fed940ebdaa02f9b032c282b66467c7/src/ImGui.NET/Util.cs
     #region Util
 
@@ -135,5 +141,22 @@ internal static unsafe class ImGuiExtras
         }
 
         return result != 0;
+    }
+
+    public static unsafe bool ItemAdd(Vector4 bb, uint id, out Vector4 navBb, uint flags)
+    {
+        fixed (Vector4* navBbPtr = &navBb)
+        {
+            return igItemAdd(bb, id, navBbPtr, flags);
+        }
+    }
+
+    public static unsafe bool ButtonBehavior(Vector4 bb, uint id, out bool hovered, out bool held, ImGuiButtonFlags flags)
+    {
+        fixed (bool* hoveredPtr = &hovered)
+        fixed (bool* heldPtr = &held)
+        {
+            return igButtonBehavior(bb, id, hoveredPtr, heldPtr, flags);
+        }
     }
 }

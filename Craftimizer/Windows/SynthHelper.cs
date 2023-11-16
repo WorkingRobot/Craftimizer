@@ -183,6 +183,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
     {
         var spacing = ImGui.GetStyle().ItemSpacing.X;
         var imageSize = ImGui.GetFrameHeight() * 2;
+        var canExecute = !Service.Condition[ConditionFlag.Crafting40];
         var lastState = Macro.InitialState;
         hoveredState = null;
 
@@ -191,30 +192,53 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         using var _color = ImRaii.PushColor(ImGuiCol.Button, Vector4.Zero);
         using var _color3 = ImRaii.PushColor(ImGuiCol.ButtonHovered, Vector4.Zero);
         using var _color2 = ImRaii.PushColor(ImGuiCol.ButtonActive, Vector4.Zero);
-        for (var i = 0; i < Macro.Count; i++)
+        var count = Macro.Count;
+        for (var i = 0; i < count; i++)
         {
             if (i % itemsPerRow != 0)
                 ImGui.SameLine(0, spacing);
             var (action, response, state) = (Macro[i].Action, Macro[i].Response, Macro[i].State);
             var actionBase = action.Base();
             var failedAction = response != ActionResponse.UsedAction;
-            using var id = ImRaii.PushId(i);
+            using var _id = ImRaii.PushId(i);
             if (i == 0)
             {
                 var pos = ImGui.GetCursorScreenPos();
-                var offset = new Vector2(3);
-                ImGui.GetWindowDrawList().AddRectFilled(pos - offset, pos + new Vector2(imageSize) + offset, ImGui.GetColorU32(ImGuiColors.DalamudWhite2), 4);
+                var offsetVec2 = ImGui.GetStyle().ItemSpacing / 2;
+                var offset = new Vector2((offsetVec2.X + offsetVec2.Y) / 2f);
+                var color = canExecute ? ImGuiColors.DalamudWhite2 : ImGuiColors.DalamudGrey3;
+                ImGui.GetWindowDrawList().AddRectFilled(pos - offset, pos + new Vector2(imageSize) + offset, ImGui.GetColorU32(color), 4);
             }
-            if (ImGui.ImageButton(action.GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(imageSize), default, Vector2.One, 0, default, failedAction ? new(1, 1, 1, ImGui.GetStyle().DisabledAlpha) : Vector4.One))
+            bool isHovered, isHeld, isPressed;
             {
-                if (i == 0)
-                    Chat.SendMessage($"/ac \"{action.GetName(RecipeData.ClassJob)}\"");
+                var pos = ImGui.GetCursorScreenPos();
+                var offset = ImGui.GetStyle().ItemSpacing / 2f;
+                var size = new Vector2(imageSize);
+
+                // yoinked from https://github.com/goatcorp/Dalamud/blob/48e8462550141db9b1a153cab9548e60238500c7/Dalamud/Interface/Windowing/Window.cs#L551
+                var min = pos - offset;
+                var max = pos + size + offset;
+                var bb = new Vector4(min.X, min.Y, max.X, max.Y);
+
+                var id = ImGui.GetID($"###ButtonContainer");
+                var isClipped = !ImGuiExtras.ItemAdd(bb, id, out _, 0);
+                
+                isPressed = ImGuiExtras.ButtonBehavior(bb, id, out isHovered, out isHeld, ImGuiButtonFlags.None);
             }
-            if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+            ImGui.ImageButton(action.GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(imageSize), default, Vector2.One, 0, default, failedAction ? new(1, 1, 1, ImGui.GetStyle().DisabledAlpha) : Vector4.One);
+            if (isPressed)
+            {
+                if (canExecute && i == 0)
+                {
+                    Chat.SendMessage($"/ac \"{action.GetName(RecipeData.ClassJob)}\"");
+                    break;
+                }
+            }
+            if (isHovered)
             {
                 ImGui.SetTooltip($"{action.GetName(RecipeData!.ClassJob)}\n" +
                     $"{actionBase.GetTooltip(CreateSim(lastState), true)}" +
-                    $"{(i == 0 ? "Click to Execute" : string.Empty)}");
+                    $"{(canExecute && i == 0 ? "Click to Execute" : string.Empty)}");
                 hoveredState = state;
             }
             lastState = state;
@@ -223,7 +247,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         var rows = (int)Math.Max(1, MathF.Ceiling(Service.Configuration.SynthHelperStepCount / itemsPerRow));
         for (var i = 0; i < rows; ++i)
         {
-            if (Macro.Count <= i * itemsPerRow)
+            if (count <= i * itemsPerRow)
                 ImGui.Dummy(new(0, imageSize));
         }
     }
