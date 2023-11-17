@@ -33,6 +33,7 @@ public sealed class Plugin : IDalamudPlugin
 
     public Configuration Configuration { get; }
     public Hooks Hooks { get; }
+    public Chat Chat { get; }
     public IconManager IconManager { get; }
 
     public Plugin([RequiredVersion("1.0")] DalamudPluginInterface pluginInterface)
@@ -42,6 +43,7 @@ public sealed class Plugin : IDalamudPlugin
         WindowSystem = new("Craftimizer");
         Configuration = pluginInterface.GetPluginConfig() as Configuration ?? new();
         Hooks = new();
+        Chat = new();
         IconManager = new();
 
         var assembly = Assembly.GetExecutingAssembly();

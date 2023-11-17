@@ -230,7 +230,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             {
                 if (canExecute && i == 0)
                 {
-                    Chat.SendMessage($"/ac \"{action.GetName(RecipeData.ClassJob)}\"");
+                    Service.Chat.SendMessage($"/ac \"{action.GetName(RecipeData.ClassJob)}\"");
                     break;
                 }
             }

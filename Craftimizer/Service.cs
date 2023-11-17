@@ -28,6 +28,7 @@ public sealed class Service
     public static Plugin Plugin { get; private set; }
     public static Configuration Configuration => Plugin.Configuration;
     public static WindowSystem WindowSystem => Plugin.WindowSystem;
+    public static Chat Chat => Plugin.Chat;
     public static IconManager IconManager => Plugin.IconManager;
 #pragma warning restore CS8618
 
