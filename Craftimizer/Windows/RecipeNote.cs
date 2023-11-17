@@ -360,7 +360,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                     if (gearsetId.HasValue)
                     {
                         if (ImGuiUtils.ButtonCentered("Switch Job"))
-                            Service.Chat.SendMessage($"/gearset change {gearsetId + 1}");
+                            RaptureGearsetModule.Instance()->EquipGearset(gearsetId.Value);
                         if (ImGui.IsItemHovered())
                             ImGui.SetTooltip($"Swap to gearset {gearsetId + 1}");
                     }
