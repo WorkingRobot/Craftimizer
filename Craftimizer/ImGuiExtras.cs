@@ -19,6 +19,9 @@ internal static unsafe class ImGuiExtras
     [DllImport("cimgui", CallingConvention = CallingConvention.Cdecl)]
     private static extern bool igButtonBehavior(Vector4 bb, uint id, bool* outHovered, bool* outHeld, ImGuiButtonFlags flags);
 
+    [DllImport("cimgui", CallingConvention = CallingConvention.Cdecl)]
+    private static extern bool igItemSize_Vec2(Vector2 size, float text_baseline_y = -1.0f);
+
     // https://github.com/ImGuiNET/ImGui.NET/blob/069363672fed940ebdaa02f9b032c282b66467c7/src/ImGui.NET/Util.cs
     #region Util
 
@@ -158,5 +161,23 @@ internal static unsafe class ImGuiExtras
         {
             return igButtonBehavior(bb, id, hoveredPtr, heldPtr, flags);
         }
+    }
+
+    public static unsafe bool ItemSize(Vector2 size, float text_baseline_y = -1.0f) =>
+        igItemSize_Vec2(size, text_baseline_y);
+
+    public static unsafe bool SetDragDropPayload<T>(string type, T data) where T : unmanaged =>
+        ImGui.SetDragDropPayload(type, (nint)(&data), (uint)sizeof(T));
+
+    public static unsafe bool AcceptDragDropPayload<T>(string type, out T data) where T : unmanaged
+    {
+        var payload = ImGui.AcceptDragDropPayload(type);
+        if (payload.NativePtr == null || payload.DataSize != sizeof(T))
+        {
+            data = default;
+            return false;
+        }
+        data = *(T*)payload.Data;
+        return true;
     }
 }

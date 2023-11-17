@@ -62,9 +62,34 @@ public sealed class MacroList : Window, IDisposable
         using var group = ImRaii.Child("macros", new(-1, -1));
         if (sortedMacros.Count > 0)
         {
+            var width = ImGui.GetContentRegionAvail().X;
             var macros = new List<Macro>(sortedMacros);
-            foreach (var macro in macros)
-                DrawMacro(macro);
+            for(var i = 0; i < macros.Count; ++i)
+            {
+                var pos = ImGui.GetCursorPos();
+                DrawMacro(macros[i]);
+                ImGui.SetCursorPos(pos);
+                ImGui.InvisibleButton($"###macroButton{i}", ImGui.GetItemRectSize());
+                if (isUnsorted)
+                {
+                    using (var _source = ImRaii.DragDropSource())
+                    {
+                        if (_source)
+                        {
+                            ImGuiExtras.SetDragDropPayload("macroListItem", i);
+                            DrawMacro(macros[i], width);
+                        }
+                    }
+                    using (var _target = ImRaii.DragDropTarget())
+                    {
+                        if (_target)
+                        {
+                            if (ImGuiExtras.AcceptDragDropPayload("macroListItem", out int j))
+                                Service.Configuration.SwapMacros(i, j);
+                        }
+                    }
+                }
+            }
         }
         else
         {
@@ -95,6 +120,7 @@ public sealed class MacroList : Window, IDisposable
 
     private string searchText = string.Empty;
     private List<Macro> sortedMacros = null!;
+    private bool isUnsorted = true;
     private void DrawSearchBar()
     {
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
@@ -102,8 +128,10 @@ public sealed class MacroList : Window, IDisposable
             RefreshSearch();
     }
 
-    private void DrawMacro(Macro macro)
+    private void DrawMacro(Macro macro, float width = -1)
     {
+        width = width < 0 ? ImGui.GetContentRegionAvail().X : width;
+
         var windowHeight = 2 * ImGui.GetFrameHeightWithSpacing();
 
         if (macro.Actions.Any(a => a.Category() == ActionCategory.Combo))
@@ -111,8 +139,8 @@ public sealed class MacroList : Window, IDisposable
 
         var stateNullable = GetMacroState(macro);
 
-        using var panel = ImRaii2.GroupPanel(macro.Name, -1, out var availWidth);
-        var stepsAvailWidthOffset = ImGui.GetContentRegionAvail().X - availWidth;
+        using var panel = ImRaii2.GroupPanel(macro.Name, width - ImGui.GetStyle().ItemSpacing.X * 2, out var availWidth);
+        var stepsAvailWidthOffset = width - availWidth;
         var spacing = ImGui.GetStyle().ItemSpacing.Y;
         var miniRowHeight = (windowHeight - spacing) / 2f;
 
@@ -294,8 +322,10 @@ public sealed class MacroList : Window, IDisposable
         if (string.IsNullOrWhiteSpace(searchText))
         {
             sortedMacros = new(Macros);
+            isUnsorted = true;
             return;
         }
+        isUnsorted = false;
         var matcher = new FuzzyMatcher(searchText.ToLowerInvariant(), MatchMode.FuzzyParts);
         var query = Macros.AsParallel().Select(i => (Item: i, Score: matcher.Matches(i.Name.ToLowerInvariant())))
             .Where(t => t.Score > 0)

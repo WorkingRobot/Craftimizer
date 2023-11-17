@@ -112,6 +112,13 @@ public class Configuration : IPluginConfiguration
         }
     }
 
+    public void SwapMacros(int i, int j)
+    {
+        (macros[i], macros[j]) = (macros[j], macros[i]);
+        Save();
+        OnMacroListChanged?.Invoke();
+    }
+
     public void Save() =>
         Service.PluginInterface.SavePluginConfig(this);
 }
