@@ -96,7 +96,7 @@ public sealed class MacroList : Window, IDisposable
                         if (_target)
                         {
                             if (ImGuiExtras.AcceptDragDropPayload("macroListItem", out int j))
-                                Service.Configuration.SwapMacros(i, j);
+                                Service.Configuration.MoveMacro(j, i);
                         }
                     }
                 }

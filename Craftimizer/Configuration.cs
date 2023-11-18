@@ -119,6 +119,15 @@ public class Configuration : IPluginConfiguration
         OnMacroListChanged?.Invoke();
     }
 
+    public void MoveMacro(int fromIdx, int toIdx)
+    {
+        var macro = macros[fromIdx];
+        macros.RemoveAt(fromIdx);
+        macros.Insert(toIdx, macro);
+        Save();
+        OnMacroListChanged?.Invoke();
+    }
+
     public void Save() =>
         Service.PluginInterface.SavePluginConfig(this);
 }
