@@ -1198,6 +1198,7 @@ public sealed class MacroEditor : Window, IDisposable
             using var _color = ImRaii.PushColor(ImGuiCol.Button, Vector4.Zero);
             using var _color3 = ImRaii.PushColor(ImGuiCol.ButtonHovered, Vector4.Zero);
             using var _color2 = ImRaii.PushColor(ImGuiCol.ButtonActive, Vector4.Zero);
+            using var _alpha = ImRaii.PushStyle(ImGuiStyleVar.DisabledAlpha, ImGui.GetStyle().DisabledAlpha * .5f);
             for (var i = 0; i < Macro.Count; i++)
             {
                 if (i % itemsPerRow != 0)
@@ -1208,7 +1209,15 @@ public sealed class MacroEditor : Window, IDisposable
                 using var id = ImRaii.PushId(i);
                 if (ImGui.ImageButton(action.GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(imageSize), default, Vector2.One, 0, default, failedAction ? new(1, 1, 1, ImGui.GetStyle().DisabledAlpha) : Vector4.One))
                     RemoveStep(i);
-                if (response is ActionResponse.ActionNotUnlocked)
+                if (response is ActionResponse.ActionNotUnlocked ||
+                    (
+                        failedAction &&
+                        (CharacterStats.Level < actionBase.Level ||
+                            (action == ActionType.Manipulation && !CharacterStats.CanUseManipulation) ||
+                            (action is ActionType.HeartAndSoul or ActionType.CarefulObservation && !CharacterStats.IsSpecialist)
+                        )
+                    )
+                )
                 {
                     Vector2 v1 = ImGui.GetItemRectMin(), v2 = ImGui.GetItemRectMax();
                     ImGui.PushClipRect(v1, v2, true);
