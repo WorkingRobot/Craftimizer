@@ -975,6 +975,16 @@ public sealed class MacroEditor : Window, IDisposable
                     }
                     if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
                         ImGui.SetTooltip($"{actions[i].GetName(RecipeData!.ClassJob)}\n{actionBase.GetTooltip(sim, true)}");
+
+                    using var _padding = ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+                    using (var _source = ImRaii.DragDropSource())
+                    {
+                        if (_source)
+                        {
+                            ImGuiExtras.SetDragDropPayload("macroActionInsert", actions[i]);
+                            ImGui.ImageButton(actions[i].GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(imageSize));
+                        }
+                    }
                 }
                 else
                     ImGui.Dummy(new(imageSize));
@@ -1207,8 +1217,26 @@ public sealed class MacroEditor : Window, IDisposable
                     ImGui.PopClipRect();
                 }
                 if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-                {
                     ImGui.SetTooltip($"{action.GetName(RecipeData!.ClassJob)}\n{actionBase.GetTooltip(CreateSim(lastState), true)}");
+
+                using var _padding = ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+                using (var _source = ImRaii.DragDropSource())
+                {
+                    if (_source)
+                    {
+                        ImGuiExtras.SetDragDropPayload("macroAction", i);
+                        ImGui.ImageButton(action.GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(imageSize));
+                    }
+                }
+                using (var _target = ImRaii.DragDropTarget())
+                {
+                    if (_target)
+                    {
+                        if (ImGuiExtras.AcceptDragDropPayload("macroAction", out int j))
+                            Macro.Move(j, i);
+                        else if (ImGuiExtras.AcceptDragDropPayload("macroActionInsert", out ActionType newAction))
+                            Macro.Insert(i, newAction);
+                    }
                 }
                 lastState = state;
             }
