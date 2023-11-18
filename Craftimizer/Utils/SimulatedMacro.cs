@@ -106,6 +106,12 @@ internal sealed class SimulatedMacro
             newState = Recalculate(sim, lastState);
         }
 
+        // Call recalculate after this please!
+        public Step(ActionType action)
+        {
+            Action = action;
+        }
+
         public SimulationState Recalculate(Sim sim, in SimulationState lastState)
         {
             (Response, State) = sim.Execute(lastState, Action);
@@ -154,6 +160,20 @@ internal sealed class SimulatedMacro
             Macro[^1].GetReliability(InitialState, Macro.Select(m => m.Action), recipeData) :
             new(InitialState, Array.Empty<ActionType>(), 0, recipeData);
 
+    private void TryRecalculateFrom(int index)
+    {
+        if (index < 0 || index >= Macro.Count)
+            return;
+
+        var state = index == 0 ? InitialState : Macro[index - 1].State;
+        var sim = CreateSim();
+        for (var i = index; i < Macro.Count; i++)
+            state = Macro[i].Recalculate(sim, state);
+    }
+
+    public void RecalculateState() =>
+        TryRecalculateFrom(0);
+
     public void RemoveRange(int index, int count) =>
         Macro.RemoveRange(index, count);
 
@@ -162,8 +182,7 @@ internal sealed class SimulatedMacro
 
     public void Add(ActionType action)
     {
-        var sim = CreateSim();
-        Macro.Add(new(action, sim, State, out _));
+        Macro.Add(new(action, CreateSim(), State, out _));
     }
 
     public void Insert(int index, ActionType action)
@@ -171,12 +190,8 @@ internal sealed class SimulatedMacro
         if (index < 0 || index >= Macro.Count)
             throw new ArgumentOutOfRangeException(nameof(index));
 
-        var state = index == 0 ? InitialState : Macro[index - 1].State;
-        var sim = CreateSim();
-        Macro.Insert(index, new(action, sim, state, out state));
-
-        for (var i = index + 1; i < Macro.Count; i++)
-            state = Macro[i].Recalculate(sim, state);
+        Macro.Insert(index, new(action));
+        TryRecalculateFrom(index);
     }
 
     public void RemoveAt(int index)
@@ -185,19 +200,23 @@ internal sealed class SimulatedMacro
             throw new ArgumentOutOfRangeException(nameof(index));
 
         Macro.RemoveAt(index);
+        TryRecalculateFrom(index);
+    }
 
-        var state = index == 0 ? InitialState : Macro[index - 1].State;
-        var sim = CreateSim();
-        for (var i = index; i < Macro.Count; i++)
-            state = Macro[i].Recalculate(sim, state);
+    public void Move(int fromIdx, int toIdx)
+    {
+        var step = Macro[fromIdx];
+        Macro.RemoveAt(fromIdx);
+        Macro.Insert(toIdx, step);
+
+        TryRecalculateFrom(Math.Min(fromIdx, toIdx));
     }
 
     public int Enqueue(ActionType action)
     {
         lock (QueueLock)
         {
-            var lastState = QueuedSteps.Count > 0 ? QueuedSteps[^1].State : State;
-            QueuedSteps.Add(new(action, CreateSim(), lastState, out _));
+            QueuedSteps.Add(new(action));
             return QueuedSteps.Count + Macro.Count;
         }
     }
@@ -216,18 +235,12 @@ internal sealed class SimulatedMacro
         {
             if (QueuedSteps.Count > 0)
             {
+                var startIdx = Macro.Count;
                 Macro.AddRange(QueuedSteps);
                 QueuedSteps.Clear();
+                TryRecalculateFrom(startIdx);
             }
         }
-    }
-
-    public void RecalculateState()
-    {
-        var sim = CreateSim();
-        var lastState = InitialState;
-        for (var i = 0; i < Macro.Count; i++)
-            lastState = Macro[i].Recalculate(sim, lastState);
     }
 
     private static Sim CreateSim() =>
