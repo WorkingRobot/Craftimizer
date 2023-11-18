@@ -50,7 +50,7 @@ public sealed class MacroList : Window, IDisposable
         var oldCharacterStats = CharacterStats;
         var oldRecipeData = RecipeData;
 
-        (CharacterStats, RecipeData, _) = Service.Plugin.GetOpenedStats();
+        (CharacterStats, RecipeData, _) = Service.Plugin.GetDefaultStats();
 
         if (oldCharacterStats != CharacterStats || oldRecipeData != RecipeData)
             RecalculateStats();
