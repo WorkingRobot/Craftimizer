@@ -35,7 +35,7 @@ public sealed class MacroList : Window, IDisposable
         CollapsedCondition = ImGuiCond.Appearing;
         Collapsed = false;
 
-        SizeConstraints = new() { MinimumSize = new(500, 520), MaximumSize = new(float.PositiveInfinity) };
+        SizeConstraints = new() { MinimumSize = new(465, 520), MaximumSize = new(float.PositiveInfinity) };
 
         TitleBarButtons = new()
         {
@@ -83,7 +83,7 @@ public sealed class MacroList : Window, IDisposable
                 ImGui.InvisibleButton($"###macroButton{i}", ImGui.GetItemRectSize());
                 if (isUnsorted)
                 {
-                    using (var _source = ImRaii.DragDropSource())
+                    using (var _source = ImRaii.DragDropSource(ImGuiDragDropFlags.SourceNoDisableHover))
                     {
                         if (_source)
                         {
@@ -236,31 +236,34 @@ public sealed class MacroList : Window, IDisposable
 
             ImGui.TableNextColumn();
             {
-                if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Paste, miniRowHeight))
-                    Service.Plugin.CopyMacro(macro.Actions);
+                if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Edit, miniRowHeight))
+                    OpenEditor(macro);
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip("Copy to Clipboard");
-                ImGui.SameLine();
-                if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Trash, miniRowHeight) && ImGui.GetIO().KeyShift)
-                    Service.Configuration.RemoveMacro(macro);
-                if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip("Delete (Hold Shift)");
-
+                    ImGui.SetTooltip("Open in Simulator");
+                ImGui.SameLine(0, spacing);
                 if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.PencilAlt, miniRowHeight))
                     ShowRenamePopup(macro);
                 DrawRenamePopup(macro);
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip("Rename");
-                ImGui.SameLine();
-                if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Edit, miniRowHeight))
-                    OpenEditor(macro);
+
+                if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Paste, miniRowHeight))
+                    Service.Plugin.CopyMacro(macro.Actions);
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip("Open in Simulator");
+                    ImGui.SetTooltip("Copy to Clipboard");
+                ImGui.SameLine(0, spacing);
+                using (var _disabled = ImRaii.Disabled(!ImGui.GetIO().KeyShift))
+                {
+                    if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Trash, miniRowHeight))
+                        Service.Configuration.RemoveMacro(macro);
+                }
+                if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+                    ImGui.SetTooltip("Delete (Hold Shift)");
             }
 
             ImGui.TableNextColumn();
             {
-                var itemsPerRow = (int)MathF.Floor((ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset + spacing) / (miniRowHeight + spacing));
+                var itemsPerRow = (int)MathF.Floor((ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset + spacing * 2) / (miniRowHeight + spacing));
                 var itemCount = macro.Actions.Count;
                 for (var i = 0; i < itemsPerRow * 2; i++)
                 {
