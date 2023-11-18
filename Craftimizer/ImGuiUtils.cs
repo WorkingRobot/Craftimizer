@@ -587,9 +587,8 @@ internal static class ImGuiUtils
     public static void TooltipWrapped(string text, float width = 300)
     {
         using var _tooltip = ImRaii.Tooltip();
-        ImGui.PushTextWrapPos(width);
+        using var _wrap = ImRaii2.TextWrapPos(width);
         ImGui.TextUnformatted(text);
-        ImGui.PopTextWrapPos();
     }
 
     public static void AlignCentered(float width, float availWidth = default)

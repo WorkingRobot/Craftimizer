@@ -1,4 +1,5 @@
 using Dalamud.Interface.Utility.Raii;
+using ImGuiNET;
 using ImPlotNET;
 using System;
 using System.Numerics;
@@ -88,5 +89,11 @@ public static class ImRaii2
     {
         ImPlot.PushStyleColor(idx, col);
         return new EndUnconditionally(ImPlot.PopStyleColor, true);
+    }
+
+    public static ImRaii.IEndObject TextWrapPos(float wrap_local_pos_x)
+    {
+        ImGui.PushTextWrapPos(wrap_local_pos_x);
+        return new EndUnconditionally(ImGui.PopTextWrapPos, true);
     }
 }
