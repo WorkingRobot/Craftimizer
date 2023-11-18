@@ -65,7 +65,7 @@ internal static class DynamicBars
                             ImGui.SetCursorPos(pos);
                             ImGuiUtils.ViolinPlot(violinData, new(barSize, ImGui.GetFrameHeight()));
                             if (ImGui.IsItemHovered())
-                                ImGui.SetTooltip(
+                                ImGuiUtils.Tooltip(
                                     $"Min: {reliability.Min}\n" +
                                     $"Med: {reliability.Median:0.##}\n" +
                                     $"Avg: {reliability.Average:0.##}\n" +

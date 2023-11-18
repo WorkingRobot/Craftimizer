@@ -59,7 +59,7 @@ public sealed class Settings : Window, IDisposable
             isDirty = true;
         }
         if (ImGui.IsItemHovered())
-            ImGui.SetTooltip(tooltip);
+            ImGuiUtils.TooltipWrapped(tooltip);
     }
 
     private static void DrawOption<T>(string label, string tooltip, T value, T min, T max, Action<T> setter, ref bool isDirty) where T : struct, INumber<T>
@@ -79,7 +79,7 @@ public sealed class Settings : Window, IDisposable
             }
         }
         if (ImGui.IsItemHovered())
-            ImGui.SetTooltip(tooltip);
+            ImGuiUtils.TooltipWrapped(tooltip);
     }
 
     private static void DrawOption<T>(string label, string tooltip, Func<T, string> getName, Func<T, string> getTooltip, T value, Action<T> setter, ref bool isDirty) where T : struct, Enum
@@ -97,12 +97,12 @@ public sealed class Settings : Window, IDisposable
                         isDirty = true;
                     }
                     if (ImGui.IsItemHovered())
-                        ImGui.SetTooltip(getTooltip(type));
+                        ImGuiUtils.TooltipWrapped(getTooltip(type));
                 }
             }
         }
         if (ImGui.IsItemHovered())
-            ImGui.SetTooltip(tooltip);
+            ImGuiUtils.TooltipWrapped(tooltip);
     }
 
     private static string GetAlgorithmName(SolverAlgorithm algorithm) =>
@@ -121,11 +121,11 @@ public sealed class Settings : Window, IDisposable
         {
             SolverAlgorithm.Oneshot =>          "Run through all iterations and pick the best macro",
             SolverAlgorithm.OneshotForked =>    "Oneshot, but using multiple solvers simultaneously",
-            SolverAlgorithm.Stepwise =>         "Run through all iterations and pick the next best step,\n" +
+            SolverAlgorithm.Stepwise =>         "Run through all iterations and pick the next best step, " +
                                                 "and repeat using previous steps as a starting point",
             SolverAlgorithm.StepwiseForked =>   "Stepwise, but using multiple solvers simultaneously",
-            SolverAlgorithm.StepwiseFurcated => "Stepwise Forked, but the top N next best steps are\n" +
-                                                "selected from the solvers, and each one is equally\n" +
+            SolverAlgorithm.StepwiseFurcated => "Stepwise Forked, but the top N next best steps are " +
+                                                "selected from the solvers, and each one is equally " +
                                                 "used as a starting point",
             _ => "Unknown"
         };
@@ -142,7 +142,7 @@ public sealed class Settings : Window, IDisposable
     private static string GetCopyTypeTooltip(MacroCopyConfiguration.CopyType type) =>
         type switch
         {
-            MacroCopyConfiguration.CopyType.OpenWindow =>       "Open a dedicated window with all macros being copied.\n" +
+            MacroCopyConfiguration.CopyType.OpenWindow =>       "Open a dedicated window with all macros being copied. " +
                                                                 "Copy, view, and choose at your own leisure.",
             MacroCopyConfiguration.CopyType.CopyToMacro =>      "Copy directly to the game's macro system.",
             MacroCopyConfiguration.CopyType.CopyToClipboard =>  "Copy to your clipboard. Macros are separated by a blank line.",
@@ -175,8 +175,8 @@ public sealed class Settings : Window, IDisposable
 
         DrawOption(
             "Enable Synthesis Helper",
-            "Adds a helper next to your synthesis window to help solve for the best craft.\n" +
-            "Extremely useful for expert recipes, where the condition can greatly affect\n" +
+            "Adds a helper next to your synthesis window to help solve for the best craft. " +
+            "Extremely useful for expert recipes, where the condition can greatly affect " +
             "which actions you take.",
             Config.EnableSynthHelper,
             v => Config.EnableSynthHelper = v,
@@ -185,8 +185,8 @@ public sealed class Settings : Window, IDisposable
 
         DrawOption(
             "Show Only One Macro Stat in Crafting Log",
-            "Only one stat will be shown for a macro. If a craft will be finished, quality\n" +
-            "is shown. Otherwise, progress is shown. Durability and remaining CP will be\n" +
+            "Only one stat will be shown for a macro. If a craft will be finished, quality " +
+            "is shown. Otherwise, progress is shown. Durability and remaining CP will be " +
             "hidden.",
             Config.ShowOptimalMacroStat,
             v => Config.ShowOptimalMacroStat = v,
@@ -195,8 +195,8 @@ public sealed class Settings : Window, IDisposable
 
         DrawOption(
             "Reliability Trial Count",
-            "When testing for reliability of a macro in the editor, this many trials will be\n" +
-            "run. You should set this value to at least 100 to get a reliable spread of data.\n" +
+            "When testing for reliability of a macro in the editor, this many trials will be " +
+            "run. You should set this value to at least 100 to get a reliable spread of data. " +
             "If it's too low, you may not find an outlier, and the average might be skewed.",
             Config.ReliabilitySimulationCount,
             5,
@@ -231,7 +231,7 @@ public sealed class Settings : Window, IDisposable
 
                 DrawOption(
                     "Copy to Shared Macros",
-                    "Copy to the shared macros tab. Leaving this unchecked copies to the\n" +
+                    "Copy to the shared macros tab. Leaving this unchecked copies to the " +
                     "individual tab.",
                     Config.MacroCopy.SharedMacro,
                     v => Config.MacroCopy.SharedMacro = v,
@@ -240,7 +240,7 @@ public sealed class Settings : Window, IDisposable
 
                 DrawOption(
                     "Macro Number",
-                    "The # of the macro to being copying to. Subsequent macros will be\n" +
+                    "The # of the macro to being copying to. Subsequent macros will be " +
                     "copied relative to this macro.",
                     Config.MacroCopy.StartMacroIdx,
                     0, 99,
@@ -250,7 +250,7 @@ public sealed class Settings : Window, IDisposable
 
                 DrawOption(
                     "Max Macro Copy Count",
-                    "The maximum number of macros to be copied. Any more and a window is\n" +
+                    "The maximum number of macros to be copied. Any more and a window is " +
                     "displayed with the rest of them.",
                     Config.MacroCopy.MaxMacroCount,
                     1, 99,
@@ -261,8 +261,8 @@ public sealed class Settings : Window, IDisposable
 
             DrawOption(
                 "Use Macro Chain's /nextmacro",
-                "Replaces the last step with /nextmacro to run the next macro\n" +
-                "automatically. Overrides Add End Notification except for the\n" +
+                "Replaces the last step with /nextmacro to run the next macro " +
+                "automatically. Overrides Add End Notification except for the " +
                 "last macro.",
                 Config.MacroCopy.UseNextMacro,
                 v => Config.MacroCopy.UseNextMacro = v,
@@ -278,12 +278,12 @@ public sealed class Settings : Window, IDisposable
                     ImGui.Text(FontAwesomeIcon.ExclamationCircle.ToIconString());
                 }
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip("Macro Chain is not installed");
+                    ImGuiUtils.Tooltip("Macro Chain is not installed");
             }
 
             DrawOption(
                 "Add Macro Lock",
-                "Adds /mlock to the beginning of every macro. Prevents other\n" +
+                "Adds /mlock to the beginning of every macro. Prevents other " +
                 "macros from being run.",
                 Config.MacroCopy.UseMacroLock,
                 v => Config.MacroCopy.UseMacroLock = v,
@@ -305,7 +305,7 @@ public sealed class Settings : Window, IDisposable
                 {
                     DrawOption(
                         "Force Notification",
-                        "Prioritize always having a notification sound at the end of\n" +
+                        "Prioritize always having a notification sound at the end of " +
                         "every macro. Keeping this off prevents macros with only 1 action.",
                         Config.MacroCopy.ForceNotification,
                         v => Config.MacroCopy.ForceNotification = v,
@@ -313,7 +313,7 @@ public sealed class Settings : Window, IDisposable
                     );
                 }
                 if (!isForceUseful && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-                    ImGui.SetTooltip("Only useful when Combine Macro is off");
+                    ImGuiUtils.Tooltip("Only useful when Combine Macro is off");
 
                 DrawOption(
                     "Add Notification Sound",
@@ -395,9 +395,9 @@ public sealed class Settings : Window, IDisposable
 
             DrawOption(
                 "Algorithm",
-                "The algorithm to use when solving for a macro. Different\n" +
-                "algorithms provide different pros and cons for using them.\n" +
-                "By far, the Stepwise Furcated algorithm provides the best\n" +
+                "The algorithm to use when solving for a macro. Different " +
+                "algorithms provide different pros and cons for using them. " +
+                "By far, the Stepwise Furcated algorithm provides the best " +
                 "results, especially for very difficult crafts.",
                 GetAlgorithmName,
                 GetAlgorithmTooltip,
@@ -408,9 +408,9 @@ public sealed class Settings : Window, IDisposable
 
             DrawOption(
                 "Iterations",
-                "The total number of iterations to run per crafting step.\n" +
-                "Higher values require more computational power. Higher values\n" +
-                "also may decrease variance, so other values should be tweaked\n" +
+                "The total number of iterations to run per crafting step. " +
+                "Higher values require more computational power. Higher values " +
+                "also may decrease variance, so other values should be tweaked " +
                 "as necessary to get a more favorable outcome.",
                 config.Iterations,
                 1000,
@@ -421,10 +421,10 @@ public sealed class Settings : Window, IDisposable
 
             DrawOption(
                 "Max Step Count",
-                "The maximum number of crafting steps; this is generally the only\n" +
-                "setting you should change, and it should be set to around 5 steps\n" +
-                "more than what you'd expect. If this value is too low, the solver\n" +
-                "won't learn much per iteration; too high and it will waste time\n" +
+                "The maximum number of crafting steps; this is generally the only " +
+                "setting you should change, and it should be set to around 5 steps " +
+                "more than what you'd expect. If this value is too low, the solver " +
+                "won't learn much per iteration; too high and it will waste time " +
                 "on useless extra steps.",
                 config.MaxStepCount,
                 1,
@@ -435,8 +435,8 @@ public sealed class Settings : Window, IDisposable
 
             DrawOption(
                 "Exploration Constant",
-                "A constant that decides how often the solver will explore new,\n" +
-                "possibly good paths. If this value is too high,\n" +
+                "A constant that decides how often the solver will explore new, " +
+                "possibly good paths. If this value is too high, " +
                 "moves will mostly be decided at random.",
                 config.ExplorationConstant,
                 0,
@@ -447,9 +447,9 @@ public sealed class Settings : Window, IDisposable
 
             DrawOption(
                 "Score Weighting Constant",
-                "A constant ranging from 0 to 1 that configures how the solver\n" +
-                "scores and picks paths to travel to next. A value of 0 means\n" +
-                "actions will be chosen based on their average outcome, whereas\n" +
+                "A constant ranging from 0 to 1 that configures how the solver " +
+                "scores and picks paths to travel to next. A value of 0 means " +
+                "actions will be chosen based on their average outcome, whereas " +
                 "1 uses their best outcome achieved so far.",
                 config.MaxScoreWeightingConstant,
                 0,
@@ -461,10 +461,10 @@ public sealed class Settings : Window, IDisposable
             using (var d = ImRaii.Disabled(config.Algorithm is not (SolverAlgorithm.OneshotForked or SolverAlgorithm.StepwiseForked or SolverAlgorithm.StepwiseFurcated)))
                 DrawOption(
                     "Max Core Count",
-                    "The number of cores to use when solving. You should use as many\n" +
-                    "as you can. If it's too high, it will have an effect on your gameplay\n" +
-                    $"experience. A good estimate would be 1 or 2 cores less than your\n" +
-                    $"system (FYI, you have {Environment.ProcessorCount} cores), but make sure to accomodate\n" +
+                    "The number of cores to use when solving. You should use as many " +
+                    "as you can. If it's too high, it will have an effect on your gameplay " +
+                    $"experience. A good estimate would be 1 or 2 cores less than your " +
+                    $"system (FYI, you have {Environment.ProcessorCount} cores), but make sure to accomodate " +
                     $"for any other tasks you have in the background, if you have any.\n" +
                     "(Only used in the Forked and Furcated algorithms)",
                     config.MaxThreadCount,
@@ -477,11 +477,11 @@ public sealed class Settings : Window, IDisposable
             using (var d = ImRaii.Disabled(config.Algorithm is not (SolverAlgorithm.OneshotForked or SolverAlgorithm.StepwiseForked or SolverAlgorithm.StepwiseFurcated)))
                 DrawOption(
                     "Fork Count",
-                    "Split the number of iterations across different solvers. In general,\n" +
-                    "you should increase this value to at least the number of cores in\n" +
-                    $"your system (FYI, you have {Environment.ProcessorCount} cores) to attain the most speedup.\n" +
-                    "The higher the number, the more chance you have of finding a\n" +
-                    "better local maximum; this concept similar but not equivalent\n" +
+                    "Split the number of iterations across different solvers. In general, " +
+                    "you should increase this value to at least the number of cores in " +
+                    $"your system (FYI, you have {Environment.ProcessorCount} cores) to attain the most speedup. " +
+                    "The higher the number, the more chance you have of finding a " +
+                    "better local maximum; this concept similar but not equivalent " +
                     "to the exploration constant.\n" +
                     "(Only used in the Forked and Furcated algorithms)",
                     config.ForkCount,
@@ -494,8 +494,8 @@ public sealed class Settings : Window, IDisposable
             using (var d = ImRaii.Disabled(config.Algorithm is not SolverAlgorithm.StepwiseFurcated))
                 DrawOption(
                     "Furcated Action Count",
-                    "On every craft step, pick this many top solutions and use them as\n" +
-                    "the input for the next craft step. For best results, use Fork Count / 2\n" +
+                    "On every craft step, pick this many top solutions and use them as " +
+                    "the input for the next craft step. For best results, use Fork Count / 2 " +
                     "and add about 1 or 2 more if needed.\n" +
                     "(Only used in the Stepwise Furcated algorithm)",
                     config.FurcatedActionCount,
@@ -510,8 +510,8 @@ public sealed class Settings : Window, IDisposable
         {
             DrawOption(
                 "Score Storage Threshold",
-                "If a craft achieves this certain arbitrary score, the solver will\n" +
-                "throw away all other possible combinations in favor of that one.\n" +
+                "If a craft achieves this certain arbitrary score, the solver will " +
+                "throw away all other possible combinations in favor of that one. " +
                 "Only change this value if you absolutely know what you're doing.",
                 config.ScoreStorageThreshold,
                 0,
@@ -522,8 +522,8 @@ public sealed class Settings : Window, IDisposable
 
             DrawOption(
                 "Max Rollout Step Count",
-                "The maximum number of crafting steps every iteration can consider.\n" +
-                "Decreasing this value can have unintended side effects. Only change\n" +
+                "The maximum number of crafting steps every iteration can consider. " +
+                "Decreasing this value can have unintended side effects. Only change " +
                 "this value if you absolutely know what you're doing.",
                 config.MaxRolloutStepCount,
                 1,
@@ -534,8 +534,8 @@ public sealed class Settings : Window, IDisposable
 
             DrawOption(
                 "Strict Actions",
-                "When finding the next possible actions to execute, use a heuristic\n" +
-                "to restrict which actions to attempt taking. This results in a much\n" +
+                "When finding the next possible actions to execute, use a heuristic " +
+                "to restrict which actions to attempt taking. This results in a much " +
                 "better macro at the cost of not finding an extremely creative one.",
                 config.StrictActions,
                 v => config = config with { StrictActions = v },
@@ -590,7 +590,7 @@ public sealed class Settings : Window, IDisposable
 
             DrawOption(
                 "Steps",
-                "Amount of weight to give to the craft's number of steps. The lower\n" +
+                "Amount of weight to give to the craft's number of steps. The lower " +
                 "the step count, the higher the score.",
                 config.ScoreSteps,
                 0,
@@ -617,7 +617,7 @@ public sealed class Settings : Window, IDisposable
                 isDirty = true;
             }
             if (ImGui.IsItemHovered())
-                ImGui.SetTooltip("Normalize all weights to sum up to 1");
+                ImGuiUtils.Tooltip("Normalize all weights to sum up to 1");
         }
 
         if (isDirty)

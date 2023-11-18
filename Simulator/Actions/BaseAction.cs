@@ -83,7 +83,7 @@ public abstract class BaseAction
         if (!IncreasesStepCount)
             builder.AppendLine($"Does Not Increase Step Count");
         if (SuccessRate(s) != 1f)
-            builder.AppendLine($"{s.CalculateSuccessRate(SuccessRate(s)) * 100:##}%% Success Rate");
+            builder.AppendLine($"{s.CalculateSuccessRate(SuccessRate(s)) * 100:##}% Success Rate");
         return builder.ToString();
     }
 }

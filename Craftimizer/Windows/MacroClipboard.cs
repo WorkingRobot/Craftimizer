@@ -57,7 +57,7 @@ public sealed class MacroClipboard : Window, IDisposable
             }
         }
         if (buttonHovered)
-            ImGui.SetTooltip("Copy to Clipboard");
+            ImGuiUtils.Tooltip("Copy to Clipboard");
 
         ImGui.SetCursorPos(cursor);
         {

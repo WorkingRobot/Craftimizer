@@ -236,7 +236,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             }
             if (isHovered)
             {
-                ImGui.SetTooltip($"{action.GetName(RecipeData!.ClassJob)}\n" +
+                ImGuiUtils.Tooltip($"{action.GetName(RecipeData!.ClassJob)}\n" +
                     $"{actionBase.GetTooltip(CreateSim(lastState), true)}" +
                     $"{(canExecute && i == 0 ? "Click to Execute" : string.Empty)}");
                 hoveredState = state;
@@ -288,7 +288,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
                 {
                     var status = effect.Status();
                     using var _reset = ImRaii.DefaultFont();
-                    ImGui.SetTooltip($"{status.Name.ToDalamudString()}\n{status.Description.ToDalamudString()}");
+                    ImGuiUtils.Tooltip($"{status.Name.ToDalamudString()}\n{status.Description.ToDalamudString()}");
                 }
                 ImGui.SameLine();
             }
@@ -313,10 +313,10 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             else if (RecipeData.Recipe.RequiredQuality > 0)
             {
                 var qualityPercent = (float)state.Quality / RecipeData.Recipe.RequiredQuality * 100;
-                halfBars.Add(new("Quality %%", Colors.HQ, reliability.ParamScore, qualityPercent, 100, $"{qualityPercent:0}%", null));
+                halfBars.Add(new("Quality %", Colors.HQ, reliability.ParamScore, qualityPercent, 100, $"{qualityPercent:0}%", null));
             }
             else if (RecipeData.RecipeInfo.MaxQuality > 0)
-                halfBars.Add(new("HQ %%", Colors.HQ, reliability.ParamScore, state.HQPercent, 100, $"{state.HQPercent}%", null));
+                halfBars.Add(new("HQ %", Colors.HQ, reliability.ParamScore, state.HQPercent, 100, $"{state.HQPercent}%", null));
 
             if (halfBars.Count > 1)
             {
@@ -350,7 +350,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         using (var color = ImRaii.PushColor(ImGuiCol.PlotHistogram, ImGuiColors.DalamudGrey3))
             ImGui.ProgressBar(fraction, new(progressWidth, ImGui.GetFrameHeight()), string.Empty);
         if (ImGui.IsItemHovered())
-            ImGui.SetTooltip($"Solver Progress: {solver.ProgressValue} / {solver.ProgressMax}");
+            ImGuiUtils.Tooltip($"Solver Progress: {solver.ProgressValue} / {solver.ProgressMax}");
         ImGui.SameLine(0, spacing);
         ImGui.AlignTextToFramePadding();
         ImGuiUtils.TextRight($"{fraction * 100:0}%", percentWidth);
@@ -365,8 +365,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
                 using var _disabled = ImRaii.Disabled();
                 ImGui.Button("Stopping", new(-1, 0));
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip("This might could a while, sorry! Please report\n" +
-                                     "if this takes longer than a second.");
+                    ImGuiUtils.TooltipWrapped("This might could a while, sorry! Please report if this takes longer than a second.");
             }
             else
             {
@@ -379,8 +378,8 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             if (ImGui.Button("Retry", new(-1, 0)))
                 CalculateBestMacro();
             if (ImGui.IsItemHovered())
-                ImGui.SetTooltip("Suggest a way to finish the crafting recipe.\n" +
-                                 "Results aren't perfect, and levels of success\n" +
+                ImGuiUtils.TooltipWrapped("Suggest a way to finish the crafting recipe. " +
+                                 "Results aren't perfect, and levels of success " +
                                  "can vary wildly depending on the solver's settings.");
         }
 

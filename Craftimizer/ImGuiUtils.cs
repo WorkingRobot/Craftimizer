@@ -60,7 +60,7 @@ internal static class ImGuiUtils
                 ImGui.SameLine(0, 0);
                 var textFrameHeight = ImGui.GetFrameHeight();
                 ImGui.AlignTextToFramePadding();
-                ImGui.Text(name);
+                ImGui.TextUnformatted(name);
                 GroupPanelLabelStack.Push((ImGui.GetItemRectMin(), ImGui.GetItemRectMax(), textFrameHeight / 2f)); // push rect to stack
                 ImGui.SameLine(0, 0);
                 ImGui.Dummy(new Vector2(0f, textFrameHeight + itemSpacing.Y)); // shifts content by fh + is.y
@@ -574,8 +574,22 @@ internal static class ImGuiUtils
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
             if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
                 Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
-            ImGui.SetTooltip("Open in Browser");
+            Tooltip("Open in Browser");
         }
+    }
+
+    public static void Tooltip(string text)
+    {
+        using var _tooltip = ImRaii.Tooltip();
+        ImGui.TextUnformatted(text);
+    }
+
+    public static void TooltipWrapped(string text, float width = 300)
+    {
+        using var _tooltip = ImRaii.Tooltip();
+        ImGui.PushTextWrapPos(width);
+        ImGui.TextUnformatted(text);
+        ImGui.PopTextWrapPos();
     }
 
     public static void AlignCentered(float width, float availWidth = default)

@@ -297,7 +297,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             {
                 ImGui.Text(levelText);
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip($"CLvl {Gearsets.CalculateCLvl(level)}");
+                    ImGuiUtils.Tooltip($"CLvl {Gearsets.CalculateCLvl(level)}");
                 ImGui.SameLine(0, 3);
             }
 
@@ -309,7 +309,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 ImGui.SameLine(0, 3);
                 ImGui.Image(SplendorousBadge.ImGuiHandle, new Vector2(imageSize));
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip($"Splendorous Tool");
+                    ImGuiUtils.Tooltip($"Splendorous Tool");
             }
 
             if (hasSpecialist)
@@ -317,7 +317,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 ImGui.SameLine(0, 3);
                 ImGui.Image(SpecialistBadge.ImGuiHandle, new Vector2(imageSize), Vector2.Zero, Vector2.One, new(0.99f, 0.97f, 0.62f, 1f));
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip($"Specialist");
+                    ImGuiUtils.Tooltip($"Specialist");
             }
 
             if (shouldHaveManip)
@@ -325,7 +325,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 ImGui.SameLine(0, 3);
                 ImGui.Image(NoManipulationBadge.ImGuiHandle, new Vector2(imageSize));
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip($"No Manipulation (Missing Job Quest)");
+                    ImGuiUtils.Tooltip($"No Manipulation (Missing Job Quest)");
             }
         }
 
@@ -348,7 +348,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                     if (ImGuiComponents.IconButton(FontAwesomeIcon.Flag))
                         Service.GameGui.OpenMapWithMapLink(mapPayload);
                     if (ImGui.IsItemHovered())
-                        ImGui.SetTooltip("Open in map");
+                        ImGuiUtils.Tooltip("Open in map");
 
                     ImGuiUtils.TextCentered($"{questTerritory} ({questLocation.X:0.0}, {questLocation.Y:0.0})");
                 }
@@ -362,7 +362,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                         if (ImGuiUtils.ButtonCentered("Switch Job"))
                             RaptureGearsetModule.Instance()->EquipGearset(gearsetId.Value);
                         if (ImGui.IsItemHovered())
-                            ImGui.SetTooltip($"Swap to gearset {gearsetId + 1}");
+                            ImGuiUtils.Tooltip($"Swap to gearset {gearsetId + 1}");
                     }
                     else
                         ImGuiUtils.TextCentered($"You do not have any {RecipeData.ClassJob.GetName().ToLowerInvariant()} gearsets.");
@@ -383,7 +383,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                     if (ImGuiComponents.IconButton(FontAwesomeIcon.Flag))
                         Service.GameGui.OpenMapWithMapLink(mapPayload);
                     if (ImGui.IsItemHovered())
-                        ImGui.SetTooltip("Open in map");
+                        ImGuiUtils.Tooltip("Open in map");
 
                     ImGuiUtils.TextCentered($"{vendorTerritory} ({vendorLoation.X:0.0}, {vendorLoation.Y:0.0})");
                 }
@@ -491,7 +491,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             ImGui.SameLine(0, 5);
             ImGui.Text(textLevel);
             if (ImGui.IsItemHovered())
-                ImGui.SetTooltip($"RLvl {RecipeData.RecipeInfo.RLvl}");
+                ImGuiUtils.Tooltip($"RLvl {RecipeData.RecipeInfo.RLvl}");
 
             if (textStarsSize != Vector2.Zero)
             {
@@ -506,7 +506,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 ImGui.SetCursorPosY(ImGui.GetCursorPosY() + badgeOffset);
                 ImGui.Image(CollectibleBadge.ImGuiHandle, badgeSize);
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip($"Collectible");
+                    ImGuiUtils.Tooltip($"Collectible");
             }
 
             if (isExpert)
@@ -515,7 +515,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 ImGui.SetCursorPosY(ImGui.GetCursorPosY() + badgeOffset);
                 ImGui.Image(ExpertBadge.ImGuiHandle, badgeSize);
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip($"Expert Recipe");
+                    ImGuiUtils.Tooltip($"Expert Recipe");
             }
         }
 
@@ -592,7 +592,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                         ImGui.GetColorU32(ImGuiCol.TableBorderLight),
                         ImGui.GetColorU32(Colors.Quality));
                         if (ImGui.IsItemHovered())
-                            ImGui.SetTooltip($"Quality: {macro.State.Quality} / {macro.State.Input.Recipe.MaxQuality}");
+                            ImGuiUtils.Tooltip($"Quality: {macro.State.Quality} / {macro.State.Input.Recipe.MaxQuality}");
                     }
                     else
                     {
@@ -603,7 +603,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                         ImGui.GetColorU32(ImGuiCol.TableBorderLight),
                         ImGui.GetColorU32(Colors.Progress));
                         if (ImGui.IsItemHovered())
-                            ImGui.SetTooltip($"Progress: {macro.State.Progress} / {macro.State.Input.Recipe.MaxProgress}");
+                            ImGuiUtils.Tooltip($"Progress: {macro.State.Progress} / {macro.State.Input.Recipe.MaxProgress}");
                     }
                 }
                 else
@@ -615,7 +615,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                         ImGui.GetColorU32(ImGuiCol.TableBorderLight),
                         ImGui.GetColorU32(Colors.Progress));
                     if (ImGui.IsItemHovered())
-                        ImGui.SetTooltip($"Progress: {macro.State.Progress} / {macro.State.Input.Recipe.MaxProgress}");
+                        ImGuiUtils.Tooltip($"Progress: {macro.State.Progress} / {macro.State.Input.Recipe.MaxProgress}");
 
                     ImGui.SameLine(0, spacing);
                     ImGuiUtils.ArcProgress(
@@ -625,7 +625,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                         ImGui.GetColorU32(ImGuiCol.TableBorderLight),
                         ImGui.GetColorU32(Colors.Quality));
                     if (ImGui.IsItemHovered())
-                        ImGui.SetTooltip($"Quality: {macro.State.Quality} / {macro.State.Input.Recipe.MaxQuality}");
+                        ImGuiUtils.Tooltip($"Quality: {macro.State.Quality} / {macro.State.Input.Recipe.MaxQuality}");
 
                     ImGuiUtils.ArcProgress((float)macro.State.Durability / macro.State.Input.Recipe.MaxDurability,
                         miniRowHeight / 2f,
@@ -633,7 +633,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                         ImGui.GetColorU32(ImGuiCol.TableBorderLight),
                         ImGui.GetColorU32(Colors.Durability));
                     if (ImGui.IsItemHovered())
-                        ImGui.SetTooltip($"Remaining Durability: {macro.State.Durability} / {macro.State.Input.Recipe.MaxDurability}");
+                        ImGuiUtils.Tooltip($"Remaining Durability: {macro.State.Durability} / {macro.State.Input.Recipe.MaxDurability}");
 
                     ImGui.SameLine(0, spacing);
                     ImGuiUtils.ArcProgress(
@@ -643,7 +643,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                         ImGui.GetColorU32(ImGuiCol.TableBorderLight),
                         ImGui.GetColorU32(Colors.CP));
                     if (ImGui.IsItemHovered())
-                        ImGui.SetTooltip($"Remaining CP: {macro.State.CP} / {macro.State.Input.Stats.CP}");
+                        ImGuiUtils.Tooltip($"Remaining CP: {macro.State.CP} / {macro.State.Input.Stats.CP}");
                 }
             }
             
@@ -652,11 +652,11 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Edit, miniRowHeight))
                     Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), macro.Actions, setter);
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip("Open in Simulator");
+                    ImGuiUtils.Tooltip("Open in Simulator");
                 if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Paste, miniRowHeight))
                     Service.Plugin.CopyMacro(macro.Actions);
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip("Copy to Clipboard");
+                    ImGuiUtils.Tooltip("Copy to Clipboard");
             }
 
             ImGui.TableNextColumn();
@@ -674,7 +674,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                         {
                             ImGui.Image(macro.Actions[i].GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(miniRowHeight));
                             if (ImGui.IsItemHovered())
-                                ImGui.SetTooltip(macro.Actions[i].GetName(RecipeData!.ClassJob));
+                                ImGuiUtils.Tooltip(macro.Actions[i].GetName(RecipeData!.ClassJob));
                         }
                         else
                         {
@@ -682,7 +682,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                             var pos = ImGui.GetCursorPos();
                             ImGui.Image(macro.Actions[i].GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(miniRowHeight), default, Vector2.One, new(1, 1, 1, .5f));
                             if (ImGui.IsItemHovered())
-                                ImGui.SetTooltip($"{macro.Actions[i].GetName(RecipeData!.ClassJob)}\nand {amtMore} more");
+                                ImGuiUtils.Tooltip($"{macro.Actions[i].GetName(RecipeData!.ClassJob)}\nand {amtMore} more");
                             ImGui.SetCursorPos(pos);
                             ImGui.GetWindowDrawList().AddRectFilled(ImGui.GetCursorScreenPos(), ImGui.GetCursorScreenPos() + new Vector2(miniRowHeight), ImGui.GetColorU32(ImGuiCol.FrameBg), miniRowHeight / 8f);
                             ImGui.GetWindowDrawList().AddTextClippedEx(ImGui.GetCursorScreenPos(), ImGui.GetCursorScreenPos() + new Vector2(miniRowHeight), $"+{amtMore}", null, new(.5f), null);

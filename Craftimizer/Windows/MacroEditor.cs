@@ -151,7 +151,7 @@ public sealed class MacroEditor : Window, IDisposable
                 Icon = FontAwesomeIcon.Cog,
                 IconOffset = new(2.5f, 1),
                 Click = _ => Service.Plugin.OpenSettingsWindow(),
-                ShowTooltip = () => ImGui.SetTooltip("Open Craftimizer Settings")
+                ShowTooltip = () => ImGuiUtils.Tooltip("Open Craftimizer Settings")
             }
         };
 
@@ -304,7 +304,7 @@ public sealed class MacroEditor : Window, IDisposable
                             : 1
                     };
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip($"CLvl {Gearsets.CalculateCLvl(CharacterStats.Level)}");
+                    ImGuiUtils.Tooltip($"CLvl {Gearsets.CalculateCLvl(CharacterStats.Level)}");
 
                 var disabledTint = new Vector4(0.5f, 0.5f, 0.5f, 0.75f);
                 var imageButtonPadding = (int)(ImGui.GetStyle().FramePadding.Y / 2f);
@@ -322,7 +322,7 @@ public sealed class MacroEditor : Window, IDisposable
                             CharacterStats = CharacterStats with { HasSplendorousBuff = !v };
                     }
                     if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-                        ImGui.SetTooltip(CharacterStats.HasSplendorousBuff ? $"Splendorous Tool" : "No Splendorous Tool");
+                        ImGuiUtils.Tooltip(CharacterStats.HasSplendorousBuff ? $"Splendorous Tool" : "No Splendorous Tool");
                 }
                 ImGui.SameLine(0, 5);
                 bool? newIsSpecialist = null;
@@ -343,7 +343,7 @@ public sealed class MacroEditor : Window, IDisposable
                         }
                     }
                     if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-                        ImGui.SetTooltip(v ? $"Specialist" : "Not a Specialist");
+                        ImGuiUtils.Tooltip(v ? $"Specialist" : "Not a Specialist");
                 }
                 ImGui.SameLine(0, 5);
                 {
@@ -356,7 +356,7 @@ public sealed class MacroEditor : Window, IDisposable
                             CharacterStats = CharacterStats with { CanUseManipulation = !v };
                     }
                     if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-                        ImGui.SetTooltip(CharacterStats.CanUseManipulation && manipLevel <= CharacterStats.Level ? $"Can Use Manipulation" : "Cannot Use Manipulation");
+                        ImGuiUtils.Tooltip(CharacterStats.CanUseManipulation && manipLevel <= CharacterStats.Level ? $"Can Use Manipulation" : "Cannot Use Manipulation");
                 }
 
                 ImGui.TableNextColumn();
@@ -365,13 +365,13 @@ public sealed class MacroEditor : Window, IDisposable
                 var buffImageSize = new Vector2(imageSize * WellFedBadge.Width / WellFedBadge.Height, imageSize);
                 ImGui.Image(WellFedBadge.ImGuiHandle, buffImageSize);
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip("Food");
+                    ImGuiUtils.Tooltip("Food");
                 ImGui.SameLine(0, 5);
                 {
                     ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
                     using var combo = ImRaii.Combo("##food", FormatItemBuff(Buffs.Food));
                     if (ImGui.IsItemHovered())
-                        ImGui.SetTooltip(FormatItemBuffDescription(Buffs.Food));
+                        ImGuiUtils.Tooltip(FormatItemBuffDescription(Buffs.Food));
                     if (combo)
                     {
                         if (ImGui.Selectable("None", Buffs.Food.ItemId == 0))
@@ -383,7 +383,7 @@ public sealed class MacroEditor : Window, IDisposable
                             if (ImGui.Selectable(FormatItemBuff(row), Buffs.Food == row))
                                 newFoodBuff = row;
                             if (ImGui.IsItemHovered())
-                                ImGui.SetTooltip(FormatItemBuffDescription(row));
+                                ImGuiUtils.Tooltip(FormatItemBuffDescription(row));
 
                             if (food.Item.CanBeHq)
                             {
@@ -391,7 +391,7 @@ public sealed class MacroEditor : Window, IDisposable
                                 if (ImGui.Selectable(FormatItemBuff(row), Buffs.Food == row))
                                     newFoodBuff = row;
                                 if (ImGui.IsItemHovered())
-                                    ImGui.SetTooltip(FormatItemBuffDescription(row));
+                                    ImGuiUtils.Tooltip(FormatItemBuffDescription(row));
                             }
                         }
                     }
@@ -401,13 +401,13 @@ public sealed class MacroEditor : Window, IDisposable
                 buffImageSize = new Vector2(imageSize * MedicatedBadge.Width / MedicatedBadge.Height, imageSize);
                 ImGui.Image(MedicatedBadge.ImGuiHandle, buffImageSize);
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip("Medicine");
+                    ImGuiUtils.Tooltip("Medicine");
                 ImGui.SameLine(0, 5);
                 {
                     ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
                     using var combo = ImRaii.Combo("##medicine", FormatItemBuff(Buffs.Medicine));
                     if (ImGui.IsItemHovered())
-                        ImGui.SetTooltip(FormatItemBuffDescription(Buffs.Medicine));
+                        ImGuiUtils.Tooltip(FormatItemBuffDescription(Buffs.Medicine));
                     if (combo)
                     {
                         if (ImGui.Selectable("None", Buffs.Medicine.ItemId == 0))
@@ -419,7 +419,7 @@ public sealed class MacroEditor : Window, IDisposable
                             if (ImGui.Selectable(FormatItemBuff(row), Buffs.Medicine == row))
                                 newMedicineBuff = row;
                             if (ImGui.IsItemHovered())
-                                ImGui.SetTooltip(FormatItemBuffDescription(row));
+                                ImGuiUtils.Tooltip(FormatItemBuffDescription(row));
 
                             if (medicine.Item.CanBeHq)
                             {
@@ -427,7 +427,7 @@ public sealed class MacroEditor : Window, IDisposable
                                 if (ImGui.Selectable(FormatItemBuff(row), Buffs.Medicine == row))
                                     newMedicineBuff = row;
                                 if (ImGui.IsItemHovered())
-                                    ImGui.SetTooltip(FormatItemBuffDescription(row));
+                                    ImGuiUtils.Tooltip(FormatItemBuffDescription(row));
                             }
                         }
                     }
@@ -441,13 +441,13 @@ public sealed class MacroEditor : Window, IDisposable
                 var fcBuffName = "Eat from the Hand";
                 var fcStatName = "Craftsmanship";
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip(fcBuffName);
+                    ImGuiUtils.Tooltip(fcBuffName);
                 ImGui.SameLine(0, 5);
                 {
                     ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
                     using var combo = ImRaii.Combo("##fcCraftsmanship", FormatFCBuff(fcBuffName, Buffs.FC.Craftsmanship));
                     if (ImGui.IsItemHovered())
-                        ImGui.SetTooltip(FormatFCBuffDescription(fcBuffName, fcStatName, Buffs.FC.Craftsmanship));
+                        ImGuiUtils.Tooltip(FormatFCBuffDescription(fcBuffName, fcStatName, Buffs.FC.Craftsmanship));
                     if (combo)
                     {
                         if (ImGui.Selectable("None", Buffs.FC.Craftsmanship == 0))
@@ -458,7 +458,7 @@ public sealed class MacroEditor : Window, IDisposable
                             if (ImGui.Selectable(FormatFCBuff(fcBuffName, i), Buffs.FC.Craftsmanship == i))
                                 newFCCraftsmanshipBuff = i;
                             if (ImGui.IsItemHovered())
-                                ImGui.SetTooltip(FormatFCBuffDescription(fcBuffName, fcStatName, i));
+                                ImGuiUtils.Tooltip(FormatFCBuffDescription(fcBuffName, fcStatName, i));
                         }
                     }
                 }
@@ -469,13 +469,13 @@ public sealed class MacroEditor : Window, IDisposable
                 fcBuffName = "In Control";
                 fcStatName = "Control";
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip(fcBuffName);
+                    ImGuiUtils.Tooltip(fcBuffName);
                 ImGui.SameLine(0, 5);
                 {
                     ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
                     using var combo = ImRaii.Combo("##fcControl", FormatFCBuff(fcBuffName, Buffs.FC.Control));
                     if (ImGui.IsItemHovered())
-                        ImGui.SetTooltip(FormatFCBuffDescription(fcBuffName, fcStatName, Buffs.FC.Control));
+                        ImGuiUtils.Tooltip(FormatFCBuffDescription(fcBuffName, fcStatName, Buffs.FC.Control));
                     if (combo)
                     {
                         if (ImGui.Selectable("None", Buffs.FC.Control == 0))
@@ -486,7 +486,7 @@ public sealed class MacroEditor : Window, IDisposable
                             if (ImGui.Selectable(FormatFCBuff(fcBuffName, i), Buffs.FC.Control == i))
                                 newFCControlBuff = i;
                             if (ImGui.IsItemHovered())
-                                ImGui.SetTooltip(FormatFCBuffDescription(fcBuffName, fcStatName, i));
+                                ImGuiUtils.Tooltip(FormatFCBuffDescription(fcBuffName, fcStatName, i));
                         }
                     }
                 }
@@ -577,7 +577,7 @@ public sealed class MacroEditor : Window, IDisposable
             if (!stat.IsRelative)
                 s.AppendLine($"{name} +{value}");
             else
-                s.AppendLine($"{name} +{value}%% (Max {max})");
+                s.AppendLine($"{name} +{value}% (Max {max})");
         }
 
         if (FoodStatus.TryGetFood(input.ItemId) is { } food)
@@ -777,7 +777,7 @@ public sealed class MacroEditor : Window, IDisposable
         ImGui.SameLine(0, 5);
         ImGui.Text(textLevel);
         if (ImGui.IsItemHovered())
-            ImGui.SetTooltip($"RLvl {RecipeData.RecipeInfo.RLvl}");
+            ImGuiUtils.Tooltip($"RLvl {RecipeData.RecipeInfo.RLvl}");
 
         if (textStarsSize != Vector2.Zero)
         {
@@ -792,7 +792,7 @@ public sealed class MacroEditor : Window, IDisposable
             ImGui.SetCursorPosY(ImGui.GetCursorPosY() + badgeOffset);
             ImGui.Image(CollectibleBadge.ImGuiHandle, badgeSize);
             if (ImGui.IsItemHovered())
-                ImGui.SetTooltip($"Collectible");
+                ImGuiUtils.Tooltip($"Collectible");
         }
 
         if (isExpert)
@@ -801,7 +801,7 @@ public sealed class MacroEditor : Window, IDisposable
             ImGui.SetCursorPosY(ImGui.GetCursorPosY() + badgeOffset);
             ImGui.Image(ExpertBadge.ImGuiHandle, badgeSize);
             if (ImGui.IsItemHovered())
-                ImGui.SetTooltip($"Expert Recipe");
+                ImGuiUtils.Tooltip($"Expert Recipe");
         }
 
         using (var statsTable = ImRaii.Table("stats", 3, ImGuiTableFlags.BordersInnerV))
@@ -897,10 +897,10 @@ public sealed class MacroEditor : Window, IDisposable
             {
                 var perItem = RecipeData.CalculateItemStartingQuality(idx, 1);
                 var total = RecipeData.CalculateItemStartingQuality(idx, hqCount);
-                ImGui.SetTooltip($"{ingredient.Item.Name.ToDalamudString()} {SeIconChar.HighQuality.ToIconString()}\n+{perItem} Quality/Item{(total > 0 ? $"\n+{total} Quality" : "")}");
+                ImGuiUtils.Tooltip($"{ingredient.Item.Name.ToDalamudString()} {SeIconChar.HighQuality.ToIconString()}\n+{perItem} Quality/Item{(total > 0 ? $"\n+{total} Quality" : "")}");
             }
             else
-                ImGui.SetTooltip($"{ingredient.Item.Name.ToDalamudString()}");
+                ImGuiUtils.Tooltip($"{ingredient.Item.Name.ToDalamudString()}");
         }
         ImGui.SameLine(0, 5);
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - (5 + ImGui.CalcTextSize("/").X + 5 + ImGui.CalcTextSize($"99").X));
@@ -974,7 +974,7 @@ public sealed class MacroEditor : Window, IDisposable
                         ImGui.PopClipRect();
                     }
                     if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-                        ImGui.SetTooltip($"{actions[i].GetName(RecipeData!.ClassJob)}\n{actionBase.GetTooltip(sim, true)}");
+                        ImGuiUtils.Tooltip($"{actions[i].GetName(RecipeData!.ClassJob)}\n{actionBase.GetTooltip(sim, true)}");
 
                     using var _padding = ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, Vector2.Zero);
                     using (var _source = ImRaii.DragDropSource())
@@ -1028,7 +1028,7 @@ public sealed class MacroEditor : Window, IDisposable
                         ImGui.Text(condition.Name());
                     }
                     if (ImGui.IsItemHovered())
-                        ImGui.SetTooltip(condition.Description(CharacterStats.HasSplendorousBuff).Replace("%", "%%"));
+                        ImGuiUtils.Tooltip(condition.Description(CharacterStats.HasSplendorousBuff));
 
                     ImGui.SetCursorPos(pos);
                     ImGuiUtils.AlignRight(ImGui.GetFrameHeight(), totalSize);
@@ -1045,8 +1045,8 @@ public sealed class MacroEditor : Window, IDisposable
                         }
                     }
                     if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-                        ImGui.SetTooltip("Condition Randomness\n" +
-                            "Allows the condition to fluctuate randomly like a real craft.\n" +
+                        ImGuiUtils.TooltipWrapped($"Condition Randomness{(!Service.Configuration.ConditionRandomness ? " (Disabled)" : string.Empty)}\n" +
+                            "Allows the condition to fluctuate randomly like a real craft. " +
                             "Turns off when generating a macro.");
                 }
                 var datas = new List<DynamicBars.BarData>(3)
@@ -1059,10 +1059,10 @@ public sealed class MacroEditor : Window, IDisposable
                 else if (RecipeData.Recipe.RequiredQuality > 0)
                 {
                     var qualityPercent = (float)State.Quality / RecipeData.Recipe.RequiredQuality * 100;
-                    datas.Add(new("Quality %%", Colors.HQ, Reliability.ParamScore, qualityPercent, 100, $"{qualityPercent:0}%"));
+                    datas.Add(new("Quality %", Colors.HQ, Reliability.ParamScore, qualityPercent, 100, $"{qualityPercent:0}%"));
                 }
                 else if (RecipeData.RecipeInfo.MaxQuality > 0)
-                    datas.Add(new("HQ %%", Colors.HQ, Reliability.ParamScore, State.HQPercent, 100, $"{State.HQPercent}%"));
+                    datas.Add(new("HQ %", Colors.HQ, Reliability.ParamScore, State.HQPercent, 100, $"{State.HQPercent}%"));
                 DynamicBars.Draw(datas);
 
                 ImGui.TableNextColumn();
@@ -1110,7 +1110,7 @@ public sealed class MacroEditor : Window, IDisposable
                 {
                     var status = effect.Status();
                     using var _reset = ImRaii.DefaultFont();
-                    ImGui.SetTooltip($"{status.Name.ToDalamudString()}\n{status.Description.ToDalamudString()}");
+                    ImGuiUtils.Tooltip($"{status.Name.ToDalamudString()}\n{status.Description.ToDalamudString()}");
                 }
                 ImGui.SameLine();
             }
@@ -1155,7 +1155,7 @@ public sealed class MacroEditor : Window, IDisposable
                             ImGui.SetCursorPos(pos);
                             ImGuiUtils.ViolinPlot(violinData, new(barSize, ImGui.GetFrameHeight()));
                             if (ImGui.IsItemHovered())
-                                ImGui.SetTooltip(
+                                ImGuiUtils.Tooltip(
                                     $"Min: {reliability.Min}\n" +
                                     $"Med: {reliability.Median:0.##}\n" +
                                     $"Avg: {reliability.Average:0.##}\n" +
@@ -1226,7 +1226,7 @@ public sealed class MacroEditor : Window, IDisposable
                     ImGui.PopClipRect();
                 }
                 if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-                    ImGui.SetTooltip($"{action.GetName(RecipeData!.ClassJob)}\n{actionBase.GetTooltip(CreateSim(lastState), true)}");
+                    ImGuiUtils.Tooltip($"{action.GetName(RecipeData!.ClassJob)}\n{actionBase.GetTooltip(CreateSim(lastState), true)}");
 
                 using var _padding = ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, Vector2.Zero);
                 using (var _source = ImRaii.DragDropSource())
@@ -1263,7 +1263,7 @@ public sealed class MacroEditor : Window, IDisposable
             using (var color = ImRaii.PushColor(ImGuiCol.PlotHistogram, ImGuiColors.DalamudGrey3))
                 ImGui.ProgressBar(fraction, new(progressWidth, ImGui.GetFrameHeight()), string.Empty);
             if (ImGui.IsItemHovered())
-                ImGui.SetTooltip($"Solver Progress: {solver.ProgressValue} / {solver.ProgressMax}");
+                ImGuiUtils.Tooltip($"Solver Progress: {solver.ProgressValue} / {solver.ProgressMax}");
             ImGui.SameLine(0, spacing);
             ImGui.AlignTextToFramePadding();
             ImGuiUtils.TextRight($"{fraction * 100:0}%", percentWidth);
@@ -1304,7 +1304,7 @@ public sealed class MacroEditor : Window, IDisposable
                 using var _disabled = ImRaii.Disabled();
                 ImGui.Button("Stopping", new(halfWidth, height));
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip("This might could a while, sorry! Please report\n" +
+                    ImGuiUtils.Tooltip("This might could a while, sorry! Please report " +
                                      "if this takes longer than a second.");
             }
             else
@@ -1318,15 +1318,15 @@ public sealed class MacroEditor : Window, IDisposable
             if (ImGui.Button(SolverStartStepCount.HasValue ? "Regenerate" : "Generate", new(halfWidth, height)))
                 CalculateBestMacro();
             if (ImGui.IsItemHovered())
-                ImGui.SetTooltip("Suggest a way to finish the crafting recipe.\n" +
-                                 "Results aren't perfect, and levels of success\n" +
+                ImGuiUtils.Tooltip("Suggest a way to finish the crafting recipe. " +
+                                 "Results aren't perfect, and levels of success " +
                                  "can vary wildly depending on the solver's settings.");
         }
         ImGui.SameLine();
         if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Paste))
             Service.Plugin.CopyMacro(Macro.Actions.ToArray());
         if (ImGui.IsItemHovered())
-            ImGui.SetTooltip("Copy to Clipboard");
+            ImGuiUtils.Tooltip("Copy to Clipboard");
         ImGui.SameLine();
         using (var _disabled = ImRaii.Disabled(SolverRunning))
         {
@@ -1334,7 +1334,7 @@ public sealed class MacroEditor : Window, IDisposable
                 ShowImportPopup();
         }
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-            ImGui.SetTooltip("Import Macro");
+            ImGuiUtils.Tooltip("Import Macro");
         DrawImportPopup();
         ImGui.SameLine();
         if (DefaultActions.Length > 0)
@@ -1350,7 +1350,7 @@ public sealed class MacroEditor : Window, IDisposable
                 }
             }
             if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-                ImGui.SetTooltip("Reset");
+                ImGuiUtils.Tooltip("Reset");
         }
         ImGui.SameLine();
         using (var _disabled = ImRaii.Disabled(SolverRunning))
@@ -1362,7 +1362,7 @@ public sealed class MacroEditor : Window, IDisposable
             }
         }
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-            ImGui.SetTooltip("Clear");
+            ImGuiUtils.Tooltip("Clear");
     }
 
     private void ShowSaveAsPopup()

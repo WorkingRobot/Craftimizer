@@ -44,7 +44,7 @@ public sealed class MacroList : Window, IDisposable
                 Icon = FontAwesomeIcon.Cog,
                 IconOffset = new(2.5f, 1),
                 Click = _ => Service.Plugin.OpenSettingsWindow(),
-                ShowTooltip = () => ImGui.SetTooltip("Open Craftimizer Settings")
+                ShowTooltip = () => ImGuiUtils.Tooltip("Open Craftimizer Settings")
             }
         };
 
@@ -179,7 +179,7 @@ public sealed class MacroList : Window, IDisposable
                         ImGui.GetColorU32(ImGuiCol.TableBorderLight),
                         ImGui.GetColorU32(Colors.Quality));
                         if (ImGui.IsItemHovered())
-                            ImGui.SetTooltip($"Quality: {state.Quality} / {state.Input.Recipe.MaxQuality}");
+                            ImGuiUtils.Tooltip($"Quality: {state.Quality} / {state.Input.Recipe.MaxQuality}");
                     }
                     else
                     {
@@ -190,7 +190,7 @@ public sealed class MacroList : Window, IDisposable
                         ImGui.GetColorU32(ImGuiCol.TableBorderLight),
                         ImGui.GetColorU32(Colors.Progress));
                         if (ImGui.IsItemHovered())
-                            ImGui.SetTooltip($"Progress: {state.Progress} / {state.Input.Recipe.MaxProgress}");
+                            ImGuiUtils.Tooltip($"Progress: {state.Progress} / {state.Input.Recipe.MaxProgress}");
                     }
                 }
                 else
@@ -202,7 +202,7 @@ public sealed class MacroList : Window, IDisposable
                         ImGui.GetColorU32(ImGuiCol.TableBorderLight),
                         ImGui.GetColorU32(Colors.Progress));
                     if (ImGui.IsItemHovered())
-                        ImGui.SetTooltip($"Progress: {state.Progress} / {state.Input.Recipe.MaxProgress}");
+                        ImGuiUtils.Tooltip($"Progress: {state.Progress} / {state.Input.Recipe.MaxProgress}");
 
                     ImGui.SameLine(0, spacing);
                     ImGuiUtils.ArcProgress(
@@ -212,7 +212,7 @@ public sealed class MacroList : Window, IDisposable
                         ImGui.GetColorU32(ImGuiCol.TableBorderLight),
                         ImGui.GetColorU32(Colors.Quality));
                     if (ImGui.IsItemHovered())
-                        ImGui.SetTooltip($"Quality: {state.Quality} / {state.Input.Recipe.MaxQuality}");
+                        ImGuiUtils.Tooltip($"Quality: {state.Quality} / {state.Input.Recipe.MaxQuality}");
 
                     ImGuiUtils.ArcProgress((float)state.Durability / state.Input.Recipe.MaxDurability,
                         miniRowHeight / 2f,
@@ -220,7 +220,7 @@ public sealed class MacroList : Window, IDisposable
                         ImGui.GetColorU32(ImGuiCol.TableBorderLight),
                         ImGui.GetColorU32(Colors.Durability));
                     if (ImGui.IsItemHovered())
-                        ImGui.SetTooltip($"Remaining Durability: {state.Durability} / {state.Input.Recipe.MaxDurability}");
+                        ImGuiUtils.Tooltip($"Remaining Durability: {state.Durability} / {state.Input.Recipe.MaxDurability}");
 
                     ImGui.SameLine(0, spacing);
                     ImGuiUtils.ArcProgress(
@@ -230,7 +230,7 @@ public sealed class MacroList : Window, IDisposable
                         ImGui.GetColorU32(ImGuiCol.TableBorderLight),
                         ImGui.GetColorU32(Colors.CP));
                     if (ImGui.IsItemHovered())
-                        ImGui.SetTooltip($"Remaining CP: {state.CP} / {state.Input.Stats.CP}");
+                        ImGuiUtils.Tooltip($"Remaining CP: {state.CP} / {state.Input.Stats.CP}");
                 }
             }
 
@@ -239,18 +239,18 @@ public sealed class MacroList : Window, IDisposable
                 if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Edit, miniRowHeight))
                     OpenEditor(macro);
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip("Open in Simulator");
+                    ImGuiUtils.Tooltip("Open in Simulator");
                 ImGui.SameLine(0, spacing);
                 if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.PencilAlt, miniRowHeight))
                     ShowRenamePopup(macro);
                 DrawRenamePopup(macro);
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip("Rename");
+                    ImGuiUtils.Tooltip("Rename");
 
                 if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Paste, miniRowHeight))
                     Service.Plugin.CopyMacro(macro.Actions);
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip("Copy to Clipboard");
+                    ImGuiUtils.Tooltip("Copy to Clipboard");
                 ImGui.SameLine(0, spacing);
                 using (var _disabled = ImRaii.Disabled(!ImGui.GetIO().KeyShift))
                 {
@@ -258,7 +258,7 @@ public sealed class MacroList : Window, IDisposable
                         Service.Configuration.RemoveMacro(macro);
                 }
                 if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-                    ImGui.SetTooltip("Delete (Hold Shift)");
+                    ImGuiUtils.Tooltip("Delete (Hold Shift)");
             }
 
             ImGui.TableNextColumn();
@@ -276,7 +276,7 @@ public sealed class MacroList : Window, IDisposable
                         {
                             ImGui.Image(macro.Actions[i].GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(miniRowHeight));
                             if (ImGui.IsItemHovered())
-                                ImGui.SetTooltip(macro.Actions[i].GetName(RecipeData!.ClassJob));
+                                ImGuiUtils.Tooltip(macro.Actions[i].GetName(RecipeData!.ClassJob));
                         }
                         else
                         {
@@ -284,7 +284,7 @@ public sealed class MacroList : Window, IDisposable
                             var pos = ImGui.GetCursorPos();
                             ImGui.Image(macro.Actions[i].GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(miniRowHeight), default, Vector2.One, new(1, 1, 1, .5f));
                             if (ImGui.IsItemHovered())
-                                ImGui.SetTooltip($"{macro.Actions[i].GetName(RecipeData!.ClassJob)}\nand {amtMore} more");
+                                ImGuiUtils.Tooltip($"{macro.Actions[i].GetName(RecipeData!.ClassJob)}\nand {amtMore} more");
                             ImGui.SetCursorPos(pos);
                             ImGui.GetWindowDrawList().AddRectFilled(ImGui.GetCursorScreenPos(), ImGui.GetCursorScreenPos() + new Vector2(miniRowHeight), ImGui.GetColorU32(ImGuiCol.FrameBg), miniRowHeight / 8f);
                             ImGui.GetWindowDrawList().AddTextClippedEx(ImGui.GetCursorScreenPos(), ImGui.GetCursorScreenPos() + new Vector2(miniRowHeight), $"+{amtMore}", null, new(.5f), null);
