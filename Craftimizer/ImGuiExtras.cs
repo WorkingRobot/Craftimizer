@@ -22,6 +22,9 @@ internal static unsafe class ImGuiExtras
     [DllImport("cimgui", CallingConvention = CallingConvention.Cdecl)]
     private static extern bool igItemSize_Vec2(Vector2 size, float text_baseline_y = -1.0f);
 
+    [DllImport("cimgui", CallingConvention = CallingConvention.Cdecl)]
+    private static extern ImGuiItemFlags igGetItemFlags();
+
     // https://github.com/ImGuiNET/ImGui.NET/blob/069363672fed940ebdaa02f9b032c282b66467c7/src/ImGui.NET/Util.cs
     #region Util
 
@@ -166,6 +169,9 @@ internal static unsafe class ImGuiExtras
     public static unsafe bool ItemSize(Vector2 size, float text_baseline_y = -1.0f) =>
         igItemSize_Vec2(size, text_baseline_y);
 
+    public static unsafe ImGuiItemFlags GetItemFlags() =>
+        igGetItemFlags();
+
     public static unsafe bool SetDragDropPayload<T>(string type, T data) where T : unmanaged =>
         ImGui.SetDragDropPayload(type, (nint)(&data), (uint)sizeof(T));
 
@@ -180,4 +186,20 @@ internal static unsafe class ImGuiExtras
         data = *(T*)payload.Data;
         return true;
     }
+}
+
+// https://github.com/ocornut/imgui/blob/v1.88/imgui_internal.h#L758
+[Flags]
+internal enum ImGuiItemFlags
+{
+    None = 0,
+    NoTabStop = 1 << 0, // Disable keyboard tabbing. This is a "lighter" version of ImGuiItemFlags_NoNav.
+    ButtonRepeat = 1 << 1, // Button() will return true multiple times based on io.KeyRepeatDelay and io.KeyRepeatRate settings.
+    Disabled = 1 << 2, // Disable interactions but doesn't affect visuals. See BeginDisabled()/EndDisabled(). See github.com/ocornut/imgui/issues/211
+    NoNav = 1 << 3, // Disable any form of focusing (keyboard/gamepad directional navigation and SetKeyboardFocusHere() calls)
+    NoNavDefaultFocus = 1 << 4, // Disable item being a candidate for default focus (e.g. used by title bar items)
+    SelectableDontClosePopup = 1 << 5, // Disable MenuItem/Selectable() automatically closing their popup window
+    MixedValue = 1 << 6, // [BETA] Represent a mixed/indeterminate value, generally multi-selection where values differ. Currently only supported by Checkbox() (later should support all sorts of widgets)
+    ReadOnly = 1 << 7, // [ALPHA] Allow hovering interactions but underlying value is not changed.
+    Inputable = 1 << 8, // [WIP] Auto-activate input mode when tab focused. Currently only used and supported by a few items before it becomes a generic feature.
 }

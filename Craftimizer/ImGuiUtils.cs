@@ -513,7 +513,7 @@ internal static class ImGuiUtils
         return ImGui.CalcTextSize(icon.ToIconString());
     }
 
-    private static void DrawCenteredIcon(FontAwesomeIcon icon, Vector2 offset, Vector2 size)
+    private static void DrawCenteredIcon(FontAwesomeIcon icon, Vector2 offset, Vector2 size, bool isDisabled = false)
     {
         var iconSize = GetIconSize(icon);
 
@@ -535,7 +535,7 @@ internal static class ImGuiUtils
             iconOffset = Vector2.Zero;
         }
 
-        ImGui.GetWindowDrawList().AddText(UiBuilder.IconFont, UiBuilder.IconFont.FontSize * scale, offset + iconOffset, ImGui.GetColorU32(ImGuiCol.Text), icon.ToIconString());
+        ImGui.GetWindowDrawList().AddText(UiBuilder.IconFont, UiBuilder.IconFont.FontSize * scale, offset + iconOffset, ImGui.GetColorU32(!isDisabled ? ImGuiCol.Text : ImGuiCol.TextDisabled), icon.ToIconString());
     }
 
     public static bool IconButtonSquare(FontAwesomeIcon icon, float size = -1)
@@ -549,7 +549,8 @@ internal static class ImGuiUtils
         if (ImGui.Button($"###{icon.ToIconString()}", buttonSize))
             ret = true;
 
-        DrawCenteredIcon(icon, pos + spacing, buttonSize - spacing * 2);
+        var isDisabled = ImGuiExtras.GetItemFlags().HasFlag(ImGuiItemFlags.Disabled);
+        DrawCenteredIcon(icon, pos + spacing, buttonSize - spacing * 2, isDisabled);
 
         return ret;
     }
