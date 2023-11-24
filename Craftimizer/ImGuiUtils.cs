@@ -145,16 +145,21 @@ internal static class ImGuiUtils
     private static float Lerp(float a, float b, float t) =>
         MathF.FusedMultiplyAdd(b - a, t, a);
 
-    private static void ArcSegment(Vector2 o, Vector2 prev, Vector2 cur, Vector2? next, float radius, float ratio, uint color)
+    private readonly record struct ArcEdge(float Angle, Vector2 Point)
+    {
+        public ArcEdge(float angle) : this(angle, UnitCircle(angle)) { }
+    }
+
+    private static void ArcSegment(Vector2 o, ArcEdge prev, ArcEdge cur, ArcEdge? next, float radius, float ratio, uint color)
     {
         var d = ImGui.GetWindowDrawList();
 
-        d.PathLineTo(o + cur * radius);
-        d.PathLineTo(o + prev * radius);
-        d.PathLineTo(o + prev * radius * ratio);
-        d.PathLineTo(o + cur * radius * ratio);
+        d.PathLineTo(o + cur.Point * radius);
+        d.PathLineTo(o + prev.Point * radius);
+        d.PathLineTo(o + prev.Point * radius * ratio);
+        d.PathLineTo(o + cur.Point * radius * ratio);
         if (next is { } nextValue)
-            d.PathLineTo(o + nextValue * radius);
+            d.PathLineTo(o + nextValue.Point * radius);
         d.PathFillConvex(color);
     }
 
@@ -164,24 +169,25 @@ internal static class ImGuiUtils
         if (startAngle > endAngle)
             (startAngle, endAngle) = (endAngle, startAngle);
 
+        // Origin of circle
         var offset = ImGui.GetCursorScreenPos() + new Vector2(radius);
 
+        // Number of segments to draw
         var segments = ImGui.GetWindowDrawList()._CalcCircleAutoSegmentCount(radius);
+        // Angle between each segment
         var incrementAngle = MathF.Tau / segments;
+        // Whether the arc is a full circle (no background or all background)
         var isFullCircle = (endAngle - startAngle) % MathF.Tau == 0;
 
-        var prevA = startAngle;
-        var prev = UnitCircle(prevA);
+        var end = new ArcEdge(endAngle);
+        var prev = new ArcEdge(startAngle);
         for (var i = 1; i <= segments; ++i)
         {
-            var a = startAngle + incrementAngle * i;
-            var cur = UnitCircle(a);
-
-            var nextA = a + incrementAngle;
-            var next = UnitCircle(nextA);
+            var cur = new ArcEdge(startAngle + incrementAngle * i);
+            var next = new ArcEdge(startAngle + incrementAngle * (i + 1));
 
             // full segment is background
-            if (prevA >= endAngle)
+            if (prev.Angle >= end.Angle)
             {
                 // don't overlap with the first segment
                 if (i == segments && !isFullCircle)
@@ -190,29 +196,26 @@ internal static class ImGuiUtils
                     ArcSegment(offset, prev, cur, next, radius, ratio, backgroundColor);
             }
             // segment is partially filled
-            else if (a > endAngle && !isFullCircle)
+            else if (cur.Angle > end.Angle && !isFullCircle)
             {
                 // we split the drawing in two
-                var end = UnitCircle(endAngle);
                 ArcSegment(offset, prev, end, null, radius, ratio, filledColor);
-                ArcSegment(offset, end, cur, next, radius, ratio, backgroundColor);
-                // set the previous segment to endAngle
-                a = endAngle;
+                if (i == segments)
+                    ArcSegment(offset, end, cur, null, radius, ratio, backgroundColor);
+                else
+                    ArcSegment(offset, end, cur, next, radius, ratio, backgroundColor);
+                // set the previous segment to end
                 cur = end;
             }
             // full segment is filled
             else
             {
-                // if the next segment will be partially filled, the next segment will be the endAngle
-                if (nextA > endAngle && !isFullCircle)
-                {
-                    var end = UnitCircle(endAngle);
+                // if the next segment will be partially filled, the next segment will be the end
+                if (next.Angle > end.Angle && !isFullCircle)
                     ArcSegment(offset, prev, cur, end, radius, ratio, filledColor);
-                }
                 else
                     ArcSegment(offset, prev, cur, next, radius, ratio, filledColor);
             }
-            prevA = a;
             prev = cur;
         }
 
@@ -220,9 +223,9 @@ internal static class ImGuiUtils
             ImGui.Dummy(new Vector2(radius * 2));
     }
 
-    public static void ArcProgress(float value, float radiusInner, float radiusOuter, uint backgroundColor, uint filledColor)
+    public static void ArcProgress(float value, float radius, float ratio, uint backgroundColor, uint filledColor)
     {
-        Arc(MathF.PI / 2, MathF.PI / 2 - MathF.Tau * Math.Clamp(value, 0, 1), radiusInner, radiusOuter, backgroundColor, filledColor);
+        Arc(MathF.PI / 2, MathF.PI / 2 - MathF.Tau * Math.Clamp(value, 0, 1), radius, ratio, backgroundColor, filledColor);
     }
 
     public sealed class ViolinData
