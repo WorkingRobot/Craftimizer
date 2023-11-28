@@ -59,6 +59,8 @@ public sealed unsafe class SynthHelper : Window, IDisposable
     private SimulationState currentState;
     private SimulatedMacro Macro { get; } = new();
 
+    private bool IsSuggestedActionExecutionQueued { get; set; }
+
     private CancellationTokenSource? HelperTaskTokenSource { get; set; }
     private Exception? HelperTaskException { get; set; }
     private Solver.Solver? HelperTaskObject { get; set; }
@@ -86,7 +88,6 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         Service.WindowSystem.AddWindow(this);
     }
 
-
     private bool wasOpen;
     public override bool DrawConditions()
     {
@@ -99,6 +100,8 @@ public sealed unsafe class SynthHelper : Window, IDisposable
                 HelperTaskTokenSource?.Cancel();
             }
         }
+        if (!isOpen)
+            IsSuggestedActionExecutionQueued = false;
 
         wasOpen = isOpen;
         return isOpen;
@@ -114,7 +117,8 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             return false;
 
         if (Service.Configuration.DisableSynthHelperOnMacro &&
-            RaptureShellModule.Instance()->MacroCurrentLine >= 0)
+            RaptureShellModule.Instance()->MacroCurrentLine >= 0 &&
+            !IsSuggestedActionExecutionQueued)
             return false;
 
         Addon = (AddonSynthesis*)Service.GameGui.GetAddonByName("Synthesis");
@@ -158,6 +162,11 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         var offset = 5;
 
         Position = ImGuiHelpers.MainViewport.Pos + pos + new Vector2(size.X, offset * scale);
+    }
+
+    public override void PostDraw()
+    {
+        IsSuggestedActionExecutionQueued = false;
     }
 
     public override void Draw()
@@ -226,7 +235,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
                 isPressed = ImGuiExtras.ButtonBehavior(bb, id, out isHovered, out isHeld, ImGuiButtonFlags.None);
             }
             ImGui.ImageButton(action.GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(imageSize), default, Vector2.One, 0, default, failedAction ? new(1, 1, 1, ImGui.GetStyle().DisabledAlpha) : Vector4.One);
-            if (isPressed)
+            if (isPressed || IsSuggestedActionExecutionQueued)
             {
                 if (canExecute && i == 0)
                 {
@@ -560,6 +569,11 @@ public sealed unsafe class SynthHelper : Window, IDisposable
     {
         if (Macro.Enqueue(action) >= Service.Configuration.SynthHelperStepCount)
             HelperTaskTokenSource?.Cancel();
+    }
+
+    public void QueueSuggestedActionExecution()
+    {
+        IsSuggestedActionExecutionQueued = true;
     }
 
     private static Sim CreateSim(in SimulationState state) =>

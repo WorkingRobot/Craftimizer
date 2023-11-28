@@ -78,6 +78,10 @@ public sealed class Plugin : IDalamudPlugin
         {
             HelpMessage = "Open the crafting macro editor.",
         });
+        Service.CommandManager.AddHandler("/craftaction", new CommandInfo((_, _) => ExecuteSuggestedSynthHelperAction())
+        {
+            HelpMessage = "Execute the suggested action in the synthesis helper. This command mostly exists for controller players.",
+        });
     }
 
     public (CharacterStats? Character, RecipeData? Recipe, MacroEditor.CrafterBuffs? Buffs) GetOpenedStats()
@@ -122,6 +126,9 @@ public sealed class Plugin : IDalamudPlugin
         EditorWindow = new(characterStats, recipeData, buffs, actions, setter);
     }
 
+    public void ExecuteSuggestedSynthHelperAction() =>
+        SynthHelperWindow.QueueSuggestedActionExecution();
+
     public void OpenSettingsWindow()
     {
         if (SettingsWindow.IsOpen ^= true)
@@ -159,6 +166,7 @@ public sealed class Plugin : IDalamudPlugin
         Service.CommandManager.RemoveHandler("/craftimizer");
         Service.CommandManager.RemoveHandler("/craftmacros");
         Service.CommandManager.RemoveHandler("/crafteditor");
+        Service.CommandManager.RemoveHandler("/craftaction");
         SettingsWindow.Dispose();
         RecipeNoteWindow.Dispose();
         SynthHelperWindow.Dispose();
