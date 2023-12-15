@@ -156,7 +156,7 @@ internal static class ClassJobUtils
         PlayerState.Instance()->ClassJobLevelArray[me.GetExpArrayIdx()];
 
     public static unsafe bool CanPlayerUseManipulation(this ClassJob me) =>
-        ActionManager.CanUseActionOnTarget(ActionType.Manipulation.GetId(me), (GameObject*)Service.ClientState.LocalPlayer!.Address);
+        UIState.Instance()->IsUnlockLinkUnlockedOrQuestCompleted(ActionType.Manipulation.GetActionRow(me).Action!.UnlockLink);
 
     public static string GetName(this ClassJob me)
     {
