@@ -6,7 +6,7 @@ namespace Craftimizer.Solver;
 public readonly record struct SolverSolution {
     private readonly List<ActionType> actions = null!;
     public readonly IReadOnlyList<ActionType> Actions { get => actions; init => ActionEnumerable = value; }
-    public readonly IEnumerable<ActionType> ActionEnumerable { init => actions = SanitizeCombos(value).ToList(); }
+    public readonly IEnumerable<ActionType> ActionEnumerable { init => actions = value.ToList(); }
     public readonly SimulationState State { get; init; }
 
     public SolverSolution(IEnumerable<ActionType> actions, in SimulationState state)
@@ -32,14 +32,5 @@ public readonly record struct SolverSolution {
         }
         else
             yield return action;
-    }
-
-    internal static IEnumerable<ActionType> SanitizeCombos(IEnumerable<ActionType> actions)
-    {
-        foreach (var action in actions)
-        {
-            foreach (var sanitizedAction in SanitizeCombo(action))
-                yield return sanitizedAction;
-        }
     }
 }

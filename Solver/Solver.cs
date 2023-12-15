@@ -225,7 +225,7 @@ public sealed class Solver : IDisposable
                 }
                 if (definiteCount != equalCount)
                 {
-                    foreach(var action in refActions.Take(equalCount).Skip(definiteCount))
+                    foreach (var action in refActions.Take(equalCount).Skip(definiteCount))
                         InvokeNewAction(action);
 
                     definiteActionCount = equalCount;
