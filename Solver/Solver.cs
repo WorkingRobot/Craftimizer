@@ -9,10 +9,11 @@ public sealed class Solver : IDisposable
     public SolverConfig Config { get; }
     public SimulationState State { get; }
     public CancellationToken Token { get; init; }
-    public SolverSolution? Solution { get; private set; }
+    private SolverSolution? Solution { get; set; }
+    public SolverSolution? SanitizedSolution => Solution.HasValue ? Solution.Value with { ActionEnumerable = Solution.Value.Actions.SelectMany(SolverSolution.SanitizeCombo) } : null;
 
     public bool IsStarted => CompletionTask != null;
-    public bool IsCompletedSuccessfully => Solution != null;
+    public bool IsCompletedSuccessfully => Solution.HasValue;
     public bool IsCompleted => CompletionTask?.IsCompleted ?? false;
 
     private Func<Task<SolverSolution>> SearchFunc { get; }
@@ -76,7 +77,7 @@ public sealed class Solver : IDisposable
 
         await CompletionTask!.ConfigureAwait(false);
 
-        return Solution!.Value;
+        return SanitizedSolution!.Value;
     }
 
     public async Task<SolverSolution?> GetSafeTask()
