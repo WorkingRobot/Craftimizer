@@ -113,6 +113,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         return isOpen;
     }
 
+    private bool StatsChanged { get; set; }
     private bool ShouldDraw()
     {
         if (Service.ClientState.LocalPlayer == null)
@@ -132,7 +133,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 return false;
         }
 
-        var statsChanged = false;
+        StatsChanged = false;
         {
             var instance = CSRecipeNote.Instance();
 
@@ -148,7 +149,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             if (recipeId != RecipeData?.RecipeId)
             {
                 RecipeData = new(recipeId);
-                statsChanged = true;
+                StatsChanged = true;
             }
         }
 
@@ -166,7 +167,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             if (characterStats != CharacterStats)
             {
                 CharacterStats = characterStats;
-                statsChanged = true;
+                StatsChanged = true;
             }
         }
 
@@ -174,10 +175,10 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         if (craftStatus != CraftStatus)
         {
             CraftStatus = craftStatus;
-            statsChanged = true;
+            StatsChanged = true;
         }
 
-        if (statsChanged && CraftStatus == CraftableStatus.OK)
+        if (StatsChanged && CraftStatus == CraftableStatus.OK)
             CalculateBestMacros();
 
         return true;
@@ -199,10 +200,16 @@ public sealed unsafe class RecipeNote : Window, IDisposable
     public override void Draw()
     {
         var availWidth = ImGui.GetContentRegionAvail().X;
-        using (var table = ImRaii.Table("stats", 2, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.SizingFixedSame))
+        using (var table = ImRaii.Table("stats", 2, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.SizingFixedSame | ImGuiTableFlags.NoSavedSettings))
         {
             if (table)
             {
+                if (StatsChanged)
+                {
+                    ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 150);
+                    ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 150);
+                }
+
                 ImGui.TableNextColumn();
                 DrawCharacterStats();
                 ImGui.TableNextColumn();
@@ -437,6 +444,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                     if (table)
                     {
                         ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 100);
+                        ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthStretch);
 
                         ImGui.TableNextColumn();
                         ImGui.Text("Craftsmanship");
@@ -456,6 +464,9 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 }
                 break;
         }
+
+        using var _spacing = ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
+        ImGui.Dummy(Vector2.Zero);
     }
 
     private void DrawRecipeStats()
@@ -525,6 +536,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         if (table)
         {
             ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthStretch);
 
             ImGui.TableNextColumn();
             ImGui.Text("Progress");
@@ -704,6 +716,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         if (table)
         {
             ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthStretch);
 
             ImGui.TableNextColumn();
             ImGui.Text("Current");
