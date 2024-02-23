@@ -4,6 +4,7 @@ using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Craftimizer.Utils;
 using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.GameFonts;
 using Dalamud.Interface.ManagedFontAtlas;
@@ -31,11 +32,16 @@ namespace Craftimizer.Windows;
 
 public sealed unsafe class SynthHelper : Window, IDisposable
 {
-    private const ImGuiWindowFlags WindowFlags = ImGuiWindowFlags.NoDecoration
-      | ImGuiWindowFlags.AlwaysAutoResize
-      | ImGuiWindowFlags.NoSavedSettings
-      | ImGuiWindowFlags.NoFocusOnAppearing
-      | ImGuiWindowFlags.NoNavFocus;
+    private const ImGuiWindowFlags WindowFlagsPinned = WindowFlagsFloating
+      | ImGuiWindowFlags.NoDecoration
+      | ImGuiWindowFlags.NoSavedSettings;
+
+    private const ImGuiWindowFlags WindowFlagsFloating = 
+        ImGuiWindowFlags.AlwaysAutoResize
+      | ImGuiWindowFlags.NoFocusOnAppearing;
+
+    private const string WindowNamePinned = "Craftimizer Synthesis Helper###CraftimizerSynthHelper";
+    private const string WindowNameFloating = $"{WindowNamePinned}Floating";
 
     public AddonSynthesis* Addon { get; private set; }
     public RecipeData? RecipeData { get; private set; }
@@ -69,7 +75,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
     private IFontHandle AxisFont { get; }
 
-    public SynthHelper() : base("Craftimizer SynthHelper", WindowFlags)
+    public SynthHelper() : base(WindowNamePinned)
     {
         AxisFont = Service.PluginInterface.UiBuilder.FontAtlas.NewGameFontHandle(new(GameFontFamilyAndSize.Axis14));
 
@@ -84,6 +90,17 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         {
             MinimumSize = new(494, -1),
             MaximumSize = new(494, 10000)
+        };
+
+        TitleBarButtons = new()
+        {
+            new()
+            {
+                Icon = FontAwesomeIcon.Cog,
+                IconOffset = new(2.5f, 1),
+                Click = _ => Service.Plugin.OpenSettingsWindow(),
+                ShowTooltip = () => ImGuiUtils.Tooltip("Open Craftimizer Settings")
+            }
         };
 
         Service.WindowSystem.AddWindow(this);
@@ -155,14 +172,27 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
     public override void PreDraw()
     {
-        ref var unit = ref Addon->AtkUnitBase;
-        var scale = unit.Scale;
-        var pos = new Vector2(unit.X, unit.Y);
-        var size = new Vector2(unit.WindowNode->AtkResNode.Width, unit.WindowNode->AtkResNode.Height) * scale;
+        base.PreDraw();
 
-        var offset = 5;
+        if (Service.Configuration.PinSynthHelperToWindow)
+        {
+            ref var unit = ref Addon->AtkUnitBase;
+            var scale = unit.Scale;
+            var pos = new Vector2(unit.X, unit.Y);
+            var size = new Vector2(unit.WindowNode->AtkResNode.Width, unit.WindowNode->AtkResNode.Height) * scale;
 
-        Position = ImGuiHelpers.MainViewport.Pos + pos + new Vector2(size.X, offset * scale);
+            var offset = 5;
+
+            Position = ImGuiHelpers.MainViewport.Pos + pos + new Vector2(size.X, offset * scale);
+            Flags = WindowFlagsPinned;
+            WindowName = WindowNamePinned;
+        }
+        else
+        {
+            Position = null;
+            Flags = WindowFlagsFloating;
+            WindowName = WindowNameFloating;
+        }
     }
 
     public override void PostDraw()

@@ -36,11 +36,16 @@ namespace Craftimizer.Windows;
 
 public sealed unsafe class RecipeNote : Window, IDisposable
 {
-    private const ImGuiWindowFlags WindowFlags = ImGuiWindowFlags.NoDecoration
-      | ImGuiWindowFlags.AlwaysAutoResize
-      | ImGuiWindowFlags.NoSavedSettings
-      | ImGuiWindowFlags.NoFocusOnAppearing
-      | ImGuiWindowFlags.NoNavFocus;
+    private const ImGuiWindowFlags WindowFlagsPinned = WindowFlagsFloating
+      | ImGuiWindowFlags.NoDecoration
+      | ImGuiWindowFlags.NoSavedSettings;
+
+    private const ImGuiWindowFlags WindowFlagsFloating =
+        ImGuiWindowFlags.AlwaysAutoResize
+      | ImGuiWindowFlags.NoFocusOnAppearing;
+
+    private const string WindowNamePinned = "Craftimizer Crafting Log Helper###CraftimizerRecipeNote";
+    private const string WindowNameFloating = $"{WindowNamePinned}Floating";
 
     public enum CraftableStatus 
     {
@@ -72,7 +77,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
     private IDalamudTextureWrap NoManipulationBadge { get; }
     private IFontHandle AxisFont { get; }
 
-    public RecipeNote() : base("Craftimizer RecipeNote", WindowFlags)
+    public RecipeNote() : base(WindowNamePinned)
     {
         ExpertBadge = Service.IconManager.GetAssemblyTexture("Graphics.expert_badge.png");
         CollectibleBadge = Service.IconManager.GetAssemblyTexture("Graphics.collectible_badge.png");
@@ -90,6 +95,17 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         {
             MinimumSize = new(-1),
             MaximumSize = new(10000, 10000)
+        };
+
+        TitleBarButtons = new()
+        {
+            new()
+            {
+                Icon = FontAwesomeIcon.Cog,
+                IconOffset = new(2.5f, 1),
+                Click = _ => Service.Plugin.OpenSettingsWindow(),
+                ShowTooltip = () => ImGuiUtils.Tooltip("Open Craftimizer Settings")
+            }
         };
 
         Service.WindowSystem.AddWindow(this);
@@ -187,15 +203,28 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
     public override void PreDraw()
     {
-        ref var unit = ref Addon->AtkUnitBase;
-        var scale = unit.Scale;
-        var pos = new Vector2(unit.X, unit.Y);
-        var size = new Vector2(unit.WindowNode->AtkResNode.Width, unit.WindowNode->AtkResNode.Height) * scale;
+        base.PreDraw();
 
-        var node = (AtkResNode*)Addon->Unk458; // unit.GetNodeById(59);
-        var nodeParent = Addon->Unk258; // unit.GetNodeById(57);
+        if (Service.Configuration.PinRecipeNoteToWindow)
+        {
+            ref var unit = ref Addon->AtkUnitBase;
+            var scale = unit.Scale;
+            var pos = new Vector2(unit.X, unit.Y);
+            var size = new Vector2(unit.WindowNode->AtkResNode.Width, unit.WindowNode->AtkResNode.Height) * scale;
 
-        Position = ImGuiHelpers.MainViewport.Pos + pos + new Vector2(size.X, (nodeParent->Y + node->Y) * scale);
+            var node = (AtkResNode*)Addon->Unk458; // unit.GetNodeById(59);
+            var nodeParent = Addon->Unk258; // unit.GetNodeById(57);
+
+            Position = ImGuiHelpers.MainViewport.Pos + pos + new Vector2(size.X, (nodeParent->Y + node->Y) * scale);
+            Flags = WindowFlagsPinned;
+            WindowName = WindowNamePinned;
+        }
+        else
+        {
+            Position = null;
+            Flags = WindowFlagsFloating;
+            WindowName = WindowNameFloating;
+        }
     }
 
     public override void Draw()

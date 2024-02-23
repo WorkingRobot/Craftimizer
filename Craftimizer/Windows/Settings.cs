@@ -184,6 +184,15 @@ public sealed class Settings : Window, IDisposable
         );
 
         DrawOption(
+            "Pin Crafting Log Window",
+            "Pins the helper window to the right of your crafting log. Disabling this will " +
+            "allow you to move it around.",
+            Config.PinRecipeNoteToWindow,
+            v => Config.PinRecipeNoteToWindow = v,
+            ref isDirty
+        );
+
+        DrawOption(
             "Show Only One Macro Stat in Crafting Log",
             "Only one stat will be shown for a macro. If a craft will be finished, quality " +
             "is shown. Otherwise, progress is shown. Durability and remaining CP will be " +
@@ -657,7 +666,16 @@ public sealed class Settings : Window, IDisposable
         var isDirty = false;
 
         DrawOption(
-            "Disable when running macro",
+            "Pin Window",
+            "Pins the synthesis helper to the right of your synthesis window. Disabling this will " +
+            "allow you to move it around.",
+            Config.PinSynthHelperToWindow,
+            v => Config.PinSynthHelperToWindow = v,
+            ref isDirty
+        );
+
+        DrawOption(
+            "Disable When Running Macro",
             "Disables itself when an in-game macro is running.",
             Config.DisableSynthHelperOnMacro,
             v => Config.DisableSynthHelperOnMacro = v,

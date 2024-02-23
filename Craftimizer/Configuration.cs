@@ -94,6 +94,9 @@ public class Configuration : IPluginConfiguration
     public bool ShowOptimalMacroStat { get; set; } = true;
     public int SynthHelperStepCount { get; set; } = 5;
 
+    public bool PinSynthHelperToWindow { get; set; } = true;
+    public bool PinRecipeNoteToWindow { get; set; } = true;
+
     public MacroCopyConfiguration MacroCopy { get; set; } = new();
 
     public void AddMacro(Macro macro)
