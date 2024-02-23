@@ -349,14 +349,14 @@ public sealed unsafe class SynthHelper : Window, IDisposable
                 new("Durability", Colors.Durability, state.Durability, RecipeData.RecipeInfo.MaxDurability),
             };
             if (RecipeData.Recipe.ItemResult.Value!.IsCollectable)
-                halfBars.Add(new("Collectability", Colors.HQ, reliability.ParamScore, state.Collectability, state.MaxCollectability, $"{state.Collectability}", null));
+                halfBars.Add(new("Collectability", Colors.Collectability, reliability.ParamScore, state.Collectability, state.MaxCollectability, RecipeData.CollectableThresholds, $"{state.Collectability}", $"{state.MaxCollectability:0}"));
             else if (RecipeData.Recipe.RequiredQuality > 0)
             {
                 var qualityPercent = (float)state.Quality / RecipeData.Recipe.RequiredQuality * 100;
-                halfBars.Add(new("Quality %", Colors.HQ, reliability.ParamScore, qualityPercent, 100, $"{qualityPercent:0}%", null));
+                halfBars.Add(new("Quality %", Colors.HQ, reliability.ParamScore, qualityPercent, 100, null, $"{qualityPercent:0}%", null));
             }
             else if (RecipeData.RecipeInfo.MaxQuality > 0)
-                halfBars.Add(new("HQ %", Colors.HQ, reliability.ParamScore, state.HQPercent, 100, $"{state.HQPercent}%", null));
+                halfBars.Add(new("HQ %", Colors.HQ, reliability.ParamScore, state.HQPercent, 100, null, $"{state.HQPercent}%", null));
 
             if (halfBars.Count > 1)
             {

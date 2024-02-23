@@ -10,6 +10,7 @@ public static class Colors
     public static readonly Vector4 Quality = new(0.26f, 0.71f, 0.69f, 1f);
     public static readonly Vector4 Durability = new(0.13f, 0.52f, 0.93f, 1f);
     public static readonly Vector4 HQ = new(0.592f, 0.863f, 0.376f, 1f);
+    public static readonly Vector4 Collectability = new(0.99f, 0.56f, 0.57f, 1f);
     public static readonly Vector4 CP = new(0.63f, 0.37f, 0.75f, 1f);
 
     private static Vector4 SolverProgressBg => ImGui.ColorConvertU32ToFloat4(ImGui.GetColorU32(ImGuiCol.TableBorderLight));
@@ -23,6 +24,13 @@ public static class Colors
         new(0.21f, 0.30f, 0.98f, 1f),
         new(0.26f, 0.62f, 0.94f, 1f),
         new(0.70f, 0.49f, 0.88f, 1f),
+    };
+
+    public static readonly Vector4[] CollectabilityThreshold = new Vector4[]
+    {
+        new(0.47f, 0.78f, 0.93f, 1f), // Blue
+        new(0.99f, 0.79f, 0f, 1f), // Yellow
+        new(0.75f, 1f, 0.75f, 1f), // Green
     };
 
     public static (Vector4 Background, Vector4 Foreground) GetSolverProgressColors(int? stageValue) => 

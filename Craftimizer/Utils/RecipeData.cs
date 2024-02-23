@@ -83,7 +83,7 @@ public sealed record RecipeData
             case 4:
                 var data4 = LuminaSheets.SharlayanCraftWorksSupplySheet.GetRow(Recipe.Unknown46);
                 if (data4 == null)
-                    goto default;
+                    break;
                 foreach (var item in data4.Items)
                 {
                     if (item.Item.Row == Recipe.ItemResult.Row)

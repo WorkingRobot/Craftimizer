@@ -189,8 +189,6 @@ public sealed class MacroEditor : Window, IDisposable
         if (modifiedInput)
             RecalculateState();
 
-        ImGui.Separator();
-
         using (var table = ImRaii.Table("macroInfo", 2, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.SizingStretchSame))
         {
             if (table)
@@ -1052,14 +1050,14 @@ public sealed class MacroEditor : Window, IDisposable
                     new("Condition", DrawCondition)
                 };
                 if (RecipeData.Recipe.ItemResult.Value!.IsCollectable)
-                    datas.Add(new("Collectability", Colors.HQ, Reliability.ParamScore, State.Collectability, State.MaxCollectability, $"{State.Collectability}"));
+                    datas.Add(new("Collectability", Colors.Collectability, Reliability.ParamScore, State.Collectability, State.MaxCollectability, RecipeData.CollectableThresholds, $"{State.Collectability}", $"{State.MaxCollectability:0}"));
                 else if (RecipeData.Recipe.RequiredQuality > 0)
                 {
                     var qualityPercent = (float)State.Quality / RecipeData.Recipe.RequiredQuality * 100;
-                    datas.Add(new("Quality %", Colors.HQ, Reliability.ParamScore, qualityPercent, 100, $"{qualityPercent:0}%"));
+                    datas.Add(new("Quality %", Colors.HQ, Reliability.ParamScore, qualityPercent, 100, null, $"{qualityPercent:0}%"));
                 }
                 else if (RecipeData.RecipeInfo.MaxQuality > 0)
-                    datas.Add(new("HQ %", Colors.HQ, Reliability.ParamScore, State.HQPercent, 100, $"{State.HQPercent}%"));
+                    datas.Add(new("HQ %", Colors.HQ, Reliability.ParamScore, State.HQPercent, 100, null, $"{State.HQPercent}%"));
                 DynamicBars.Draw(datas);
 
                 ImGui.TableNextColumn();

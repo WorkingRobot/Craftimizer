@@ -75,17 +75,17 @@ public class SharlayanCraftWorksSupply : ExcelRow
         for (var i = 0; i < 4; i++)
         {
             Items[i] = new ItemData();
-            Items[i].Level = parser.ReadColumn<byte>(0 + (i * 11 + 0));
-            Items[i].Item = new LazyRow<Item>(gameData, parser.ReadColumn<uint>(0 + (i * 11 + 1)), language);
-            Items[i].CollectabilityMid = parser.ReadColumn<ushort>(0 + (i * 11 + 2));
-            Items[i].CollectabilityHigh = parser.ReadColumn<ushort>(0 + (i * 11 + 3));
-            Items[i].XPReward = parser.ReadColumn<uint>(0 + (i * 11 + 4));
-            Items[i].HighXPMultiplier = parser.ReadColumn<byte>(0 + (i * 11 + 5));
-            Items[i].GilReward = parser.ReadColumn<ushort>(0 + (i * 11 + 6));
-            Items[i].HighGilMultiplier = parser.ReadColumn<byte>(0 + (i * 11 + 7));
-            Items[i].Unknown8 = parser.ReadColumn<byte>(0 + (i * 11 + 8));
-            Items[i].ScripReward = parser.ReadColumn<byte>(0 + (i * 11 + 9));
-            Items[i].HighScripMultiplier = parser.ReadColumn<byte>(0 + (i * 11 + 10));
+            Items[i].Level = parser.ReadColumn<byte>(0 * 4 + i);
+            Items[i].Item = new LazyRow<Item>(gameData, parser.ReadColumn<uint>(1 * 4 + i), language);
+            Items[i].CollectabilityMid = parser.ReadColumn<ushort>(2 * 4 + i);
+            Items[i].CollectabilityHigh = parser.ReadColumn<ushort>(3 * 4 + i);
+            Items[i].XPReward = parser.ReadColumn<uint>(4 * 4 + i);
+            Items[i].HighXPMultiplier = parser.ReadColumn<byte>(5 * 4 + i);
+            Items[i].GilReward = parser.ReadColumn<ushort>(6 * 4 + i);
+            Items[i].HighGilMultiplier = parser.ReadColumn<byte>(7 * 4 + i);
+            Items[i].Unknown8 = parser.ReadColumn<byte>(8 * 4 + i);
+            Items[i].ScripReward = parser.ReadColumn<byte>(9 * 4 + i);
+            Items[i].HighScripMultiplier = parser.ReadColumn<byte>(10 * 4 + i);
         }
     }
 }
