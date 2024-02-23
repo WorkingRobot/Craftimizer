@@ -17,6 +17,7 @@ public sealed record RecipeData
 
     public ClassJob ClassJob { get; }
     public RecipeInfo RecipeInfo { get; }
+    public IReadOnlyList<int?>? CollectableThresholds { get; }
     public IReadOnlyList<(Item Item, int Amount)> Ingredients { get; }
     public int MaxStartingQuality { get; }
     private int TotalHqILvls { get; }
@@ -44,6 +45,57 @@ public sealed record RecipeData
             ProgressModifier = Table.ProgressModifier,
             ProgressDivider = Table.ProgressDivider,
         };
+
+        CollectableThresholds = null;
+        switch (Recipe.Unknown45)
+        {
+            case 1:
+                var data1 = LuminaSheets.CollectablesShopRefineSheet.GetRow(Recipe.Unknown46);
+                if (data1 == null)
+                    break;
+                CollectableThresholds = new int?[] { data1.LowCollectability, data1.MidCollectability, data1.HighCollectability };
+                break;
+            case 2:
+                var data2 = LuminaSheets.HWDCrafterSupplySheet.GetRow(Recipe.Unknown46);
+                if (data2 == null)
+                    break;
+                var idx = Array.FindIndex(data2.ItemTradeIn, i => i.Row == Recipe.ItemResult.Row);
+                if (idx == -1)
+                    break;
+                CollectableThresholds = new int?[] { data2.BaseCollectableRating[idx], data2.MidCollectableRating[idx], data2.HighCollectableRating[idx] };
+                break;
+            case 3:
+                var subRowCount = LuminaSheets.SatisfactionSupplySheet.GetSubRowCount(Recipe.Unknown46);
+                if (subRowCount is not { } subRowValue)
+                    break;
+                for (uint i = 0; i < subRowValue; ++i)
+                {
+                    var data3 = LuminaSheets.SatisfactionSupplySheet.GetRow(Recipe.Unknown46, i);
+                    if (data3 == null)
+                        continue;
+                    if (data3.Item.Row == Recipe.ItemResult.Row)
+                    {
+                        CollectableThresholds = new int?[] { data3.CollectabilityLow, data3.CollectabilityMid, data3.CollectabilityHigh };
+                        break;
+                    }
+                }
+                break;
+            case 4:
+                var data4 = LuminaSheets.SharlayanCraftWorksSupplySheet.GetRow(Recipe.Unknown46);
+                if (data4 == null)
+                    goto default;
+                foreach (var item in data4.Items)
+                {
+                    if (item.Item.Row == Recipe.ItemResult.Row)
+                    {
+                        CollectableThresholds = new int?[] { null, item.CollectabilityMid, item.CollectabilityHigh };
+                        break;
+                    }
+                }
+                break;
+            default:
+                break;
+        }
 
         Ingredients = Recipe.UnkData5.Take(6)
             .Where(i => i != null && i.ItemIngredient != 0)
