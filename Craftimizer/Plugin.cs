@@ -47,7 +47,7 @@ public sealed class Plugin : IDalamudPlugin
         IconManager = new();
 
         var assembly = Assembly.GetExecutingAssembly();
-        Version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
+        Version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion.Split('+')[0];
         Author = assembly.GetCustomAttribute<AssemblyCompanyAttribute>()!.Company;
         BuildConfiguration = assembly.GetCustomAttribute<AssemblyConfigurationAttribute>()!.Configuration;
         Icon = IconManager.GetAssemblyTexture("icon.png");
