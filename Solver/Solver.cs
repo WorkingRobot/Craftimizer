@@ -22,11 +22,22 @@ public sealed class Solver : IDisposable
 
     private int progress;
     private int maxProgress;
+    private int progressStage;
 
-    // In iterative algorithms, the value can be reset back to 0.
+    // In iterative algorithms, the value can be reset back to 0 (and progress stage increases by 1)
     // In other algorithms, the value increases monotonically.
     public int ProgressValue => progress;
+    // Maximum ProgressValue value.
     public int ProgressMax => maxProgress;
+    // Always increases by 1 when ProgressValue is reset. Set to null if the algorithm is not iterative.
+    public int? ProgressStage
+    {
+        get
+        {
+            var stage = progressStage;
+            return stage == -1 ? null : stage;
+        }
+    }
 
     public delegate void LogDelegate(string text);
     public delegate void NewActionDelegate(ActionType action);
@@ -43,15 +54,17 @@ public sealed class Solver : IDisposable
         Config = config;
         State = state;
 
-        SearchFunc = Config.Algorithm switch
+        (SearchFunc, var hasProgressStage) = ((Func<Task<SolverSolution>>, bool))(Config.Algorithm switch
         {
-            SolverAlgorithm.Oneshot => SearchOneshot,
-            SolverAlgorithm.OneshotForked => SearchOneshotForked,
-            SolverAlgorithm.Stepwise => SearchStepwise,
-            SolverAlgorithm.StepwiseForked => SearchStepwiseForked,
-            SolverAlgorithm.StepwiseFurcated => SearchStepwiseFurcated,
+            SolverAlgorithm.Oneshot => (SearchOneshot, false),
+            SolverAlgorithm.OneshotForked => (SearchOneshotForked, false),
+            SolverAlgorithm.Stepwise => (SearchStepwise, true),
+            SolverAlgorithm.StepwiseForked => (SearchStepwiseForked, true),
+            SolverAlgorithm.StepwiseFurcated => (SearchStepwiseFurcated, true),
             _ => throw new ArgumentOutOfRangeException(nameof(config), config, $"Invalid algorithm: {config.Algorithm}")
-        };
+        });
+
+        progressStage = hasProgressStage ? 0 : -1;
     }
 
     public void Start()
@@ -116,7 +129,11 @@ public sealed class Solver : IDisposable
 
     private void ResetProgress()
     {
+        if (!ProgressStage.HasValue)
+            throw new InvalidOperationException("Progress cannot be reset.");
+
         Interlocked.Exchange(ref progress, 0);
+        Interlocked.Increment(ref progressStage);
     }
 
     private async Task<SolverSolution> SearchStepwiseFurcated()

@@ -387,8 +387,11 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         var percentWidth = ImGui.CalcTextSize("100%").X;
         var progressWidth = availSpace - percentWidth - spacing;
         var fraction = Math.Clamp((float)solver.ProgressValue / solver.ProgressMax, 0, 1);
-        using (var color = ImRaii.PushColor(ImGuiCol.PlotHistogram, ImGuiColors.DalamudGrey3))
-            ImGui.ProgressBar(fraction, new(progressWidth, ImGui.GetFrameHeight()), string.Empty);
+        var progressColors = Colors.GetSolverProgressColors(solver.ProgressStage);
+
+        using (ImRaii.PushColor(ImGuiCol.FrameBg, progressColors.Background))
+            using (ImRaii.PushColor(ImGuiCol.PlotHistogram, progressColors.Foreground))
+                ImGui.ProgressBar(fraction, new(progressWidth, ImGui.GetFrameHeight()), string.Empty);
         if (ImGui.IsItemHovered())
             ImGuiUtils.Tooltip($"Solver Progress: {solver.ProgressValue} / {solver.ProgressMax}");
         ImGui.SameLine(0, spacing);

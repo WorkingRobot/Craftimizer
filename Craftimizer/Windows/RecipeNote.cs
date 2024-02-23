@@ -66,6 +66,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
     private CancellationTokenSource? BestMacroTokenSource { get; set; }
     private Exception? BestMacroException { get; set; }
+    private Solver.Solver? BestMacroSolver { get; set; }
     public (Macro, SimulationState)? BestSavedMacro { get; private set; }
     public bool HasSavedMacro { get; private set; }
     public SolverSolution? BestSuggestedMacro { get; private set; }
@@ -264,19 +265,19 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             if (BestSavedMacro is { } savedMacro)
             {
                 ImGuiUtils.TextCentered(savedMacro.Item1.Name, panelWidth);
-                DrawMacro((savedMacro.Item1.Actions, savedMacro.Item2), a => { savedMacro.Item1.ActionEnumerable = a; Service.Configuration.Save(); }, stepsPanelWidthOffset, true);
+                DrawMacro((savedMacro.Item1.Actions, savedMacro.Item2), null, a => { savedMacro.Item1.ActionEnumerable = a; Service.Configuration.Save(); }, stepsPanelWidthOffset, true);
             }
             else
-                DrawMacro(null, null, stepsPanelWidthOffset, true);
+                DrawMacro(null, null, null, stepsPanelWidthOffset, true);
         }
 
         using (var panel = ImRaii2.GroupPanel("Suggested Macro", panelWidth, out _))
         {
             var stepsPanelWidthOffset = ImGui.GetContentRegionAvail().X - panelWidth;
             if (BestSuggestedMacro is { } suggestedMacro)
-                DrawMacro((suggestedMacro.Actions, suggestedMacro.State), null, stepsPanelWidthOffset, false);
+                DrawMacro((suggestedMacro.Actions, suggestedMacro.State), null, null, stepsPanelWidthOffset, false);
             else
-                DrawMacro(null, null, stepsPanelWidthOffset, false);
+                DrawMacro(null, BestMacroSolver, null, stepsPanelWidthOffset, false);
         }
 
         ImGuiHelpers.ScaledDummy(5);
@@ -581,7 +582,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         }
     }
 
-    private void DrawMacro((IReadOnlyList<ActionType> Actions, SimulationState State)? macroValue, Action<IEnumerable<ActionType>>? setter, float stepsAvailWidthOffset, bool isSavedMacro)
+    private void DrawMacro((IReadOnlyList<ActionType> Actions, SimulationState State)? macroValue, Solver.Solver? solver, Action<IEnumerable<ActionType>>? setter, float stepsAvailWidthOffset, bool isSavedMacro)
     {
         var windowHeight = 2 * ImGui.GetFrameHeightWithSpacing();
 
@@ -590,7 +591,33 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             if (isSavedMacro && !HasSavedMacro)
                 ImGuiUtils.TextMiddleNewLine("You have no macros!", new(ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset, windowHeight + 1));
             else if (BestMacroException == null)
-                ImGuiUtils.TextMiddleNewLine("Calculating...", new(ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset, windowHeight + 1));
+            {
+                if (solver != null)
+                {
+                    var calcTextSize = ImGui.CalcTextSize("Calculating...");
+                    var spacing = ImGui.GetStyle().ItemSpacing.X;
+                    var fraction = Math.Clamp((float)solver.ProgressValue / solver.ProgressMax, 0, 1);
+                    var progressColors = Colors.GetSolverProgressColors(solver.ProgressStage);
+
+                    ImGuiUtils.AlignCentered(windowHeight + spacing + calcTextSize.X, ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset);
+
+                    ImGuiUtils.ArcProgress(
+                        fraction,
+                        windowHeight / 2f,
+                        .5f,
+                        ImGui.ColorConvertFloat4ToU32(progressColors.Background),
+                        ImGui.ColorConvertFloat4ToU32(progressColors.Foreground));
+                    if (ImGui.IsItemHovered())
+                        ImGuiUtils.Tooltip($"Solver Progress: {solver.ProgressValue} / {solver.ProgressMax}");
+
+                    ImGui.SameLine(0, spacing);
+
+                    ImGuiUtils.AlignMiddle(calcTextSize, new(calcTextSize.X, windowHeight));
+                    ImGui.Text("Calculating...");
+                }
+                else
+                    ImGuiUtils.TextMiddleNewLine("Calculating...", new(ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset, windowHeight + 1));
+            }
             else
             {
                 ImGui.AlignTextToFramePadding();
@@ -833,6 +860,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
     {
         BestMacroTokenSource?.Cancel();
         BestMacroTokenSource = new();
+        BestMacroSolver = null;
         BestMacroException = null;
         BestSavedMacro = null;
         HasSavedMacro = false;
@@ -900,6 +928,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
         var solver = new Solver.Solver(config, state) { Token = token };
         solver.OnLog += Log.Debug;
+        BestMacroSolver = solver;
         solver.Start();
         var solution = solver.GetTask().GetAwaiter().GetResult();
 
