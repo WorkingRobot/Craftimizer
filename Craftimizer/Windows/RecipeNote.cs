@@ -64,12 +64,58 @@ public sealed unsafe class RecipeNote : Window, IDisposable
     public CharacterStats? CharacterStats { get; private set; }
     public CraftableStatus CraftStatus { get; private set; }
 
-    private CancellationTokenSource? BestMacroTokenSource { get; set; }
-    private Exception? BestMacroException { get; set; }
+    public sealed class BackgroundTask<T> : IDisposable where T : struct
+    {
+        public T? Result { get; private set; }
+        public Exception? Exception { get; private set; }
+        public bool Completed { get; private set; }
+
+        private CancellationTokenSource TokenSource { get; }
+        private Func<CancellationToken, T> Func { get; }
+
+        public BackgroundTask(Func<CancellationToken, T> func)
+        {
+            Func = func;
+            TokenSource = new();
+        }
+
+        public void Start()
+        {
+            var token = TokenSource.Token;
+            var task = Task.Run(() => Result = Func(token), token);
+            _ = task.ContinueWith(t =>
+            {
+                Completed = true;
+            });
+            _ = task.ContinueWith(t =>
+            {
+                if (token.IsCancellationRequested)
+                    return;
+
+                try
+                {
+                    t.Exception!.Flatten().Handle(ex => ex is TaskCanceledException or OperationCanceledException);
+                }
+                catch (AggregateException e)
+                {
+                    Exception = e;
+                    Log.Error(e, "Calculating macros failed");
+                }
+            }, TaskContinuationOptions.OnlyOnFaulted);
+        }
+
+        public void Cancel() =>
+            TokenSource.Cancel();
+
+        public void Dispose() =>
+            Cancel();
+    }
+
+    private BackgroundTask<(Macro?, SimulationState?)>? SavedMacroTask { get; set; }
+    private BackgroundTask<SolverSolution>? SuggestedMacroTask { get; set; }
+
     private Solver.Solver? BestMacroSolver { get; set; }
-    public (Macro, SimulationState)? BestSavedMacro { get; private set; }
     public bool HasSavedMacro { get; private set; }
-    public SolverSolution? BestSuggestedMacro { get; private set; }
 
     private IDalamudTextureWrap ExpertBadge { get; }
     private IDalamudTextureWrap CollectibleBadge { get; }
@@ -119,11 +165,21 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         if (isOpen != wasOpen)
         {
             if (wasOpen)
-                BestMacroTokenSource?.Cancel();
-            else
             {
-                if (!BestSuggestedMacro.HasValue && CraftStatus == CraftableStatus.OK && BestMacroTokenSource == null)
-                    CalculateBestMacros();
+                SavedMacroTask?.Cancel();
+                SuggestedMacroTask?.Cancel();
+            }
+            else if (CraftStatus == CraftableStatus.OK)
+            {
+                if (SavedMacroTask?.Result == null && (SavedMacroTask?.Completed ?? true))
+                    CalculateSavedMacro();
+                if (Service.Configuration.SuggestMacroAutomatically && SuggestedMacroTask?.Result == null && (SuggestedMacroTask?.Completed ?? true))
+                    CalculateSuggestedMacro();
+                else
+                {
+                    SuggestedMacroTask?.Cancel();
+                    SuggestedMacroTask = null;
+                }
             }
         }
 
@@ -197,7 +253,16 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         }
 
         if (StatsChanged && CraftStatus == CraftableStatus.OK)
-            CalculateBestMacros();
+        {
+            CalculateSavedMacro();
+            if (Service.Configuration.SuggestMacroAutomatically)
+                CalculateSuggestedMacro();
+            else
+            {
+                SuggestedMacroTask?.Cancel();
+                SuggestedMacroTask = null;
+            }
+        }
 
         return true;
     }
@@ -262,22 +327,22 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         using (var panel = ImRaii2.GroupPanel("Best Saved Macro", panelWidth, out _))
         {
             var stepsPanelWidthOffset = ImGui.GetContentRegionAvail().X - panelWidth;
-            if (BestSavedMacro is { } savedMacro)
+            if (SavedMacroTask?.Result is { } savedMacro && savedMacro.Item1 != null && savedMacro.Item2 != null)
             {
                 ImGuiUtils.TextCentered(savedMacro.Item1.Name, panelWidth);
-                DrawMacro((savedMacro.Item1.Actions, savedMacro.Item2), null, a => { savedMacro.Item1.ActionEnumerable = a; Service.Configuration.Save(); }, stepsPanelWidthOffset, true);
+                DrawMacro((savedMacro.Item1.Actions, savedMacro.Item2.Value), SavedMacroTask.Exception, null, a => { savedMacro.Item1.ActionEnumerable = a; Service.Configuration.Save(); }, stepsPanelWidthOffset, true);
             }
             else
-                DrawMacro(null, null, null, stepsPanelWidthOffset, true);
+                DrawMacro(null, SavedMacroTask?.Exception, null, null, stepsPanelWidthOffset, true);
         }
 
         using (var panel = ImRaii2.GroupPanel("Suggested Macro", panelWidth, out _))
         {
             var stepsPanelWidthOffset = ImGui.GetContentRegionAvail().X - panelWidth;
-            if (BestSuggestedMacro is { } suggestedMacro)
-                DrawMacro((suggestedMacro.Actions, suggestedMacro.State), null, null, stepsPanelWidthOffset, false);
+            if (SuggestedMacroTask?.Result is { } suggestedMacro)
+                DrawMacro((suggestedMacro.Actions, suggestedMacro.State), SuggestedMacroTask.Exception, null, null, stepsPanelWidthOffset, false);
             else
-                DrawMacro(null, BestMacroSolver, null, stepsPanelWidthOffset, false);
+                DrawMacro(null, SuggestedMacroTask?.Exception, BestMacroSolver, null, stepsPanelWidthOffset, false);
         }
 
         ImGuiHelpers.ScaledDummy(5);
@@ -582,7 +647,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         }
     }
 
-    private void DrawMacro((IReadOnlyList<ActionType> Actions, SimulationState State)? macroValue, Solver.Solver? solver, Action<IEnumerable<ActionType>>? setter, float stepsAvailWidthOffset, bool isSavedMacro)
+    private void DrawMacro((IReadOnlyList<ActionType> Actions, SimulationState State)? macroValue, Exception? exception, Solver.Solver? solver, Action<IEnumerable<ActionType>>? setter, float stepsAvailWidthOffset, bool isSavedMacro)
     {
         var windowHeight = 2 * ImGui.GetFrameHeightWithSpacing();
 
@@ -590,15 +655,16 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         {
             if (isSavedMacro && !HasSavedMacro)
                 ImGuiUtils.TextMiddleNewLine("You have no macros!", new(ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset, windowHeight + 1));
-            else if (BestMacroException == null)
+            else if (exception == null)
             {
-                if (solver != null)
+                if (solver != null && SuggestedMacroTask != null)
                 {
                     var calcTextSize = ImGui.CalcTextSize("Calculating...");
                     var spacing = ImGui.GetStyle().ItemSpacing.X;
                     var fraction = Math.Clamp((float)solver.ProgressValue / solver.ProgressMax, 0, 1);
                     var progressColors = Colors.GetSolverProgressColors(solver.ProgressStage);
 
+                    var c = ImGui.GetCursorPos();
                     ImGuiUtils.AlignCentered(windowHeight + spacing + calcTextSize.X, ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset);
 
                     ImGuiUtils.ArcProgress(
@@ -614,9 +680,20 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
                     ImGuiUtils.AlignMiddle(calcTextSize, new(calcTextSize.X, windowHeight));
                     ImGui.Text("Calculating...");
+                    ImGui.SetCursorPos(c + new Vector2(0, windowHeight + ImGui.GetStyle().ItemSpacing.Y - 1));
                 }
                 else
-                    ImGuiUtils.TextMiddleNewLine("Calculating...", new(ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset, windowHeight + 1));
+                {
+                    using var _padding = ImRaii.PushStyle(ImGuiStyleVar.FramePadding, ImGui.GetStyle().FramePadding * 2);
+                    var size = ImGui.CalcTextSize("Generate") + ImGui.GetStyle().FramePadding * 2;
+                    var c = ImGui.GetCursorPos();
+                    var availSize = new Vector2(ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset, windowHeight);
+                    ImGuiUtils.AlignMiddle(size, availSize);
+                    using var _disabled = ImRaii.Disabled(!(SuggestedMacroTask?.Completed) ?? false);
+                    if (ImGui.Button("Generate"))
+                        CalculateSuggestedMacro();
+                    ImGui.SetCursorPos(c + new Vector2(0, availSize.Y + ImGui.GetStyle().ItemSpacing.Y - 1));
+                }
             }
             else
             {
@@ -624,7 +701,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 using (var color = ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudRed))
                     ImGuiUtils.TextCentered("An exception occurred");
                 if (ImGuiUtils.ButtonCentered("Copy Error Message"))
-                    ImGui.SetClipboardText(BestMacroException.ToString());
+                    ImGui.SetClipboardText(exception.ToString());
             }
             return;
         }
@@ -856,91 +933,73 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         return null;
     }
 
-    private void CalculateBestMacros()
+    private void CalculateSavedMacro()
     {
-        BestMacroTokenSource?.Cancel();
-        BestMacroTokenSource = new();
-        BestMacroSolver = null;
-        BestMacroException = null;
-        BestSavedMacro = null;
-        HasSavedMacro = false;
-        BestSuggestedMacro = null;
-
-        var token = BestMacroTokenSource.Token;
-        var task = Task.Run(() => CalculateBestMacrosTask(token), token);
-        _ = task.ContinueWith(t =>
+        SavedMacroTask?.Cancel();
+        SavedMacroTask = new(token =>
         {
-            if (token == BestMacroTokenSource.Token)
-                BestMacroTokenSource = null;
-        });
-        _ = task.ContinueWith(t =>
-        {
-            if (token.IsCancellationRequested)
-                return;
+            var input = new SimulationInput(CharacterStats!, RecipeData!.RecipeInfo);
+            var state = new SimulationState(input);
+            var config = Service.Configuration.SimulatorSolverConfig;
+            var mctsConfig = new MCTSConfig(config);
+            var simulator = new SimulatorNoRandom();
+            List<Macro> macros = new(Service.Configuration.Macros);
 
-            try
-            {
-                t.Exception!.Flatten().Handle(ex => ex is TaskCanceledException or OperationCanceledException);
-            }
-            catch (AggregateException e)
-            {
-                BestMacroException = e;
-                Log.Error(e, "Calculating macros failed");
-            }
-        }, TaskContinuationOptions.OnlyOnFaulted);
-    }
+            token.ThrowIfCancellationRequested();
 
-    private void CalculateBestMacrosTask(CancellationToken token)
-    {
-        var input = new SimulationInput(CharacterStats!, RecipeData!.RecipeInfo);
-        var state = new SimulationState(input);
-        var config = Service.Configuration.SimulatorSolverConfig;
-        var mctsConfig = new MCTSConfig(config);
-        var simulator = new SimulatorNoRandom();
-        List<Macro> macros = new(Service.Configuration.Macros);
-
-        token.ThrowIfCancellationRequested();
-
-        HasSavedMacro = macros.Count > 0;
-        if (HasSavedMacro)
-        {
+            HasSavedMacro = macros.Count > 0;
+            if (!HasSavedMacro)
+                return (null, null);
             var bestSaved = macros
                 .Select(macro =>
+                {
+                    var (resp, outState, failedIdx) = simulator.ExecuteMultiple(state, macro.Actions);
+                    outState.ActionCount = macro.Actions.Count;
+                    var score = SimulationNode.CalculateScoreForState(outState, simulator.CompletionState, mctsConfig) ?? 0;
+                    if (resp != ActionResponse.SimulationComplete)
                     {
-                        var (resp, outState, failedIdx) = simulator.ExecuteMultiple(state, macro.Actions);
-                        outState.ActionCount = macro.Actions.Count;
-                        var score = SimulationNode.CalculateScoreForState(outState, simulator.CompletionState, mctsConfig) ?? 0;
-                        if (resp != ActionResponse.SimulationComplete)
-                        {
-                            if (failedIdx != -1)
-                                score /= 2;
-                        }
-                        return (macro, outState, score);
-                    })
+                        if (failedIdx != -1)
+                            score /= 2;
+                    }
+                    return (macro, outState, score);
+                })
                 .MaxBy(m => m.score);
 
             token.ThrowIfCancellationRequested();
 
-            BestSavedMacro = (bestSaved.macro, bestSaved.outState);
+            return (bestSaved.macro, bestSaved.outState);
+        });
+        SavedMacroTask.Start();
+    }
+
+    private void CalculateSuggestedMacro()
+    {
+        SuggestedMacroTask?.Cancel();
+        SuggestedMacroTask = new(token =>
+        {
+            var input = new SimulationInput(CharacterStats!, RecipeData!.RecipeInfo);
+            var state = new SimulationState(input);
+            var config = Service.Configuration.SimulatorSolverConfig;
 
             token.ThrowIfCancellationRequested();
-        }
 
-        var solver = new Solver.Solver(config, state) { Token = token };
-        solver.OnLog += Log.Debug;
-        BestMacroSolver = solver;
-        solver.Start();
-        var solution = solver.GetTask().GetAwaiter().GetResult();
+            var solver = new Solver.Solver(config, state) { Token = token };
+            solver.OnLog += Log.Debug;
+            BestMacroSolver = solver;
+            solver.Start();
+            var solution = solver.GetTask().GetAwaiter().GetResult();
 
-        token.ThrowIfCancellationRequested();
+            token.ThrowIfCancellationRequested();
 
-        BestSuggestedMacro = solution;
-
-        token.ThrowIfCancellationRequested();
+            return solution;
+        });
+        SuggestedMacroTask.Start();
     }
 
     public void Dispose()
     {
+        SavedMacroTask?.Cancel();
+        SuggestedMacroTask?.Cancel();
         Service.WindowSystem.RemoveWindow(this);
         AxisFont?.Dispose();
     }

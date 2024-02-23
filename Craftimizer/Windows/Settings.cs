@@ -193,6 +193,18 @@ public sealed class Settings : Window, IDisposable
         );
 
         DrawOption(
+            "Automatically Suggest Macro in Crafting Log",
+            "(Can cause frame drops!) When navigating to a new recipe or changing your gear " +
+            "stats, automatically suggest a new macro (equivalent to clicking \"Generate\" " +
+            "in the Macro Editor). This can cause harsh frame drops on some computers or " +
+            "recipes when underleveled while navigating the crafting log. Turning this off " +
+            "provides a button to allow you to manually suggest a macro only when you need it.",
+            Config.SuggestMacroAutomatically,
+            v => Config.SuggestMacroAutomatically = v,
+            ref isDirty
+        );
+
+        DrawOption(
             "Show Only One Macro Stat in Crafting Log",
             "Only one stat will be shown for a macro. If a craft will be finished, quality " +
             "is shown. Otherwise, progress is shown. Durability and remaining CP will be " +
