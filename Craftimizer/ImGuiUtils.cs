@@ -1,5 +1,6 @@
 using Craftimizer.Utils;
 using Dalamud.Interface;
+using Dalamud.Interface.ManagedFontAtlas;
 using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
 using ImPlotNET;
@@ -650,5 +651,17 @@ internal static class ImGuiUtils
             buttonWidth = ImGui.CalcTextSize(text).X + ImGui.GetStyle().FramePadding.X * 2;
         AlignCentered(buttonWidth);
         return ImGui.Button(text, buttonSize);
+    }
+
+    public static Vector2 CalcTextSize(this IFontHandle font, string text)
+    {
+        using (font.Push())
+            return ImGui.CalcTextSize(text);
+    }
+
+    public static void Text(this IFontHandle font, string text)
+    {
+        using (font.Push())
+            ImGui.TextUnformatted(text);
     }
 }

@@ -6,6 +6,7 @@ using Craftimizer.Utils;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.GameFonts;
+using Dalamud.Interface.ManagedFontAtlas;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
@@ -66,11 +67,11 @@ public sealed unsafe class SynthHelper : Window, IDisposable
     private Solver.Solver? HelperTaskObject { get; set; }
     private bool HelperTaskRunning => HelperTaskTokenSource != null;
 
-    private GameFontHandle AxisFont { get; }
+    private IFontHandle AxisFont { get; }
 
     public SynthHelper() : base("Craftimizer SynthHelper", WindowFlags)
     {
-        AxisFont = Service.PluginInterface.UiBuilder.GetGameFontHandle(new(GameFontFamilyAndSize.Axis14));
+        AxisFont = Service.PluginInterface.UiBuilder.FontAtlas.NewGameFontHandle(new(GameFontFamilyAndSize.Axis14));
 
         Service.Plugin.Hooks.OnActionUsed += OnUseAction;
 
@@ -267,7 +268,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
         using (var panel = ImRaii2.GroupPanel("Buffs", -1, out _))
         {
-            using var _font = ImRaii.PushFont(AxisFont.ImFont);
+            using var _font = AxisFont.Push();
 
             var iconHeight = ImGui.GetFrameHeight() * 1.75f;
             var durationShift = iconHeight * .2f;

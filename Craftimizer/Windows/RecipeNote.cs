@@ -11,6 +11,7 @@ using Dalamud.Interface.Colors;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.GameFonts;
 using Dalamud.Interface.Internal;
+using Dalamud.Interface.ManagedFontAtlas;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
@@ -69,7 +70,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
     private IDalamudTextureWrap SplendorousBadge { get; }
     private IDalamudTextureWrap SpecialistBadge { get; }
     private IDalamudTextureWrap NoManipulationBadge { get; }
-    private GameFontHandle AxisFont { get; }
+    private IFontHandle AxisFont { get; }
 
     public RecipeNote() : base("Craftimizer RecipeNote", WindowFlags)
     {
@@ -78,7 +79,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         SplendorousBadge = Service.IconManager.GetAssemblyTexture("Graphics.splendorous.png");
         SpecialistBadge = Service.IconManager.GetAssemblyTexture("Graphics.specialist.png");
         NoManipulationBadge = Service.IconManager.GetAssemblyTexture("Graphics.no_manip.png");
-        AxisFont = Service.PluginInterface.UiBuilder.GetGameFontHandle(new(GameFontFamilyAndSize.Axis14));
+        AxisFont = Service.PluginInterface.UiBuilder.FontAtlas.NewGameFontHandle(new(GameFontFamilyAndSize.Axis14));
 
         RespectCloseHotkey = false;
         DisableWindowSounds = true;
@@ -265,11 +266,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         var level = RecipeData!.ClassJob.GetPlayerLevel();
         {
             var textClassName = RecipeData.ClassJob.GetAbbreviation();
-            Vector2 textClassSize;
-            {
-                var layout = AxisFont.LayoutBuilder(textClassName).Build();
-                textClassSize = new(layout.Width, layout.Height);
-            }
+            var textClassSize = AxisFont.CalcTextSize(textClassName);
             var levelText = string.Empty;
             if (level != 0)
                 levelText = SqText.LevelPrefix.ToIconChar() + SqText.ToLevelString(level);
@@ -308,7 +305,6 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 ImGui.SameLine(0, 3);
             }
 
-            ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (imageSize - textClassSize.Y) / 2);
             AxisFont.Text(textClassName);
 
             if (hasSplendorous)
@@ -477,8 +473,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             var textStars = new string('★', RecipeData!.Table.Stars);
             var textStarsSize = Vector2.Zero;
             if (!string.IsNullOrEmpty(textStars)) {
-                var layout = AxisFont.LayoutBuilder(textStars).Build();
-                textStarsSize = new(layout.Width, layout.Height);
+                textStarsSize = AxisFont.CalcTextSize(textStars);
             }
             var textLevel = SqText.LevelPrefix.ToIconChar() + SqText.ToLevelString(RecipeData.RecipeInfo.ClassJobLevel);
             var isExpert = RecipeData.RecipeInfo.IsExpert;
@@ -507,7 +502,9 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             if (textStarsSize != Vector2.Zero)
             {
                 ImGui.SameLine(0, 3);
-                ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (imageSize - textStarsSize.Y) / 2);
+
+                // Aligns better
+                ImGui.SetCursorPosY(ImGui.GetCursorPosY() - 1);
                 AxisFont.Text(textStars);
             }
 

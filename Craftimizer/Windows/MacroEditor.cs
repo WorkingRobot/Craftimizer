@@ -10,6 +10,7 @@ using Dalamud.Interface.Colors;
 using Dalamud.Interface.GameFonts;
 using Dalamud.Interface.Internal;
 using Dalamud.Interface.Internal.Notifications;
+using Dalamud.Interface.ManagedFontAtlas;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Dalamud.Utility;
@@ -100,7 +101,7 @@ public sealed class MacroEditor : Window, IDisposable
     private IDalamudTextureWrap MedicatedBadge { get; }
     private IDalamudTextureWrap InControlBadge { get; }
     private IDalamudTextureWrap EatFromTheHandBadge { get; }
-    private GameFontHandle AxisFont { get; }
+    private IFontHandle AxisFont { get; }
 
     private string popupSaveAsMacroName = string.Empty;
 
@@ -135,7 +136,7 @@ public sealed class MacroEditor : Window, IDisposable
         MedicatedBadge = Service.IconManager.GetIcon(LuminaSheets.StatusSheet.GetRow(49)!.Icon);
         InControlBadge = Service.IconManager.GetIcon(LuminaSheets.StatusSheet.GetRow(356)!.Icon);
         EatFromTheHandBadge = Service.IconManager.GetIcon(LuminaSheets.StatusSheet.GetRow(357)!.Icon);
-        AxisFont = Service.PluginInterface.UiBuilder.GetGameFontHandle(new(GameFontFamilyAndSize.Axis14));
+        AxisFont = Service.PluginInterface.UiBuilder.FontAtlas.NewGameFontHandle(new(GameFontFamilyAndSize.Axis14));
 
         IsOpen = true;
 
@@ -212,11 +213,7 @@ public sealed class MacroEditor : Window, IDisposable
         ImGuiUtils.TextCentered("Crafter");
 
         var textClassName = RecipeData.ClassJob.GetAbbreviation();
-        Vector2 textClassSize;
-        {
-            var layout = AxisFont.LayoutBuilder(textClassName).Build();
-            textClassSize = new(layout.Width, layout.Height);
-        }
+        var textClassSize = AxisFont.CalcTextSize(textClassName);
 
         var imageSize = ImGui.GetFrameHeight();
         ImGuiUtils.AlignCentered(
@@ -709,10 +706,7 @@ public sealed class MacroEditor : Window, IDisposable
         var textStars = new string('★', RecipeData!.Table.Stars);
         var textStarsSize = Vector2.Zero;
         if (!string.IsNullOrEmpty(textStars))
-        {
-            var layout = AxisFont.LayoutBuilder(textStars).Build();
-            textStarsSize = new(layout.Width, layout.Height);
-        }
+            textStarsSize = AxisFont.CalcTextSize(textStars);
         var textLevel = SqText.LevelPrefix.ToIconChar() + SqText.ToLevelString(RecipeData.RecipeInfo.ClassJobLevel);
         var isExpert = RecipeData.RecipeInfo.IsExpert;
         var isCollectable = RecipeData.Recipe.ItemResult.Value!.IsCollectable;
@@ -735,11 +729,12 @@ public sealed class MacroEditor : Window, IDisposable
         ushort? newRecipe = null;
         {
             var recipe = RecipeData.Recipe;
+            using var fontHandle = AxisFont.Lock();
             if (ImGuiUtils.SearchableCombo(
                 "combo",
                 ref recipe,
                 LuminaSheets.RecipeSheet.Where(r => r.RecipeLevelTable.Row != 0 && r.ItemResult.Row != 0),
-                AxisFont.ImFont,
+                fontHandle.ImFont,
                 ImGui.GetContentRegionAvail().X - rightSideWidth,
                 r => r.ItemResult.Value!.Name.ToDalamudString().ToString(),
                 r => r.RowId.ToString(),
@@ -752,7 +747,7 @@ public sealed class MacroEditor : Window, IDisposable
                     var textLevelSize = ImGui.CalcTextSize(textLevel);
                     ImGui.SameLine();
 
-                    var imageSize = AxisFont.ImFont.FontSize;
+                    var imageSize = fontHandle.ImFont.FontSize;
                     ImGuiUtils.AlignRight(
                         imageSize + 5 +
                         textLevelSize.X,
@@ -766,7 +761,7 @@ public sealed class MacroEditor : Window, IDisposable
                     ImGui.SetCursorPosY(ImGui.GetCursorPosY() + ImGui.GetStyle().FramePadding.Y / 2);
                     ImGui.Image(Service.IconManager.GetIcon(classJob.GetIconId()).ImGuiHandle, new Vector2(imageSize), uv0, uv1);
                     ImGui.SameLine(0, 5);
-                    ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (AxisFont.ImFont.FontSize - textLevelSize.Y) / 2);
+                    ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (fontHandle.ImFont.FontSize - textLevelSize.Y) / 2);
                     ImGui.Text(textLevel);
                 }))
             {
@@ -782,7 +777,9 @@ public sealed class MacroEditor : Window, IDisposable
         if (textStarsSize != Vector2.Zero)
         {
             ImGui.SameLine(0, 3);
-            ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (imageSize - textStarsSize.Y) / 2);
+
+            // Aligns better
+            ImGui.SetCursorPosY(ImGui.GetCursorPosY() - 1);
             AxisFont.Text(textStars);
         }
 
@@ -1080,7 +1077,7 @@ public sealed class MacroEditor : Window, IDisposable
 
         using (var panel = ImRaii2.GroupPanel("Buffs", -1, out _))
         {
-            using var _font = ImRaii.PushFont(AxisFont.ImFont);
+            using var _font = AxisFont.Push();
 
             var iconHeight = ImGui.GetFrameHeight() * 1.75f;
             var durationShift = iconHeight * .2f;
