@@ -35,6 +35,7 @@ public sealed class Plugin : IDalamudPlugin
     public Hooks Hooks { get; }
     public Chat Chat { get; }
     public IconManager IconManager { get; }
+    public CommunityMacros CommunityMacros { get; }
 
     public Plugin([RequiredVersion("1.0")] DalamudPluginInterface pluginInterface)
     {
@@ -45,6 +46,7 @@ public sealed class Plugin : IDalamudPlugin
         Hooks = new();
         Chat = new();
         IconManager = new();
+        CommunityMacros = new();
 
         var assembly = Assembly.GetExecutingAssembly();
         Version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion.Split('+')[0];

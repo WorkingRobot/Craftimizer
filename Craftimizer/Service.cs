@@ -30,6 +30,7 @@ public sealed class Service
     public static WindowSystem WindowSystem => Plugin.WindowSystem;
     public static Chat Chat => Plugin.Chat;
     public static IconManager IconManager => Plugin.IconManager;
+    public static CommunityMacros CommunityMacros => Plugin.CommunityMacros;
 #pragma warning restore CS8618
 
     internal static void Initialize(Plugin plugin, DalamudPluginInterface iface)

@@ -109,7 +109,7 @@ public sealed class MacroEditor : Window, IDisposable
     private string popupImportUrl = string.Empty;
     private string popupImportError = string.Empty;
     private CancellationTokenSource? popupImportUrlTokenSource;
-    private MacroImport.RetrievedMacro? popupImportUrlMacro;
+    private CommunityMacros.CommunityMacro? popupImportUrlMacro;
 
     public MacroEditor(CharacterStats characterStats, RecipeData recipeData, CrafterBuffs buffs, IEnumerable<ActionType> actions, Action<IEnumerable<ActionType>>? setter) : base("Craftimizer Macro Editor", WindowFlags)
     {

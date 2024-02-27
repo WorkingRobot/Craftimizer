@@ -93,6 +93,8 @@ public class Configuration : IPluginConfiguration
     public bool DisableSynthHelperOnMacro { get; set; } = true;
     public bool ShowOptimalMacroStat { get; set; } = true;
     public bool SuggestMacroAutomatically { get; set; }
+    public bool ShowCommunityMacros { get; set; } = true;
+    public bool SearchCommunityMacroAutomatically { get; set; }
     public int SynthHelperStepCount { get; set; } = 5;
 
     public bool PinSynthHelperToWindow { get; set; } = true;

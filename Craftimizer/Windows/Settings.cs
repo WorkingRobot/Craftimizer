@@ -205,6 +205,30 @@ public sealed class Settings : Window, IDisposable
         );
 
         DrawOption(
+            "Enable Community Macros in Crafting Log",
+            "Use FFXIV Teamcraft's community rotations to search for and find the best possible" +
+            "crowd-sourced macro for your craft. This sends a request to their servers to retrieve " +
+            "a list of macros that apply to your craft's rlvl. Requests are only sent once per rlvl " +
+            "and are always cached to reduce server load.",
+            Config.ShowCommunityMacros,
+            v => Config.ShowCommunityMacros = v,
+            ref isDirty
+        );
+
+        if (Config.ShowCommunityMacros)
+        {
+            DrawOption(
+                "Automatically Search for Community Macro",
+                "When navigating to a new recipe or changing your gear stats, automatically search " +
+                "online for a new community macro.\n" +
+                "This is turned off by default so you don't hammer their servers :)",
+                Config.SearchCommunityMacroAutomatically,
+                v => Config.SearchCommunityMacroAutomatically = v,
+                ref isDirty
+            );
+        }
+
+        DrawOption(
             "Show Only One Macro Stat in Crafting Log",
             "Only one stat will be shown for a macro. If a craft will be finished, quality " +
             "is shown. Otherwise, progress is shown. Durability and remaining CP will be " +

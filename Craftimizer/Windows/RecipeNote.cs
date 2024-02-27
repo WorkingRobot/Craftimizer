@@ -83,10 +83,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         {
             var token = TokenSource.Token;
             var task = Task.Run(() => Result = Func(token), token);
-            _ = task.ContinueWith(t =>
-            {
-                Completed = true;
-            });
+            _ = task.ContinueWith(t => Completed = true);
             _ = task.ContinueWith(t =>
             {
                 if (token.IsCancellationRequested)
@@ -113,6 +110,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
     private BackgroundTask<(Macro?, SimulationState?)>? SavedMacroTask { get; set; }
     private BackgroundTask<SolverSolution>? SuggestedMacroTask { get; set; }
+    private BackgroundTask<(CommunityMacros.CommunityMacro?, SimulationState?)>? CommunityMacroTask { get; set; }
 
     private Solver.Solver? BestMacroSolver { get; set; }
     public bool HasSavedMacro { get; private set; }
@@ -168,17 +166,32 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             {
                 SavedMacroTask?.Cancel();
                 SuggestedMacroTask?.Cancel();
+                CommunityMacroTask?.Cancel();
             }
             else if (CraftStatus == CraftableStatus.OK)
             {
+                // If it didn't exist before or it already ran, we need to recalculate
                 if (SavedMacroTask?.Result == null && (SavedMacroTask?.Completed ?? true))
                     CalculateSavedMacro();
+
+                // If it didn't exist before or it already ran, we need to recalculate
                 if (Service.Configuration.SuggestMacroAutomatically && SuggestedMacroTask?.Result == null && (SuggestedMacroTask?.Completed ?? true))
                     CalculateSuggestedMacro();
+                // If we don't want to suggest automatically, we should cancel and clean out the task
                 else
                 {
                     SuggestedMacroTask?.Cancel();
                     SuggestedMacroTask = null;
+                }
+
+                // If it didn't exist before or it already ran, we need to recalculate
+                if (Service.Configuration.ShowCommunityMacros && Service.Configuration.SearchCommunityMacroAutomatically && CommunityMacroTask?.Result == null && (CommunityMacroTask?.Completed ?? true))
+                    CalculateCommunityMacro();
+                // If we don't want to search automatically, we should cancel and clean out the task
+                else
+                {
+                    CommunityMacroTask?.Cancel();
+                    CommunityMacroTask = null;
                 }
             }
         }
@@ -254,13 +267,27 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
         if (StatsChanged && CraftStatus == CraftableStatus.OK)
         {
+            // Stats changed and we are still craftable, so we need to recalculate
             CalculateSavedMacro();
+
+            // If we want to suggest automatically, we should recalculate
             if (Service.Configuration.SuggestMacroAutomatically)
                 CalculateSuggestedMacro();
+            // Otherwise, we should cancel and clean out the task
             else
             {
                 SuggestedMacroTask?.Cancel();
                 SuggestedMacroTask = null;
+            }
+            
+            // If we want to search automatically, we should recalculate
+            if (Service.Configuration.ShowCommunityMacros && Service.Configuration.SearchCommunityMacroAutomatically)
+                CalculateCommunityMacro();
+            // Otherwise, we should cancel and clean out the task
+            else
+            {
+                CommunityMacroTask?.Cancel();
+                CommunityMacroTask = null;
             }
         }
 
@@ -324,25 +351,53 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         ImGui.Separator();
 
         var panelWidth = availWidth - ImGui.GetStyle().ItemSpacing.X * 2;
-        using (var panel = ImRaii2.GroupPanel("Best Saved Macro", panelWidth, out _))
+
         {
-            var stepsPanelWidthOffset = ImGui.GetContentRegionAvail().X - panelWidth;
-            if (SavedMacroTask?.Result is { } savedMacro && savedMacro.Item1 != null && savedMacro.Item2 != null)
+            var macroTaskResult = SavedMacroTask?.Result;
+            var state = new MacroTaskState()
             {
-                ImGuiUtils.TextCentered(savedMacro.Item1.Name, panelWidth);
-                DrawMacro((savedMacro.Item1.Actions, savedMacro.Item2.Value), SavedMacroTask.Exception, null, a => { savedMacro.Item1.ActionEnumerable = a; Service.Configuration.Save(); }, stepsPanelWidthOffset, true);
-            }
-            else
-                DrawMacro(null, SavedMacroTask?.Exception, null, null, stepsPanelWidthOffset, true);
+                Type = MacroTaskType.Saved,
+                Exception = SavedMacroTask?.Exception,
+                Started = SavedMacroTask != null,
+                Completed = SavedMacroTask?.Completed ?? false,
+                Actions = macroTaskResult?.Item1?.Actions,
+                MacroName = macroTaskResult?.Item1?.Name,
+                State = macroTaskResult?.Item2,
+            };
+            if (macroTaskResult is { } macro && macro.Item1 is { } savedMacro)
+                state.MacroEditorSetter = a => { savedMacro.ActionEnumerable = a; Service.Configuration.Save(); };
+            DrawMacro(in state, panelWidth);
         }
 
-        using (var panel = ImRaii2.GroupPanel("Suggested Macro", panelWidth, out _))
         {
-            var stepsPanelWidthOffset = ImGui.GetContentRegionAvail().X - panelWidth;
-            if (SuggestedMacroTask?.Result is { } suggestedMacro)
-                DrawMacro((suggestedMacro.Actions, suggestedMacro.State), SuggestedMacroTask.Exception, null, null, stepsPanelWidthOffset, false);
-            else
-                DrawMacro(null, SuggestedMacroTask?.Exception, BestMacroSolver, null, stepsPanelWidthOffset, false);
+            var macroTaskResult = SuggestedMacroTask?.Result;
+            var state = new MacroTaskState()
+            {
+                Type = MacroTaskType.Suggested,
+                Exception = SuggestedMacroTask?.Exception,
+                Started = SuggestedMacroTask != null,
+                Completed = SuggestedMacroTask?.Completed ?? false,
+                Actions = macroTaskResult?.Actions,
+                State = macroTaskResult?.State,
+                Solver = BestMacroSolver,
+            };
+            DrawMacro(in state, panelWidth);
+        }
+
+        if (Service.Configuration.ShowCommunityMacros)
+        {
+            var macroTaskResult = CommunityMacroTask?.Result;
+            var state = new MacroTaskState()
+            {
+                Type = MacroTaskType.Community,
+                Exception = CommunityMacroTask?.Exception,
+                Started = CommunityMacroTask != null,
+                Completed = CommunityMacroTask?.Completed ?? false,
+                Actions = macroTaskResult?.Item1?.Actions,
+                MacroName = macroTaskResult?.Item1?.Name,
+                State = macroTaskResult?.Item2,
+            };
+            DrawMacro(in state, panelWidth);
         }
 
         ImGuiHelpers.ScaledDummy(5);
@@ -647,191 +702,270 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         }
     }
 
-    private void DrawMacro((IReadOnlyList<ActionType> Actions, SimulationState State)? macroValue, Exception? exception, Solver.Solver? solver, Action<IEnumerable<ActionType>>? setter, float stepsAvailWidthOffset, bool isSavedMacro)
+    private enum MacroTaskType
     {
+        Saved,
+        Suggested,
+        Community
+    }
+    private record struct MacroTaskState
+    {
+        public MacroTaskType Type;
+        public Exception? Exception;
+        public bool Started;
+        public bool Completed;
+        public IReadOnlyList<ActionType>? Actions;
+        public string? MacroName;
+        public SimulationState? State;
+        public Solver.Solver? Solver;
+        public Action<IEnumerable<ActionType>>? MacroEditorSetter;
+    }
+
+    private void DrawMacro(in MacroTaskState state, float panelWidth)
+    {
+        var panelTitle = state.Type switch
+        {
+            MacroTaskType.Saved => "Best Saved Macro",
+            MacroTaskType.Suggested => "Suggested Macro",
+            MacroTaskType.Community => "Best Community Macro",
+            _ => throw new ArgumentOutOfRangeException(nameof(state), "state.Type must have a valid type")
+        };
+
+        using var panel = ImRaii2.GroupPanel(panelTitle, panelWidth, out _);
+        if (!panel)
+            return;
+
+        var stepsAvailWidthOffset = ImGui.GetContentRegionAvail().X - panelWidth;
+
         var windowHeight = 2 * ImGui.GetFrameHeightWithSpacing();
 
-        if (macroValue is not { } macro)
+        if (!state.Started)
         {
-            if (isSavedMacro && !HasSavedMacro)
-                ImGuiUtils.TextMiddleNewLine("You have no macros!", new(ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset, windowHeight + 1));
-            else if (exception == null)
+            switch (state.Type)
             {
-                if (solver != null && SuggestedMacroTask != null)
-                {
-                    var calcTextSize = ImGui.CalcTextSize("Calculating...");
-                    var spacing = ImGui.GetStyle().ItemSpacing.X;
-                    var fraction = Math.Clamp((float)solver.ProgressValue / solver.ProgressMax, 0, 1);
-                    var progressColors = Colors.GetSolverProgressColors(solver.ProgressStage);
-
-                    var c = ImGui.GetCursorPos();
-                    ImGuiUtils.AlignCentered(windowHeight + spacing + calcTextSize.X, ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset);
-
-                    ImGuiUtils.ArcProgress(
-                        fraction,
-                        windowHeight / 2f,
-                        .5f,
-                        ImGui.ColorConvertFloat4ToU32(progressColors.Background),
-                        ImGui.ColorConvertFloat4ToU32(progressColors.Foreground));
-                    if (ImGui.IsItemHovered())
-                        ImGuiUtils.Tooltip($"Solver Progress: {solver.ProgressValue} / {solver.ProgressMax}");
-
-                    ImGui.SameLine(0, spacing);
-
-                    ImGuiUtils.AlignMiddle(calcTextSize, new(calcTextSize.X, windowHeight));
-                    ImGui.Text("Calculating...");
-                    ImGui.SetCursorPos(c + new Vector2(0, windowHeight + ImGui.GetStyle().ItemSpacing.Y - 1));
-                }
-                else
-                {
-                    using var _padding = ImRaii.PushStyle(ImGuiStyleVar.FramePadding, ImGui.GetStyle().FramePadding * 2);
-                    var size = ImGui.CalcTextSize("Generate") + ImGui.GetStyle().FramePadding * 2;
-                    var c = ImGui.GetCursorPos();
-                    var availSize = new Vector2(ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset, windowHeight);
-                    ImGuiUtils.AlignMiddle(size, availSize);
-                    using var _disabled = ImRaii.Disabled(!(SuggestedMacroTask?.Completed) ?? false);
-                    if (ImGui.Button("Generate"))
-                        CalculateSuggestedMacro();
-                    ImGui.SetCursorPos(c + new Vector2(0, availSize.Y + ImGui.GetStyle().ItemSpacing.Y - 1));
-                }
+                case MacroTaskType.Saved:
+                    throw new InvalidOperationException("Saved macro window should always be started or completed");
+                case MacroTaskType.Suggested:
+                    {
+                        using var _padding = ImRaii.PushStyle(ImGuiStyleVar.FramePadding, ImGui.GetStyle().FramePadding * 2);
+                        var size = ImGui.CalcTextSize("Generate") + ImGui.GetStyle().FramePadding * 2;
+                        var c = ImGui.GetCursorPos();
+                        var availSize = new Vector2(ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset, windowHeight);
+                        ImGuiUtils.AlignMiddle(size, availSize);
+                        if (ImGui.Button("Generate"))
+                            CalculateSuggestedMacro();
+                        ImGui.SetCursorPos(c + new Vector2(0, availSize.Y + ImGui.GetStyle().ItemSpacing.Y - 1));
+                        break;
+                    }
+                case MacroTaskType.Community:
+                    {
+                        using var _padding = ImRaii.PushStyle(ImGuiStyleVar.FramePadding, ImGui.GetStyle().FramePadding * 2);
+                        var size = ImGui.CalcTextSize("Search Online") + ImGui.GetStyle().FramePadding * 2;
+                        var c = ImGui.GetCursorPos();
+                        var availSize = new Vector2(ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset, windowHeight);
+                        ImGuiUtils.AlignMiddle(size, availSize);
+                        if (ImGui.Button("Search Online"))
+                            CalculateCommunityMacro();
+                        ImGui.SetCursorPos(c + new Vector2(0, availSize.Y + ImGui.GetStyle().ItemSpacing.Y - 1));
+                        break;
+                    }
             }
-            else
-            {
-                ImGui.AlignTextToFramePadding();
-                using (var color = ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudRed))
-                    ImGuiUtils.TextCentered("An exception occurred");
-                if (ImGuiUtils.ButtonCentered("Copy Error Message"))
-                    ImGui.SetClipboardText(exception.ToString());
-            }
-            return;
         }
-        if (macro.Actions.Any(a => a.Category() == ActionCategory.Combo))
-            throw new InvalidOperationException("Combo actions should be sanitized away");
-
-        using var table = ImRaii.Table("table", 3, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.SizingStretchSame);
-        if (table)
+        else if (!state.Completed)
         {
-            ImGui.TableSetupColumn("desc", ImGuiTableColumnFlags.WidthFixed, 0);
-            ImGui.TableSetupColumn("actions", ImGuiTableColumnFlags.WidthFixed, 0);
-            ImGui.TableSetupColumn("steps", ImGuiTableColumnFlags.WidthStretch);
-
-            ImGui.TableNextRow(ImGuiTableRowFlags.None, windowHeight);
-            ImGui.TableNextColumn();
-
-            var spacing = ImGui.GetStyle().ItemSpacing.Y;
-            var miniRowHeight = (windowHeight - spacing) / 2f;
-
+            switch (state.Type)
             {
-                if (Service.Configuration.ShowOptimalMacroStat)
-                {
-                    var progressHeight = windowHeight;
-                    if (macro.State.Progress >= macro.State.Input.Recipe.MaxProgress && macro.State.Input.Recipe.MaxQuality > 0)
+                case MacroTaskType.Saved:
+                    ImGuiUtils.TextMiddleNewLine("Calculating...", new(ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset, windowHeight + 1));
+                    break;
+                case MacroTaskType.Suggested:
                     {
+                        if (state.Solver is not { } solver)
+                            throw new ArgumentNullException(nameof(state), "Solver should not be null");
+
+                        var calcTextSize = ImGui.CalcTextSize("Calculating...");
+                        var spacing = ImGui.GetStyle().ItemSpacing.X;
+                        var fraction = Math.Clamp((float)solver.ProgressValue / solver.ProgressMax, 0, 1);
+                        var progressColors = Colors.GetSolverProgressColors(solver.ProgressStage);
+
+                        var c = ImGui.GetCursorPos();
+                        ImGuiUtils.AlignCentered(windowHeight + spacing + calcTextSize.X, ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset);
+
                         ImGuiUtils.ArcProgress(
-                        (float)macro.State.Quality / macro.State.Input.Recipe.MaxQuality,
-                        progressHeight / 2f,
-                        .5f,
-                        ImGui.GetColorU32(ImGuiCol.TableBorderLight),
-                        ImGui.GetColorU32(Colors.Quality));
+                            fraction,
+                            windowHeight / 2f + 2,
+                            .5f,
+                            ImGui.ColorConvertFloat4ToU32(progressColors.Background),
+                            ImGui.ColorConvertFloat4ToU32(progressColors.Foreground));
                         if (ImGui.IsItemHovered())
-                            ImGuiUtils.Tooltip($"Quality: {macro.State.Quality} / {macro.State.Input.Recipe.MaxQuality}");
-                    }
-                    else
-                    {
-                        ImGuiUtils.ArcProgress(
-                        (float)macro.State.Progress / macro.State.Input.Recipe.MaxProgress,
-                        progressHeight / 2f,
-                        .5f,
-                        ImGui.GetColorU32(ImGuiCol.TableBorderLight),
-                        ImGui.GetColorU32(Colors.Progress));
-                        if (ImGui.IsItemHovered())
-                            ImGuiUtils.Tooltip($"Progress: {macro.State.Progress} / {macro.State.Input.Recipe.MaxProgress}");
-                    }
-                }
-                else
-                {
-                    ImGuiUtils.ArcProgress(
-                        (float)macro.State.Progress / macro.State.Input.Recipe.MaxProgress,
-                        miniRowHeight / 2f,
-                        .5f,
-                        ImGui.GetColorU32(ImGuiCol.TableBorderLight),
-                        ImGui.GetColorU32(Colors.Progress));
-                    if (ImGui.IsItemHovered())
-                        ImGuiUtils.Tooltip($"Progress: {macro.State.Progress} / {macro.State.Input.Recipe.MaxProgress}");
+                            ImGuiUtils.Tooltip($"Solver Progress: {solver.ProgressValue} / {solver.ProgressMax}");
 
-                    ImGui.SameLine(0, spacing);
-                    ImGuiUtils.ArcProgress(
-                        (float)macro.State.Quality / macro.State.Input.Recipe.MaxQuality,
-                        miniRowHeight / 2f,
-                        .5f,
-                        ImGui.GetColorU32(ImGuiCol.TableBorderLight),
-                        ImGui.GetColorU32(Colors.Quality));
-                    if (ImGui.IsItemHovered())
-                        ImGuiUtils.Tooltip($"Quality: {macro.State.Quality} / {macro.State.Input.Recipe.MaxQuality}");
-
-                    ImGuiUtils.ArcProgress((float)macro.State.Durability / macro.State.Input.Recipe.MaxDurability,
-                        miniRowHeight / 2f,
-                        .5f,
-                        ImGui.GetColorU32(ImGuiCol.TableBorderLight),
-                        ImGui.GetColorU32(Colors.Durability));
-                    if (ImGui.IsItemHovered())
-                        ImGuiUtils.Tooltip($"Remaining Durability: {macro.State.Durability} / {macro.State.Input.Recipe.MaxDurability}");
-
-                    ImGui.SameLine(0, spacing);
-                    ImGuiUtils.ArcProgress(
-                        (float)macro.State.CP / macro.State.Input.Stats.CP,
-                        miniRowHeight / 2f,
-                        .5f,
-                        ImGui.GetColorU32(ImGuiCol.TableBorderLight),
-                        ImGui.GetColorU32(Colors.CP));
-                    if (ImGui.IsItemHovered())
-                        ImGuiUtils.Tooltip($"Remaining CP: {macro.State.CP} / {macro.State.Input.Stats.CP}");
-                }
-            }
-            
-            ImGui.TableNextColumn();
-            {
-                if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Edit, miniRowHeight))
-                    Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), macro.Actions, setter);
-                if (ImGui.IsItemHovered())
-                    ImGuiUtils.Tooltip("Open in Simulator");
-                if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Paste, miniRowHeight))
-                    Service.Plugin.CopyMacro(macro.Actions);
-                if (ImGui.IsItemHovered())
-                    ImGuiUtils.Tooltip("Copy to Clipboard");
-            }
-
-            ImGui.TableNextColumn();
-            {
-                var itemsPerRow = (int)MathF.Floor((ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset + spacing) / (miniRowHeight + spacing));
-                var itemCount = macro.Actions.Count;
-                for (var i = 0; i < itemsPerRow * 2; i++)
-                {
-                    if (i % itemsPerRow != 0)
                         ImGui.SameLine(0, spacing);
-                    if (i < itemCount)
+
+                        ImGuiUtils.AlignMiddle(calcTextSize, new(calcTextSize.X, windowHeight));
+                        ImGui.Text("Calculating...");
+                        ImGui.SetCursorPos(c + new Vector2(0, windowHeight + ImGui.GetStyle().ItemSpacing.Y - 1));
+                        break;
+                    }
+                case MacroTaskType.Community:
+                    ImGuiUtils.TextMiddleNewLine("Searching...", new(ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset, windowHeight + 1));
+                    break;
+            }
+        }
+        else if (state.Exception != null)
+        {
+            ImGui.AlignTextToFramePadding();
+            using (var color = ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudRed))
+                ImGuiUtils.TextCentered("An exception occurred");
+            if (ImGuiUtils.ButtonCentered("Copy Error Message"))
+                ImGui.SetClipboardText(state.Exception.ToString());
+        }
+        else if (state.Actions is not { } actions || state.State is not { } simState)
+        {
+            switch (state.Type)
+            {
+                case MacroTaskType.Saved:
+                    ImGuiUtils.TextMiddleNewLine("You have no macros!", new(ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset, windowHeight + 1));
+                    break;
+                case MacroTaskType.Suggested:
+                    throw new ArgumentNullException(nameof(state), "Actions or State should not be null");
+                case MacroTaskType.Community:
+                    ImGuiUtils.TextMiddleNewLine("No macros found!", new(ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset, windowHeight + 1));
+                    break;
+            }
+        }
+        else
+        {
+            if (actions.Any(a => a.Category() == ActionCategory.Combo))
+                throw new InvalidOperationException("Combo actions should be sanitized away");
+
+            if (state.MacroName is { } macroName)
+                ImGuiUtils.TextCentered(macroName, panelWidth);
+
+            using var table = ImRaii.Table("table", 3, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.SizingStretchSame);
+            if (table)
+            {
+                ImGui.TableSetupColumn("desc", ImGuiTableColumnFlags.WidthFixed, 0);
+                ImGui.TableSetupColumn("actions", ImGuiTableColumnFlags.WidthFixed, 0);
+                ImGui.TableSetupColumn("steps", ImGuiTableColumnFlags.WidthStretch);
+
+                ImGui.TableNextRow(ImGuiTableRowFlags.None, windowHeight);
+                ImGui.TableNextColumn();
+
+                var spacing = ImGui.GetStyle().ItemSpacing.Y;
+                var miniRowHeight = (windowHeight - spacing) / 2f;
+
+                {
+                    if (Service.Configuration.ShowOptimalMacroStat)
                     {
-                        var shouldShowMore = i + 1 == itemsPerRow * 2 && i + 1 < itemCount;
-                        if (!shouldShowMore)
+                        var progressHeight = windowHeight;
+                        if (simState.Progress >= simState.Input.Recipe.MaxProgress && simState.Input.Recipe.MaxQuality > 0)
                         {
-                            ImGui.Image(macro.Actions[i].GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(miniRowHeight));
+                            ImGuiUtils.ArcProgress(
+                            (float)simState.Quality / simState.Input.Recipe.MaxQuality,
+                            progressHeight / 2f,
+                            .5f,
+                            ImGui.GetColorU32(ImGuiCol.TableBorderLight),
+                            ImGui.GetColorU32(Colors.Quality));
                             if (ImGui.IsItemHovered())
-                                ImGuiUtils.Tooltip(macro.Actions[i].GetName(RecipeData!.ClassJob));
+                                ImGuiUtils.Tooltip($"Quality: {simState.Quality} / {simState.Input.Recipe.MaxQuality}");
                         }
                         else
                         {
-                            var amtMore = itemCount - itemsPerRow * 2;
-                            var pos = ImGui.GetCursorPos();
-                            ImGui.Image(macro.Actions[i].GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(miniRowHeight), default, Vector2.One, new(1, 1, 1, .5f));
+                            ImGuiUtils.ArcProgress(
+                            (float)simState.Progress / simState.Input.Recipe.MaxProgress,
+                            progressHeight / 2f,
+                            .5f,
+                            ImGui.GetColorU32(ImGuiCol.TableBorderLight),
+                            ImGui.GetColorU32(Colors.Progress));
                             if (ImGui.IsItemHovered())
-                                ImGuiUtils.Tooltip($"{macro.Actions[i].GetName(RecipeData!.ClassJob)}\nand {amtMore} more");
-                            ImGui.SetCursorPos(pos);
-                            ImGui.GetWindowDrawList().AddRectFilled(ImGui.GetCursorScreenPos(), ImGui.GetCursorScreenPos() + new Vector2(miniRowHeight), ImGui.GetColorU32(ImGuiCol.FrameBg), miniRowHeight / 8f);
-                            ImGui.GetWindowDrawList().AddTextClippedEx(ImGui.GetCursorScreenPos(), ImGui.GetCursorScreenPos() + new Vector2(miniRowHeight), $"+{amtMore}", null, new(.5f), null);
+                                ImGuiUtils.Tooltip($"Progress: {simState.Progress} / {simState.Input.Recipe.MaxProgress}");
                         }
                     }
                     else
-                        ImGui.Dummy(new(miniRowHeight));
+                    {
+                        ImGuiUtils.ArcProgress(
+                        (float)simState.Progress / simState.Input.Recipe.MaxProgress,
+                            miniRowHeight / 2f,
+                            .5f,
+                            ImGui.GetColorU32(ImGuiCol.TableBorderLight),
+                            ImGui.GetColorU32(Colors.Progress));
+                        if (ImGui.IsItemHovered())
+                            ImGuiUtils.Tooltip($"Progress: {simState.Progress} / {simState.Input.Recipe.MaxProgress}");
+
+                        ImGui.SameLine(0, spacing);
+                        ImGuiUtils.ArcProgress(
+                        (float)simState.Quality / simState.Input.Recipe.MaxQuality,
+                            miniRowHeight / 2f,
+                            .5f,
+                            ImGui.GetColorU32(ImGuiCol.TableBorderLight),
+                            ImGui.GetColorU32(Colors.Quality));
+                        if (ImGui.IsItemHovered())
+                            ImGuiUtils.Tooltip($"Quality: {simState.Quality} / {simState.Input.Recipe.MaxQuality}");
+                        ImGuiUtils.ArcProgress((float)simState.Durability / simState.Input.Recipe.MaxDurability,
+                        miniRowHeight / 2f,
+                            .5f,
+                            ImGui.GetColorU32(ImGuiCol.TableBorderLight),
+                            ImGui.GetColorU32(Colors.Durability));
+                        if (ImGui.IsItemHovered())
+                            ImGuiUtils.Tooltip($"Remaining Durability: {simState.Durability} / {simState.Input.Recipe.MaxDurability}");
+
+                        ImGui.SameLine(0, spacing);
+                        ImGuiUtils.ArcProgress(
+                        (float)simState.CP / simState.Input.Stats.CP,
+                            miniRowHeight / 2f,
+                            .5f,
+                            ImGui.GetColorU32(ImGuiCol.TableBorderLight),
+                            ImGui.GetColorU32(Colors.CP));
+                        if (ImGui.IsItemHovered())
+                            ImGuiUtils.Tooltip($"Remaining CP: {simState.CP} / {simState.Input.Stats.CP}");
+                    }
+                }
+
+                ImGui.TableNextColumn();
+                {
+                    if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Edit, miniRowHeight))
+                        Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), actions, state.MacroEditorSetter);
+                    if (ImGui.IsItemHovered())
+                        ImGuiUtils.Tooltip("Open in Simulator");
+                    if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Paste, miniRowHeight))
+                        Service.Plugin.CopyMacro(actions);
+                    if (ImGui.IsItemHovered())
+                        ImGuiUtils.Tooltip("Copy to Clipboard");
+                }
+
+                ImGui.TableNextColumn();
+                {
+                    var itemsPerRow = (int)MathF.Floor((ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset + spacing) / (miniRowHeight + spacing));
+                    var itemCount = actions.Count;
+                    for (var i = 0; i < itemsPerRow * 2; i++)
+                    {
+                        if (i % itemsPerRow != 0)
+                            ImGui.SameLine(0, spacing);
+                        if (i < itemCount)
+                        {
+                            var shouldShowMore = i + 1 == itemsPerRow * 2 && i + 1 < itemCount;
+                            if (!shouldShowMore)
+                            {
+                                ImGui.Image(actions[i].GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(miniRowHeight));
+                                if (ImGui.IsItemHovered())
+                                    ImGuiUtils.Tooltip(actions[i].GetName(RecipeData!.ClassJob));
+                            }
+                            else
+                            {
+                                var amtMore = itemCount - itemsPerRow * 2;
+                                var pos = ImGui.GetCursorPos();
+                                ImGui.Image(actions[i].GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(miniRowHeight), default, Vector2.One, new(1, 1, 1, .5f));
+                                if (ImGui.IsItemHovered())
+                                    ImGuiUtils.Tooltip($"{actions[i].GetName(RecipeData!.ClassJob)}\nand {amtMore} more");
+                                ImGui.SetCursorPos(pos);
+                                ImGui.GetWindowDrawList().AddRectFilled(ImGui.GetCursorScreenPos(), ImGui.GetCursorScreenPos() + new Vector2(miniRowHeight), ImGui.GetColorU32(ImGuiCol.FrameBg), miniRowHeight / 8f);
+                                ImGui.GetWindowDrawList().AddTextClippedEx(ImGui.GetCursorScreenPos(), ImGui.GetCursorScreenPos() + new Vector2(miniRowHeight), $"+{amtMore}", null, new(.5f), null);
+                            }
+                        }
+                        else
+                            ImGui.Dummy(new(miniRowHeight));
+                    }
                 }
             }
         }
@@ -947,20 +1081,12 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
             token.ThrowIfCancellationRequested();
 
-            HasSavedMacro = macros.Count > 0;
-            if (!HasSavedMacro)
+            if (macros.Count == 0)
                 return (null, null);
             var bestSaved = macros
                 .Select(macro =>
                 {
-                    var (resp, outState, failedIdx) = simulator.ExecuteMultiple(state, macro.Actions);
-                    outState.ActionCount = macro.Actions.Count;
-                    var score = SimulationNode.CalculateScoreForState(outState, simulator.CompletionState, mctsConfig) ?? 0;
-                    if (resp != ActionResponse.SimulationComplete)
-                    {
-                        if (failedIdx != -1)
-                            score /= 2;
-                    }
+                    var (score, outState) = CommunityMacros.CommunityMacro.CalculateScore(macro.Actions, simulator, in state, in mctsConfig);
                     return (macro, outState, score);
                 })
                 .MaxBy(m => m.score);
@@ -996,10 +1122,42 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         SuggestedMacroTask.Start();
     }
 
+    public void CalculateCommunityMacro()
+    {
+        CommunityMacroTask?.Cancel();
+        CommunityMacroTask = new(token =>
+        {
+            var input = new SimulationInput(CharacterStats!, RecipeData!.RecipeInfo);
+            var state = new SimulationState(input);
+            var config = Service.Configuration.SimulatorSolverConfig;
+            var mctsConfig = new MCTSConfig(config);
+            var simulator = new SimulatorNoRandom();
+            var macros = Service.CommunityMacros.RetrieveRotations(input.Recipe.RLvl, token).GetAwaiter().GetResult();
+
+            token.ThrowIfCancellationRequested();
+
+            if (macros.Count == 0)
+                return (null, null);
+            var bestSaved = macros
+                .Select(macro =>
+                {
+                    var (score, outState) = CommunityMacros.CommunityMacro.CalculateScore(macro.Actions, simulator, in state, in mctsConfig);
+                    return (macro, outState, score);
+                })
+                .MaxBy(m => m.score);
+
+            token.ThrowIfCancellationRequested();
+
+            return (bestSaved.macro, bestSaved.outState);
+        });
+        CommunityMacroTask.Start();
+    }
+
     public void Dispose()
     {
-        SavedMacroTask?.Cancel();
-        SuggestedMacroTask?.Cancel();
+        SavedMacroTask?.Dispose();
+        SuggestedMacroTask?.Dispose();
+        CommunityMacroTask?.Dispose();
         Service.WindowSystem.RemoveWindow(this);
         AxisFont?.Dispose();
     }
