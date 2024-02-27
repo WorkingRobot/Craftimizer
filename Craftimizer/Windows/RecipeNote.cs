@@ -168,7 +168,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 SuggestedMacroTask?.Cancel();
                 CommunityMacroTask?.Cancel();
             }
-            else if (CraftStatus == CraftableStatus.OK)
+            else if (CraftStatus == CraftableStatus.OK && !StatsChanged)
             {
                 // If it didn't exist before or it already ran, we need to recalculate
                 if (SavedMacroTask?.Result == null && (SavedMacroTask?.Completed ?? true))
