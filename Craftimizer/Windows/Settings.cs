@@ -1,6 +1,7 @@
 using Craftimizer.Solver;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
+using Dalamud.Interface.ManagedFontAtlas;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
@@ -23,9 +24,15 @@ public sealed class Settings : Window, IDisposable
 
     private string? SelectedTab { get; set; }
 
+    private IFontHandle HeaderFont { get; }
+    private IFontHandle SubheaderFont { get; }
+
     public Settings() : base("Craftimizer Settings", WindowFlags)
     {
         Service.WindowSystem.AddWindow(this);
+
+        HeaderFont = Service.PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(e => e.OnPreBuild(tk => tk.AddDalamudDefaultFont(UiBuilder.DefaultFontSizePx * 2f)));
+        SubheaderFont = Service.PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(e => e.OnPreBuild(tk => tk.AddDalamudDefaultFont(UiBuilder.DefaultFontSizePx * 1.5f)));
 
         SizeConstraints = new WindowSizeConstraints()
         {
@@ -765,7 +772,18 @@ public sealed class Settings : Window, IDisposable
                 ImGui.Image(icon.ImGuiHandle, new(icon.Width, icon.Height));
 
                 ImGui.TableNextColumn();
-                ImGui.Text($"Craftimizer v{plugin.Version} {plugin.BuildConfiguration}");
+                ImGuiUtils.AlignMiddle(new(float.PositiveInfinity, HeaderFont.GetFontSize() + SubheaderFont.GetFontSize() + ImGui.GetFontSize() + ImGui.GetStyle().ItemSpacing.Y * 2), new(0, icon.Height));
+
+                using (HeaderFont.Push())
+                {
+                    ImGuiUtils.AlignCentered(ImGui.CalcTextSize("Craftimizer").X);
+                    ImGuiUtils.Hyperlink("Craftimizer", "https://github.com/WorkingRobot/craftimizer", false);
+                }
+
+                using (SubheaderFont.Push())
+                    ImGuiUtils.TextCentered($"v{plugin.Version} {plugin.BuildConfiguration}");
+
+                ImGuiUtils.AlignCentered(ImGui.CalcTextSize($"By {plugin.Author} (WorkingRobot)").X);
                 ImGui.Text($"By {plugin.Author} (");
                 ImGui.SameLine(0, 0);
                 ImGuiUtils.Hyperlink("WorkingRobot", "https://github.com/WorkingRobot");
@@ -774,15 +792,34 @@ public sealed class Settings : Window, IDisposable
             }
         }
 
-        ImGui.Text("Credit to altosock's ");
+        ImGui.Separator();
+
+        using (SubheaderFont.Push())
+            ImGuiUtils.TextCentered("Special Thanks");
+
+        var startPosX = ImGui.GetCursorPosX();
+
+        ImGuiUtils.TextWrappedTo("Thank you to ");
+        ImGui.SameLine(0, 0);
+        ImGuiUtils.Hyperlink("alostsock", "https://github.com/alostsock");
+        ImGui.SameLine(0, 0);
+        ImGuiUtils.TextWrappedTo(" for making ");
         ImGui.SameLine(0, 0);
         ImGuiUtils.Hyperlink("Craftingway", "https://craftingway.app");
         ImGui.SameLine(0, 0);
-        ImGui.Text(" for the original solver algorithm");
+        ImGuiUtils.TextWrappedTo(" and the original solver algorithm");
+
+        ImGuiUtils.TextWrappedTo("Thank you to ");
+        ImGui.SameLine(0, 0);
+        ImGuiUtils.Hyperlink("FFXIV Teamcraft", "https://ffxivteamcraft.com");
+        ImGui.SameLine(0, 0);
+        ImGuiUtils.TextWrappedTo(" and its users for their community rotations");
     }
 
     public void Dispose()
     {
         Service.WindowSystem.RemoveWindow(this);
+        SubheaderFont?.Dispose();
+        HeaderFont?.Dispose();
     }
 }

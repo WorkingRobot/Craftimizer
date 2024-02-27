@@ -588,15 +588,49 @@ internal static class ImGuiUtils
 
     public static void Tooltip(string text)
     {
+        using var _font = ImRaii.PushFont(UiBuilder.DefaultFont);
         using var _tooltip = ImRaii.Tooltip();
         ImGui.TextUnformatted(text);
     }
 
     public static void TooltipWrapped(string text, float width = 300)
     {
+        using var _font = ImRaii.PushFont(UiBuilder.DefaultFont);
         using var _tooltip = ImRaii.Tooltip();
         using var _wrap = ImRaii2.TextWrapPos(width);
         ImGui.TextUnformatted(text);
+    }
+
+    public static void TextWrappedTo(string text, float wrapPosX = default, float basePosX = default)
+    {
+        var font = ImGui.GetFont();
+
+        var currentPos = ImGui.GetCursorPosX();
+
+        if (basePosX == default)
+            basePosX = ImGui.GetCursorStartPos().X;
+
+        float currentWrapWidth;
+        if (wrapPosX == default)
+            currentWrapWidth = ImGui.GetContentRegionAvail().X;
+        else
+            currentWrapWidth = wrapPosX - currentPos;
+
+        var textBuf = text.AsSpan();
+        var lineSize = font.CalcWordWrapPositionA(1, textBuf, currentWrapWidth) ?? textBuf.Length;
+        var lineBuf = textBuf[..lineSize];
+        ImGui.Text(lineBuf.ToString());
+        var remainingBuf = textBuf[lineSize..];
+
+        while (!remainingBuf.IsEmpty && char.IsWhiteSpace(remainingBuf[0]))
+            remainingBuf = remainingBuf[1..];
+
+        if (!remainingBuf.IsEmpty)
+        {
+            ImGui.SetCursorPosX(basePosX);
+            using (ImRaii2.TextWrapPos(wrapPosX))
+                ImGui.TextWrapped(remainingBuf.ToString());
+        }
     }
 
     public static void AlignCentered(float width, float availWidth = default)
@@ -655,6 +689,12 @@ internal static class ImGuiUtils
             buttonWidth = ImGui.CalcTextSize(text).X + ImGui.GetStyle().FramePadding.X * 2;
         AlignCentered(buttonWidth);
         return ImGui.Button(text, buttonSize);
+    }
+
+    public static float GetFontSize(this IFontHandle font)
+    {
+        using (font.Push())
+            return ImGui.GetFontSize();
     }
 
     public static Vector2 CalcTextSize(this IFontHandle font, string text)

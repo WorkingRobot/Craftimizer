@@ -172,6 +172,36 @@ internal static unsafe class ImGuiExtras
     public static unsafe ImGuiItemFlags GetItemFlags() =>
         igGetItemFlags();
 
+    public static unsafe int? CalcWordWrapPositionA(this ImFontPtr font, float scale, ReadOnlySpan<char> text, float wrap_width)
+    {
+        var utf8TextByteCount = Encoding.UTF8.GetByteCount(text);
+        byte* utf8TextBytes;
+        if (utf8TextByteCount > StackAllocationSizeLimit)
+        {
+            utf8TextBytes = Allocate(utf8TextByteCount + 1);
+        }
+        else
+        {
+            var stackPtr = stackalloc byte[utf8TextByteCount + 1];
+            utf8TextBytes = stackPtr;
+        }
+        GetUtf8(text, utf8TextBytes, utf8TextByteCount);
+
+        var ret = ImGuiNative.ImFont_CalcWordWrapPositionA(font.NativePtr, scale, utf8TextBytes, utf8TextBytes + utf8TextByteCount, wrap_width);
+
+        int? retVal = null;
+        if (utf8TextBytes <= ret && ret <= utf8TextBytes + utf8TextByteCount)
+        {
+            var retIndex = (int)(ret - utf8TextBytes);
+            retVal = Encoding.UTF8.GetCharCount(utf8TextBytes, retIndex);
+        }
+
+        if (utf8TextByteCount > StackAllocationSizeLimit)
+            Free(utf8TextBytes);
+
+        return retVal;
+    }
+
     public static unsafe bool SetDragDropPayload<T>(string type, T data) where T : unmanaged =>
         ImGui.SetDragDropPayload(type, (nint)(&data), (uint)sizeof(T));
 
