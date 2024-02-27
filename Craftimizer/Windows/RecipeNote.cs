@@ -395,6 +395,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 Completed = CommunityMacroTask?.Completed ?? false,
                 Actions = macroTaskResult?.Item1?.Actions,
                 MacroName = macroTaskResult?.Item1?.Name,
+                MacroUrl = macroTaskResult?.Item1?.Url,
                 State = macroTaskResult?.Item2,
             };
             DrawMacro(in state, panelWidth);
@@ -716,6 +717,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         public bool Completed;
         public IReadOnlyList<ActionType>? Actions;
         public string? MacroName;
+        public string? MacroUrl;
         public SimulationState? State;
         public Solver.Solver? Solver;
         public Action<IEnumerable<ActionType>>? MacroEditorSetter;
@@ -840,7 +842,17 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 throw new InvalidOperationException("Combo actions should be sanitized away");
 
             if (state.MacroName is { } macroName)
-                ImGuiUtils.TextCentered(macroName, panelWidth);
+            {
+                if (state.MacroUrl is { } macroUrl)
+                {
+                    ImGuiUtils.AlignCentered(ImGui.CalcTextSize(macroName).X, panelWidth);
+                    ImGuiUtils.Hyperlink(macroName, macroUrl, false);
+                }
+                else
+                {
+                    ImGuiUtils.TextCentered(macroName, panelWidth);
+                }
+            }
 
             using var table = ImRaii.Table("table", 3, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.SizingStretchSame);
             if (table)

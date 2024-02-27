@@ -190,6 +190,8 @@ public sealed class CommunityMacros
             public MapValue<RecipeFieldData>? Recipe { get; set; }
         }
 
+        public string? Name { get; set; }
+
         public FieldData? Fields { get; set; }
 
         public ErrorData? Error { get; set; }
@@ -230,6 +232,7 @@ public sealed class CommunityMacros
     public sealed record CommunityMacro
     {
         public string Name { get; }
+        public string? Url { get; }
         public IReadOnlyList<ActionType> Actions { get; }
 
         public CommunityMacro(TeamcraftMacro macro)
@@ -291,6 +294,16 @@ public sealed class CommunityMacros
             }
 
             Actions = actions;
+
+            if (!string.IsNullOrEmpty(macro.Name))
+            {
+                if (Uri.TryCreate(macro.Name, UriKind.Relative, out var uri))
+                {
+                    var rotationId = macro.Name.Split('/')[^1];
+                    if (!string.IsNullOrEmpty(rotationId))
+                        Url = $"https://ffxivteamcraft.com/simulator/custom/{rotationId}";
+                }
+            }
         }
 
         public CommunityMacro(CraftingwayMacro macro)

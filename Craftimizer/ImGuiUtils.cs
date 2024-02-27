@@ -569,16 +569,20 @@ internal static class ImGuiUtils
     }
 
     // https://gist.github.com/dougbinks/ef0962ef6ebe2cadae76c4e9f0586c69#file-imguiutils-h-L228
-    public static unsafe void Hyperlink(string text, string url)
+    public static unsafe void Hyperlink(string text, string url, bool underline = true)
     {
         ImGui.TextUnformatted(text);
-        UnderlineLastItem(*ImGui.GetStyleColorVec4(ImGuiCol.Text));
+        if (underline)
+            UnderlineLastItem(*ImGui.GetStyleColorVec4(ImGuiCol.Text));
         if (ImGui.IsItemHovered())
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
             if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
                 Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
-            Tooltip("Open in Browser");
+            var urlWithoutScheme = url;
+            if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
+                urlWithoutScheme = uri.Host + (string.Equals(uri.PathAndQuery, "/", StringComparison.Ordinal) ? string.Empty : uri.PathAndQuery);
+            Tooltip(urlWithoutScheme);
         }
     }
 
