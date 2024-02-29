@@ -10,8 +10,41 @@ public class ActionSetTests
     [TestMethod]
     public void TestActionPoolSize()
     {
-        Assert.AreEqual(ActionPool.EnumSize, Enum.GetValues<ActionType>().Length);
         Assert.AreEqual(ActionPool.MaskSize, Unsafe.SizeOf<ActionSet>() * 8);
+    }
+
+    [TestMethod]
+    public void TestActionPoolConstructor()
+    {
+        CollectionAssert.AreEquivalent(new ActionType[]
+        {
+            ActionType.StandardTouchCombo,
+            ActionType.AdvancedTouchCombo,
+            ActionType.FocusedTouchCombo,
+            ActionType.FocusedSynthesisCombo,
+            ActionType.TrainedFinesse,
+            ActionType.PrudentSynthesis,
+            ActionType.Groundwork,
+            ActionType.AdvancedTouch,
+            ActionType.CarefulSynthesis,
+            ActionType.TrainedEye,
+            ActionType.DelicateSynthesis,
+            ActionType.PreparatoryTouch,
+            ActionType.Reflect,
+            ActionType.PrudentTouch,
+            ActionType.Manipulation,
+            ActionType.MuscleMemory,
+            ActionType.ByregotsBlessing,
+            ActionType.WasteNot2,
+            ActionType.BasicSynthesis,
+            ActionType.Innovation,
+            ActionType.GreatStrides,
+            ActionType.StandardTouch,
+            ActionType.Veneration,
+            ActionType.WasteNot,
+            ActionType.MastersMend,
+            ActionType.BasicTouch,
+        }, pool.AcceptedActions);
     }
 
     [TestMethod]
@@ -19,7 +52,7 @@ public class ActionSetTests
     {
         foreach (var i in Enum.GetValues<ActionType>())
         {
-            byte idx;
+            int idx;
             try
             {
                 idx = pool.FromAction(i);
@@ -101,18 +134,18 @@ public class ActionSetTests
 
         Assert.AreEqual(4, set.Count);
 
-        Assert.AreEqual(ActionType.DelicateSynthesis, set.ElementAt(in pool, 0));
-        Assert.AreEqual(ActionType.Reflect, set.ElementAt(in pool, 1));
-        Assert.AreEqual(ActionType.ByregotsBlessing, set.ElementAt(in pool, 2));
-        Assert.AreEqual(ActionType.BasicSynthesis, set.ElementAt(in pool, 3));
+        Assert.AreEqual(ActionType.BasicSynthesis, set.ElementAt(in pool, 0));
+        Assert.AreEqual(ActionType.ByregotsBlessing, set.ElementAt(in pool, 1));
+        Assert.AreEqual(ActionType.DelicateSynthesis, set.ElementAt(in pool, 2));
+        Assert.AreEqual(ActionType.Reflect, set.ElementAt(in pool, 3));
 
         set.RemoveAction(in pool, ActionType.Reflect);
 
         Assert.AreEqual(3, set.Count);
 
-        Assert.AreEqual(ActionType.DelicateSynthesis, set.ElementAt(in pool, 0));
+        Assert.AreEqual(ActionType.BasicSynthesis, set.ElementAt(in pool, 0));
         Assert.AreEqual(ActionType.ByregotsBlessing, set.ElementAt(in pool, 1));
-        Assert.AreEqual(ActionType.BasicSynthesis, set.ElementAt(in pool, 2));
+        Assert.AreEqual(ActionType.DelicateSynthesis, set.ElementAt(in pool, 2));
     }
 
     [TestMethod]

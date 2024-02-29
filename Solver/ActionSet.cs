@@ -34,7 +34,7 @@ public struct ActionSet
     public readonly bool HasAction(in ActionPool pool, ActionType action) => (bits & pool.ToMask(action)) != 0;
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ActionType ElementAt(in ActionPool pool, int index) => pool.ToAction((byte)(Intrinsics.NthBitSet(bits, index) - 1));
+    public readonly ActionType ElementAt(in ActionPool pool, int index) => pool.ToAction(Intrinsics.NthBitSet(bits, index) - 1);
 
     [Pure]
     public readonly int Count => BitOperations.PopCount(bits);
