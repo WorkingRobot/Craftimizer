@@ -21,6 +21,8 @@ public readonly record struct MCTSConfig
     public float ScoreCP { get; init; }
     public float ScoreSteps { get; init; }
 
+    public ActionPool ActionPool { get; init; }
+
     public MCTSConfig(in SolverConfig config)
     {
         MaxStepCount = config.MaxStepCount;
@@ -36,5 +38,7 @@ public readonly record struct MCTSConfig
         ScoreDurability = config.ScoreDurability;
         ScoreCP = config.ScoreCP;
         ScoreSteps = config.ScoreSteps;
+
+        ActionPool = config.ActionPool;
     }
 }

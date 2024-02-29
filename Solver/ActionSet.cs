@@ -7,75 +7,13 @@ namespace Craftimizer.Solver;
 
 public struct ActionSet
 {
-    private uint bits;
-
-    internal static ReadOnlySpan<ActionType> AcceptedActions => new[]
-    {
-        ActionType.StandardTouchCombo,
-        ActionType.AdvancedTouchCombo,
-        ActionType.FocusedTouchCombo,
-        ActionType.FocusedSynthesisCombo,
-        ActionType.TrainedFinesse,
-        ActionType.PrudentSynthesis,
-        ActionType.Groundwork,
-        ActionType.AdvancedTouch,
-        ActionType.CarefulSynthesis,
-        ActionType.TrainedEye,
-        ActionType.DelicateSynthesis,
-        ActionType.PreparatoryTouch,
-        ActionType.Reflect,
-        ActionType.PrudentTouch,
-        ActionType.Manipulation,
-        ActionType.MuscleMemory,
-        ActionType.ByregotsBlessing,
-        ActionType.WasteNot2,
-        ActionType.BasicSynthesis,
-        ActionType.Innovation,
-        ActionType.GreatStrides,
-        ActionType.StandardTouch,
-        ActionType.Veneration,
-        ActionType.WasteNot,
-        ActionType.MastersMend,
-        ActionType.BasicTouch,
-    };
-
-    public static readonly int[] AcceptedActionsLUT;
-
-    static ActionSet()
-    {
-        AcceptedActionsLUT = new int[Enum.GetValues<ActionType>().Length];
-        for (var i = 0; i < AcceptedActionsLUT.Length; i++)
-            AcceptedActionsLUT[i] = -1;
-        for (var i = 0; i < AcceptedActions.Length; i++)
-            AcceptedActionsLUT[(byte)AcceptedActions[i]] = i;
-    }
-
-    [Pure]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int FromAction(ActionType action)
-    {
-        var ret = AcceptedActionsLUT[(byte)action];
-        if (ret == -1)
-            throw new ArgumentOutOfRangeException(nameof(action), action, $"Action {action} is unsupported in {nameof(ActionSet)}.");
-        return ret;
-    }
-    [Pure]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ActionType ToAction(int index)
-    {
-        if (index < 0 || index >= AcceptedActions.Length)
-            throw new ArgumentOutOfRangeException(nameof(index), index, $"Index {index} is out of range for {nameof(ActionSet)}.");
-        return AcceptedActions[index];
-    }
-    [Pure]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint ToMask(ActionType action) => 1u << (FromAction(action) + 1);
+    internal uint bits;
 
     // Return true if action was newly added and not there before.
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool AddAction(ActionType action)
+    public bool AddAction(in ActionPool pool, ActionType action)
     {
-        var mask = ToMask(action);
+        var mask = pool.ToMask(action);
         var old = bits;
         bits |= mask;
         return (old & mask) == 0;
@@ -83,9 +21,9 @@ public struct ActionSet
 
     // Return true if action was newly removed and not already gone.
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool RemoveAction(ActionType action)
+    public bool RemoveAction(in ActionPool pool, ActionType action)
     {
-        var mask = ToMask(action);
+        var mask = pool.ToMask(action);
         var old = bits;
         bits &= ~mask;
         return (old & mask) != 0;
@@ -93,10 +31,10 @@ public struct ActionSet
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool HasAction(ActionType action) => (bits & ToMask(action)) != 0;
+    public readonly bool HasAction(in ActionPool pool, ActionType action) => (bits & pool.ToMask(action)) != 0;
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ActionType ElementAt(int index) => ToAction(Intrinsics.NthBitSet(bits, index) - 1);
+    public readonly ActionType ElementAt(in ActionPool pool, int index) => pool.ToAction((byte)(Intrinsics.NthBitSet(bits, index) - 1));
 
     [Pure]
     public readonly int Count => BitOperations.PopCount(bits);
@@ -105,38 +43,38 @@ public struct ActionSet
     public readonly bool IsEmpty => bits == 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ActionType SelectRandom(Random random)
+    public readonly ActionType SelectRandom(in ActionPool pool, Random random)
     {
 #if IS_DETERMINISTIC
-        return First();
+        return First(in pool);
 #else
-        return ElementAt(random.Next(Count));
+        return ElementAt(in pool, random.Next(Count));
 #endif
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ActionType PopRandom(Random random)
+    public ActionType PopRandom(in ActionPool pool, Random random)
     {
 #if IS_DETERMINISTIC
-        return PopFirst();
+        return PopFirst(in pool);
 #else
-        var action = ElementAt(random.Next(Count));
-        RemoveAction(action);
+        var action = ElementAt(in pool, random.Next(Count));
+        RemoveAction(in pool, action);
         return action;
 #endif
     }
 
 #if IS_DETERMINISTIC
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ActionType PopFirst()
+    private ActionType PopFirst(in pool)
     {
-        var action = First();
-        RemoveAction(action);
+        var action = First(in pool);
+        RemoveAction(in pool, action);
         return action;
     }
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private readonly ActionType First() => ElementAt(0);
+    private readonly ActionType First(in pool) => ElementAt(in pool, 0);
 #endif
 }

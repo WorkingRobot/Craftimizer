@@ -31,6 +31,7 @@ public readonly record struct SolverConfig
     public float ScoreCP { get; init; }
     public float ScoreSteps { get; init; }
 
+    public ActionPool ActionPool { get; init; }
     public SolverAlgorithm Algorithm { get; init; }
 
     public SolverConfig()
@@ -54,6 +55,7 @@ public readonly record struct SolverConfig
         ScoreCP = .05f;
         ScoreSteps = .05f;
 
+        ActionPool = ActionPool.Default;
         Algorithm = SolverAlgorithm.StepwiseFurcated;
     }
 
