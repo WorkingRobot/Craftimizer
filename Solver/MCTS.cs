@@ -52,9 +52,9 @@ public sealed class MCTS
             if (state.IsComplete)
                 return startNode;
 
-            if (!state.AvailableActions.HasAction(in simulator.Pool, action))
+            if (!state.AvailableActions.HasAction(action))
                 return startNode;
-            state.AvailableActions.RemoveAction(in simulator.Pool, action);
+            state.AvailableActions.RemoveAction(action);
 
             startNode = startNode.Add(Execute(simulator, state.State, action, strict));
         }
@@ -184,7 +184,7 @@ public sealed class MCTS
         if (initialState.IsComplete)
             return (initialNode, initialState.CalculateScore(config) ?? 0);
 
-        var poppedAction = initialState.AvailableActions.PopRandom(in simulator.Pool, random);
+        var poppedAction = initialState.AvailableActions.PopRandom(random);
         var expandedNode = initialNode.Add(Execute(simulator, initialState.State, poppedAction, true));
 
         // playout to a terminal state
@@ -198,7 +198,7 @@ public sealed class MCTS
         while (SimulationNode.GetCompletionState(currentCompletionState, currentActions) == CompletionState.Incomplete &&
             actionCount < actions.Length)
         {
-            var nextAction = currentActions.SelectRandom(in simulator.Pool, random);
+            var nextAction = currentActions.SelectRandom(random);
             actions[actionCount++] = nextAction;
             (_, currentState) = simulator.Execute(currentState, nextAction);
             currentCompletionState = simulator.CompletionState;

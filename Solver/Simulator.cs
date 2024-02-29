@@ -7,8 +7,7 @@ namespace Craftimizer.Solver;
 
 internal sealed class Simulator : SimulatorNoRandom
 {
-    public readonly ActionPool Pool;
-    private readonly ActionType[] poolActions;
+    private readonly ActionType[] actionPool;
     private readonly int maxStepCount;
 
     public override CompletionState CompletionState
@@ -22,10 +21,9 @@ internal sealed class Simulator : SimulatorNoRandom
         }
     }
 
-    public Simulator(in ActionPool pool, int maxStepCount)
+    public Simulator(ActionType[] actionPool, int maxStepCount)
     {
-        Pool = pool;
-        poolActions = Pool.AcceptedActions;
+        this.actionPool = actionPool;
         this.maxStepCount = maxStepCount;
     }
 
@@ -137,9 +135,9 @@ internal sealed class Simulator : SimulatorNoRandom
             return new();
 
         var ret = new ActionSet();
-        foreach (var action in poolActions)
+        foreach (var action in actionPool)
             if (CanUseAction(action, strict))
-                ret.AddAction(in Pool, action);
+                ret.AddAction(action);
         return ret;
     }
 

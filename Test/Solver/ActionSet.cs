@@ -1,70 +1,8 @@
-using System.Runtime.CompilerServices;
-
 namespace Craftimizer.Test.Solver;
 
 [TestClass]
 public class ActionSetTests
 {
-    private readonly ActionPool pool = ActionPool.Default;
-
-    [TestMethod]
-    public void TestActionPoolSize()
-    {
-        Assert.AreEqual(ActionPool.MaskSize, Unsafe.SizeOf<ActionSet>() * 8);
-    }
-
-    [TestMethod]
-    public void TestActionPoolConstructor()
-    {
-        CollectionAssert.AreEquivalent(new ActionType[]
-        {
-            ActionType.StandardTouchCombo,
-            ActionType.AdvancedTouchCombo,
-            ActionType.FocusedTouchCombo,
-            ActionType.FocusedSynthesisCombo,
-            ActionType.TrainedFinesse,
-            ActionType.PrudentSynthesis,
-            ActionType.Groundwork,
-            ActionType.AdvancedTouch,
-            ActionType.CarefulSynthesis,
-            ActionType.TrainedEye,
-            ActionType.DelicateSynthesis,
-            ActionType.PreparatoryTouch,
-            ActionType.Reflect,
-            ActionType.PrudentTouch,
-            ActionType.Manipulation,
-            ActionType.MuscleMemory,
-            ActionType.ByregotsBlessing,
-            ActionType.WasteNot2,
-            ActionType.BasicSynthesis,
-            ActionType.Innovation,
-            ActionType.GreatStrides,
-            ActionType.StandardTouch,
-            ActionType.Veneration,
-            ActionType.WasteNot,
-            ActionType.MastersMend,
-            ActionType.BasicTouch,
-        }, pool.AcceptedActions);
-    }
-
-    [TestMethod]
-    public void TestAcceptedActions()
-    {
-        foreach (var i in Enum.GetValues<ActionType>())
-        {
-            int idx;
-            try
-            {
-                idx = pool.FromAction(i);
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-                continue;
-            }
-            Assert.AreEqual(i, pool.ToAction(idx));
-        }
-    }
-
     [TestMethod]
     public void TestSize()
     {
@@ -72,14 +10,14 @@ public class ActionSetTests
         Assert.IsTrue(set.IsEmpty);
         Assert.AreEqual(0, set.Count);
 
-        set.AddAction(in pool, ActionType.BasicSynthesis);
-        set.AddAction(in pool, ActionType.WasteNot2);
+        set.AddAction(ActionType.BasicSynthesis);
+        set.AddAction(ActionType.WasteNot2);
 
         Assert.AreEqual(2, set.Count);
         Assert.IsFalse(set.IsEmpty);
 
-        set.RemoveAction(in pool, ActionType.BasicSynthesis);
-        set.RemoveAction(in pool, ActionType.WasteNot2);
+        set.RemoveAction(ActionType.BasicSynthesis);
+        set.RemoveAction(ActionType.WasteNot2);
 
         Assert.IsTrue(set.IsEmpty);
         Assert.AreEqual(0, set.Count);
@@ -90,17 +28,17 @@ public class ActionSetTests
     {
         var set = new ActionSet();
 
-        Assert.IsTrue(set.AddAction(in pool, ActionType.BasicSynthesis));
-        Assert.IsFalse(set.AddAction(in pool, ActionType.BasicSynthesis));
+        Assert.IsTrue(set.AddAction(ActionType.BasicSynthesis));
+        Assert.IsFalse(set.AddAction(ActionType.BasicSynthesis));
 
-        Assert.IsTrue(set.RemoveAction(in pool, ActionType.BasicSynthesis));
-        Assert.IsFalse(set.RemoveAction(in pool, ActionType.BasicSynthesis));
+        Assert.IsTrue(set.RemoveAction(ActionType.BasicSynthesis));
+        Assert.IsFalse(set.RemoveAction(ActionType.BasicSynthesis));
 
-        Assert.IsTrue(set.AddAction(in pool, ActionType.BasicSynthesis));
-        Assert.IsTrue(set.AddAction(in pool, ActionType.WasteNot2));
+        Assert.IsTrue(set.AddAction(ActionType.BasicSynthesis));
+        Assert.IsTrue(set.AddAction(ActionType.WasteNot2));
 
-        Assert.IsTrue(set.RemoveAction(in pool, ActionType.BasicSynthesis));
-        Assert.IsTrue(set.RemoveAction(in pool, ActionType.WasteNot2));
+        Assert.IsTrue(set.RemoveAction(ActionType.BasicSynthesis));
+        Assert.IsTrue(set.RemoveAction(ActionType.WasteNot2));
     }
 
     [TestMethod]
@@ -108,18 +46,18 @@ public class ActionSetTests
     {
         var set = new ActionSet();
 
-        set.AddAction(in pool, ActionType.BasicSynthesis);
+        set.AddAction(ActionType.BasicSynthesis);
 
-        Assert.IsTrue(set.HasAction(in pool, ActionType.BasicSynthesis));
-        Assert.IsFalse(set.HasAction(in pool, ActionType.WasteNot2));
+        Assert.IsTrue(set.HasAction(ActionType.BasicSynthesis));
+        Assert.IsFalse(set.HasAction(ActionType.WasteNot2));
 
-        set.AddAction(in pool, ActionType.WasteNot2);
-        Assert.IsTrue(set.HasAction(in pool, ActionType.BasicSynthesis));
-        Assert.IsTrue(set.HasAction(in pool, ActionType.WasteNot2));
+        set.AddAction(ActionType.WasteNot2);
+        Assert.IsTrue(set.HasAction(ActionType.BasicSynthesis));
+        Assert.IsTrue(set.HasAction(ActionType.WasteNot2));
 
-        set.RemoveAction(in pool, ActionType.BasicSynthesis);
-        Assert.IsFalse(set.HasAction(in pool, ActionType.BasicSynthesis));
-        Assert.IsTrue(set.HasAction(in pool, ActionType.WasteNot2));
+        set.RemoveAction(ActionType.BasicSynthesis);
+        Assert.IsFalse(set.HasAction(ActionType.BasicSynthesis));
+        Assert.IsTrue(set.HasAction(ActionType.WasteNot2));
     }
 
     [TestMethod]
@@ -127,25 +65,25 @@ public class ActionSetTests
     {
         var set = new ActionSet();
 
-        set.AddAction(in pool, ActionType.BasicSynthesis);
-        set.AddAction(in pool, ActionType.ByregotsBlessing);
-        set.AddAction(in pool, ActionType.DelicateSynthesis);
-        set.AddAction(in pool, ActionType.Reflect);
+        set.AddAction(ActionType.BasicSynthesis);
+        set.AddAction(ActionType.ByregotsBlessing);
+        set.AddAction(ActionType.DelicateSynthesis);
+        set.AddAction(ActionType.Reflect);
 
         Assert.AreEqual(4, set.Count);
 
-        Assert.AreEqual(ActionType.BasicSynthesis, set.ElementAt(in pool, 0));
-        Assert.AreEqual(ActionType.ByregotsBlessing, set.ElementAt(in pool, 1));
-        Assert.AreEqual(ActionType.DelicateSynthesis, set.ElementAt(in pool, 2));
-        Assert.AreEqual(ActionType.Reflect, set.ElementAt(in pool, 3));
+        Assert.AreEqual(ActionType.BasicSynthesis, set.ElementAt(0));
+        Assert.AreEqual(ActionType.ByregotsBlessing, set.ElementAt(1));
+        Assert.AreEqual(ActionType.DelicateSynthesis, set.ElementAt(2));
+        Assert.AreEqual(ActionType.Reflect, set.ElementAt(3));
 
-        set.RemoveAction(in pool, ActionType.Reflect);
+        set.RemoveAction(ActionType.Reflect);
 
         Assert.AreEqual(3, set.Count);
 
-        Assert.AreEqual(ActionType.BasicSynthesis, set.ElementAt(in pool, 0));
-        Assert.AreEqual(ActionType.ByregotsBlessing, set.ElementAt(in pool, 1));
-        Assert.AreEqual(ActionType.DelicateSynthesis, set.ElementAt(in pool, 2));
+        Assert.AreEqual(ActionType.BasicSynthesis, set.ElementAt(0));
+        Assert.AreEqual(ActionType.ByregotsBlessing, set.ElementAt(1));
+        Assert.AreEqual(ActionType.DelicateSynthesis, set.ElementAt(2));
     }
 
     [TestMethod]
@@ -165,13 +103,13 @@ public class ActionSetTests
 
         var set = new ActionSet();
         foreach(var action in actions)
-            set.AddAction(in pool, action);
+            set.AddAction(action);
 
         var counts = new Dictionary<ActionType, int>();
         var rng = new Random(0);
         for (var i = 0; i < 100; i++)
         {
-            var action = set.SelectRandom(in pool, rng);
+            var action = set.SelectRandom(rng);
 
             CollectionAssert.Contains(actions, action);
 
