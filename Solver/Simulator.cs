@@ -7,7 +7,7 @@ namespace Craftimizer.Solver;
 
 internal sealed class Simulator : SimulatorNoRandom
 {
-    private readonly ActionType[] actionPool;
+    private readonly (BaseAction Data, ActionType Action)[] actionPoolObjects;
     private readonly int maxStepCount;
 
     public override CompletionState CompletionState
@@ -23,7 +23,7 @@ internal sealed class Simulator : SimulatorNoRandom
 
     public Simulator(ActionType[] actionPool, int maxStepCount)
     {
-        this.actionPool = actionPool;
+        actionPoolObjects = actionPool.Select(x => (x.Base(), x)).ToArray();
         this.maxStepCount = maxStepCount;
     }
 
@@ -32,11 +32,9 @@ internal sealed class Simulator : SimulatorNoRandom
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     // It's just a bunch of if statements, I would assume this is actually quite simple to follow
 #pragma warning disable MA0051 // Method is too long
-    private bool CanUseAction(ActionType action, bool strict)
+    private bool CanUseAction(ActionType action, BaseAction baseAction, bool strict)
 #pragma warning restore MA0051 // Method is too long
     {
-        var baseAction = action.Base();
-
         if (CalculateSuccessRate(baseAction.SuccessRate(this)) != 1)
             return false;
 
@@ -135,8 +133,8 @@ internal sealed class Simulator : SimulatorNoRandom
             return new();
 
         var ret = new ActionSet();
-        foreach (var action in actionPool)
-            if (CanUseAction(action, strict))
+        foreach (var (data, action) in actionPoolObjects)
+            if (CanUseAction(action, data, strict))
                 ret.AddAction(action);
         return ret;
     }

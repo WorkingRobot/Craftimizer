@@ -7,19 +7,19 @@ namespace Craftimizer.Solver;
 
 public struct ActionSet
 {
-    internal ulong bits;
+    private ulong bits;
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static int FromAction(ActionType action) => (byte)action;
+    private static int FromAction(ActionType action) => (byte)action;
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static ActionType ToAction(int index) => (ActionType)index;
+    private static ActionType ToAction(int index) => (ActionType)index;
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static ulong ToMask(ActionType action) => 1ul << FromAction(action);
+    private static ulong ToMask(ActionType action) => 1ul << FromAction(action);
 
     // Return true if action was newly added and not there before.
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
