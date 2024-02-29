@@ -43,22 +43,36 @@ public readonly struct ActionPool
 
     private unsafe struct EnumBuffer
     {
-        public fixed byte Data[MaskSize];
+        private fixed byte data[MaskSize];
 
-        public ref ActionType this[int index] => ref Unsafe.As<byte, ActionType>(ref Data[index]);
+        public ActionType this[int index] => (ActionType)data[index];
 
-        public Span<ActionType> AsSpan() => new(Unsafe.AsPointer(ref this[0]), MaskSize);
+        public EnumBuffer(ReadOnlySpan<ActionType> actions)
+        {
+            fixed (byte* dataPtr = data)
+                actions.CopyTo(new Span<ActionType>(dataPtr, MaskSize));
+        }
+
+        public readonly ActionType[] ToArray(int size)
+        {
+            fixed (byte* dataPtr = data)
+                return new Span<ActionType>(dataPtr, size).ToArray();
+        }
     }
 
     private unsafe struct LUTBuffer
     {
-        public fixed byte Data[EnumSize];
+        private fixed byte data[EnumSize];
 
-        public ref byte this[ActionType index] => ref Data[(byte)index];
+        public byte this[ActionType index] => data[(byte)index];
 
-#pragma warning disable MA0099
-        public Span<byte> AsSpan() => new(Unsafe.AsPointer(ref this[0]), EnumSize);
-#pragma warning restore MA0099
+        public LUTBuffer(ReadOnlySpan<ActionType> actions)
+        {
+            for (var i = 0; i < EnumSize; i++)
+                data[i] = 0xFF;
+            for (var i = 0; i < actions.Length; i++)
+                data[(byte)actions[i]] = (byte)i;
+        }
     }
 
     // List of accepted actions (max 32)
@@ -67,22 +81,16 @@ public readonly struct ActionPool
     private readonly LUTBuffer acceptedActionsLUT;
     private readonly byte size;
 
-    internal ReadOnlySpan<ActionType> AcceptedActions => acceptedActions.AsSpan().Slice(0, size);
+    internal ActionType[] AcceptedActions => acceptedActions.ToArray(size);
 
     public ActionPool(ReadOnlySpan<ActionType> actions)
     {
         if (actions.Length > MaskSize)
             throw new ArgumentOutOfRangeException(nameof(actions), actions.Length, $"ActionPool only supports up to {MaskSize} actions");
 
+        acceptedActions = new(actions);
+        acceptedActionsLUT = new(actions);
         size = (byte)actions.Length;
-
-        acceptedActions.AsSpan().Fill((ActionType)0xFF);
-        acceptedActionsLUT.AsSpan().Fill(0xFF);
-
-        actions.CopyTo(acceptedActions.AsSpan());
-
-        for (var i = 0; i < size; i++)
-            acceptedActionsLUT[acceptedActions[i]] = (byte)i;
     }
 
     [Pure]
