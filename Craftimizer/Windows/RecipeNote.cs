@@ -843,15 +843,14 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
             if (state.MacroName is { } macroName)
             {
+                using var _ = ImRaii2.TextWrapPos(panelWidth);
                 if (state.MacroUrl is { } macroUrl)
                 {
                     ImGuiUtils.AlignCentered(ImGui.CalcTextSize(macroName).X, panelWidth);
                     ImGuiUtils.Hyperlink(macroName, macroUrl, false);
                 }
                 else
-                {
                     ImGuiUtils.TextCentered(macroName, panelWidth);
-                }
             }
 
             using var table = ImRaii.Table("table", 3, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.SizingStretchSame);

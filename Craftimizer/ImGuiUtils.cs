@@ -620,10 +620,7 @@ internal static class ImGuiUtils
         var lineSize = font.CalcWordWrapPositionA(1, textBuf, currentWrapWidth) ?? textBuf.Length;
         var lineBuf = textBuf[..lineSize];
         ImGui.Text(lineBuf.ToString());
-        var remainingBuf = textBuf[lineSize..];
-
-        while (!remainingBuf.IsEmpty && char.IsWhiteSpace(remainingBuf[0]))
-            remainingBuf = remainingBuf[1..];
+        var remainingBuf = textBuf[lineSize..].TrimStart();
 
         if (!remainingBuf.IsEmpty)
         {
