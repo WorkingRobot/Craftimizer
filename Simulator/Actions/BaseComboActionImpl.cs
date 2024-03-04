@@ -13,8 +13,10 @@ internal abstract class BaseComboAction<A, B> : BaseComboAction where A : BaseAc
 
     public override int CPCost(Simulator s) => ActionA.CPCost(s) + ActionB.CPCost(s);
 
-    public override bool CanUse(Simulator s) =>
-        BaseCanUse(s) && VerifyDurability2(s, ActionA.DurabilityCost);
+    public override bool IsPossible(Simulator s) => ActionA.IsPossible(s) && ActionB.IsPossible(s);
+
+    public override bool CouldUse(Simulator s) =>
+        BaseCouldUse(s) && VerifyDurability2(s, ActionA.DurabilityCost);
 
     public override void Use(Simulator s)
     {

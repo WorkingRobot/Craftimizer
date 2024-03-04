@@ -35,13 +35,22 @@ public class Simulator
     }
     public bool IsComplete => CompletionState != CompletionState.Incomplete;
 
-    public IEnumerable<ActionType> AvailableActions => ActionUtils.AvailableActions(this);
+    public SimulationState ExecuteUnchecked(in SimulationState state, ActionType action)
+    {
+        this.state = state;
+        ExecuteUnchecked(action);
+        return this.state;
+    }
 
     public (ActionResponse Response, SimulationState NewState) Execute(in SimulationState state, ActionType action)
     {
         this.state = state;
         return (Execute(action), this.state);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void ExecuteUnchecked(ActionType action) =>
+        action.Base().Use(this);
 
     private ActionResponse Execute(ActionType action)
     {
