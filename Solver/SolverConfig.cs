@@ -93,6 +93,19 @@ public readonly record struct SolverConfig
         ActionType.BasicTouch,
     });
 
+    public static readonly IReadOnlySet<ActionType> InefficientActions = new HashSet<ActionType>(new[]
+    {
+        ActionType.CarefulObservation,
+        ActionType.HeartAndSoul,
+        ActionType.FinalAppraisal
+    });
+
+    public static readonly IReadOnlySet<ActionType> RiskyActions = new HashSet<ActionType>(new[]
+    {
+        ActionType.RapidSynthesis,
+        ActionType.HastyTouch,
+    });
+
     public static readonly SolverConfig SimulatorDefault = new SolverConfig() with
     {
 
