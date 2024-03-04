@@ -272,7 +272,7 @@ public sealed class Solver : IDisposable
 
         var actions = new List<ActionType>();
         var state = State;
-        var sim = new Simulator(Config.ActionPool, Config.MaxStepCount) { State = state };
+        var sim = new Simulator(Config.ActionPool, Config.MaxStepCount, state);
         while (true)
         {
             Token.ThrowIfCancellationRequested();
@@ -338,7 +338,7 @@ public sealed class Solver : IDisposable
 
         var actions = new List<ActionType>();
         var state = State;
-        var sim = new Simulator(Config.ActionPool, Config.MaxStepCount) { State = state };
+        var sim = new Simulator(Config.ActionPool, Config.MaxStepCount, state);
         while (true)
         {
             Token.ThrowIfCancellationRequested();
