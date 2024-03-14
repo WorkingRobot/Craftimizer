@@ -6,8 +6,8 @@ using Craftimizer.Solver;
 
 namespace Craftimizer.Benchmark;
 
-[SimpleJob(RuntimeMoniker.Net70, baseline: true)]
-[SimpleJob(RuntimeMoniker.Net80)]
+[SimpleJob(RuntimeMoniker.Net80, baseline: true)]
+[SimpleJob(RuntimeMoniker.Net90)]
 [MinColumn, Q1Column, Q3Column, MaxColumn]
 [DotTraceDiagnoser]
 public class Bench
