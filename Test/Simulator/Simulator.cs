@@ -1,5 +1,3 @@
-using Craftimizer.Simulator.Actions;
-
 namespace Craftimizer.Test.Simulator;
 
 [TestClass]
@@ -34,7 +32,6 @@ public class SimulatorTests
             ProgressDivider = 130
         });
 
-    // Conflicting Info:
     // https://craftingway.app/rotation/sandy-fafnir-doVCs
     // Classical Longsword
     private static SimulationInput Input2 { get; } =
@@ -222,10 +219,8 @@ public class SimulatorTests
                 ActionType.GreatStrides,
                 ActionType.ByregotsBlessing
             },
-             // Conflicting Info:
-             // TC           https://ffxivteamcraft.com/simulator/35020/34800/4PTlwTV6w1aGCUdO2BRl
-             3549, 10932, 5, 7);
+            // TC           https://ffxivteamcraft.com/simulator/35020/34800/4PTlwTV6w1aGCUdO2BRl
             // Craftingway  https://craftingway.app/rotation/sandy-fafnir-doVCs
-            //3548, 10931, 5, 7);
+            3549, 10932, 5, 7);
     }
 }

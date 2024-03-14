@@ -177,6 +177,8 @@ public sealed class MCTS
         }
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    [SkipLocalsInit]
     private (Node ExpandedNode, float Score) ExpandAndRollout(Random random, Simulator simulator, Node initialNode)
     {
         ref var initialState = ref initialNode.State;
@@ -235,26 +237,6 @@ public sealed class MCTS
         }
     }
 
-    private void ShowAllNodes()
-    {
-        static void ShowNodes(StringBuilder b, Node node, Stack<Node> path)
-        {
-            path.Push(node);
-            b.AppendLine($"{new string(' ', path.Count)}{node.State.Action}");
-            {
-                for (var i = 0; i < node.Children.Count; ++i)
-                {
-                    var n = node.ChildAt((i >> 3, i & 7))!;
-                    ShowNodes(b, n, path);
-                }
-                path.Pop();
-            }
-        }
-        var b = new StringBuilder();
-        ShowNodes(b, rootNode, new());
-        Console.WriteLine(b.ToString());
-    }
-
     private bool AllNodesComplete()
     {
         static bool NodesIncomplete(Node node, Stack<Node> path)
@@ -301,11 +283,7 @@ public sealed class MCTS
                     {
                         staleCounter = 0;
                         if (AllNodesComplete())
-                        {
-                            //Console.WriteLine("All nodes solved for. Can't find a valid solution.");
-                            //ShowAllNodes();
                             return;
-                        }
                     }
                 }
                 else
@@ -333,12 +311,6 @@ public sealed class MCTS
             if (node.State.Action != null)
                 actions.Add(node.State.Action.Value);
         }
-
-        //var at = node.ChildIdx;
-        //ref var sum = ref node.ParentScores!.Value.Data[at.arrayIdx].ScoreSum.Span[at.subIdx];
-        //ref var max = ref node.ParentScores!.Value.Data[at.arrayIdx].MaxScore.Span[at.subIdx];
-        //ref var visits = ref node.ParentScores!.Value.Data[at.arrayIdx].Visits.Span[at.subIdx];
-        //Console.WriteLine($"{sum} {max} {visits}");
 
         return new(actions, node.State.State);
     }
