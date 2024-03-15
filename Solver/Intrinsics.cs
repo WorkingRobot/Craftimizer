@@ -23,7 +23,7 @@ internal static class Intrinsics
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int HMaxIndexScalar(Vector<float> v, int len)
+    private static int HMaxIndexScalar(Vector256<float> v, int len)
     {
         var m = 0;
         for (var i = 1; i < len; ++i)
@@ -46,10 +46,10 @@ internal static class Intrinsics
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     // https://stackoverflow.com/a/23592221
-    private static int HMaxIndexAVX2(Vector<float> v, int len)
+    private static int HMaxIndexAVX2(Vector256<float> v, int len)
     {
         // Remove NaNs
-        var vfilt = ClearLastN(v.AsVector256(), len);
+        var vfilt = ClearLastN(v, len);
 
         // Find max value and broadcast to all lanes
         var vmax128 = HMax(vfilt);
@@ -66,40 +66,10 @@ internal static class Intrinsics
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int HMaxIndex(Vector<float> v, int len) =>
+    public static int HMaxIndex(Vector256<float> v, int len) =>
         Avx2.IsSupported ?
         HMaxIndexAVX2(v, len) :
         HMaxIndexScalar(v, len);
-
-    [Pure]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int NthBitSetScalar(uint value, int n)
-    {
-        var mask = 0x0000FFFFu;
-        var size = 16;
-        var _base = 0;
-
-        if (n++ >= BitOperations.PopCount(value))
-            return 32;
-
-        while (size > 0)
-        {
-            var count = BitOperations.PopCount(value & mask);
-            if (n > count)
-            {
-                _base += size;
-                size >>= 1;
-                mask |= mask << size;
-            }
-            else
-            {
-                size >>= 1;
-                mask >>= size;
-            }
-        }
-
-        return _base;
-    }
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -133,25 +103,8 @@ internal static class Intrinsics
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int NthBitSetBMI2(uint value, int n) =>
-        BitOperations.TrailingZeroCount(Bmi2.ParallelBitDeposit(1u << n, value));
-
-    [Pure]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int NthBitSetBMI2(ulong value, int n) =>
         BitOperations.TrailingZeroCount(Bmi2.X64.ParallelBitDeposit(1ul << n, value));
-
-    [Pure]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int NthBitSet(uint value, int n)
-    {
-        if (n >= BitOperations.PopCount(value))
-            return 32;
-
-        return Bmi2.IsSupported ?
-            NthBitSetBMI2(value, n) :
-            NthBitSetScalar(value, n);
-    }
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -168,17 +121,15 @@ internal static class Intrinsics
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SkipLocalsInit]
-    public static Vector<float> ReciprocalSqrt(Vector<float> data)
+    public static Vector256<float> ReciprocalSqrt(Vector256<float> data)
     {
-        if (Avx.IsSupported && Vector<float>.Count >= Vector256<float>.Count)
-            return Avx.ReciprocalSqrt(data.AsVector256()).AsVector();
+        if (Avx.IsSupported && Vector256<float>.Count >= Vector256<float>.Count)
+            return Avx.ReciprocalSqrt(data);
 
-        if (Sse.IsSupported && Vector<float>.Count >= Vector128<float>.Count)
-            return Sse.ReciprocalSqrt(data.AsVector128()).AsVector();
-
-        Span<float> result = stackalloc float[Vector<float>.Count];
-        for (var i = 0; i < Vector<float>.Count; ++i)
-            result[i] = MathF.ReciprocalSqrtEstimate(data[i]);
-        return new(result);
+        Unsafe.SkipInit(out Vector256<float> ret);
+        ref var result = ref Unsafe.As<Vector256<float>, float>(ref Unsafe.AsRef(in ret));
+        for (var i = 0; i < Vector256<float>.Count; ++i)
+            Unsafe.Add(ref result, i) = MathF.ReciprocalSqrtEstimate(data[i]);
+        return ret;
     }
 }

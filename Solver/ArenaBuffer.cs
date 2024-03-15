@@ -1,5 +1,4 @@
 using System.Diagnostics.Contracts;
-using System.Numerics;
 using System.Runtime.CompilerServices;
 
 namespace Craftimizer.Solver;
@@ -10,11 +9,11 @@ public struct ArenaBuffer
     // The benchmark reaches 20 at most, but here we have a little leeway just in case.
     internal const int MaxSize = 32;
 
-    internal static readonly int BatchSize = Vector<float>.Count;
-    internal static readonly int BatchSizeBits = int.Log2(BatchSize);
-    internal static readonly int BatchSizeMask = BatchSize - 1;
+    internal const int BatchSize = 8;
+    internal const int BatchSizeBits = 3; // int.Log2(BatchSize);
+    internal const int BatchSizeMask = BatchSize - 1;
 
-    internal static readonly int BatchCount = MaxSize / BatchSize;
+    internal const int BatchCount = MaxSize / BatchSize;
 }
 
 // Adapted from https://github.com/dtao/ConcurrentList/blob/4fcf1c76e93021a41af5abb2d61a63caeba2adad/ConcurrentList/ConcurrentList.cs

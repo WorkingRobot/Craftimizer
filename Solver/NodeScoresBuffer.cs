@@ -1,54 +1,45 @@
-using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
 
 namespace Craftimizer.Solver;
 
-// Adapted from https://github.com/dtao/ConcurrentList/blob/4fcf1c76e93021a41af5abb2d61a63caeba2adad/ConcurrentList/ConcurrentList.cs
 public struct NodeScoresBuffer
 {
     [StructLayout(LayoutKind.Auto)]
-    public readonly struct ScoresBatch
+    public struct ScoresBatch
     {
-        public readonly Memory<float> ScoreSum;
-        public readonly Memory<float> MaxScore;
-        public readonly Memory<int> Visits;
-
-        public ScoresBatch()
-        {
-            ScoreSum = new float[ArenaBuffer.BatchSize];
-            MaxScore = new float[ArenaBuffer.BatchSize];
-            Visits = new int[ArenaBuffer.BatchSize];
-        }
+        public Vector256<float> ScoreSum;
+        public Vector256<float> MaxScore;
+        public Vector256<int> Visits;
     }
 
-    public ScoresBatch[] Data;
+    public ScoresBatch[]? Data;
     public int Count { get; private set; }
 
     public void Add()
     {
-        Data ??= new ScoresBatch[ArenaBuffer.BatchCount];
-
-        var idx = Count++;
-
-        var (arrayIdx, subIdx) = GetArrayIndex(idx);
-
-        if (subIdx == 0)
-            Data[arrayIdx] = new();
+        Data ??= GC.AllocateUninitializedArray<ScoresBatch>(ArenaBuffer.BatchCount);
+        var count = Count++;
+        if ((count & ArenaBuffer.BatchSizeMask) == 0)
+            Data[count >> ArenaBuffer.BatchSizeBits] = new();
     }
 
     public readonly void Visit((int arrayIdx, int subIdx) at, float score)
     {
-        Data[at.arrayIdx].ScoreSum.Span[at.subIdx] += score;
-        Data[at.arrayIdx].MaxScore.Span[at.subIdx] = Math.Max(Data[at.arrayIdx].MaxScore.Span[at.subIdx], score);
-        Data[at.arrayIdx].Visits.Span[at.subIdx]++;
+        ref var batch = ref Data![at.arrayIdx];
+        batch.ScoreSum.At(at.subIdx) += score;
+        ref var maxScore = ref batch.MaxScore.At(at.subIdx);
+        maxScore = Math.Max(maxScore, score);
+        batch.Visits.At(at.subIdx)++;
     }
 
     public readonly int GetVisits((int arrayIdx, int subIdx) at) =>
-        Data[at.arrayIdx].Visits.Span[at.subIdx];
+        Data![at.arrayIdx].Visits[at.subIdx];
+}
 
-    [Pure]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static (int arrayIdx, int subIdx) GetArrayIndex(int idx) =>
-        (idx >> ArenaBuffer.BatchSizeBits, idx & ArenaBuffer.BatchSizeMask);
+internal static class VectorUtils
+{
+    public static ref T At<T>(this ref Vector256<T> me, int idx) =>
+        ref Unsafe.Add(ref Unsafe.As<Vector256<T>, T>(ref me), idx);
 }
