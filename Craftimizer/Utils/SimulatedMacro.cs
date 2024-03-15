@@ -25,7 +25,7 @@ internal sealed class SimulatedMacro
 
             public Param()
             {
-                DataList = new();
+                DataList = [];
             }
 
             public void Add(int value)
@@ -124,7 +124,7 @@ internal sealed class SimulatedMacro
                 new(initialState, actionSet, Service.Configuration.ReliabilitySimulationCount, recipeData);
     };
 
-    private List<Step> Macro { get; set; } = new();
+    private List<Step> Macro { get; set; } = [];
     private SimulationState initialState;
     public SimulationState InitialState
     {
@@ -139,7 +139,7 @@ internal sealed class SimulatedMacro
         }
     }
     private object QueueLock { get; } = new();
-    private List<Step> QueuedSteps { get; set; } = new();
+    private List<Step> QueuedSteps { get; set; } = [];
 
     public SimulationState State => Macro.Count > 0 ? Macro[^1].State : InitialState;
 

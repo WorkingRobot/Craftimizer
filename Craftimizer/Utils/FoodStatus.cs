@@ -1,18 +1,18 @@
 using Craftimizer.Plugin;
 using Craftimizer.Plugin.Utils;
 using Lumina.Excel.GeneratedSheets;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace Craftimizer.Utils;
 
 public static class FoodStatus
 {
-    private static readonly ReadOnlyDictionary<uint, uint> ItemFoodToItemLUT;
-    private static readonly ReadOnlyDictionary<uint, Food> FoodItems;
-    private static readonly ReadOnlyDictionary<uint, Food> MedicineItems;
+    private static readonly FrozenDictionary<uint, uint> ItemFoodToItemLUT;
+    private static readonly FrozenDictionary<uint, Food> FoodItems;
+    private static readonly FrozenDictionary<uint, Food> MedicineItems;
     private static readonly ImmutableArray<uint> FoodOrder;
     private static readonly ImmutableArray<uint> MedicineOrder;
 
@@ -41,7 +41,7 @@ public static class FoodStatus
 
             lut.TryAdd(itemFood.RowId, item.RowId);
         }
-        ItemFoodToItemLUT = lut.AsReadOnly();
+        ItemFoodToItemLUT = lut.ToFrozenDictionary();
 
         var foods = new Dictionary<uint, Food>();
         var medicines = new Dictionary<uint, Food>();
@@ -87,8 +87,8 @@ public static class FoodStatus
             }
         }
         
-        FoodItems = foods.AsReadOnly();
-        MedicineItems = medicines.AsReadOnly();
+        FoodItems = foods.ToFrozenDictionary();
+        MedicineItems = medicines.ToFrozenDictionary();
 
         FoodOrder = FoodItems.OrderByDescending(a => a.Value.Item.LevelItem.Row).Select(a => a.Key).ToImmutableArray();
         MedicineOrder = MedicineItems.OrderByDescending(a => a.Value.Item.LevelItem.Row).Select(a => a.Key).ToImmutableArray();

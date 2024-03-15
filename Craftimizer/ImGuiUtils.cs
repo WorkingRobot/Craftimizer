@@ -231,20 +231,12 @@ internal static class ImGuiUtils
 
     public sealed class ViolinData
     {
-        [StructLayout(LayoutKind.Sequential)]
-        public struct Point
+        public struct Point(float x, float y, float y2)
         {
-            public float X, Y, Y2;
-
-            public Point(float x, float y, float y2)
-            {
-                X = x;
-                Y = y;
-                Y2 = y2;
-            }
+            public float X = x, Y = y, Y2 = y2;
         }
 
-        public ReadOnlySpan<Point> Data => (DataArray ?? Array.Empty<Point>()).AsSpan();
+        public ReadOnlySpan<Point> Data => (DataArray ?? []).AsSpan();
         private Point[]? DataArray { get; set; }
         public readonly float Min;
         public readonly float Max;
@@ -261,7 +253,7 @@ internal static class ImGuiUtils
                     .Select(n => Lerp(min, max, n / (float)resolution))
                     .Select(n => (n, (float)KernelDensity.EstimateGaussian(n, bandwidth, samplesList)))
                     .Select(n => new Point(n.n, n.Item2, -n.Item2));
-                DataArray = data.ToArray();
+                DataArray = [.. data];
                 s.Stop();
                 Log.Debug($"Violin plot processing took {s.Elapsed.TotalMilliseconds:0.00}ms");
             });
@@ -311,7 +303,7 @@ internal static class ImGuiUtils
         public SearchableComboData(IEnumerable<T> items, T selectedItem, Func<T, string> getString)
         {
             this.items = items.ToImmutableArray();
-            filteredItems = new() { selectedItem };
+            filteredItems = [selectedItem];
             this.selectedItem = selectedItem;
             this.getString = getString;
             input = GetString(selectedItem);
@@ -355,7 +347,7 @@ internal static class ImGuiUtils
         {
             if (string.IsNullOrWhiteSpace(input))
             {
-                filteredItems = items.ToList();
+                filteredItems = [.. items];
                 return;
             }
             var matcher = new FuzzyMatcher(input.ToLowerInvariant(), MatchMode.FuzzyParts);
@@ -364,10 +356,10 @@ internal static class ImGuiUtils
                 .OrderByDescending(t => t.Score)
                 .Select(t => t.Item);
             token.ThrowIfCancellationRequested();
-            filteredItems = query.ToList();
+            filteredItems = [.. query];
         }
     }
-    private static readonly Dictionary<uint, object> ComboData = new();
+    private static readonly Dictionary<uint, object> ComboData = [];
 
     private static SearchableComboData<T> GetComboData<T>(uint comboKey, IEnumerable<T> items, T selectedItem, Func<T, string> getString) where T : class =>
         (SearchableComboData<T>)(

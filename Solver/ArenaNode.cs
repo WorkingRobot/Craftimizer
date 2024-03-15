@@ -2,23 +2,15 @@ using System.Runtime.CompilerServices;
 
 namespace Craftimizer.Solver;
 
-public sealed class ArenaNode<T> where T : struct
+public sealed class ArenaNode<T>(in T state, ArenaNode<T>? parent = null) where T : struct
 {
-    public T State;
+    public T State = state;
     public ArenaBuffer<T> Children;
     public NodeScoresBuffer ChildScores;
     public (int arrayIdx, int subIdx) ChildIdx;
-    public readonly ArenaNode<T>? Parent;
+    public readonly ArenaNode<T>? Parent = parent;
 
     public NodeScoresBuffer? ParentScores => Parent?.ChildScores;
-
-    public ArenaNode(in T state, ArenaNode<T>? parent = null)
-    {
-        State = state;
-        Children = new();
-        ChildScores = new();
-        Parent = parent;
-    }
 
     public ArenaNode<T>? ChildAt((int arrayIdx, int subIdx) at) =>
         Children.Data?[at.arrayIdx]?[at.subIdx];

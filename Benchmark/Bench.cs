@@ -20,7 +20,8 @@ public class Bench
             $"{HashCode.Combine(Data.ToString()!):X8}";
     }
 
-    private static SimulationInput[] Inputs { get; } = new SimulationInput[] {
+    private static SimulationInput[] Inputs { get; } =
+    [
         // https://craftingway.app/rotation/loud-namazu-jVe9Y
         // Chondrite Saw
         new(new()
@@ -76,7 +77,7 @@ public class Bench
             ProgressModifier = 80,
             ProgressDivider = 130
         })
-    };
+    ];
 
     public static IEnumerable<HashWrapper<SimulationState>> States => Inputs.Select(i => new HashWrapper<SimulationState>(new(i)));
 

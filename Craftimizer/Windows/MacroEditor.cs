@@ -119,8 +119,7 @@ public sealed class MacroEditor : Window, IDisposable
         MacroSetter = setter;
         DefaultActions = actions.ToArray();
 
-        HQIngredientCounts = new();
-        HQIngredientCounts.AddRange(Enumerable.Repeat(0, RecipeData.Ingredients.Count));
+        HQIngredientCounts = [.. Enumerable.Repeat(0, RecipeData.Ingredients.Count)];
 
         RecalculateState();
         foreach (var action in DefaultActions)
@@ -145,8 +144,8 @@ public sealed class MacroEditor : Window, IDisposable
 
         SizeConstraints = new() { MinimumSize = new(821, 750), MaximumSize = new(float.PositiveInfinity) };
 
-        TitleBarButtons = new()
-        {
+        TitleBarButtons =
+        [
             new()
             {
                 Icon = FontAwesomeIcon.Cog,
@@ -154,7 +153,7 @@ public sealed class MacroEditor : Window, IDisposable
                 Click = _ => Service.Plugin.OpenSettingsWindow(),
                 ShowTooltip = () => ImGuiUtils.Tooltip("Open Craftimizer Settings")
             }
-        };
+        ];
 
         Service.WindowSystem.AddWindow(this);
     }

@@ -15,7 +15,7 @@ public class Macro
 
     public string Name { get; set; } = string.Empty;
     [JsonProperty(PropertyName = "Actions")]
-    private List<ActionType> actions { get; set; } = new();
+    private List<ActionType> actions { get; set; } = [];
     [JsonIgnore]
     public IReadOnlyList<ActionType> Actions
     {
@@ -80,7 +80,7 @@ public class Configuration : IPluginConfiguration
     public static event Action? OnMacroListChanged;
 
     [JsonProperty(PropertyName = "Macros")]
-    private List<Macro> macros { get; set; } = new();
+    private List<Macro> macros { get; set; } = [];
     [JsonIgnore]
     public IReadOnlyList<Macro> Macros => macros;
     public int ReliabilitySimulationCount { get; set; } = 500;

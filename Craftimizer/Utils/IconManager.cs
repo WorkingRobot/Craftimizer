@@ -10,10 +10,10 @@ namespace Craftimizer.Utils;
 
 public sealed class IconManager : IDisposable
 {
-    private readonly Dictionary<uint, IDalamudTextureWrap> iconCache = new();
-    private readonly Dictionary<uint, IDalamudTextureWrap> hqIconCache = new();
-    private readonly Dictionary<string, IDalamudTextureWrap> textureCache = new();
-    private readonly Dictionary<string, IDalamudTextureWrap> assemblyCache = new();
+    private readonly Dictionary<uint, IDalamudTextureWrap> iconCache = [];
+    private readonly Dictionary<uint, IDalamudTextureWrap> hqIconCache = [];
+    private readonly Dictionary<string, IDalamudTextureWrap> textureCache = [];
+    private readonly Dictionary<string, IDalamudTextureWrap> assemblyCache = [];
 
     public IDalamudTextureWrap GetIcon(uint id)
     {

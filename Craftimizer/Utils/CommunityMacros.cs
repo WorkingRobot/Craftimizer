@@ -73,7 +73,7 @@ public sealed class CommunityMacros
         [JsonRequired]
         public required ValueData Data { get; set; }
 
-        public T[] Value => Data.Values ?? Array.Empty<T>();
+        public T[] Value => Data.Values ?? [];
         public static implicit operator T[](ArrayValue<T> v) => v.Value;
     }
 
@@ -373,7 +373,7 @@ public sealed class CommunityMacros
         }
     }
 
-    private Dictionary<int, List<CommunityMacro>> CachedRotations { get; } = new();
+    private Dictionary<int, List<CommunityMacro>> CachedRotations { get; } = [];
 
     public async Task<IReadOnlyList<CommunityMacro>> RetrieveRotations(int rlvl, CancellationToken token)
     {
@@ -403,17 +403,17 @@ public sealed class CommunityMacros
         {
             StructuredQuery = new StructuredQuery
             {
-                From = new List<CollectionSelector>
-                {
+                From =
+                [
                     new() { CollectionId = "rotations" }
-                },
+                ],
                 Where = new Filter
                 {
                     CompositeFilter = new CompositeFilter
                     {
                         Op = CompositeOperator.AND,
-                        Filters = new List<Filter>
-                        {
+                        Filters =
+                        [
                             new()
                             {
                                 FieldFilter = new FieldFilter
@@ -432,11 +432,11 @@ public sealed class CommunityMacros
                                     Value = new IntegerValue { Value = rlvl }
                                 }
                             }
-                        }
+                        ]
                     },
                 },
-                OrderBy = new List<Order>
-                {
+                OrderBy =
+                [
                     new()
                     {
                         Field = new FieldReference { FieldPath = "xivVersion" },
@@ -447,7 +447,7 @@ public sealed class CommunityMacros
                         Field = new FieldReference { FieldPath = "__name__" },
                         Direction = Direction.DESCENDING
                     }
-                }
+                ]
             },
         };
 

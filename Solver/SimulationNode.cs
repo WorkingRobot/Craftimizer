@@ -7,25 +7,17 @@ using System.Runtime.InteropServices;
 namespace Craftimizer.Solver;
 
 [StructLayout(LayoutKind.Auto)]
-public struct SimulationNode
+public struct SimulationNode(in SimulationState state, ActionType? action, CompletionState completionState, ActionSet actions)
 {
-    public readonly SimulationState State;
-    public readonly ActionType? Action;
-    public readonly CompletionState SimulationCompletionState;
+    public readonly SimulationState State = state;
+    public readonly ActionType? Action = action;
+    public readonly CompletionState SimulationCompletionState = completionState;
 
-    public ActionSet AvailableActions;
+    public ActionSet AvailableActions = actions;
 
     public readonly CompletionState CompletionState => GetCompletionState(SimulationCompletionState, AvailableActions);
 
     public readonly bool IsComplete => CompletionState != CompletionState.Incomplete;
-
-    public SimulationNode(in SimulationState state, ActionType? action, CompletionState completionState, ActionSet actions)
-    {
-        State = state;
-        Action = action;
-        SimulationCompletionState = completionState;
-        AvailableActions = actions;
-    }
 
     public static CompletionState GetCompletionState(CompletionState simCompletionState, ActionSet actions) =>
         actions.IsEmpty && simCompletionState == CompletionState.Incomplete ?

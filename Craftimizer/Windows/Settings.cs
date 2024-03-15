@@ -805,7 +805,7 @@ public sealed class Settings : Window, IDisposable
                         pool.Add(combo);
                 }
             }
-            actionPool = pool.ToArray();
+            actionPool = [.. pool];
         }
     }
 

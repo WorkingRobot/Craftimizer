@@ -7,7 +7,7 @@ namespace Craftimizer.Utils;
 internal readonly struct FuzzyMatcher
 {
     private const bool IsBorderMatching = true;
-    private static readonly (int, int)[] EmptySegArray = Array.Empty<(int, int)>();
+    private static readonly (int, int)[] EmptySegArray = [];
 
     private readonly string needleString = string.Empty;
     private readonly int needleFinalPosition = -1;

@@ -92,8 +92,8 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             MaximumSize = new(494, 10000)
         };
 
-        TitleBarButtons = new()
-        {
+        TitleBarButtons =
+        [
             new()
             {
                 Icon = FontAwesomeIcon.Cog,
@@ -101,7 +101,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
                 Click = _ => Service.Plugin.OpenSettingsWindow(),
                 ShowTooltip = () => ImGuiUtils.Tooltip("Open Craftimizer Settings")
             }
-        };
+        ];
 
         Service.WindowSystem.AddWindow(this);
     }

@@ -1,5 +1,5 @@
 using Craftimizer.Simulator.Actions;
-using System.Collections.ObjectModel;
+using System.Collections.Frozen;
 
 namespace Craftimizer.Simulator;
 
@@ -16,14 +16,14 @@ public enum ActionCategory
 
 public static class ActionCategoryUtils
 {
-    private static readonly ReadOnlyDictionary<ActionCategory, ActionType[]> SortedActions;
+    private static readonly FrozenDictionary<ActionCategory, ActionType[]> SortedActions;
 
     static ActionCategoryUtils()
     {
-        SortedActions = new(
+        SortedActions =
             Enum.GetValues<ActionType>()
             .GroupBy(a => a.Category())
-            .ToDictionary(g => g.Key, g => g.OrderBy(a => a.Level()).ToArray()));
+            .ToFrozenDictionary(g => g.Key, g => g.OrderBy(a => a.Level()).ToArray());
     }
 
     public static IReadOnlyList<ActionType> GetActions(this ActionCategory me)

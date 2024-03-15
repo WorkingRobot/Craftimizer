@@ -8,20 +8,13 @@ namespace Craftimizer.Plugin;
 
 public static class ImRaii2
 {
-    private struct EndUnconditionally : ImRaii.IEndObject, IDisposable
+    private struct EndUnconditionally(Action endAction, bool success) : ImRaii.IEndObject, IDisposable
     {
-        private Action EndAction { get; }
+        private Action EndAction { get; } = endAction;
 
-        public bool Success { get; }
+        public bool Success { get; } = success;
 
-        public bool Disposed { get; private set; }
-
-        public EndUnconditionally(Action endAction, bool success)
-        {
-            EndAction = endAction;
-            Success = success;
-            Disposed = false;
-        }
+        public bool Disposed { get; private set; } = false;
 
         public void Dispose()
         {
@@ -33,20 +26,13 @@ public static class ImRaii2
         }
     }
 
-    private struct EndConditionally : ImRaii.IEndObject, IDisposable
+    private struct EndConditionally(Action endAction, bool success) : ImRaii.IEndObject, IDisposable
     {
-        public bool Success { get; }
+        public bool Success { get; } = success;
 
-        public bool Disposed { get; private set; }
+        public bool Disposed { get; private set; } = false;
 
-        private Action EndAction { get; }
-
-        public EndConditionally(Action endAction, bool success)
-        {
-            EndAction = endAction;
-            Success = success;
-            Disposed = false;
-        }
+        private Action EndAction { get; } = endAction;
 
         public void Dispose()
         {

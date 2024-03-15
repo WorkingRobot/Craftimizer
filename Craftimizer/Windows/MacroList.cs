@@ -23,7 +23,7 @@ public sealed class MacroList : Window, IDisposable
     public RecipeData? RecipeData { get; private set; }
 
     private IReadOnlyList<Macro> Macros => Service.Configuration.Macros;
-    private Dictionary<Macro, SimulationState> MacroStateCache { get; } = new();
+    private Dictionary<Macro, SimulationState> MacroStateCache { get; } = [];
 
     public MacroList() : base("Craftimizer Macro List", WindowFlags, false)
     {
@@ -37,8 +37,8 @@ public sealed class MacroList : Window, IDisposable
 
         SizeConstraints = new() { MinimumSize = new(465, 520), MaximumSize = new(float.PositiveInfinity) };
 
-        TitleBarButtons = new()
-        {
+        TitleBarButtons =
+        [
             new()
             {
                 Icon = FontAwesomeIcon.Cog,
@@ -46,7 +46,7 @@ public sealed class MacroList : Window, IDisposable
                 Click = _ => Service.Plugin.OpenSettingsWindow(),
                 ShowTooltip = () => ImGuiUtils.Tooltip("Open Craftimizer Settings")
             }
-        };
+        ];
 
         Service.WindowSystem.AddWindow(this);
     }
@@ -345,7 +345,7 @@ public sealed class MacroList : Window, IDisposable
             .Where(t => t.Score > 0)
             .OrderByDescending(t => t.Score)
             .Select(t => t.Item);
-        sortedMacros = query.ToList();
+        sortedMacros = [.. query];
     }
 
     private void OpenEditor(Macro? macro)

@@ -64,20 +64,14 @@ public sealed unsafe class RecipeNote : Window, IDisposable
     public CharacterStats? CharacterStats { get; private set; }
     public CraftableStatus CraftStatus { get; private set; }
 
-    public sealed class BackgroundTask<T> : IDisposable where T : struct
+    public sealed class BackgroundTask<T>(Func<CancellationToken, T> func) : IDisposable where T : struct
     {
         public T? Result { get; private set; }
         public Exception? Exception { get; private set; }
         public bool Completed { get; private set; }
 
-        private CancellationTokenSource TokenSource { get; }
-        private Func<CancellationToken, T> Func { get; }
-
-        public BackgroundTask(Func<CancellationToken, T> func)
-        {
-            Func = func;
-            TokenSource = new();
-        }
+        private CancellationTokenSource TokenSource { get; } = new();
+        private Func<CancellationToken, T> Func { get; } = func;
 
         public void Start()
         {
@@ -142,8 +136,8 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             MaximumSize = new(10000, 10000)
         };
 
-        TitleBarButtons = new()
-        {
+        TitleBarButtons =
+        [
             new()
             {
                 Icon = FontAwesomeIcon.Cog,
@@ -151,7 +145,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 Click = _ => Service.Plugin.OpenSettingsWindow(),
                 ShowTooltip = () => ImGuiUtils.Tooltip("Open Craftimizer Settings")
             }
-        };
+        ];
 
         Service.WindowSystem.AddWindow(this);
     }

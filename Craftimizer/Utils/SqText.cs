@@ -1,7 +1,7 @@
 using Dalamud.Game.Text;
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Numerics;
 
 namespace Craftimizer.Utils;
@@ -10,7 +10,7 @@ public static class SqText
 {
     public static SeIconChar LevelPrefix => SeIconChar.LevelEn;
 
-    public static readonly ReadOnlyDictionary<char, SeIconChar> LevelNumReplacements = new(new Dictionary<char, SeIconChar>
+    public static readonly FrozenDictionary<char, SeIconChar> LevelNumReplacements = new Dictionary<char, SeIconChar>
     {
         ['0'] = SeIconChar.Number0,
         ['1'] = SeIconChar.Number1,
@@ -22,7 +22,7 @@ public static class SqText
         ['7'] = SeIconChar.Number7,
         ['8'] = SeIconChar.Number8,
         ['9'] = SeIconChar.Number9,
-    });
+    }.ToFrozenDictionary();
 
     public static string ToLevelString<T>(T value) where T : IBinaryInteger<T>
     {
