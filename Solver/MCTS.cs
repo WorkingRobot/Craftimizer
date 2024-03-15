@@ -3,7 +3,6 @@ using Craftimizer.Simulator;
 using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Text;
 using Node = Craftimizer.Solver.ArenaNode<Craftimizer.Solver.SimulationNode>;
 
 namespace Craftimizer.Solver;
@@ -23,7 +22,7 @@ public sealed class MCTS
     public MCTS(in MCTSConfig config, in SimulationState state)
     {
         this.config = config;
-        var sim = new Simulator(config.MaxStepCount) { State = state };
+        var sim = new Simulator(config.ActionPool, config.MaxStepCount, state);
         rootNode = new(new(
             state,
             null,
@@ -35,7 +34,7 @@ public sealed class MCTS
 
     private static SimulationNode Execute(Simulator simulator, in SimulationState state, ActionType action, bool strict)
     {
-        (_, var newState) = simulator.Execute(state, action);
+        var newState = simulator.ExecuteUnchecked(state, action);
         return new(
             newState,
             action,
@@ -194,7 +193,6 @@ public sealed class MCTS
         var currentCompletionState = expandedNode.State.SimulationCompletionState;
         var currentActions = expandedNode.State.AvailableActions;
 
-
         byte actionCount = 0;
         Span<ActionType> actions = stackalloc ActionType[Math.Min(config.MaxStepCount - currentState.ActionCount, config.MaxRolloutStepCount)];
         while (SimulationNode.GetCompletionState(currentCompletionState, currentActions) == CompletionState.Incomplete &&
@@ -202,7 +200,7 @@ public sealed class MCTS
         {
             var nextAction = currentActions.SelectRandom(random);
             actions[actionCount++] = nextAction;
-            (_, currentState) = simulator.Execute(currentState, nextAction);
+            currentState = simulator.ExecuteUnchecked(currentState, nextAction);
             currentCompletionState = simulator.CompletionState;
             if (currentCompletionState != CompletionState.Incomplete)
                 break;
@@ -262,17 +260,14 @@ public sealed class MCTS
         return !NodesIncomplete(rootNode, new());
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Search(int iterations, ref int progress, CancellationToken token)
     {
-        Simulator simulator = new(config.MaxStepCount);
+        var simulator = new Simulator(config.ActionPool, config.MaxStepCount, rootNode.State.State);
         var random = rootNode.State.State.Input.Random;
         var staleCounter = 0;
         var i = 0;
         for (; i < iterations || MaxScore == 0; i++)
         {
-            token.ThrowIfCancellationRequested();
-
             var selectedNode = Select();
             var (endNode, score) = ExpandAndRollout(random, simulator, selectedNode);
             if (MaxScore == 0)
@@ -293,7 +288,10 @@ public sealed class MCTS
             Backpropagate(endNode, score);
 
             if ((i & (ProgressUpdateFrequency - 1)) == ProgressUpdateFrequency - 1)
+            {
+                token.ThrowIfCancellationRequested();
                 Interlocked.Add(ref progress, ProgressUpdateFrequency);
+            }
         }
         Interlocked.Add(ref progress, i & (ProgressUpdateFrequency - 1));
     }

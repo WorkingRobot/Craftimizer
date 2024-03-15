@@ -10,11 +10,12 @@ internal sealed class TrainedEye : BaseAction
 
     public override int CPCost(Simulator s) => 250;
 
-    public override bool CanUse(Simulator s) =>
-        s.IsFirstStep &&
+    public override bool IsPossible(Simulator s) => s.IsFirstStep &&
         !s.Input.Recipe.IsExpert &&
         s.Input.Stats.Level >= (s.Input.Recipe.ClassJobLevel + 10) &&
-        base.CanUse(s);
+        base.IsPossible(s);
+
+    public override bool CouldUse(Simulator s) => s.IsFirstStep && base.CouldUse(s);
 
     public override void UseSuccess(Simulator s) =>
         s.IncreaseQualityRaw(s.Input.Recipe.MaxQuality - s.Quality);

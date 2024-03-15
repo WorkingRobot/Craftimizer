@@ -11,7 +11,7 @@ internal sealed class ByregotsBlessing : BaseAction
     public override int CPCost(Simulator s) => 24;
     public override int Efficiency(Simulator s) => 100 + (20 * s.GetEffectStrength(EffectType.InnerQuiet));
 
-    public override bool CanUse(Simulator s) => s.HasEffect(EffectType.InnerQuiet) && base.CanUse(s);
+    public override bool CouldUse(Simulator s) => s.HasEffect(EffectType.InnerQuiet) && base.CouldUse(s);
 
     public override void UseSuccess(Simulator s)
     {

@@ -7,8 +7,8 @@ public abstract class BaseComboAction : BaseAction
 
     public sealed override ActionCategory Category => ActionCategory.Combo;
 
-    protected bool BaseCanUse(Simulator s) =>
-        base.CanUse(s);
+    protected bool BaseCouldUse(Simulator s) =>
+        base.CouldUse(s);
 
     private static bool VerifyDurability2(int durabilityA, int durability, in Effects effects)
     {

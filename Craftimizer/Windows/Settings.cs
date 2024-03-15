@@ -1,3 +1,5 @@
+using Craftimizer.Simulator;
+using Craftimizer.Simulator.Actions;
 using Craftimizer.Solver;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
@@ -8,8 +10,10 @@ using Dalamud.Interface.Windowing;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using ImGuiNET;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Text;
 
 namespace Craftimizer.Plugin.Windows;
 
@@ -558,6 +562,21 @@ public sealed class Settings : Window, IDisposable
                 );
         }
 
+        using (var panel = ImRaii2.GroupPanel("Action Pool", -1, out var poolWidth))
+        {
+            poolWidth -= ImGui.GetStyle().ItemSpacing.X * 2;
+
+            ImGui.Text("Select the actions you want the solver to choose from.");
+
+            var pool = config.ActionPool;
+            DrawActionPool(ref pool, poolWidth, out var isPoolDirty);
+            if (isPoolDirty)
+            {
+                config = config with { ActionPool = pool };
+                isDirty = true;
+            }
+        }
+
         using (var panel = ImRaii2.GroupPanel("Advanced", -1, out _))
         {
             DrawOption(
@@ -674,6 +693,120 @@ public sealed class Settings : Window, IDisposable
 
         if (isDirty)
             configRef = config;
+    }
+
+    private static void DrawActionPool(ref ActionType[] actionPool, float poolWidth, out bool isDirty)
+    {
+        isDirty = false;
+
+        var recipeData = Service.Plugin.GetDefaultStats().Recipe;
+        HashSet<ActionType> pool = new(actionPool);
+
+        var imageSize = ImGui.GetFrameHeight() * 2;
+        var spacing = ImGui.GetStyle().ItemSpacing.Y;
+
+        using var _color = ImRaii.PushColor(ImGuiCol.Button, Vector4.Zero);
+        using var _color3 = ImRaii.PushColor(ImGuiCol.ButtonHovered, Vector4.Zero);
+        using var _color2 = ImRaii.PushColor(ImGuiCol.ButtonActive, Vector4.Zero);
+        using var _alpha = ImRaii.PushStyle(ImGuiStyleVar.DisabledAlpha, ImGui.GetStyle().DisabledAlpha * .5f);
+        foreach (var category in Enum.GetValues<ActionCategory>())
+        {
+            if (category == ActionCategory.Combo)
+                continue;
+
+            var actions = category.GetActions();
+            using var panel = ImRaii2.GroupPanel(category.GetDisplayName(), poolWidth, out var availSpace);
+            var itemsPerRow = (int)MathF.Floor((availSpace + spacing) / (imageSize + spacing));
+            var itemCount = actions.Count;
+            var iterCount = (int)(Math.Ceiling((float)itemCount / itemsPerRow) * itemsPerRow);
+            for (var i = 0; i < iterCount; i++)
+            {
+                if (i % itemsPerRow != 0)
+                    ImGui.SameLine(0, spacing);
+                if (i < itemCount)
+                {
+                    var actionBase = actions[i].Base();
+                    var isEnabled = pool.Contains(actions[i]);
+                    var isInefficient = SolverConfig.InefficientActions.Contains(actions[i]);
+                    var isRisky = SolverConfig.RiskyActions.Contains(actions[i]);
+                    var iconTint = Vector4.One;
+                    if (!isEnabled)
+                        iconTint = new(1, 1, 1, ImGui.GetStyle().DisabledAlpha);
+                    else if (isInefficient)
+                        iconTint = new(1, 1f, .5f, 1);
+                    else if (isRisky)
+                        iconTint = new(1, .5f, .5f, 1);
+                    if (ImGui.ImageButton(actions[i].GetIcon(recipeData.ClassJob).ImGuiHandle, new(imageSize), default, Vector2.One, 0, default, iconTint))
+                    {
+                        isDirty = true;
+                        if (isEnabled)
+                            pool.Remove(actions[i]);
+                        else
+                            pool.Add(actions[i]);
+                    }
+                    if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+                    {
+                        var s = new StringBuilder();
+                        s.AppendLine(actions[i].GetName(recipeData.ClassJob));
+                        if (isInefficient)
+                            s.AppendLine(
+                                "Not recommended. This action may be randomly used in a " +
+                                "detrimental way to the rest of the craft. Always use " +
+                                "your best judgement if enabling this action.");
+                        if (isRisky)
+                            s.AppendLine(
+                                "Useless; the solver currently doesn't take any risks in " +
+                                "its crafts. It only takes steps that have a 100% chance of " +
+                                "succeeding. If you want have a moment where you want to take " +
+                                "risks in your craft (like in expert recipes), don't rely " +
+                                "on the solver during that time.");
+                        ImGuiUtils.TooltipWrapped(s.ToString());
+                    }
+                }
+                else
+                    ImGui.Dummy(new(imageSize));
+            }
+        }
+
+        if (isDirty)
+        {
+            bool InPool(BaseComboAction action)
+            {
+                if (action.ActionTypeA.Base() is BaseComboAction { } aCombo)
+                {
+                    if (!InPool(aCombo))
+                        return false;
+                }
+                else
+                {
+                    if (!pool.Contains(action.ActionTypeA))
+                        return false;
+                }
+                if (action.ActionTypeB.Base() is BaseComboAction { } bCombo)
+                {
+                    if (!InPool(bCombo))
+                        return false;
+                }
+                else
+                {
+                    if (!pool.Contains(action.ActionTypeB))
+                        return false;
+                }
+                return true;
+            }
+
+            foreach(var combo in ActionCategory.Combo.GetActions())
+            {
+                if (combo.Base() is BaseComboAction { } comboAction)
+                {
+                    if (!InPool(comboAction))
+                        pool.Remove(combo);
+                    else
+                        pool.Add(combo);
+                }
+            }
+            actionPool = pool.ToArray();
+        }
     }
 
     private void DrawTabSimulator()

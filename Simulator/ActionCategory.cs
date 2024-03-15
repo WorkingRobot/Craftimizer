@@ -22,7 +22,6 @@ public static class ActionCategoryUtils
     {
         SortedActions = new(
             Enum.GetValues<ActionType>()
-            .Where(a => a.Category() != ActionCategory.Combo)
             .GroupBy(a => a.Category())
             .ToDictionary(g => g.Key, g => g.OrderBy(a => a.Level()).ToArray()));
     }

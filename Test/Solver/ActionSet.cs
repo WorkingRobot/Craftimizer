@@ -4,21 +4,6 @@ namespace Craftimizer.Test.Solver;
 public class ActionSetTests
 {
     [TestMethod]
-    public void TestAcceptedActions()
-    {
-        var actions = ActionSet.AcceptedActions;
-        var lut = ActionSet.AcceptedActionsLUT;
-
-        Assert.IsTrue(actions.Length <= 32);
-        foreach (var i in Enum.GetValues<ActionType>())
-        {
-            var idx = lut[(byte)i];
-            if (idx != -1)
-                Assert.AreEqual(i, actions[idx]);
-        }
-    }
-
-    [TestMethod]
     public void TestSize()
     {
         var set = new ActionSet();
@@ -87,18 +72,18 @@ public class ActionSetTests
 
         Assert.AreEqual(4, set.Count);
 
-        Assert.AreEqual(ActionType.DelicateSynthesis, set.ElementAt(0));
-        Assert.AreEqual(ActionType.Reflect, set.ElementAt(1));
-        Assert.AreEqual(ActionType.ByregotsBlessing, set.ElementAt(2));
-        Assert.AreEqual(ActionType.BasicSynthesis, set.ElementAt(3));
+        Assert.AreEqual(ActionType.BasicSynthesis, set.ElementAt(0));
+        Assert.AreEqual(ActionType.ByregotsBlessing, set.ElementAt(1));
+        Assert.AreEqual(ActionType.DelicateSynthesis, set.ElementAt(2));
+        Assert.AreEqual(ActionType.Reflect, set.ElementAt(3));
 
         set.RemoveAction(ActionType.Reflect);
 
         Assert.AreEqual(3, set.Count);
 
-        Assert.AreEqual(ActionType.DelicateSynthesis, set.ElementAt(0));
+        Assert.AreEqual(ActionType.BasicSynthesis, set.ElementAt(0));
         Assert.AreEqual(ActionType.ByregotsBlessing, set.ElementAt(1));
-        Assert.AreEqual(ActionType.BasicSynthesis, set.ElementAt(2));
+        Assert.AreEqual(ActionType.DelicateSynthesis, set.ElementAt(2));
     }
 
     [TestMethod]

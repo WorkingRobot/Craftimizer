@@ -1,12 +1,13 @@
 using System.Diagnostics.Contracts;
-using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Craftimizer.Solver;
 
 // Adapted from https://github.com/dtao/ConcurrentList/blob/4fcf1c76e93021a41af5abb2d61a63caeba2adad/ConcurrentList/ConcurrentList.cs
 public struct NodeScoresBuffer
 {
+    [StructLayout(LayoutKind.Auto)]
     public readonly struct ScoresBatch
     {
         public readonly Memory<float> ScoreSum;
@@ -15,28 +16,18 @@ public struct NodeScoresBuffer
 
         public ScoresBatch()
         {
-            ScoreSum = new float[BatchSize];
-            MaxScore = new float[BatchSize];
-            Visits = new int[BatchSize];
+            ScoreSum = new float[ArenaBuffer.BatchSize];
+            MaxScore = new float[ArenaBuffer.BatchSize];
+            Visits = new int[ArenaBuffer.BatchSize];
         }
     }
-
-    // Technically 25, but it's very unlikely to actually get to there.
-    // The benchmark reaches 20 at most, but here we have a little leeway just in case.
-    private const int MaxSize = 24;
-
-    private static readonly int BatchSize = Vector<float>.Count;
-    private static readonly int BatchSizeBits = int.Log2(BatchSize);
-    private static readonly int BatchSizeMask = BatchSize - 1;
-
-    private static readonly int BatchCount = MaxSize / BatchSize;
 
     public ScoresBatch[] Data;
     public int Count { get; private set; }
 
     public void Add()
     {
-        Data ??= new ScoresBatch[BatchCount];
+        Data ??= new ScoresBatch[ArenaBuffer.BatchCount];
 
         var idx = Count++;
 
@@ -59,5 +50,5 @@ public struct NodeScoresBuffer
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static (int arrayIdx, int subIdx) GetArrayIndex(int idx) =>
-        (idx >> BatchSizeBits, idx & BatchSizeMask);
+        (idx >> ArenaBuffer.BatchSizeBits, idx & ArenaBuffer.BatchSizeMask);
 }

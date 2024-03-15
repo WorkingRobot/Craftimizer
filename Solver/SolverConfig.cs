@@ -1,3 +1,4 @@
+using Craftimizer.Simulator.Actions;
 using System.Runtime.InteropServices;
 
 namespace Craftimizer.Solver;
@@ -31,6 +32,7 @@ public readonly record struct SolverConfig
     public float ScoreCP { get; init; }
     public float ScoreSteps { get; init; }
 
+    public ActionType[] ActionPool { get; init; }
     public SolverAlgorithm Algorithm { get; init; }
 
     public SolverConfig()
@@ -54,8 +56,55 @@ public readonly record struct SolverConfig
         ScoreCP = .05f;
         ScoreSteps = .05f;
 
+        ActionPool = DefaultActionPool;
         Algorithm = SolverAlgorithm.StepwiseFurcated;
     }
+
+    public static ActionType[] OptimizeActionPool(IEnumerable<ActionType> actions) =>
+        actions.Order().ToArray();
+
+    public static readonly ActionType[] DefaultActionPool = OptimizeActionPool(new[]
+    {
+        ActionType.StandardTouchCombo,
+        ActionType.AdvancedTouchCombo,
+        ActionType.FocusedTouchCombo,
+        ActionType.FocusedSynthesisCombo,
+        ActionType.TrainedFinesse,
+        ActionType.PrudentSynthesis,
+        ActionType.Groundwork,
+        ActionType.AdvancedTouch,
+        ActionType.CarefulSynthesis,
+        ActionType.TrainedEye,
+        ActionType.DelicateSynthesis,
+        ActionType.PreparatoryTouch,
+        ActionType.Reflect,
+        ActionType.PrudentTouch,
+        ActionType.Manipulation,
+        ActionType.MuscleMemory,
+        ActionType.ByregotsBlessing,
+        ActionType.WasteNot2,
+        ActionType.BasicSynthesis,
+        ActionType.Innovation,
+        ActionType.GreatStrides,
+        ActionType.StandardTouch,
+        ActionType.Veneration,
+        ActionType.WasteNot,
+        ActionType.MastersMend,
+        ActionType.BasicTouch,
+    });
+
+    public static readonly IReadOnlySet<ActionType> InefficientActions = new HashSet<ActionType>(new[]
+    {
+        ActionType.CarefulObservation,
+        ActionType.HeartAndSoul,
+        ActionType.FinalAppraisal
+    });
+
+    public static readonly IReadOnlySet<ActionType> RiskyActions = new HashSet<ActionType>(new[]
+    {
+        ActionType.RapidSynthesis,
+        ActionType.HastyTouch,
+    });
 
     public static readonly SolverConfig SimulatorDefault = new SolverConfig() with
     {

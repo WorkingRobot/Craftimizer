@@ -12,7 +12,7 @@ public sealed class ArenaNode<T> where T : struct
 
     public NodeScoresBuffer? ParentScores => Parent?.ChildScores;
 
-    public ArenaNode(T state, ArenaNode<T>? parent = null)
+    public ArenaNode(in T state, ArenaNode<T>? parent = null)
     {
         State = state;
         Children = new();
@@ -24,9 +24,9 @@ public sealed class ArenaNode<T> where T : struct
         Children.Data?[at.arrayIdx]?[at.subIdx];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ArenaNode<T> Add(T state)
+    public ArenaNode<T> Add(in T state)
     {
-        var node = new ArenaNode<T>(state, this);
+        var node = new ArenaNode<T>(in state, this);
         ChildScores.Add();
         Children.Add(node);
         return node;

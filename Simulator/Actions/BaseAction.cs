@@ -25,8 +25,19 @@ public abstract class BaseAction
     public virtual int Efficiency(Simulator s) => 0;
     public virtual float SuccessRate(Simulator s) => 1f;
 
-    public virtual bool CanUse(Simulator s) =>
-        s.Input.Stats.Level >= Level && s.CP >= CPCost(s);
+    // Return true if it can be in the action pool now or in the future
+    // e.g. if Heart and Soul is already used, it is impossible to use it again
+    // or if it's a first step action and IsFirstStep is false
+    public virtual bool IsPossible(Simulator s) =>
+        s.Input.Stats.Level >= Level;
+
+    // Return true if it can be used now
+    // This already assumes that IsPossible returns true *at some point before*
+    public virtual bool CouldUse(Simulator s) =>
+        s.CP >= CPCost(s);
+
+    public bool CanUse(Simulator s) =>
+        IsPossible(s) && CouldUse(s);
 
     public virtual void Use(Simulator s)
     {

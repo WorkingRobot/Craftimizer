@@ -145,7 +145,7 @@ public sealed class Solver : IDisposable
         var bestSims = new List<(float Score, SolverSolution Result)>();
 
         var state = State;
-        var sim = new Simulator(Config.MaxStepCount);
+        var sim = new Simulator(Config.ActionPool, Config.MaxStepCount);
 
         var activeStates = new List<SolverSolution>() { new(Array.Empty<ActionType>(), state) };
 
@@ -272,7 +272,7 @@ public sealed class Solver : IDisposable
 
         var actions = new List<ActionType>();
         var state = State;
-        var sim = new Simulator(Config.MaxStepCount) { State = state };
+        var sim = new Simulator(Config.ActionPool, Config.MaxStepCount, state);
         while (true)
         {
             Token.ThrowIfCancellationRequested();
@@ -338,7 +338,7 @@ public sealed class Solver : IDisposable
 
         var actions = new List<ActionType>();
         var state = State;
-        var sim = new Simulator(Config.MaxStepCount) { State = state };
+        var sim = new Simulator(Config.ActionPool, Config.MaxStepCount, state);
         while (true)
         {
             Token.ThrowIfCancellationRequested();

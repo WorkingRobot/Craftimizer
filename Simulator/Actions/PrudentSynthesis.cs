@@ -12,7 +12,7 @@ internal sealed class PrudentSynthesis : BaseAction
     public override int CPCost(Simulator s) => 18;
     public override int Efficiency(Simulator s) => 180;
 
-    public override bool CanUse(Simulator s) =>
+    public override bool CouldUse(Simulator s) =>
         !(s.HasEffect(EffectType.WasteNot) || s.HasEffect(EffectType.WasteNot2))
-        && base.CanUse(s);
+        && base.CouldUse(s);
 }

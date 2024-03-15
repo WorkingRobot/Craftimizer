@@ -1,3 +1,4 @@
+using Craftimizer.Simulator.Actions;
 using System.Runtime.InteropServices;
 
 namespace Craftimizer.Solver;
@@ -21,6 +22,8 @@ public readonly record struct MCTSConfig
     public float ScoreCP { get; init; }
     public float ScoreSteps { get; init; }
 
+    public ActionType[] ActionPool { get; init; }
+
     public MCTSConfig(in SolverConfig config)
     {
         MaxStepCount = config.MaxStepCount;
@@ -36,5 +39,7 @@ public readonly record struct MCTSConfig
         ScoreDurability = config.ScoreDurability;
         ScoreCP = config.ScoreCP;
         ScoreSteps = config.ScoreSteps;
+
+        ActionPool = config.ActionPool;
     }
 }

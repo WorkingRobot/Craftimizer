@@ -7,6 +7,7 @@ namespace Craftimizer.Solver;
 
 internal sealed class Simulator : SimulatorNoRandom
 {
+    private readonly (BaseAction Data, ActionType Action)[] actionPoolObjects;
     private readonly int maxStepCount;
 
     public override CompletionState CompletionState
@@ -20,8 +21,15 @@ internal sealed class Simulator : SimulatorNoRandom
         }
     }
 
-    public Simulator(int maxStepCount)
+    public Simulator(ActionType[] actionPool, int maxStepCount, SimulationState? filteringState = null)
     {
+        var pool = actionPool.Select(x => (x.Base(), x));
+        if (filteringState is { } state)
+        {
+            State = state;
+            pool = pool.Where(x => x.Item1.IsPossible(this));
+        }
+        actionPoolObjects = pool.OrderBy(x => x.x).ToArray();
         this.maxStepCount = maxStepCount;
     }
 
@@ -30,11 +38,9 @@ internal sealed class Simulator : SimulatorNoRandom
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     // It's just a bunch of if statements, I would assume this is actually quite simple to follow
 #pragma warning disable MA0051 // Method is too long
-    private bool CanUseAction(ActionType action, bool strict)
+    private bool CouldUseAction(ActionType action, BaseAction baseAction, bool strict)
 #pragma warning restore MA0051 // Method is too long
     {
-        var baseAction = action.Base();
-
         if (CalculateSuccessRate(baseAction.SuccessRate(this)) != 1)
             return false;
 
@@ -46,7 +52,7 @@ internal sealed class Simulator : SimulatorNoRandom
         {
             // always use Trained Eye if it's available
             if (action == ActionType.TrainedEye)
-                return baseAction.CanUse(this);
+                return baseAction.CouldUse(this);
 
             // don't allow quality moves under Muscle Memory for difficult crafts
             if (Input.Recipe.ClassJobLevel == 90 &&
@@ -123,7 +129,7 @@ internal sealed class Simulator : SimulatorNoRandom
                 return false;
         }
 
-        return baseAction.CanUse(this);
+        return baseAction.CouldUse(this);
     }
 
     // https://github.com/alostsock/crafty/blob/cffbd0cad8bab3cef9f52a3e3d5da4f5e3781842/crafty/src/craft_state.rs#L137
@@ -133,10 +139,9 @@ internal sealed class Simulator : SimulatorNoRandom
             return new();
 
         var ret = new ActionSet();
-        foreach (var action in ActionSet.AcceptedActions)
-            if (CanUseAction(action, strict))
+        foreach (var (data, action) in actionPoolObjects)
+            if (CouldUseAction(action, data, strict))
                 ret.AddAction(action);
         return ret;
     }
-
 }
