@@ -2,13 +2,25 @@ namespace Craftimizer.Simulator.Actions;
 
 internal sealed class BasicSynthesis : BaseAction
 {
-    public override ActionCategory Category => ActionCategory.Synthesis;
-    public override int Level => 1;
-    public override uint ActionId => 100001;
+    public int CP;
+    public int EfficiencyNormal = 100;
+    public int EfficiencyGood = 120;
 
-    public override bool IncreasesProgress => true;
+    public BasicSynthesis()
+    {
+        Category = ActionCategory.Synthesis;
+        IncreasesProgress = true;
+        ActionId = 100001;
+        Level = 1;
+    }
 
-    public override int CPCost(Simulator s) => 0;
+    public override void CPCost(Simulator s, ref int cost)
+    {
+        cost = CP;
+    }
     // Basic Synthesis Mastery Trait
-    public override int Efficiency(Simulator s) => s.Input.Stats.Level >= 31 ? 120 : 100;
+    public override void Efficiency(Simulator s, ref int eff)
+    {
+        eff = s.Input.Stats.Level >= 31 ? EfficiencyGood : EfficiencyNormal;
+    }
 }

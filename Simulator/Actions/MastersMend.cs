@@ -2,14 +2,19 @@ namespace Craftimizer.Simulator.Actions;
 
 internal sealed class MastersMend : BaseAction
 {
-    public override ActionCategory Category => ActionCategory.Durability;
-    public override int Level => 7;
-    public override uint ActionId => 100003;
+    public MastersMend()
+    {
+        Category = ActionCategory.Durability;
+        Level = 7;
+        ActionId = 100003;
+        DurabilityCost = 0;
+    }
 
-    public override int DurabilityCost => 0;
+    public override void CPCost(Simulator s, ref int cost)
+    {
+        cost = 88;
+    }
 
-    public override int CPCost(Simulator s) => 88;
-
-    public override void UseSuccess(Simulator s) =>
+    public override void UseSuccess(Simulator s, ref int eff) =>
         s.RestoreDurability(30);
 }

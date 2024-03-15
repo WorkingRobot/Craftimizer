@@ -4,14 +4,17 @@ namespace Craftimizer.Simulator.Actions;
 
 internal abstract class BaseBuffAction : BaseAction
 {
+    public BaseBuffAction()
+    {
+        MacroWaitTime = 2;
+        DurabilityCost = 0;
+    }
+
     // Non-instanced properties
-    public abstract EffectType Effect { get; }
-    public virtual byte Duration => 1;
-    public override int MacroWaitTime => 2;
+    public EffectType Effect;
+    public int Duration = 1;
 
-    public sealed override int DurabilityCost => 0;
-
-    public override void UseSuccess(Simulator s) =>
+    public override void UseSuccess(Simulator s, ref int eff) =>
         s.AddEffect(Effect, Duration);
 
     public override string GetTooltip(Simulator s, bool addUsability)

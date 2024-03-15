@@ -2,22 +2,31 @@ namespace Craftimizer.Simulator.Actions;
 
 internal sealed class PreciseTouch : BaseAction
 {
-    public override ActionCategory Category => ActionCategory.Quality;
-    public override int Level => 53;
-    public override uint ActionId => 100128;
-
-    public override bool IncreasesQuality => true;
-
-    public override int CPCost(Simulator s) => 18;
-    public override int Efficiency(Simulator s) => 150;
-
-    public override bool CouldUse(Simulator s) =>
-        (s.Condition == Condition.Good || s.Condition == Condition.Excellent || s.HasEffect(EffectType.HeartAndSoul))
-        && base.CouldUse(s);
-
-    public override void UseSuccess(Simulator s)
+    public PreciseTouch()
     {
-        base.UseSuccess(s);
+        Category = ActionCategory.Quality;
+        Level = 53;
+        ActionId = 100128;
+        IncreasesQuality = true;
+    }
+
+    public override void CPCost(Simulator s, ref int cost)
+    {
+        cost = 18;
+    }
+
+    public override void Efficiency(Simulator s, ref int eff)
+    {
+        eff = 150;
+    }
+
+    public override bool CouldUse(Simulator s, ref int cost) =>
+        (s.Condition == Condition.Good || s.Condition == Condition.Excellent || s.HasEffect(EffectType.HeartAndSoul))
+        && base.CouldUse(s, ref cost);
+
+    public override void UseSuccess(Simulator s, ref int eff)
+    {
+        base.UseSuccess(s, ref eff);
         s.StrengthenEffect(EffectType.InnerQuiet);
         if (s.Condition != Condition.Good && s.Condition != Condition.Excellent)
             s.RemoveEffect(EffectType.HeartAndSoul);

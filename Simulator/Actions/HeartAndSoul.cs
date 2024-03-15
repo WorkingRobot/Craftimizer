@@ -2,21 +2,25 @@ namespace Craftimizer.Simulator.Actions;
 
 internal sealed class HeartAndSoul : BaseBuffAction
 {
-    public override ActionCategory Category => ActionCategory.Other;
-    public override int Level => 86;
-    public override uint ActionId => 100419;
-    public override int MacroWaitTime => 3;
+    public HeartAndSoul()
+    {
+        Level = 86;
+        Effect = EffectType.HeartAndSoul;
+        MacroWaitTime = 3;
+        ActionId = 100419;
+        Category = ActionCategory.Other;
+        IncreasesStepCount = false;
+    }
 
-    public override bool IncreasesStepCount => false;
-
-    public override EffectType Effect => EffectType.HeartAndSoul;
-
-    public override int CPCost(Simulator s) => 0;
+    public override void CPCost(Simulator s, ref int cost)
+    {
+        cost = 0;
+    }
 
     public override bool IsPossible(Simulator s) =>
         base.IsPossible(s) && s.Input.Stats.IsSpecialist && !s.ActionStates.UsedHeartAndSoul;
 
-    public override bool CouldUse(Simulator s) => !s.ActionStates.UsedHeartAndSoul;
+    public override bool CouldUse(Simulator s, ref int cost) => !s.ActionStates.UsedHeartAndSoul;
 
     public override string GetTooltip(Simulator s, bool addUsability) =>
         $"{GetBaseTooltip(s, addUsability)}Specialist Only\n";

@@ -5,10 +5,13 @@ public abstract class BaseComboAction : BaseAction
     public abstract ActionType ActionTypeA { get; }
     public abstract ActionType ActionTypeB { get; }
 
-    public sealed override ActionCategory Category => ActionCategory.Combo;
+    public BaseComboAction()
+    {
+        Category = ActionCategory.Combo;
+    }
 
-    protected bool BaseCouldUse(Simulator s) =>
-        base.CouldUse(s);
+    protected bool BaseCouldUse(Simulator s, ref int cost) =>
+        base.CouldUse(s, ref cost);
 
     private static bool VerifyDurability2(int durabilityA, int durability, in Effects effects)
     {

@@ -2,14 +2,27 @@ namespace Craftimizer.Simulator.Actions;
 
 internal sealed class RapidSynthesis : BaseAction
 {
-    public override ActionCategory Category => ActionCategory.Synthesis;
-    public override int Level => 9;
-    public override uint ActionId => 100363;
+    public RapidSynthesis()
+    {
+        Category = ActionCategory.Synthesis;
+        Level = 9;
+        ActionId = 100363;
+        IncreasesProgress = true;
+    }
 
-    public override bool IncreasesProgress => true;
+    public override void CPCost(Simulator s, ref int cost)
+    {
+        cost = 0;
+    }
 
-    public override int CPCost(Simulator s) => 0;
     // Rapid Synthesis Mastery Trait
-    public override int Efficiency(Simulator s) => s.Input.Stats.Level >= 63 ? 500 : 250;
-    public override float SuccessRate(Simulator s) => 0.50f;
+    public override void Efficiency(Simulator s, ref int eff)
+    {
+        eff = s.Input.Stats.Level >= 63 ? 500 : 250;
+    }
+
+    public override void SuccessRate(Simulator s, ref float success)
+    {
+        success = 0.50f;
+    }
 }

@@ -170,7 +170,8 @@ public class SimulatorTests
             },
             0, 4064, 15, 332);
         Assert.AreEqual(10, state.ActiveEffects.InnerQuiet);
-        Assert.IsTrue(ActionType.TrainedFinesse.Base().CanUse(new SimulatorNoRandom() { State = state }));
+        var cost = 0;
+        Assert.IsTrue(ActionType.TrainedFinesse.Base().CanUse(new SimulatorNoRandom() { State = state }, ref cost));
     }
 
     [TestMethod]

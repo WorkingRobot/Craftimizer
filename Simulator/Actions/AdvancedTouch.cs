@@ -2,12 +2,26 @@ namespace Craftimizer.Simulator.Actions;
 
 internal sealed class AdvancedTouch : BaseAction
 {
-    public override ActionCategory Category => ActionCategory.Quality;
-    public override int Level => 84;
-    public override uint ActionId => 100411;
+    public int CostDefault = 46;
+    public int CostOptimal = 18;
+    public int EfficiencyDefault = 150;
 
-    public override bool IncreasesQuality => true;
+    public AdvancedTouch()
+    {
+        Category = ActionCategory.Quality;
+        Level = 84;
+        ActionId = 100411;
+        IncreasesQuality = true;
+    }
 
-    public override int CPCost(Simulator s) => s.ActionStates.TouchComboIdx == 2 ? 18 : 46;
-    public override int Efficiency(Simulator s) => 150;
+
+    public override void CPCost(Simulator s, ref int cost)
+    {
+        cost = s.ActionStates.TouchComboIdx == 2 ? CostOptimal : CostDefault;
+    }
+
+    public override void Efficiency(Simulator s, ref int eff)
+    {
+        eff = EfficiencyDefault;
+    }
 }

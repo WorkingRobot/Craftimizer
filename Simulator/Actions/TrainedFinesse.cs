@@ -2,17 +2,26 @@ namespace Craftimizer.Simulator.Actions;
 
 internal sealed class TrainedFinesse : BaseAction
 {
-    public override ActionCategory Category => ActionCategory.Quality;
-    public override int Level => 90;
-    public override uint ActionId => 100435;
+    public TrainedFinesse()
+    {
+        Category = ActionCategory.Quality;
+        Level = 90;
+        ActionId = 100435;
+        IncreasesQuality = true;
+        DurabilityCost = 0;
+    }
 
-    public override bool IncreasesQuality => true;
-    public override int DurabilityCost => 0;
+    public override void CPCost(Simulator s, ref int cost)
+    {
+        cost = 32;
+    }
 
-    public override int CPCost(Simulator s) => 32;
-    public override int Efficiency(Simulator s) => 100;
+    public override void Efficiency(Simulator s, ref int eff)
+    {
+        eff = 100;
+    }
 
-    public override bool CouldUse(Simulator s) =>
+    public override bool CouldUse(Simulator s, ref int cost) =>
         s.GetEffectStrength(EffectType.InnerQuiet) == 10
-        && base.CouldUse(s);
+        && base.CouldUse(s, ref cost);
 }
