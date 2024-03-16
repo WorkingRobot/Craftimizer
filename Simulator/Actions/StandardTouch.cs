@@ -1,13 +1,12 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal sealed class StandardTouch : BaseAction
+internal sealed class StandardTouch() : BaseAction(
+    ActionCategory.Quality, 18, 100004,
+    increasesQuality: true,
+    defaultCPCost: 32,
+    defaultEfficiency: 125
+    )
 {
-    public override ActionCategory Category => ActionCategory.Quality;
-    public override int Level => 18;
-    public override uint ActionId => 100004;
-
-    public override bool IncreasesQuality => true;
-
-    public override int CPCost(Simulator s) => s.ActionStates.TouchComboIdx == 1 ? 18 : 32;
-    public override int Efficiency(Simulator s) => 125;
+    public override int CPCost(Simulator s) =>
+        s.ActionStates.TouchComboIdx == 1 ? 18 : 32;
 }

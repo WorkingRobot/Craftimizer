@@ -1,12 +1,10 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal sealed class Observe : BaseAction
+internal sealed class Observe() : BaseAction(
+    ActionCategory.Other, 13, 100010,
+    durabilityCost: 0,
+    defaultCPCost: 7
+    )
 {
-    public override ActionCategory Category => ActionCategory.Other;
-    public override int Level => 13;
-    public override uint ActionId => 100010;
 
-    public override int DurabilityCost => 0;
-
-    public override int CPCost(Simulator s) => 7;
 }

@@ -1,14 +1,13 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal sealed class FocusedSynthesis : BaseAction
+internal sealed class FocusedSynthesis() : BaseAction(
+    ActionCategory.Synthesis, 67, 100235,
+    increasesProgress: true,
+    defaultCPCost: 5,
+    defaultEfficiency: 200,
+    defaultSuccessRate: 0.50f
+    )
 {
-    public override ActionCategory Category => ActionCategory.Synthesis;
-    public override int Level => 67;
-    public override uint ActionId => 100235;
-
-    public override bool IncreasesProgress => true;
-
-    public override int CPCost(Simulator s) => 5;
-    public override int Efficiency(Simulator s) => 200;
-    public override float SuccessRate(Simulator s) => s.ActionStates.Observed ? 1.00f : 0.50f;
+    public override float SuccessRate(Simulator s) =>
+        s.ActionStates.Observed ? 1.00f : 0.50f;
 }

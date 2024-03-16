@@ -1,13 +1,10 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal sealed class Veneration : BaseBuffAction
+internal sealed class Veneration() : BaseBuffAction(
+    ActionCategory.Buffs, 15, 19297,
+    EffectType.Veneration, duration: 4,
+    defaultCPCost: 18
+    )
 {
-    public override ActionCategory Category => ActionCategory.Buffs;
-    public override int Level => 15;
-    public override uint ActionId => 19297;
 
-    public override EffectType Effect => EffectType.Veneration;
-    public override byte Duration => 4;
-
-    public override int CPCost(Simulator s) => 18;
 }

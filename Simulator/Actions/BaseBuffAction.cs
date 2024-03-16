@@ -2,14 +2,25 @@ using System.Text;
 
 namespace Craftimizer.Simulator.Actions;
 
-internal abstract class BaseBuffAction : BaseAction
+internal abstract class BaseBuffAction(
+        ActionCategory category, int level, uint actionId,
+        EffectType effect, int duration,
+        int macroWaitTime = 2,
+        bool increasesProgress = false, bool increasesQuality = false,
+        int durabilityCost = 0, bool increasesStepCount = true,
+        int defaultCPCost = 0,
+        int defaultEfficiency = 0,
+        float defaultSuccessRate = 1) :
+    BaseAction(
+        category, level, actionId,
+        macroWaitTime,
+        increasesProgress, increasesQuality,
+        durabilityCost, increasesStepCount,
+        defaultCPCost, defaultEfficiency, defaultSuccessRate)
 {
     // Non-instanced properties
-    public abstract EffectType Effect { get; }
-    public virtual byte Duration => 1;
-    public override int MacroWaitTime => 2;
-
-    public sealed override int DurabilityCost => 0;
+    public readonly EffectType Effect = effect;
+    public readonly int Duration = duration;
 
     public override void UseSuccess(Simulator s) =>
         s.AddEffect(Effect, Duration);

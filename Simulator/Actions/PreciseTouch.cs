@@ -1,16 +1,12 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal sealed class PreciseTouch : BaseAction
+internal sealed class PreciseTouch() : BaseAction(
+    ActionCategory.Quality, 53, 100128,
+    increasesQuality: true,
+    defaultCPCost: 18,
+    defaultEfficiency: 150
+    )
 {
-    public override ActionCategory Category => ActionCategory.Quality;
-    public override int Level => 53;
-    public override uint ActionId => 100128;
-
-    public override bool IncreasesQuality => true;
-
-    public override int CPCost(Simulator s) => 18;
-    public override int Efficiency(Simulator s) => 150;
-
     public override bool CouldUse(Simulator s) =>
         (s.Condition == Condition.Good || s.Condition == Condition.Excellent || s.HasEffect(EffectType.HeartAndSoul))
         && base.CouldUse(s);

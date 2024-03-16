@@ -1,17 +1,16 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal abstract class BaseComboAction<A, B> : BaseComboAction where A : BaseAction, new() where B : BaseAction, new()
+internal abstract class BaseComboAction<A, B>(
+    ActionType actionTypeA, ActionType actionTypeB,
+    int? baseCPCost = null) :
+    BaseComboAction(
+        actionTypeA, actionTypeB,
+        ActionA, ActionB,
+        baseCPCost
+        ) where A : BaseAction, new() where B : BaseAction, new()
 {
     protected static readonly A ActionA = new();
     protected static readonly B ActionB = new();
-
-    public override int Level => ActionB.Level;
-    public override uint ActionId => ActionB.ActionId;
-
-    public override bool IncreasesProgress => ActionA.IncreasesProgress || ActionB.IncreasesProgress;
-    public override bool IncreasesQuality => ActionA.IncreasesQuality || ActionB.IncreasesQuality;
-
-    public override int CPCost(Simulator s) => ActionA.CPCost(s) + ActionB.CPCost(s);
 
     public override bool IsPossible(Simulator s) => ActionA.IsPossible(s) && ActionB.IsPossible(s);
 

@@ -1,11 +1,17 @@
 namespace Craftimizer.Simulator.Actions;
 
-public abstract class BaseComboAction : BaseAction
+public abstract class BaseComboAction(
+        ActionType actionTypeA, ActionType actionTypeB,
+        BaseAction actionA, BaseAction actionB,
+        int? defaultCPCost = null) :
+    BaseAction(
+        ActionCategory.Combo, Math.Max(actionA.Level, actionA.Level), actionB.ActionId,
+        increasesProgress: actionA.IncreasesProgress || actionB.IncreasesProgress,
+        increasesQuality: actionA.IncreasesQuality || actionB.IncreasesQuality,
+        defaultCPCost: defaultCPCost ?? (actionA.DefaultCPCost + actionB.DefaultCPCost))
 {
-    public abstract ActionType ActionTypeA { get; }
-    public abstract ActionType ActionTypeB { get; }
-
-    public sealed override ActionCategory Category => ActionCategory.Combo;
+    public readonly ActionType ActionTypeA = actionTypeA;
+    public readonly ActionType ActionTypeB = actionTypeB;
 
     protected bool BaseCouldUse(Simulator s) =>
         base.CouldUse(s);

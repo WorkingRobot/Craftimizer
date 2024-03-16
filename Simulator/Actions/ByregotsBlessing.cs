@@ -1,17 +1,16 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal sealed class ByregotsBlessing : BaseAction
+internal sealed class ByregotsBlessing() : BaseAction(
+    ActionCategory.Quality, 50, 100339,
+    increasesQuality: true,
+    defaultCPCost: 24,
+    defaultEfficiency: 100)
 {
-    public override ActionCategory Category => ActionCategory.Quality;
-    public override int Level => 50;
-    public override uint ActionId => 100339;
+    public override int Efficiency(Simulator s) =>
+        100 + (20 * s.GetEffectStrength(EffectType.InnerQuiet));
 
-    public override bool IncreasesQuality => true;
-
-    public override int CPCost(Simulator s) => 24;
-    public override int Efficiency(Simulator s) => 100 + (20 * s.GetEffectStrength(EffectType.InnerQuiet));
-
-    public override bool CouldUse(Simulator s) => s.HasEffect(EffectType.InnerQuiet) && base.CouldUse(s);
+    public override bool CouldUse(Simulator s) =>
+        s.HasEffect(EffectType.InnerQuiet) && base.CouldUse(s);
 
     public override void UseSuccess(Simulator s)
     {

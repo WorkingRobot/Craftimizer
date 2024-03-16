@@ -1,13 +1,9 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal sealed class Innovation : BaseBuffAction
+internal sealed class Innovation() : BaseBuffAction(
+    ActionCategory.Buffs, 26, 19004,
+    EffectType.Innovation, duration: 4,
+    defaultCPCost: 18)
 {
-    public override ActionCategory Category => ActionCategory.Buffs;
-    public override int Level => 26;
-    public override uint ActionId => 19004;
 
-    public override EffectType Effect => EffectType.Innovation;
-    public override byte Duration => 4;
-
-    public override int CPCost(Simulator s) => 18;
 }

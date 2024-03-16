@@ -1,14 +1,13 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal sealed class FocusedTouch : BaseAction
+internal sealed class FocusedTouch() : BaseAction(
+    ActionCategory.Quality, 68, 100243,
+    increasesQuality: true,
+    defaultCPCost: 18,
+    defaultEfficiency: 150,
+    defaultSuccessRate: 0.50f
+    )
 {
-    public override ActionCategory Category => ActionCategory.Quality;
-    public override int Level => 68;
-    public override uint ActionId => 100243;
-
-    public override bool IncreasesQuality => true;
-
-    public override int CPCost(Simulator s) => 18;
-    public override int Efficiency(Simulator s) => 150;
-    public override float SuccessRate(Simulator s) => s.ActionStates.Observed ? 1.00f : 0.50f;
+    public override float SuccessRate(Simulator s) =>
+        s.ActionStates.Observed ? 1.00f : 0.50f;
 }

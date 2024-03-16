@@ -1,16 +1,12 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal sealed class MuscleMemory : BaseAction
+internal sealed class MuscleMemory() : BaseAction(
+    ActionCategory.FirstTurn, 54, 100379,
+    increasesProgress: true,
+    defaultCPCost: 6,
+    defaultEfficiency: 300
+    )
 {
-    public override ActionCategory Category => ActionCategory.FirstTurn;
-    public override int Level => 54;
-    public override uint ActionId => 100379;
-
-    public override bool IncreasesProgress => true;
-
-    public override int CPCost(Simulator s) => 6;
-    public override int Efficiency(Simulator s) => 300;
-
     public override bool IsPossible(Simulator s) => s.IsFirstStep && base.IsPossible(s);
 
     public override bool CouldUse(Simulator s) => s.IsFirstStep && base.CouldUse(s);

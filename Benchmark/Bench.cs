@@ -1,4 +1,5 @@
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Diagnosers;
 using BenchmarkDotNet.Diagnostics.dotTrace;
 using BenchmarkDotNet.Jobs;
 using Craftimizer.Simulator;
@@ -9,7 +10,9 @@ namespace Craftimizer.Benchmark;
 [SimpleJob(RuntimeMoniker.Net80, baseline: true)]
 [SimpleJob(RuntimeMoniker.Net90)]
 [MinColumn, Q1Column, Q3Column, MaxColumn]
-[DotTraceDiagnoser]
+//[DotTraceDiagnoser]
+[MemoryDiagnoser]
+[DisassemblyDiagnoser(maxDepth: 500, exportGithubMarkdown: false, exportHtml: true)]
 public class Bench
 {
     public record struct HashWrapper<T>(T Data) where T : notnull
@@ -96,12 +99,25 @@ public class Bench
     [ParamsSource(nameof(Configs))]
     public HashWrapper<SolverConfig> Config { get; set; }
 
-    [Benchmark]
-    public async Task<float> Solve()
+    // [Benchmark]
+    public async Task<float> SolveAsync()
     {
         var solver = new Solver.Solver(Config, State);
         solver.Start();
         var (_, s) = await solver.GetTask().ConfigureAwait(false);
         return (float)s.Quality / s.Input.Recipe.MaxQuality;
+    }
+
+    [Benchmark]
+    public (float MaxScore, SolverSolution Solution) Solve()
+    {
+        var config = new MCTSConfig(Config.Data);
+
+        var solver = new MCTS(config, State);
+        var progress = 0;
+        solver.Search(Config.Data.Iterations, ref progress, CancellationToken.None);
+        var solution = solver.Solution();
+
+        return (solver.MaxScore, solution);
     }
 }

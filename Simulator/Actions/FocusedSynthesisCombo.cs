@@ -1,7 +1,8 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal sealed class FocusedSynthesisCombo : BaseComboAction<Observe, FocusedSynthesis>
+internal sealed class FocusedSynthesisCombo() : BaseComboAction<Observe, FocusedSynthesis>(
+    ActionType.Observe, ActionType.FocusedSynthesis
+    )
 {
-    public override ActionType ActionTypeA => ActionType.Observe;
-    public override ActionType ActionTypeB => ActionType.FocusedSynthesis;
+
 }

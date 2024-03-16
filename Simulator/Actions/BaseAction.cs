@@ -2,28 +2,46 @@ using System.Text;
 
 namespace Craftimizer.Simulator.Actions;
 
-public abstract class BaseAction
+public abstract class BaseAction(
+    ActionCategory category, int level, uint actionId,
+    int macroWaitTime = 3,
+    bool increasesProgress = false, bool increasesQuality = false,
+    int durabilityCost = 10, bool increasesStepCount = true,
+    int defaultCPCost = 0,
+    int defaultEfficiency = 0,
+    float defaultSuccessRate = 1)
 {
     // Non-instanced properties
 
     // Metadata
-    public abstract ActionCategory Category { get; }
-    public abstract int Level { get; }
+    public readonly ActionCategory Category = category;
+
+    public readonly int Level = level;
     // Doesn't matter from which class, we'll use the sheet to extrapolate the rest
-    public abstract uint ActionId { get; }
+    public readonly uint ActionId = actionId;
     // Seconds
-    public virtual int MacroWaitTime => 3;
+    public readonly int MacroWaitTime = macroWaitTime;
 
     // Action properties
-    public virtual bool IncreasesProgress => false;
-    public virtual bool IncreasesQuality => false;
-    public virtual int DurabilityCost => 10;
-    public virtual bool IncreasesStepCount => true;
+    public readonly bool IncreasesProgress = increasesProgress;
+    public readonly bool IncreasesQuality = increasesQuality;
+    public readonly int DurabilityCost = durabilityCost;
+    public readonly bool IncreasesStepCount = increasesStepCount;
 
     // Instanced properties
-    public abstract int CPCost(Simulator s);
-    public virtual int Efficiency(Simulator s) => 0;
-    public virtual float SuccessRate(Simulator s) => 1f;
+    public readonly int DefaultCPCost = defaultCPCost;
+    public readonly int DefaultEfficiency = defaultEfficiency;
+    public readonly float DefaultSuccessRate = defaultSuccessRate;
+
+    // Instanced properties
+    public virtual int CPCost(Simulator s) =>
+        DefaultCPCost;
+
+    public virtual int Efficiency(Simulator s) =>
+        DefaultEfficiency;
+
+    public virtual float SuccessRate(Simulator s) =>
+        DefaultSuccessRate;
 
     // Return true if it can be in the action pool now or in the future
     // e.g. if Heart and Soul is already used, it is impossible to use it again
@@ -65,36 +83,41 @@ public abstract class BaseAction
 
     public virtual void UseSuccess(Simulator s)
     {
-        if (Efficiency(s) != 0f)
+        var eff = Efficiency(s);
+        if (eff != 0)
         {
             if (IncreasesProgress)
-                s.IncreaseProgress(Efficiency(s));
+                s.IncreaseProgress(eff);
             if (IncreasesQuality)
-                s.IncreaseQuality(Efficiency(s));
+                s.IncreaseQuality(eff);
         }
     }
 
     public virtual string GetTooltip(Simulator s, bool addUsability)
     {
+        var cost = CPCost(s);
+        var eff = Efficiency(s);
+        var success = SuccessRate(s);
+
         var builder = new StringBuilder();
         if (addUsability && !CanUse(s))
             builder.AppendLine($"Cannot Use");
         builder.AppendLine($"Level {Level}");
-        if (CPCost(s) != 0)
-            builder.AppendLine($"-{s.CalculateCPCost(CPCost(s))} CP");
+        if (cost != 0)
+            builder.AppendLine($"-{s.CalculateCPCost(cost)} CP");
         if (DurabilityCost != 0)
             builder.AppendLine($"-{s.CalculateDurabilityCost(DurabilityCost)} Durability");
-        if (Efficiency(s) != 0)
+        if (eff != 0)
         {
             if (IncreasesProgress)
-                builder.AppendLine($"+{s.CalculateProgressGain(Efficiency(s))} Progress");
+                builder.AppendLine($"+{s.CalculateProgressGain(eff)} Progress");
             if (IncreasesQuality)
-                builder.AppendLine($"+{s.CalculateQualityGain(Efficiency(s))} Quality");
+                builder.AppendLine($"+{s.CalculateQualityGain(eff)} Quality");
         }
         if (!IncreasesStepCount)
             builder.AppendLine($"Does Not Increase Step Count");
-        if (SuccessRate(s) != 1f)
-            builder.AppendLine($"{s.CalculateSuccessRate(SuccessRate(s)) * 100:##}% Success Rate");
+        if (success != 1)
+            builder.AppendLine($"{s.CalculateSuccessRate(success) * 100:##}% Success Rate");
         return builder.ToString();
     }
 }
