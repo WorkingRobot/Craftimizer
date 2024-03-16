@@ -41,10 +41,7 @@ internal sealed class Simulator : SimulatorNoRandom
     private bool CouldUseAction(ActionType action, BaseAction baseAction, bool strict)
 #pragma warning restore MA0051 // Method is too long
     {
-        var success = 0f;
-        int cost = 0, eff = 0;
-        baseAction.SuccessRate(this, ref success);
-        if (Math.Abs(CalculateSuccessRate(success) - 1) > float.Epsilon)
+        if (CalculateSuccessRate(baseAction.SuccessRate(this)) != 1)
             return false;
 
         // don't allow quality moves at max quality
@@ -55,7 +52,7 @@ internal sealed class Simulator : SimulatorNoRandom
         {
             // always use Trained Eye if it's available
             if (action == ActionType.TrainedEye)
-                return baseAction.CouldUse(this, ref cost);
+                return baseAction.CouldUse(this);
 
             // don't allow quality moves under Muscle Memory for difficult crafts
             if (Input.Recipe.ClassJobLevel == 90 &&
@@ -88,8 +85,7 @@ internal sealed class Simulator : SimulatorNoRandom
 
             if (baseAction.IncreasesProgress)
             {
-                baseAction.Efficiency(this, ref eff);
-                var progressIncrease = CalculateProgressGain(eff);
+                var progressIncrease = CalculateProgressGain(baseAction.Efficiency(this));
                 var wouldFinish = Progress + progressIncrease >= Input.Recipe.MaxProgress;
 
                 if (wouldFinish)
@@ -133,7 +129,7 @@ internal sealed class Simulator : SimulatorNoRandom
                 return false;
         }
 
-        return baseAction.CouldUse(this, ref cost);
+        return baseAction.CouldUse(this);
     }
 
     // https://github.com/alostsock/crafty/blob/cffbd0cad8bab3cef9f52a3e3d5da4f5e3781842/crafty/src/craft_state.rs#L137

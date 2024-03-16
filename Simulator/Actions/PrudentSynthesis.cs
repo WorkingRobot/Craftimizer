@@ -1,28 +1,14 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal sealed class PrudentSynthesis : BaseAction
+internal sealed class PrudentSynthesis() : BaseAction(
+    ActionCategory.Synthesis, 88, 100427,
+    increasesProgress: true,
+    durabilityCost: 5,
+    defaultCPCost: 18,
+    defaultEfficiency: 180
+    )
 {
-
-    public PrudentSynthesis()
-    {
-        Category = ActionCategory.Synthesis;
-        Level = 88;
-        ActionId = 100427;
-        IncreasesProgress = true;
-        DurabilityCost /= 2;
-    }
-
-    public override void CPCost(Simulator s, ref int cost)
-    {
-        cost = 18;
-    }
-
-    public override void Efficiency(Simulator s, ref int eff)
-    {
-        eff = 180;
-    }
-
-    public override bool CouldUse(Simulator s, ref int cost) =>
+    public override bool CouldUse(Simulator s) =>
         !(s.HasEffect(EffectType.WasteNot) || s.HasEffect(EffectType.WasteNot2))
-        && base.CouldUse(s, ref cost);
+        && base.CouldUse(s);
 }

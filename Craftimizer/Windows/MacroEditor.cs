@@ -935,7 +935,6 @@ public sealed class MacroEditor : Window, IDisposable
         using var _color3 = ImRaii.PushColor(ImGuiCol.ButtonHovered, Vector4.Zero);
         using var _color2 = ImRaii.PushColor(ImGuiCol.ButtonActive, Vector4.Zero);
         using var _alpha = ImRaii.PushStyle(ImGuiStyleVar.DisabledAlpha, ImGui.GetStyle().DisabledAlpha * .5f);
-        var cost = 0;
         foreach (var category in Enum.GetValues<ActionCategory>())
         {
             if (category == ActionCategory.Combo)
@@ -953,7 +952,7 @@ public sealed class MacroEditor : Window, IDisposable
                 if (i < itemCount)
                 {
                     var actionBase = actions[i].Base();
-                    var canUse = actionBase.CanUse(sim, ref cost);
+                    var canUse = actionBase.CanUse(sim);
                     if (ImGui.ImageButton(actions[i].GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(imageSize), default, Vector2.One, 0, default, !canUse ? new(1, 1, 1, ImGui.GetStyle().DisabledAlpha) : Vector4.One))
                         AddStep(actions[i]);
                     if (!canUse &&

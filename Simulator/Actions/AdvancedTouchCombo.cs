@@ -1,7 +1,8 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal sealed class AdvancedTouchCombo : BaseComboAction<StandardTouchCombo, AdvancedTouch>
+internal sealed class AdvancedTouchCombo() : BaseComboAction<StandardTouchCombo, AdvancedTouch>(
+    ActionType.StandardTouchCombo, ActionType.AdvancedTouch, 18 * 3
+    )
 {
-    public override ActionType ActionTypeA => ActionType.StandardTouchCombo;
-    public override ActionType ActionTypeB => ActionType.AdvancedTouch;
+
 }

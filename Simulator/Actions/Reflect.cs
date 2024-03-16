@@ -1,32 +1,19 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal sealed class Reflect : BaseAction
+internal sealed class Reflect() : BaseAction(
+    ActionCategory.FirstTurn, 69, 100387,
+    increasesQuality: true,
+    defaultCPCost: 6,
+    defaultEfficiency: 100
+    )
 {
-    public Reflect()
-    {
-        Category = ActionCategory.FirstTurn;
-        Level = 69;
-        ActionId = 100387;
-        IncreasesQuality = true;
-    }
-
-    public override void CPCost(Simulator s, ref int cost)
-    {
-        cost = 6;
-    }
-
-    public override void Efficiency(Simulator s, ref int eff)
-    {
-        eff = 100;
-    }
-
     public override bool IsPossible(Simulator s) => s.IsFirstStep && base.IsPossible(s);
 
-    public override bool CouldUse(Simulator s, ref int cost) => s.IsFirstStep && base.CouldUse(s, ref cost);
+    public override bool CouldUse(Simulator s) => s.IsFirstStep && base.CouldUse(s);
 
-    public override void UseSuccess(Simulator s, ref int eff)
+    public override void UseSuccess(Simulator s)
     {
-        base.UseSuccess(s, ref eff);
+        base.UseSuccess(s);
         s.StrengthenEffect(EffectType.InnerQuiet);
     }
 }

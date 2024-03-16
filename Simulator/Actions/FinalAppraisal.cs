@@ -1,21 +1,10 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal sealed class FinalAppraisal : BaseBuffAction
+internal sealed class FinalAppraisal() : BaseBuffAction(
+    ActionCategory.Synthesis, 42, 19012,
+    EffectType.FinalAppraisal, duration: 4,
+    increasesStepCount: false,
+    defaultCPCost: 1)
 {
-    public int CP = 1;
 
-    public FinalAppraisal()
-    {
-        Category = ActionCategory.Synthesis;
-        Level = 42;
-        ActionId = 19012;
-        Effect = EffectType.FinalAppraisal;
-        Duration = 4;
-        IncreasesStepCount = false;
-    }
-
-    public override void CPCost(Simulator s, ref int cost)
-    {
-        cost = CP;
-    }
 }

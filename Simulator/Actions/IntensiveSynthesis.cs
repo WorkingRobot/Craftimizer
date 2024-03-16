@@ -1,32 +1,19 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal sealed class IntensiveSynthesis : BaseAction
+internal sealed class IntensiveSynthesis() : BaseAction(
+    ActionCategory.Synthesis, 78, 100315,
+    increasesProgress: true,
+    defaultCPCost: 6,
+    defaultEfficiency: 400
+    )
 {
-    public IntensiveSynthesis()
-    {
-        Category = ActionCategory.Synthesis;
-        Level = 78;
-        ActionId = 100315;
-        IncreasesProgress = true;
-    }
-
-    public override void CPCost(Simulator s, ref int cost)
-    {
-        cost = 6;
-    }
-
-    public override void Efficiency(Simulator s, ref int eff)
-    {
-        eff = 400;
-    }
-
-    public override bool CouldUse(Simulator s, ref int cost) =>
+    public override bool CouldUse(Simulator s) =>
         (s.Condition == Condition.Good || s.Condition == Condition.Excellent || s.HasEffect(EffectType.HeartAndSoul))
-        && base.CouldUse(s, ref cost);
+        && base.CouldUse(s);
 
-    public override void UseSuccess(Simulator s, ref int eff)
+    public override void UseSuccess(Simulator s)
     {
-        base.UseSuccess(s, ref eff);
+        base.UseSuccess(s);
         if (s.Condition != Condition.Good && s.Condition != Condition.Excellent)
             s.RemoveEffect(EffectType.HeartAndSoul);
     }

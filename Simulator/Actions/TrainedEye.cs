@@ -1,28 +1,21 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal sealed class TrainedEye : BaseAction
+internal sealed class TrainedEye() : BaseAction(
+    ActionCategory.FirstTurn, 80, 100283,
+    increasesQuality: true,
+    defaultCPCost: 250
+    )
 {
-    public TrainedEye()
-    {
-        Category = ActionCategory.FirstTurn;
-        Level = 80;
-        ActionId = 100283;
-        IncreasesQuality = true;
-    }
+    public override bool IsPossible(Simulator s) =>
+        s.IsFirstStep &&
+        !s.Input.Recipe.IsExpert &&
+        s.Input.Stats.Level >= (s.Input.Recipe.ClassJobLevel + 10) &&
+        base.IsPossible(s);
 
-    public override void CPCost(Simulator s,ref int cost)
-    {
-        cost = 250;
-    }
+    public override bool CouldUse(Simulator s) =>
+        s.IsFirstStep && base.CouldUse(s);
 
-    public override bool IsPossible(Simulator s) => s.IsFirstStep &&
-                                                    !s.Input.Recipe.IsExpert &&
-                                                    s.Input.Stats.Level >= (s.Input.Recipe.ClassJobLevel + 10) &&
-                                                    base.IsPossible(s);
-
-    public override bool CouldUse(Simulator s, ref int cost) => s.IsFirstStep && base.CouldUse(s, ref cost);
-
-    public override void UseSuccess(Simulator s, ref int eff) =>
+    public override void UseSuccess(Simulator s) =>
         s.IncreaseQualityRaw(s.Input.Recipe.MaxQuality - s.Quality);
 
     public override string GetTooltip(Simulator s, bool addUsability) =>

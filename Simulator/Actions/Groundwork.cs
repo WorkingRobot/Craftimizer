@@ -1,26 +1,19 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal sealed class Groundwork : BaseAction
+internal sealed class Groundwork() : BaseAction(
+    ActionCategory.Synthesis, 72, 100403,
+    increasesProgress: true,
+    durabilityCost: 20,
+    defaultCPCost: 18,
+    defaultEfficiency: 300
+    )
 {
-    public Groundwork()
-    {
-        Category = ActionCategory.Synthesis;
-        Level = 72;
-        ActionId = 100403;
-        IncreasesProgress = true;
-        DurabilityCost = 20;
-    }
-
-    public override void CPCost(Simulator s, ref int cost)
-    {
-        cost = 18;
-    }
-
-    public override void Efficiency(Simulator s, ref int eff)
+    public override int Efficiency(Simulator s)
     {
         // Groundwork Mastery Trait
-        eff = s.Input.Stats.Level >= 86 ? 360 : 300;
+        var eff = s.Input.Stats.Level >= 86 ? 360 : 300;
         if (s.Durability < s.CalculateDurabilityCost(DurabilityCost))
             eff /= 2;
+        return eff;
     }
 }

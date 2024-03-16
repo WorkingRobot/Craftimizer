@@ -1,27 +1,14 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal sealed class PrudentTouch : BaseAction
+internal sealed class PrudentTouch() : BaseAction(
+    ActionCategory.Quality, 66, 100227,
+    increasesQuality: true,
+    durabilityCost: 5,
+    defaultCPCost: 25,
+    defaultEfficiency: 100
+    )
 {
-    public PrudentTouch()
-    {
-        Category = ActionCategory.Quality;
-        Level = 66;
-        ActionId = 100227;
-        IncreasesQuality = true;
-        DurabilityCost /= 2;
-    }
-
-    public override void CPCost(Simulator s, ref int cost)
-    {
-        cost = 25;
-    }
-
-    public override void Efficiency(Simulator s, ref int eff)
-    {
-        eff = 100;
-    }
-
-    public override bool CouldUse(Simulator s, ref int cost) =>
+    public override bool CouldUse(Simulator s) =>
         !(s.HasEffect(EffectType.WasteNot) || s.HasEffect(EffectType.WasteNot2))
-        && base.CouldUse(s, ref cost);
+        && base.CouldUse(s);
 }

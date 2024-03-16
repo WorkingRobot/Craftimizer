@@ -1,30 +1,18 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal sealed class Manipulation : BaseBuffAction
+internal sealed class Manipulation() : BaseBuffAction(
+    ActionCategory.Durability, 65, 4574,
+    EffectType.Manipulation, duration: 8,
+    defaultCPCost: 96)
 {
-    public Manipulation()
-    {
-        Category = ActionCategory.Durability;
-        Level = 65;
-        ActionId = 4574;
-        Effect = EffectType.Manipulation;
-        Duration = 8;
-    }
-
-    public override void CPCost(Simulator s, ref int cost)
-    {
-        cost = 96;
-    }
-
     public override bool IsPossible(Simulator s) =>
         s.Input.Stats.CanUseManipulation && base.IsPossible(s);
 
-    public override void Use(Simulator s, ref int cost, ref float success, ref int eff)
+    public override void Use(Simulator s)
     {
-        UseSuccess(s, ref eff);
-        CPCost(s, ref cost);
+        UseSuccess(s);
 
-        s.ReduceCP(cost);
+        s.ReduceCP(CPCost(s));
 
         s.IncreaseStepCount();
 

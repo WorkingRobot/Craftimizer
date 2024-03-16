@@ -1,24 +1,14 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal sealed class WasteNot : BaseBuffAction
+internal sealed class WasteNot() : BaseBuffAction(
+    ActionCategory.Durability, 15, 4631,
+    EffectType.WasteNot, duration: 4,
+    defaultCPCost: 56
+    )
 {
-    public WasteNot()
+    public override void UseSuccess(Simulator s)
     {
-        Category = ActionCategory.Durability;
-        Level = 15;
-        ActionId = 4631;
-        Effect = EffectType.WasteNot;
-        Duration = 4;
-    }
-
-    public override void CPCost(Simulator s, ref int cost)
-    {
-        cost = 56;
-    }
-
-    public override void UseSuccess(Simulator s, ref int eff)
-    {
-        base.UseSuccess(s, ref eff);
+        base.UseSuccess(s);
         s.RemoveEffect(EffectType.WasteNot2);
     }
 }

@@ -1,20 +1,10 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal sealed class GreatStrides : BaseBuffAction
+internal sealed class GreatStrides() : BaseBuffAction(
+    ActionCategory.Buffs, 21, 260,
+    EffectType.GreatStrides, duration: 3,
+    increasesStepCount: false,
+    defaultCPCost: 32)
 {
-    public int CP = 32;
 
-    public GreatStrides()
-    {
-        Category = ActionCategory.Buffs;
-        Level = 21;
-        ActionId = 260;
-        Effect = EffectType.GreatStrides;
-        Duration = 3;
-    }
-
-    public override void CPCost(Simulator s, ref int cost)
-    {
-        cost = CP;
-    }
 }

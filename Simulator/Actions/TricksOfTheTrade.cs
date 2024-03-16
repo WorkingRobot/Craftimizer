@@ -1,25 +1,16 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal sealed class TricksOfTheTrade : BaseAction
+internal sealed class TricksOfTheTrade() : BaseAction(
+    ActionCategory.Other, 13, 100371,
+    durabilityCost: 0,
+    defaultCPCost: 0
+    )
 {
-    public TricksOfTheTrade()
-    {
-        Category = ActionCategory.Other;
-        Level = 13;
-        ActionId = 100371;
-        DurabilityCost = 0;
-    }
-
-    public override void CPCost(Simulator s, ref int cost)
-    {
-        cost = 0;
-    }
-
-    public override bool CouldUse(Simulator s, ref int cost) =>
+    public override bool CouldUse(Simulator s) =>
         (s.Condition == Condition.Good || s.Condition == Condition.Excellent || s.HasEffect(EffectType.HeartAndSoul))
-        && base.CouldUse(s, ref cost);
+        && base.CouldUse(s);
 
-    public override void UseSuccess(Simulator s, ref int eff)
+    public override void UseSuccess(Simulator s)
     {
         s.RestoreCP(20);
         if (s.Condition != Condition.Good && s.Condition != Condition.Excellent)

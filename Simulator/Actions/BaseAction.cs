@@ -2,39 +2,46 @@ using System.Text;
 
 namespace Craftimizer.Simulator.Actions;
 
-public abstract class BaseAction
+public abstract class BaseAction(
+    ActionCategory category, int level, uint actionId,
+    int macroWaitTime = 3,
+    bool increasesProgress = false, bool increasesQuality = false,
+    int durabilityCost = 10, bool increasesStepCount = true,
+    int defaultCPCost = 0,
+    int defaultEfficiency = 0,
+    float defaultSuccessRate = 1)
 {
     // Non-instanced properties
 
     // Metadata
-    public ActionCategory Category;
+    public readonly ActionCategory Category = category;
 
-    public int Level;
+    public readonly int Level = level;
     // Doesn't matter from which class, we'll use the sheet to extrapolate the rest
-    public uint ActionId;
+    public readonly uint ActionId = actionId;
     // Seconds
-    public int MacroWaitTime = 3;
+    public readonly int MacroWaitTime = macroWaitTime;
 
     // Action properties
-    public bool IncreasesProgress;
-    public bool IncreasesQuality;
-    public int DurabilityCost = 10;
-    public bool IncreasesStepCount = true;
-    public int EfficiencyFactor;
-    public float SuccessRateFactor = 1;
+    public readonly bool IncreasesProgress = increasesProgress;
+    public readonly bool IncreasesQuality = increasesQuality;
+    public readonly int DurabilityCost = durabilityCost;
+    public readonly bool IncreasesStepCount = increasesStepCount;
 
     // Instanced properties
-    public abstract void CPCost(Simulator s, ref int cost);
+    public readonly int DefaultCPCost = defaultCPCost;
+    public readonly int DefaultEfficiency = defaultEfficiency;
+    public readonly float DefaultSuccessRate = defaultSuccessRate;
 
-    public virtual void Efficiency(Simulator s, ref int eff)
-    {
-        eff = EfficiencyFactor;
-    }
+    // Instanced properties
+    public virtual int CPCost(Simulator s) =>
+        DefaultCPCost;
 
-    public virtual void SuccessRate(Simulator s, ref float success)
-    {
-        success = SuccessRateFactor;
-    }
+    public virtual int Efficiency(Simulator s) =>
+        DefaultEfficiency;
+
+    public virtual float SuccessRate(Simulator s) =>
+        DefaultSuccessRate;
 
     // Return true if it can be in the action pool now or in the future
     // e.g. if Heart and Soul is already used, it is impossible to use it again
@@ -44,23 +51,18 @@ public abstract class BaseAction
 
     // Return true if it can be used now
     // This already assumes that IsPossible returns true *at some point before*
-    public virtual bool CouldUse(Simulator s, ref int cost)
+    public virtual bool CouldUse(Simulator s) =>
+        s.CP >= CPCost(s);
+
+    public bool CanUse(Simulator s) =>
+        IsPossible(s) && CouldUse(s);
+
+    public virtual void Use(Simulator s)
     {
-        CPCost(s, ref cost);
-        return s.CP >= cost;
-    }
+        if (s.RollSuccess(SuccessRate(s)))
+            UseSuccess(s);
 
-    public bool CanUse(Simulator s, ref int cost) =>
-        IsPossible(s) && CouldUse(s, ref cost);
-
-    public virtual void Use(Simulator s, ref int cost, ref float success, ref int eff)
-    {
-        SuccessRate(s, ref success);
-        if (s.RollSuccess(success))
-            UseSuccess(s, ref eff);
-        CPCost(s, ref cost);
-
-        s.ReduceCP(cost);
+        s.ReduceCP(CPCost(s));
         s.ReduceDurability(DurabilityCost);
 
         if (s.Durability > 0)
@@ -79,9 +81,9 @@ public abstract class BaseAction
             s.ActiveEffects.DecrementDuration();
     }
 
-    public virtual void UseSuccess(Simulator s, ref int eff)
+    public virtual void UseSuccess(Simulator s)
     {
-        Efficiency(s, ref eff);
+        var eff = Efficiency(s);
         if (eff != 0)
         {
             if (IncreasesProgress)
@@ -93,28 +95,28 @@ public abstract class BaseAction
 
     public virtual string GetTooltip(Simulator s, bool addUsability)
     {
+        var cost = CPCost(s);
+        var eff = Efficiency(s);
+        var success = SuccessRate(s);
+
         var builder = new StringBuilder();
-        int cost = 0;
-        float success = 1f;
-        if (addUsability && !CanUse(s, ref cost))
+        if (addUsability && !CanUse(s))
             builder.AppendLine($"Cannot Use");
         builder.AppendLine($"Level {Level}");
         if (cost != 0)
             builder.AppendLine($"-{s.CalculateCPCost(cost)} CP");
         if (DurabilityCost != 0)
             builder.AppendLine($"-{s.CalculateDurabilityCost(DurabilityCost)} Durability");
-        Efficiency(s, ref cost);
-        if (cost != 0)
+        if (eff != 0)
         {
             if (IncreasesProgress)
-                builder.AppendLine($"+{s.CalculateProgressGain(cost)} Progress");
+                builder.AppendLine($"+{s.CalculateProgressGain(eff)} Progress");
             if (IncreasesQuality)
-                builder.AppendLine($"+{s.CalculateQualityGain(cost)} Quality");
+                builder.AppendLine($"+{s.CalculateQualityGain(eff)} Quality");
         }
         if (!IncreasesStepCount)
             builder.AppendLine($"Does Not Increase Step Count");
-        SuccessRate(s, ref success);
-        if (Math.Abs(success - 1f) > float.Epsilon)
+        if (success != 1)
             builder.AppendLine($"{s.CalculateSuccessRate(success) * 100:##}% Success Rate");
         return builder.ToString();
     }

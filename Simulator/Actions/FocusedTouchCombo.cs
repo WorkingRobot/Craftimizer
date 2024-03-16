@@ -1,7 +1,8 @@
 namespace Craftimizer.Simulator.Actions;
 
-internal sealed class FocusedTouchCombo : BaseComboAction<Observe, FocusedTouch>
+internal sealed class FocusedTouchCombo() : BaseComboAction<Observe, FocusedTouch>(
+    ActionType.Observe, ActionType.FocusedTouch
+    )
 {
-    public override ActionType ActionTypeA => ActionType.Observe;
-    public override ActionType ActionTypeB => ActionType.FocusedTouch;
+
 }

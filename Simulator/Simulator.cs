@@ -21,10 +21,6 @@ public class Simulator
     public ref Effects ActiveEffects => ref state.ActiveEffects;
     public ref ActionStates ActionStates => ref state.ActionStates;
 
-    private int cost;
-    private int eff;
-    private float success;
-
     public bool IsFirstStep => state.StepCount == 0;
 
     public virtual CompletionState CompletionState {
@@ -54,7 +50,7 @@ public class Simulator
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ExecuteUnchecked(ActionType action) =>
-        action.Base().Use(this, ref cost, ref success, ref eff);
+        action.Base().Use(this);
 
     private ActionResponse Execute(ActionType action)
     {
@@ -62,7 +58,7 @@ public class Simulator
             return ActionResponse.SimulationComplete;
 
         var baseAction = action.Base();
-        if (!baseAction.CanUse(this, ref cost))
+        if (!baseAction.CanUse(this))
         {
             if (baseAction.Level > Input.Stats.Level)
                 return ActionResponse.ActionNotUnlocked;
@@ -70,12 +66,12 @@ public class Simulator
                 return ActionResponse.ActionNotUnlocked;
             if (action is ActionType.CarefulObservation or ActionType.HeartAndSoul && !Input.Stats.IsSpecialist)
                 return ActionResponse.ActionNotUnlocked;
-            if (cost > CP)
+            if (baseAction.CPCost(this) > CP)
                 return ActionResponse.NotEnoughCP;
             return ActionResponse.CannotUseAction;
         }
 
-        baseAction.Use(this, ref cost, ref success, ref eff);
+        baseAction.Use(this);
 
         return ActionResponse.UsedAction;
     }
