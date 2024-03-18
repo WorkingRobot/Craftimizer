@@ -2,15 +2,37 @@ using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Craftimizer.Solver;
 using ObjectLayoutInspector;
+using System.Diagnostics;
 
 namespace Craftimizer.Benchmark;
 
 internal static class Program
 {
-    private static Task Main(string[] args)
+    private static void Main(string[] args)
     {
+#if IS_DETERMINISTIC
+        var b = new Bench();
+
+        var initConfig = Bench.Configs.First();
+        var initState = Bench.States.First();
+
+        var config = new MCTSConfig(initConfig.Data);
+
+        var s = Stopwatch.StartNew();
+        for (var i = 0; i < 100; ++i)
+        {
+            var solver = new MCTS(config, initState);
+            var progress = 0;
+            solver.Search(initConfig.Data.Iterations, ref progress, CancellationToken.None);
+            var solution = solver.Solution();
+            Console.WriteLine($"{i+1}");
+        }
+        s.Stop();
+        Console.WriteLine($"{s.Elapsed.TotalMilliseconds:0.00}ms");
+#else
         RunBench(args);
-        return Task.CompletedTask;
+#endif
+
         // return RunOther();
     }
 

@@ -22,27 +22,36 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
+		Deterministic|x64 = Deterministic|x64
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{13C812E9-0D42-4B95-8646-40EEBF30636F}.Debug|x64.ActiveCfg = Debug|x64
 		{13C812E9-0D42-4B95-8646-40EEBF30636F}.Debug|x64.Build.0 = Debug|x64
+		{13C812E9-0D42-4B95-8646-40EEBF30636F}.Deterministic|x64.ActiveCfg = Release|x64
 		{13C812E9-0D42-4B95-8646-40EEBF30636F}.Release|x64.ActiveCfg = Release|x64
 		{13C812E9-0D42-4B95-8646-40EEBF30636F}.Release|x64.Build.0 = Release|x64
 		{057C4B64-4D99-4847-9BCF-966571CAE57C}.Debug|x64.ActiveCfg = Debug|x64
 		{057C4B64-4D99-4847-9BCF-966571CAE57C}.Debug|x64.Build.0 = Debug|x64
+		{057C4B64-4D99-4847-9BCF-966571CAE57C}.Deterministic|x64.ActiveCfg = Deterministic|x64
+		{057C4B64-4D99-4847-9BCF-966571CAE57C}.Deterministic|x64.Build.0 = Deterministic|x64
 		{057C4B64-4D99-4847-9BCF-966571CAE57C}.Release|x64.ActiveCfg = Release|x64
 		{057C4B64-4D99-4847-9BCF-966571CAE57C}.Release|x64.Build.0 = Release|x64
 		{172EE849-AC7E-4F2A-ACAB-EF9D065523B3}.Debug|x64.ActiveCfg = Debug|x64
 		{172EE849-AC7E-4F2A-ACAB-EF9D065523B3}.Debug|x64.Build.0 = Debug|x64
+		{172EE849-AC7E-4F2A-ACAB-EF9D065523B3}.Deterministic|x64.ActiveCfg = Deterministic|x64
+		{172EE849-AC7E-4F2A-ACAB-EF9D065523B3}.Deterministic|x64.Build.0 = Deterministic|x64
 		{172EE849-AC7E-4F2A-ACAB-EF9D065523B3}.Release|x64.ActiveCfg = Release|x64
 		{172EE849-AC7E-4F2A-ACAB-EF9D065523B3}.Release|x64.Build.0 = Release|x64
 		{2B0EA452-6DFC-48DB-9049-EA782E600C21}.Debug|x64.ActiveCfg = Debug|x64
 		{2B0EA452-6DFC-48DB-9049-EA782E600C21}.Debug|x64.Build.0 = Debug|x64
+		{2B0EA452-6DFC-48DB-9049-EA782E600C21}.Deterministic|x64.ActiveCfg = Deterministic|x64
+		{2B0EA452-6DFC-48DB-9049-EA782E600C21}.Deterministic|x64.Build.0 = Deterministic|x64
 		{2B0EA452-6DFC-48DB-9049-EA782E600C21}.Release|x64.ActiveCfg = Release|x64
 		{2B0EA452-6DFC-48DB-9049-EA782E600C21}.Release|x64.Build.0 = Release|x64
 		{C3AEA981-9DA8-405C-995B-86528493891B}.Debug|x64.ActiveCfg = Debug|x64
 		{C3AEA981-9DA8-405C-995B-86528493891B}.Debug|x64.Build.0 = Debug|x64
+		{C3AEA981-9DA8-405C-995B-86528493891B}.Deterministic|x64.ActiveCfg = Deterministic|x64
 		{C3AEA981-9DA8-405C-995B-86528493891B}.Release|x64.ActiveCfg = Release|x64
 		{C3AEA981-9DA8-405C-995B-86528493891B}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection

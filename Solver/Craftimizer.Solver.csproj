@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <Platforms>x64</Platforms>
-    <Configurations>Debug;Release</Configurations>
+    <Configurations>Debug;Release;Deterministic</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,7 +26,7 @@
     </AssemblyAttribute>
   </ItemGroup>
 
-  <PropertyGroup Condition="'$(IS_BENCH)'=='1'">
+  <PropertyGroup Condition="'$(IS_BENCH)'=='1' Or '$(Configuration)'=='Deterministic'">
     <DefineConstants>$(DefineConstants);IS_DETERMINISTIC</DefineConstants>
   </PropertyGroup>
 
