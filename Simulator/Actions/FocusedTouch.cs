@@ -5,9 +5,9 @@ internal sealed class FocusedTouch() : BaseAction(
     increasesQuality: true,
     defaultCPCost: 18,
     defaultEfficiency: 150,
-    defaultSuccessRate: 0.50f
+    defaultSuccessRate: 50
     )
 {
-    public override float SuccessRate(Simulator s) =>
-        s.ActionStates.Observed ? 1.00f : 0.50f;
+    public override int SuccessRate(Simulator s) =>
+        s.ActionStates.Observed ? 100 : 50;
 }

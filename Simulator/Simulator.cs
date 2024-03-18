@@ -124,10 +124,10 @@ public class Simulator
     public bool HasEffect(EffectType effect) =>
         ActiveEffects.HasEffect(effect);
 
-    public virtual bool RollSuccessRaw(float successRate) =>
-        successRate >= Input.Random.NextSingle();
+    public virtual bool RollSuccessRaw(int successRate) =>
+        successRate >= Input.Random.NextSingle() * 100f;
 
-    public bool RollSuccess(float successRate) =>
+    public bool RollSuccess(int successRate) =>
         RollSuccessRaw(CalculateSuccessRate(successRate));
 
     public void IncreaseStepCount()
@@ -189,11 +189,12 @@ public class Simulator
             CP = Input.Stats.CP;
     }
 
-    public float CalculateSuccessRate(float successRate)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int CalculateSuccessRate(int successRate)
     {
         if (Condition == Condition.Centered)
-            successRate += 0.25f;
-        return Math.Clamp(successRate, 0, 1);
+            successRate += 25;
+        return Math.Clamp(successRate, 0, 100);
     }
 
     public int CalculateDurabilityCost(int amount)

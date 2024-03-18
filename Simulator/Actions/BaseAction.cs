@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Craftimizer.Simulator.Actions;
@@ -9,7 +10,7 @@ public abstract class BaseAction(
     int durabilityCost = 10, bool increasesStepCount = true,
     int defaultCPCost = 0,
     int defaultEfficiency = 0,
-    float defaultSuccessRate = 1)
+    int defaultSuccessRate = 100)
 {
     // Non-instanced properties
 
@@ -31,16 +32,19 @@ public abstract class BaseAction(
     // Instanced properties
     public readonly int DefaultCPCost = defaultCPCost;
     public readonly int DefaultEfficiency = defaultEfficiency;
-    public readonly float DefaultSuccessRate = defaultSuccessRate;
+    public readonly int DefaultSuccessRate = defaultSuccessRate; // out of 100
 
     // Instanced properties
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public virtual int CPCost(Simulator s) =>
         DefaultCPCost;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public virtual int Efficiency(Simulator s) =>
         DefaultEfficiency;
 
-    public virtual float SuccessRate(Simulator s) =>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public virtual int SuccessRate(Simulator s) =>
         DefaultSuccessRate;
 
     // Return true if it can be in the action pool now or in the future
@@ -116,8 +120,8 @@ public abstract class BaseAction(
         }
         if (!IncreasesStepCount)
             builder.AppendLine($"Does Not Increase Step Count");
-        if (success != 1)
-            builder.AppendLine($"{s.CalculateSuccessRate(success) * 100:##}% Success Rate");
+        if (success != 100)
+            builder.AppendLine($"{s.CalculateSuccessRate(success)}% Success Rate");
         return builder.ToString();
     }
 }

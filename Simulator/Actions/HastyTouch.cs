@@ -5,7 +5,7 @@ internal sealed class HastyTouch() : BaseAction(
     increasesQuality: true,
     defaultCPCost: 0,
     defaultEfficiency: 100,
-    defaultSuccessRate: 0.60f
+    defaultSuccessRate: 60
     )
 {
 

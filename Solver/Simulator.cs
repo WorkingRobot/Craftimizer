@@ -38,7 +38,7 @@ internal sealed class Simulator : SimulatorNoRandom
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool CouldUseAction(BaseAction baseAction)
     {
-        if (CalculateSuccessRate(baseAction.SuccessRate(this)) != 1)
+        if (CalculateSuccessRate(baseAction.SuccessRate(this)) != 100)
             return false;
 
         // don't allow quality moves at max quality
@@ -56,7 +56,7 @@ internal sealed class Simulator : SimulatorNoRandom
     private bool ShouldUseAction(ActionType action, BaseAction baseAction)
 #pragma warning restore MA0051 // Method is too long
     {
-        if (CalculateSuccessRate(baseAction.SuccessRate(this)) != 1)
+        if (CalculateSuccessRate(baseAction.SuccessRate(this)) != 100)
             return false;
 
         // don't allow quality moves at max quality

@@ -5,7 +5,7 @@ internal sealed class RapidSynthesis() : BaseAction(
     increasesProgress: true,
     defaultCPCost: 0,
     defaultEfficiency: 250,
-    defaultSuccessRate: 0.50f
+    defaultSuccessRate: 50
     )
 {
     // Rapid Synthesis Mastery Trait

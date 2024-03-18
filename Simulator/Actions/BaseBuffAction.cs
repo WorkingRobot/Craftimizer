@@ -10,7 +10,7 @@ internal abstract class BaseBuffAction(
         int durabilityCost = 0, bool increasesStepCount = true,
         int defaultCPCost = 0,
         int defaultEfficiency = 0,
-        float defaultSuccessRate = 1) :
+        int defaultSuccessRate = 100) :
     BaseAction(
         category, level, actionId,
         macroWaitTime,
