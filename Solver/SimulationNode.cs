@@ -27,7 +27,7 @@ public struct SimulationNode(in SimulationState state, ActionType? action, Compl
     public readonly float? CalculateScore(in MCTSConfig config) =>
         CalculateScoreForState(State, SimulationCompletionState, config);
 
-    public static float? CalculateScoreForState(in SimulationState state, CompletionState completionState, MCTSConfig config)
+    public static float? CalculateScoreForState(in SimulationState state, CompletionState completionState, in MCTSConfig config)
     {
         if (completionState != CompletionState.ProgressComplete)
             return null;

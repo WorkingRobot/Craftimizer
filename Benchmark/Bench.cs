@@ -4,14 +4,15 @@ using BenchmarkDotNet.Diagnostics.dotTrace;
 using BenchmarkDotNet.Jobs;
 using Craftimizer.Simulator;
 using Craftimizer.Solver;
+using System.Runtime.CompilerServices;
 
 namespace Craftimizer.Benchmark;
 
 [SimpleJob(RuntimeMoniker.Net80, baseline: true)]
-[SimpleJob(RuntimeMoniker.Net90)]
+//[SimpleJob(RuntimeMoniker.Net90)]
 [MinColumn, Q1Column, Q3Column, MaxColumn]
 //[DotTraceDiagnoser]
-[MemoryDiagnoser]
+//[MemoryDiagnoser]
 [DisassemblyDiagnoser(maxDepth: 500, exportGithubMarkdown: false, exportHtml: true)]
 public class Bench
 {
@@ -109,6 +110,7 @@ public class Bench
     }
 
     [Benchmark]
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public (float MaxScore, SolverSolution Solution) Solve()
     {
         var config = new MCTSConfig(Config.Data);
