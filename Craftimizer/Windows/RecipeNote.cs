@@ -1043,9 +1043,15 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         var level = LuminaSheets.LevelSheet.GetRow(levelRowId) ??
             throw new ArgumentNullException(nameof(levelRowId), $"Invalid level row {levelRowId}");
         var territory = level.Territory.Value!.PlaceName.Value!.Name.ToDalamudString().ToString();
-        var location = MapUtil.WorldToMap(new(level.X, level.Z), level.Map.Value!);
+        var location = WorldToMap2(new(level.X, level.Z), level.Map.Value!);
 
-        return (ResolveNpcResidentName(level.Object), territory, location, new(level.Territory.Row, level.Map.Row, location.X, location.Y));
+        return (ResolveNpcResidentName(level.Object.Row), territory, location, new(level.Territory.Row, level.Map.Row, location.X, location.Y));
+    }
+
+    // MapUtil.WorldToMap but for GeneratedSheets2
+    private static Vector2 WorldToMap2(Vector2 worldCoordinates, Lumina.Excel.GeneratedSheets2.Map map)
+    {
+        return MapUtil.WorldToMap(worldCoordinates, map.OffsetX, map.OffsetY, map.SizeFactor);
     }
 
     private static string ResolveNpcResidentName(uint npcRowId)

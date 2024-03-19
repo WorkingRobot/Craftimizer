@@ -3,7 +3,7 @@ using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.GeneratedSheets2;
 using System;
 using System.Linq;
 
@@ -16,9 +16,9 @@ public static unsafe class Gearsets
 
     private static readonly GearsetStats BaseStats = new(180, 0, 0);
 
-    public const int ParamCP = 11;
-    public const int ParamCraftsmanship = 70;
-    public const int ParamControl = 71;
+    public const uint ParamCP = 11;
+    public const uint ParamCraftsmanship = 70;
+    public const uint ParamControl = 71;
 
     private static readonly int[] LevelToCLvlLUT;
 
@@ -67,7 +67,7 @@ public static unsafe class Gearsets
 
         int cp = 0, craftsmanship = 0, control = 0;
 
-        void IncreaseStat(int baseParam, int amount)
+        void IncreaseStat(uint baseParam, int amount)
         {
             if (baseParam == ParamCP)
                 cp += amount;
@@ -77,11 +77,11 @@ public static unsafe class Gearsets
                 control += amount;
         }
 
-        foreach (var statIncrease in item.UnkData59)
-            IncreaseStat(statIncrease.BaseParam, statIncrease.BaseParamValue);
+        foreach (var statIncrease in item.BaseParam.Zip(item.BaseParamValue))
+            IncreaseStat(statIncrease.First.Row, statIncrease.Second);
         if (gearsetItem.isHq)
-            foreach (var statIncrease in item.UnkData73)
-                IncreaseStat(statIncrease.BaseParamSpecial, statIncrease.BaseParamValueSpecial);
+            foreach (var statIncrease in item.BaseParamSpecial.Zip(item.BaseParamValueSpecial))
+                IncreaseStat(statIncrease.First.Row, statIncrease.Second);
 
         foreach (var gearsetMateria in gearsetItem.materia)
         {
@@ -89,7 +89,7 @@ public static unsafe class Gearsets
                 continue;
 
             var materia = LuminaSheets.MateriaSheet.GetRow(gearsetMateria.Type)!;
-            IncreaseStat((int)materia.BaseParam.Row, materia.Value[gearsetMateria.Grade]);
+            IncreaseStat(materia.BaseParam.Row, materia.Value[gearsetMateria.Grade]);
         }
 
         cp = Math.Min(cp, CalculateParamCap(item, ParamCP));
@@ -152,10 +152,10 @@ public static unsafe class Gearsets
             throw new ArgumentOutOfRangeException(nameof(level), level, "Level is out of range.");
 
     // https://github.com/ffxiv-teamcraft/ffxiv-teamcraft/blob/24d0db2d9676f264edf53651b21005305267c84c/apps/client/src/app/modules/gearsets/materia.service.ts#L265
-    private static int CalculateParamCap(Item item, int paramId)
+    private static int CalculateParamCap(Item item, uint paramId)
     {
         var ilvl = item.LevelItem.Value!;
-        var param = LuminaSheets.BaseParamSheet.GetRow((uint)paramId)!;
+        var param = LuminaSheets.BaseParamSheet.GetRow(paramId)!;
 
         var baseValue = paramId switch
         {
@@ -167,26 +167,27 @@ public static unsafe class Gearsets
         // https://github.com/ffxiv-teamcraft/ffxiv-teamcraft/blob/24d0db2d9676f264edf53651b21005305267c84c/apps/data-extraction/src/extractors/items.extractor.ts#L6
         var slotMod = item.EquipSlotCategory.Row switch
         {
-            1 => param.oneHWpnPct,
-            2 => param.OHPct,
-            3 => param.HeadPct,
-            4 => param.ChestPct,
-            5 => param.HandsPct,
-            6 => param.WaistPct,
-            7 => param.LegsPct,
-            8 => param.FeetPct,
-            9 => param.EarringPct,
-            10 => param.NecklacePct,
-            11 => param.BraceletPct,
-            12 => param.RingPct,
-            13 => param.twoHWpnPct,
-            14 => param.oneHWpnPct,
-            15 => param.ChestHeadPct,
-            16 => param.ChestHeadLegsFeetPct,
-            18 => param.LegsFeetPct,
-            19 => param.HeadChestHandsLegsFeetPct,
-            20 => param.ChestLegsGlovesPct,
-            21 => param.ChestLegsFeetPct,
+            1 => param.OneHandWeaponPercent, // column 4
+            2 => param.OffHandPercent,       // column 5
+            3 => param.HeadPercent,          // ...
+            4 => param.ChestPercent,
+            5 => param.HandsPercent,
+            6 => param.WaistPercent,
+            7 => param.LegsPercent,
+            8 => param.FeetPercent,
+            9 => param.EarringPercent,
+            10 => param.NecklacePercent,
+            11 => param.BraceletPercent,
+            12 => param.RingPercent,
+            13 => param.TwoHandWeaponPercent,
+            14 => param.OneHandWeaponPercent,
+            15 => param.ChestHeadPercent,
+            16 => param.ChestHeadLegsFeetPercent,
+            17 => 0,
+            18 => param.LegsFeetPercent,
+            19 => param.HeadChestHandsLegsFeetPercent,
+            20 => param.ChestLegsGlovesPercent,
+            21 => param.ChestLegsFeetPercent,
             _ => 0
         };
         var roleMod = param.MeldParam[item.BaseParamModifier];

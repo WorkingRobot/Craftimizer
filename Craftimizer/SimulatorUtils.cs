@@ -6,17 +6,17 @@ using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.GeneratedSheets2;
 using System;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Text;
-using Action = Lumina.Excel.GeneratedSheets.Action;
+using Action = Lumina.Excel.GeneratedSheets2.Action;
 using ActionType = Craftimizer.Simulator.Actions.ActionType;
 using ClassJob = Craftimizer.Simulator.ClassJob;
 using Condition = Craftimizer.Simulator.Condition;
-using Status = Lumina.Excel.GeneratedSheets.Status;
+using Status = Lumina.Excel.GeneratedSheets2.Status;
 
 namespace Craftimizer.Plugin;
 
@@ -156,7 +156,7 @@ internal static class ClassJobUtils
         PlayerState.Instance()->ClassJobLevelArray[me.GetExpArrayIdx()];
 
     public static unsafe bool CanPlayerUseManipulation(this ClassJob me) =>
-        UIState.Instance()->IsUnlockLinkUnlockedOrQuestCompleted(ActionType.Manipulation.GetActionRow(me).Action!.UnlockLink);
+        UIState.Instance()->IsUnlockLinkUnlockedOrQuestCompleted(ActionType.Manipulation.GetActionRow(me).Action!.UnlockLink.Row);
 
     public static string GetName(this ClassJob me)
     {

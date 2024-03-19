@@ -1,6 +1,6 @@
 using Craftimizer.Plugin;
 using Craftimizer.Simulator;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.GeneratedSheets2;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,30 +47,34 @@ public sealed record RecipeData
         };
 
         CollectableThresholds = null;
-        switch (Recipe.Unknown45)
+        switch (Recipe.Unknown1)
         {
             case 1:
-                var data1 = LuminaSheets.CollectablesShopRefineSheet.GetRow(Recipe.Unknown46);
+                var data1 = LuminaSheets.CollectablesShopRefineSheet.GetRow(Recipe.Unknown0);
                 if (data1 == null)
                     break;
                 CollectableThresholds = new int?[] { data1.LowCollectability, data1.MidCollectability, data1.HighCollectability };
                 break;
             case 2:
-                var data2 = LuminaSheets.HWDCrafterSupplySheet.GetRow(Recipe.Unknown46);
+                var data2 = LuminaSheets.HWDCrafterSupplySheet.GetRow(Recipe.Unknown0);
                 if (data2 == null)
                     break;
-                var idx = Array.FindIndex(data2.ItemTradeIn, i => i.Row == Recipe.ItemResult.Row);
-                if (idx == -1)
-                    break;
-                CollectableThresholds = new int?[] { data2.BaseCollectableRating[idx], data2.MidCollectableRating[idx], data2.HighCollectableRating[idx] };
+                foreach (var entry in data2.HWDCrafterSupplyParams)
+                {
+                    if (entry.ItemTradeIn.Row == Recipe.ItemResult.Row)
+                    {
+                        CollectableThresholds = new int?[] { entry.BaseCollectableRating, entry.MidCollectableRating, entry.HighCollectableRating };
+                        break;
+                    }
+                }
                 break;
             case 3:
-                var subRowCount = LuminaSheets.SatisfactionSupplySheet.GetSubRowCount(Recipe.Unknown46);
+                var subRowCount = LuminaSheets.SatisfactionSupplySheet.GetSubRowCount(Recipe.Unknown0);
                 if (subRowCount is not { } subRowValue)
                     break;
                 for (uint i = 0; i < subRowValue; ++i)
                 {
-                    var data3 = LuminaSheets.SatisfactionSupplySheet.GetRow(Recipe.Unknown46, i);
+                    var data3 = LuminaSheets.SatisfactionSupplySheet.GetRow(Recipe.Unknown0, i);
                     if (data3 == null)
                         continue;
                     if (data3.Item.Row == Recipe.ItemResult.Row)
@@ -81,7 +85,7 @@ public sealed record RecipeData
                 }
                 break;
             case 4:
-                var data4 = LuminaSheets.SharlayanCraftWorksSupplySheet.GetRow(Recipe.Unknown46);
+                var data4 = LuminaSheets.SharlayanCraftWorksSupplySheet.GetRow(Recipe.Unknown0);
                 if (data4 == null)
                     break;
                 foreach (var item in data4.Items)
@@ -97,10 +101,11 @@ public sealed record RecipeData
                 break;
         }
 
-        Ingredients = Recipe.UnkData5.Take(6)
-            .Where(i => i != null && i.ItemIngredient != 0)
-            .Select(i => (LuminaSheets.ItemSheet.GetRow((uint)i.ItemIngredient)!, (int)i.AmountIngredient))
-            .Where(i => i.Item1 != null).ToList();
+        Ingredients = Recipe.Ingredient.Zip(Recipe.AmountIngredient)
+            .Take(6)
+            .Where(i => i.First.Value != null)
+            .Select(i => (i.First.Value!, (int)i.Second))
+            .ToList();
         MaxStartingQuality = (int)Math.Floor(Recipe.MaterialQualityFactor * RecipeInfo.MaxQuality / 100f);
 
         TotalHqILvls = (int)Ingredients.Where(i => i.Item.CanBeHq).Sum(i => i.Item.LevelItem.Row * i.Amount);

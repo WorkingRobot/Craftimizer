@@ -1,6 +1,6 @@
 using Craftimizer.Plugin;
 using Craftimizer.Plugin.Utils;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.GeneratedSheets2;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -68,7 +68,7 @@ public static class FoodStatus
                 if (stat.BaseParam == 0)
                     continue;
                 var foodStat = new FoodStat(stat.IsRelative, stat.Value, stat.Max, stat.ValueHQ, stat.MaxHQ);
-                switch (stat.BaseParam)
+                switch ((uint)stat.BaseParam)
                 {
                     case Gearsets.ParamCraftsmanship: craftsmanship = foodStat; break;
                     case Gearsets.ParamControl: control = foodStat; break;

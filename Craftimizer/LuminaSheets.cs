@@ -2,10 +2,10 @@ using Dalamud;
 using Lumina;
 using Lumina.Data;
 using Lumina.Excel;
-using Lumina.Excel.GeneratedSheets;
-using System;
+using Lumina.Excel.GeneratedSheets2;
 using System.Collections.Concurrent;
-using Action = Lumina.Excel.GeneratedSheets.Action;
+using Action = Lumina.Excel.GeneratedSheets2.Action;
+using ItemFood = Lumina.Excel.GeneratedSheets.ItemFood; // BaseParam is too annoying with SoA
 
 namespace Craftimizer.Plugin;
 
