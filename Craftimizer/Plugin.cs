@@ -5,6 +5,7 @@ using Craftimizer.Simulator.Actions;
 using Craftimizer.Utils;
 using Craftimizer.Windows;
 using Dalamud.Game.Command;
+using Dalamud.Interface.ImGuiNotification;
 using Dalamud.Interface.Internal;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
@@ -162,6 +163,15 @@ public sealed class Plugin : IDalamudPlugin
 
     public void CopyMacro(IReadOnlyList<ActionType> actions) =>
         MacroCopy.Copy(actions);
+
+    public IActiveNotification DisplayNotification(Notification notification)
+    {
+        notification.InitialDuration = TimeSpan.FromSeconds(5);
+        var ret = Service.NotificationManager.AddNotification(notification);
+        if (notification.Icon != null)
+            ret.SetIconTexture(Icon);
+        return ret;
+    }
 
     public void Dispose()
     {

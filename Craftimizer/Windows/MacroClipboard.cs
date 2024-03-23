@@ -53,7 +53,13 @@ public sealed class MacroClipboard : Window, IDisposable
             if (buttonClicked)
             {
                 ImGui.SetClipboardText(macro);
-                Service.PluginInterface.UiBuilder.AddNotification($"Macro {idx + 1} copied to clipboard.", "Craftimizer Macro Copied", NotificationType.Success);
+                Service.Plugin.DisplayNotification(new()
+                {
+                    Content = $"Macro {idx + 1} copied to clipboard.",
+                    MinimizedText = $"Copied macro {idx + 1}",
+                    Title = "Macro Copied",
+                    Type = NotificationType.Success
+                });
             }
         }
         if (buttonHovered)

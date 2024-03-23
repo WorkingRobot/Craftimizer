@@ -24,6 +24,7 @@ public sealed class Service
     [PluginService] public static IFramework Framework { get; private set; }
     [PluginService] public static IPluginLog PluginLog { get; private set; }
     [PluginService] public static IGameInteropProvider GameInteropProvider { get; private set; }
+    [PluginService] public static INotificationManager NotificationManager { get; private set; }
 
     public static Plugin Plugin { get; private set; }
     public static Configuration Configuration => Plugin.Configuration;

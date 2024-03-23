@@ -20,7 +20,13 @@ public static class MacroCopy
     {
         if (actions.Count == 0)
         {
-            Service.PluginInterface.UiBuilder.AddNotification("Could not copy macro. It's empty!", "Craftimizer Macro Not Copied", NotificationType.Error);
+            Service.Plugin.DisplayNotification(new()
+            {
+                Content = "Cannot copy an empty macro.",
+                MinimizedText = "Cannot copy empty macro",
+                Title = "Macro Not Copied",
+                Type = NotificationType.Error
+            });
             return;
         }
 
@@ -29,10 +35,9 @@ public static class MacroCopy
         var s = new List<string>();
         for (var i = 0; i < actions.Count; ++i)
         {
-            if (s.Count == 0)
+            if (config.UseMacroLock && s.Count == 0)
             {
-                if (config.UseMacroLock)
-                    s.Add("/mlock");
+                s.Add("/mlock");
             }
 
             s.Add(GetActionCommand(actions[i], config));
@@ -73,7 +78,7 @@ public static class MacroCopy
                 CopyToMacro(macros, config);
                 break;
             case MacroCopyConfiguration.CopyType.CopyToClipboard:
-                CopyToClipboard(macros, config);
+                CopyToClipboard(macros);
                 break;
         }
     }
@@ -128,12 +133,24 @@ public static class MacroCopy
             i++, macroIdx += config.CopyDown ? 10 : 1)
             SetMacro(macroIdx, config.SharedMacro, macros[i]);
 
-        Service.PluginInterface.UiBuilder.AddNotification(i > 1 ? "Copied macro to User Macros." : $"Copied {i} macros to User Macros.", "Craftimizer Macro Copied", NotificationType.Success);
+        Service.Plugin.DisplayNotification(new()
+        {
+            Content = i > 1 ? "Copied macro to User Macros." : $"Copied {i} macros to User Macros.",
+            MinimizedText = i > 1 ? "Copied macro" : $"Copied {i} macros",
+            Title = "Macro Copied",
+            Type = NotificationType.Success
+        });
         if (i < macros.Count)
         {
             Service.Plugin.OpenMacroClipboard(macros);
             var rest = macros.Count - i;
-            Service.PluginInterface.UiBuilder.AddNotification($"Couldn't copy {rest} macro{(rest == 1 ? "" : "s")}, so a window was opened with all of them.", "Craftimizer Macro Copied", NotificationType.Info);
+            Service.Plugin.DisplayNotification(new()
+            {
+                Content = $"Couldn't copy {rest} macro{(rest == 1 ? "" : "s")}, so a window was opened with all of them.",
+                Minimized = false,
+                Title = "Macro Copied",
+                Type = NotificationType.Warning
+            });
         }
     }
 
@@ -150,9 +167,15 @@ public static class MacroCopy
         IMemorySpace.Free(text);
     }
 
-    private static void CopyToClipboard(List<string> macros, MacroCopyConfiguration config)
+    private static void CopyToClipboard(List<string> macros)
     {
         ImGui.SetClipboardText(string.Join(Environment.NewLine + Environment.NewLine, macros));
-        Service.PluginInterface.UiBuilder.AddNotification(macros.Count > 1 ? "Copied macro to clipboard." : $"Copied {macros.Count} macros to clipboard.", "Craftimizer Macro Copied", NotificationType.Success);
+        Service.Plugin.DisplayNotification(new()
+        {
+            Content = macros.Count > 1 ? "Copied macro to clipboard." : $"Copied {macros.Count} macros to clipboard.",
+            MinimizedText = macros.Count > 1 ? "Copied macro" : $"Copied {macros.Count} macros",
+            Title = "Macro Copied",
+            Type = NotificationType.Success
+        });
     }
 }

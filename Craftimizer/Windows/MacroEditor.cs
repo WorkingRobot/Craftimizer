@@ -1480,7 +1480,13 @@ public sealed class MacroEditor : Window, IDisposable
                         foreach (var action in parsedActions)
                             AddStep(action);
 
-                        Service.PluginInterface.UiBuilder.AddNotification($"Imported macro with {parsedActions.Count} step{(parsedActions.Count != 1 ? "s" : "")}", "Craftimizer Macro Imported", NotificationType.Success);
+                        Service.Plugin.DisplayNotification(new()
+                        {
+                            Content = $"Imported macro with {parsedActions.Count} step{(parsedActions.Count != 1 ? "s" : "")}",
+                            MinimizedText = $"Imported {parsedActions.Count} step macro",
+                            Title = "Macro Imported",
+                            Type = NotificationType.Success
+                        });
                         popupImportUrlTokenSource?.Cancel();
                         ImGui.CloseCurrentPopup();
                     }
@@ -1530,7 +1536,12 @@ public sealed class MacroEditor : Window, IDisposable
                     Macro.Clear();
                     foreach (var action in actions)
                         AddStep(action);
-                    Service.PluginInterface.UiBuilder.AddNotification($"Imported macro \"{name}\"", "Craftimizer Macro Imported", NotificationType.Success);
+                    Service.Plugin.DisplayNotification(new()
+                    {
+                        Content = $"Imported macro \"{name}\"",
+                        Title = "Macro Imported",
+                        Type = NotificationType.Success
+                    });
 
                     popupImportUrlTokenSource?.Cancel();
                     ImGui.CloseCurrentPopup();
