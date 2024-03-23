@@ -253,7 +253,10 @@ internal static class ImGuiUtils
                     .Select(n => Lerp(min, max, n / (float)resolution))
                     .Select(n => (n, (float)KernelDensity.EstimateGaussian(n, bandwidth, samplesList)))
                     .Select(n => new Point(n.n, n.Item2, -n.Item2));
-                DataArray = [.. data];
+                // ParallelQuery doesn't support [.. data] correctly. The plots look very wrong.
+#pragma warning disable IDE0305 // Simplify collection initialization
+                DataArray = data.ToArray();
+#pragma warning restore IDE0305 // Simplify collection initialization
                 s.Stop();
                 Log.Debug($"Violin plot processing took {s.Elapsed.TotalMilliseconds:0.00}ms");
             });
