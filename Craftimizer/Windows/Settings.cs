@@ -165,7 +165,8 @@ public sealed class Settings : Window, IDisposable
         if (ImGui.BeginTabBar("settingsTabBar"))
         {
             DrawTabGeneral();
-            DrawTabSimulator();
+            DrawTabRecipeNote();
+            DrawTabMacroEditor();
             if (Config.EnableSynthHelper)
                 DrawTabSynthHelper();
             DrawTabAbout();
@@ -193,51 +194,6 @@ public sealed class Settings : Window, IDisposable
             v => Config.EnableSynthHelper = v,
             ref isDirty
         );
-
-        DrawOption(
-            "Pin Crafting Log Window",
-            "Pins the helper window to the right of your crafting log. Disabling this will " +
-            "allow you to move it around.",
-            Config.PinRecipeNoteToWindow,
-            v => Config.PinRecipeNoteToWindow = v,
-            ref isDirty
-        );
-
-        DrawOption(
-            "Automatically Suggest Macro in Crafting Log",
-            "(Can cause frame drops!) When navigating to a new recipe or changing your gear " +
-            "stats, automatically suggest a new macro (equivalent to clicking \"Generate\" " +
-            "in the Macro Editor). This can cause harsh frame drops on some computers or " +
-            "recipes when underleveled while navigating the crafting log. Turning this off " +
-            "provides a button to allow you to manually suggest a macro only when you need it.",
-            Config.SuggestMacroAutomatically,
-            v => Config.SuggestMacroAutomatically = v,
-            ref isDirty
-        );
-
-        DrawOption(
-            "Enable Community Macros in Crafting Log",
-            "Use FFXIV Teamcraft's community rotations to search for and find the best possible" +
-            "crowd-sourced macro for your craft. This sends a request to their servers to retrieve " +
-            "a list of macros that apply to your craft's rlvl. Requests are only sent once per rlvl " +
-            "and are always cached to reduce server load.",
-            Config.ShowCommunityMacros,
-            v => Config.ShowCommunityMacros = v,
-            ref isDirty
-        );
-
-        if (Config.ShowCommunityMacros)
-        {
-            DrawOption(
-                "Automatically Search for Community Macro",
-                "When navigating to a new recipe or changing your gear stats, automatically search " +
-                "online for a new community macro.\n" +
-                "This is turned off by default so you don't hammer their servers :)",
-                Config.SearchCommunityMacroAutomatically,
-                v => Config.SearchCommunityMacroAutomatically = v,
-                ref isDirty
-            );
-        }
 
         DrawOption(
             "Show Only One Macro Stat in Crafting Log",
@@ -470,7 +426,7 @@ public sealed class Settings : Window, IDisposable
                 "as necessary to get a more favorable outcome.",
                 config.Iterations,
                 1000,
-                500000,
+                1000000,
                 v => config = config with { Iterations = v },
                 ref isDirty
             );
@@ -809,9 +765,9 @@ public sealed class Settings : Window, IDisposable
         }
     }
 
-    private void DrawTabSimulator()
+    private void DrawTabRecipeNote()
     {
-        using var tab = TabItem("Simulator");
+        using var tab = TabItem("Crafting Log");
         if (!tab)
             return;
 
@@ -819,11 +775,82 @@ public sealed class Settings : Window, IDisposable
 
         var isDirty = false;
 
-        var solverConfig = Config.SimulatorSolverConfig;
-        DrawSolverConfig(ref solverConfig, SolverConfig.SimulatorDefault, out var isSolverDirty);
+        DrawOption(
+            "Pin Helper Window",
+            "Pins the helper window to the right of your crafting log. Disabling this will " +
+            "allow you to move it around.",
+            Config.PinRecipeNoteToWindow,
+            v => Config.PinRecipeNoteToWindow = v,
+            ref isDirty
+        );
+
+        DrawOption(
+            "Automatically Suggest Macro",
+            "(Can cause frame drops!) When navigating to a new recipe or changing your gear " +
+            "stats, automatically suggest a new macro (equivalent to clicking \"Generate\" " +
+            "in the Macro Editor). This can cause harsh frame drops on some computers or " +
+            "recipes when underleveled while navigating the crafting log. Turning this off " +
+            "provides a button to allow you to manually suggest a macro only when you need it.",
+            Config.SuggestMacroAutomatically,
+            v => Config.SuggestMacroAutomatically = v,
+            ref isDirty
+        );
+
+        DrawOption(
+            "Enable Community Macros",
+            "Use FFXIV Teamcraft's community rotations to search for and find the best possible " +
+            "crowd-sourced macro for your craft. This sends a request to their servers to retrieve " +
+            "a list of macros that apply to your craft's rlvl. Requests are only sent once per rlvl " +
+            "and are always cached to reduce server load.",
+            Config.ShowCommunityMacros,
+            v => Config.ShowCommunityMacros = v,
+            ref isDirty
+        );
+
+        if (Config.ShowCommunityMacros)
+        {
+            DrawOption(
+                "Automatically Search for Community Macro",
+                "When navigating to a new recipe or changing your gear stats, automatically search " +
+                "online for a new community macro.\n" +
+                "This is turned off by default so you don't hammer their servers :)",
+                Config.SearchCommunityMacroAutomatically,
+                v => Config.SearchCommunityMacroAutomatically = v,
+                ref isDirty
+            );
+        }
+
+        ImGuiHelpers.ScaledDummy(5);
+        ImGui.Separator();
+        ImGuiHelpers.ScaledDummy(5);
+
+        var solverConfig = Config.RecipeNoteSolverConfig;
+        DrawSolverConfig(ref solverConfig, SolverConfig.RecipeNoteDefault, out var isSolverDirty);
         if (isSolverDirty)
         {
-            Config.SimulatorSolverConfig = solverConfig;
+            Config.RecipeNoteSolverConfig = solverConfig;
+            isDirty = true;
+        }
+
+        if (isDirty)
+            Config.Save();
+    }
+
+    private void DrawTabMacroEditor()
+    {
+        using var tab = TabItem("Macro Editor");
+        if (!tab)
+            return;
+
+        ImGuiHelpers.ScaledDummy(5);
+
+        var isDirty = false;
+
+        var solverConfig = Config.EditorSolverConfig;
+        DrawSolverConfig(ref solverConfig, SolverConfig.EditorDefault, out var isSolverDirty);
+        if (isSolverDirty)
+        {
+            Config.EditorSolverConfig = solverConfig;
             isDirty = true;
         }
 
@@ -842,7 +869,7 @@ public sealed class Settings : Window, IDisposable
         var isDirty = false;
 
         DrawOption(
-            "Pin Window",
+            "Pin Helper Window",
             "Pins the synthesis helper to the right of your synthesis window. Disabling this will " +
             "allow you to move it around.",
             Config.PinSynthHelperToWindow,

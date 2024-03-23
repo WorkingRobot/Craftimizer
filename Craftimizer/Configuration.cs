@@ -85,10 +85,15 @@ public class Configuration : IPluginConfiguration
     public IReadOnlyList<Macro> Macros => macros;
     public int ReliabilitySimulationCount { get; set; } = 500;
     public bool ConditionRandomness { get; set; } = true;
+
     [JsonConverter(typeof(PopulateConverter))]
-    public SolverConfig SimulatorSolverConfig { get; set; } = SolverConfig.SimulatorDefault;
+    [JsonProperty(PropertyName = "SimulatorSolverConfig")]
+    public SolverConfig RecipeNoteSolverConfig { get; set; } = SolverConfig.RecipeNoteDefault;
+    [JsonConverter(typeof(PopulateConverter))]
+    public SolverConfig EditorSolverConfig { get; set; } = SolverConfig.EditorDefault;
     [JsonConverter(typeof(PopulateConverter))]
     public SolverConfig SynthHelperSolverConfig { get; set; } = SolverConfig.SynthHelperDefault;
+
     public bool EnableSynthHelper { get; set; } = true;
     public bool DisableSynthHelperOnMacro { get; set; } = true;
     public bool ShowOptimalMacroStat { get; set; } = true;

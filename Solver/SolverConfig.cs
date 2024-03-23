@@ -1,4 +1,5 @@
 using Craftimizer.Simulator.Actions;
+using System.Collections.Frozen;
 using System.Runtime.InteropServices;
 
 namespace Craftimizer.Solver;
@@ -37,7 +38,7 @@ public readonly record struct SolverConfig
 
     public SolverConfig()
     {
-        Iterations = 100000;
+        Iterations = 100_000;
         ScoreStorageThreshold = 1f;
         MaxScoreWeightingConstant = 0.1f;
         ExplorationConstant = 4;
@@ -56,63 +57,122 @@ public readonly record struct SolverConfig
         ScoreCP = .05f;
         ScoreSteps = .05f;
 
-        ActionPool = DefaultActionPool;
+        ActionPool = DeterministicActionPool;
         Algorithm = SolverAlgorithm.StepwiseFurcated;
     }
 
     public static ActionType[] OptimizeActionPool(IEnumerable<ActionType> actions) =>
         actions.Order().ToArray();
 
-    public static readonly ActionType[] DefaultActionPool = OptimizeActionPool(new[]
+    public static readonly ActionType[] DeterministicActionPool = OptimizeActionPool(new[]
     {
+        ActionType.MuscleMemory,
+        ActionType.Reflect,
+        ActionType.TrainedEye,
+
+        ActionType.BasicSynthesis,
+        ActionType.CarefulSynthesis,
+        ActionType.FocusedSynthesis,
+        ActionType.Groundwork,
+        ActionType.DelicateSynthesis,
+        ActionType.PrudentSynthesis,
+
+        ActionType.BasicTouch,
+        ActionType.StandardTouch,
+        ActionType.ByregotsBlessing,
+        ActionType.PrudentTouch,
+        ActionType.FocusedTouch,
+        ActionType.PreparatoryTouch,
+        ActionType.AdvancedTouch,
+        ActionType.TrainedFinesse,
+
+        ActionType.MastersMend,
+        ActionType.WasteNot,
+        ActionType.WasteNot2,
+        ActionType.Manipulation,
+
+        ActionType.Veneration,
+        ActionType.GreatStrides,
+        ActionType.Innovation,
+
+        ActionType.Observe,
+
         ActionType.StandardTouchCombo,
         ActionType.AdvancedTouchCombo,
         ActionType.FocusedTouchCombo,
         ActionType.FocusedSynthesisCombo,
-        ActionType.TrainedFinesse,
-        ActionType.PrudentSynthesis,
-        ActionType.Groundwork,
-        ActionType.AdvancedTouch,
-        ActionType.CarefulSynthesis,
-        ActionType.TrainedEye,
-        ActionType.DelicateSynthesis,
-        ActionType.PreparatoryTouch,
-        ActionType.Reflect,
-        ActionType.PrudentTouch,
-        ActionType.Manipulation,
+    });
+
+    // Same as deterministic, but with condition-specific actions added
+    public static readonly ActionType[] RandomizedActionPool = OptimizeActionPool(new[]
+    {
         ActionType.MuscleMemory,
-        ActionType.ByregotsBlessing,
-        ActionType.WasteNot2,
+        ActionType.Reflect,
+        ActionType.TrainedEye,
+
         ActionType.BasicSynthesis,
-        ActionType.Innovation,
-        ActionType.GreatStrides,
-        ActionType.StandardTouch,
-        ActionType.Veneration,
-        ActionType.WasteNot,
-        ActionType.MastersMend,
+        ActionType.CarefulSynthesis,
+        ActionType.FocusedSynthesis,
+        ActionType.Groundwork,
+        ActionType.DelicateSynthesis,
+        ActionType.IntensiveSynthesis,
+        ActionType.PrudentSynthesis,
+
         ActionType.BasicTouch,
+        ActionType.StandardTouch,
+        ActionType.ByregotsBlessing,
+        ActionType.PreciseTouch,
+        ActionType.PrudentTouch,
+        ActionType.FocusedTouch,
+        ActionType.PreparatoryTouch,
+        ActionType.AdvancedTouch,
+        ActionType.TrainedFinesse,
+
+        ActionType.MastersMend,
+        ActionType.WasteNot,
+        ActionType.WasteNot2,
+        ActionType.Manipulation,
+
+        ActionType.Veneration,
+        ActionType.GreatStrides,
+        ActionType.Innovation,
+
+        ActionType.Observe,
+        ActionType.TricksOfTheTrade,
+
+        ActionType.StandardTouchCombo,
+        ActionType.AdvancedTouchCombo,
+        ActionType.FocusedTouchCombo,
+        ActionType.FocusedSynthesisCombo,
     });
 
-    public static readonly IReadOnlySet<ActionType> InefficientActions = new HashSet<ActionType>(new[]
-    {
-        ActionType.CarefulObservation,
-        ActionType.HeartAndSoul,
-        ActionType.FinalAppraisal
-    });
+    public static readonly FrozenSet<ActionType> InefficientActions =
+        new[]
+        {
+            ActionType.CarefulObservation,
+            ActionType.HeartAndSoul,
+            ActionType.FinalAppraisal
+        }.ToFrozenSet();
 
-    public static readonly IReadOnlySet<ActionType> RiskyActions = new HashSet<ActionType>(new[]
-    {
-        ActionType.RapidSynthesis,
-        ActionType.HastyTouch,
-    });
+    public static readonly FrozenSet<ActionType> RiskyActions =
+        new[]
+        {
+            ActionType.RapidSynthesis,
+            ActionType.HastyTouch,
+        }.ToFrozenSet();
 
-    public static readonly SolverConfig SimulatorDefault = new SolverConfig() with
+    public static readonly SolverConfig RecipeNoteDefault = new SolverConfig() with
     {
 
     };
 
+    public static readonly SolverConfig EditorDefault = new SolverConfig() with
+    {
+        Iterations = 500000
+    };
+
     public static readonly SolverConfig SynthHelperDefault = new SolverConfig() with
     {
-        // Add properties if necessary
+        ActionPool = RandomizedActionPool
     };
 }

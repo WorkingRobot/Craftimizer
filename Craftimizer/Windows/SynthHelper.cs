@@ -426,7 +426,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
                                  "can vary wildly depending on the solver's settings.");
         }
 
-        if (ImGui.Button("Open in Simulator", new(-1, 0)))
+        if (ImGui.Button("Open in Macro Editor", new(-1, 0)))
             Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), Enumerable.Empty<ActionType>(), null);
     }
 

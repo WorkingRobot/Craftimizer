@@ -400,7 +400,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         if (ImGui.Button("View Saved Macros", new(availWidth, 0)))
             Service.Plugin.OpenMacroListWindow();
 
-        if (ImGui.Button("Open in Simulator", new(availWidth, 0)))
+        if (ImGui.Button("Open in Macro Editor", new(availWidth, 0)))
             Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), Enumerable.Empty<ActionType>(), null);
     }
 
@@ -932,7 +932,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                     if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Edit, miniRowHeight))
                         Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), actions, state.MacroEditorSetter);
                     if (ImGui.IsItemHovered())
-                        ImGuiUtils.Tooltip("Open in Simulator");
+                        ImGuiUtils.Tooltip("Open in Macro Editor");
                     if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Paste, miniRowHeight))
                         Service.Plugin.CopyMacro(actions);
                     if (ImGui.IsItemHovered())
@@ -1085,7 +1085,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         {
             var input = new SimulationInput(CharacterStats!, RecipeData!.RecipeInfo);
             var state = new SimulationState(input);
-            var config = Service.Configuration.SimulatorSolverConfig;
+            var config = Service.Configuration.RecipeNoteSolverConfig;
             var mctsConfig = new MCTSConfig(config);
             var simulator = new SimulatorNoRandom();
             List<Macro> macros = new(Service.Configuration.Macros);
@@ -1116,7 +1116,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         {
             var input = new SimulationInput(CharacterStats!, RecipeData!.RecipeInfo);
             var state = new SimulationState(input);
-            var config = Service.Configuration.SimulatorSolverConfig;
+            var config = Service.Configuration.RecipeNoteSolverConfig;
 
             token.ThrowIfCancellationRequested();
 
@@ -1140,7 +1140,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         {
             var input = new SimulationInput(CharacterStats!, RecipeData!.RecipeInfo);
             var state = new SimulationState(input);
-            var config = Service.Configuration.SimulatorSolverConfig;
+            var config = Service.Configuration.RecipeNoteSolverConfig;
             var mctsConfig = new MCTSConfig(config);
             var simulator = new SimulatorNoRandom();
             var macros = Service.CommunityMacros.RetrieveRotations(input.Recipe.RLvl, token).GetAwaiter().GetResult();

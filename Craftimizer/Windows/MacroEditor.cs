@@ -1603,7 +1603,7 @@ public sealed class MacroEditor : Window, IDisposable
 
     private void CalculateBestMacroTask(SimulationState state, CancellationToken token)
     {
-        var config = Service.Configuration.SimulatorSolverConfig;
+        var config = Service.Configuration.EditorSolverConfig;
 
         token.ThrowIfCancellationRequested();
 

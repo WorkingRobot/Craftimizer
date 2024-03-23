@@ -239,7 +239,7 @@ public sealed class MacroList : Window, IDisposable
                 if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Edit, miniRowHeight))
                     OpenEditor(macro);
                 if (ImGui.IsItemHovered())
-                    ImGuiUtils.Tooltip("Open in Simulator");
+                    ImGuiUtils.Tooltip("Open in Macro Editor");
                 ImGui.SameLine(0, spacing);
                 if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.PencilAlt, miniRowHeight))
                     ShowRenamePopup(macro);
