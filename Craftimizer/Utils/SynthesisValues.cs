@@ -8,14 +8,9 @@ using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
 namespace Craftimizer.Utils;
 
-internal sealed unsafe class SynthesisValues
+internal sealed unsafe class SynthesisValues(AddonSynthesis* addon)
 {
-    private AddonSynthesis* Addon { get; }
-
-    public SynthesisValues(AddonSynthesis* addon)
-    {
-        Addon = addon;
-    }
+    private AddonSynthesis* Addon { get; } = addon;
 
     private ReadOnlySpan<AtkValue> Values => new(Addon->AtkUnitBase.AtkValues, Addon->AtkUnitBase.AtkValuesCount);
 
@@ -48,7 +43,7 @@ internal sealed unsafe class SynthesisValues
     public bool IsExpertRecipe => GetBool(25);
 
     public bool IsShowingCollectibleInfo => IsShowingCollectibleInfoValue != 0;
-    public Condition Condition => (Condition)(1 << (int)ConditionValue);
+    public Condition Condition => (Condition)ConditionValue;
     public bool IsCollectible => IsCollectibleValue != 0;
 
     private uint? TryGetUInt(int i)
