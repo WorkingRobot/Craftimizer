@@ -172,7 +172,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 if (Service.Configuration.SuggestMacroAutomatically && SuggestedMacroTask?.Result == null && (SuggestedMacroTask?.Completed ?? true))
                     CalculateSuggestedMacro();
                 // If we don't want to suggest automatically, we should cancel and clean out the task
-                else
+                else if (!Service.Configuration.SuggestMacroAutomatically && SuggestedMacroTask?.Result == null)
                 {
                     SuggestedMacroTask?.Cancel();
                     SuggestedMacroTask = null;
@@ -182,7 +182,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 if (Service.Configuration.ShowCommunityMacros && Service.Configuration.SearchCommunityMacroAutomatically && CommunityMacroTask?.Result == null && (CommunityMacroTask?.Completed ?? true))
                     CalculateCommunityMacro();
                 // If we don't want to search automatically, we should cancel and clean out the task
-                else
+                else if (!Service.Configuration.SearchCommunityMacroAutomatically && CommunityMacroTask?.Result == null)
                 {
                     CommunityMacroTask?.Cancel();
                     CommunityMacroTask = null;
