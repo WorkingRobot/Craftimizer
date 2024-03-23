@@ -28,6 +28,7 @@
   
    <ItemGroup>
      <EmbeddedResource Include="../icon.png" />
+     <EmbeddedResource Include="../horse_icon.png" />
      <EmbeddedResource Include="Graphics\collectible_badge.png" />
      <EmbeddedResource Include="Graphics\expert.png" />
      <EmbeddedResource Include="Graphics\expert_badge.png" />

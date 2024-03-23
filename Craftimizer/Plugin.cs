@@ -53,7 +53,11 @@ public sealed class Plugin : IDalamudPlugin
         Version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion.Split('+')[0];
         Author = assembly.GetCustomAttribute<AssemblyCompanyAttribute>()!.Company;
         BuildConfiguration = assembly.GetCustomAttribute<AssemblyConfigurationAttribute>()!.Configuration;
-        Icon = IconManager.GetAssemblyTexture("icon.png");
+        var now = DateTime.Now;
+        if (now.Day == 1 && now.Month == 4)
+            Icon = IconManager.GetAssemblyTexture("horse_icon.png");
+        else
+            Icon = IconManager.GetAssemblyTexture("icon.png");
 
         SettingsWindow = new();
         RecipeNoteWindow = new();
