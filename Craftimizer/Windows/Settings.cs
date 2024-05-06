@@ -932,7 +932,7 @@ public sealed class Settings : Window, IDisposable
                 ImGui.Image(icon.ImGuiHandle, new(icon.Width, icon.Height));
 
                 ImGui.TableNextColumn();
-                ImGuiUtils.AlignMiddle(new(float.PositiveInfinity, HeaderFont.GetFontSize() + SubheaderFont.GetFontSize() + ImGui.GetFontSize() + ImGui.GetStyle().ItemSpacing.Y * 2), new(0, icon.Height));
+                ImGuiUtils.AlignMiddle(new(float.PositiveInfinity, HeaderFont.GetFontSize() + SubheaderFont.GetFontSize() + ImGui.GetFontSize() * 3 + ImGui.GetStyle().ItemSpacing.Y * 4), new(0, icon.Height));
 
                 using (HeaderFont.Push())
                 {
@@ -949,10 +949,17 @@ public sealed class Settings : Window, IDisposable
                 ImGuiUtils.Hyperlink("WorkingRobot", "https://github.com/WorkingRobot");
                 ImGui.SameLine(0, 0);
                 ImGui.Text(")");
+
+                ImGuiUtils.AlignCentered(ImGui.CalcTextSize($"Ko-fi").X);
+                ImGuiUtils.Hyperlink("Ko-fi", "https://ko-fi.com/camora");
             }
         }
 
+        ImGuiHelpers.ScaledDummy(5);
+
         ImGui.Separator();
+
+        ImGuiHelpers.ScaledDummy(5);
 
         using (SubheaderFont.Push())
             ImGuiUtils.TextCentered("Special Thanks");
@@ -967,13 +974,27 @@ public sealed class Settings : Window, IDisposable
         ImGui.SameLine(0, 0);
         ImGuiUtils.Hyperlink("Craftingway", "https://craftingway.app");
         ImGui.SameLine(0, 0);
-        ImGuiUtils.TextWrappedTo(" and the original solver algorithm");
+        ImGuiUtils.TextWrappedTo(" and the original solver algorithm.");
 
         ImGuiUtils.TextWrappedTo("Thank you to ");
         ImGui.SameLine(0, 0);
         ImGuiUtils.Hyperlink("FFXIV Teamcraft", "https://ffxivteamcraft.com");
         ImGui.SameLine(0, 0);
-        ImGuiUtils.TextWrappedTo(" and its users for their community rotations");
+        ImGuiUtils.TextWrappedTo(" and its users for their community rotations.");
+
+        ImGuiUtils.TextWrappedTo("Thank you to ");
+        ImGui.SameLine(0, 0);
+        ImGuiUtils.Hyperlink("this", "https://dke.maastrichtuniversity.nl/m.winands/documents/multithreadedMCTS2.pdf");
+        ImGui.SameLine(0, 0);
+        ImGuiUtils.TextWrappedTo(", ");
+        ImGui.SameLine(0, 0);
+        ImGuiUtils.Hyperlink("this", "https://liacs.leidenuniv.nl/~plaata1/papers/paper_ICAART18.pdf");
+        ImGui.SameLine(0, 0);
+        ImGuiUtils.TextWrappedTo(", and ");
+        ImGui.SameLine(0, 0);
+        ImGuiUtils.Hyperlink("this paper", "https://arxiv.org/abs/2308.04459");
+        ImGui.SameLine(0, 0);
+        ImGuiUtils.TextWrappedTo(" for inspiration and design references.");
     }
 
     public void Dispose()

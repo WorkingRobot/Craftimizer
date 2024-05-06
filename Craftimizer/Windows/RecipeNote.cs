@@ -750,7 +750,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                         ImGuiUtils.AlignMiddle(size, availSize);
                         if (ImGui.Button("Generate"))
                             CalculateSuggestedMacro();
-                        ImGui.SetCursorPos(c + new Vector2(0, availSize.Y + ImGui.GetStyle().ItemSpacing.Y - 1));
+                        ImGui.SetCursorPos(c + new Vector2(0, availSize.Y + ImGui.GetStyle().ItemSpacing.Y));
                         break;
                     }
                 case MacroTaskType.Community:
@@ -762,7 +762,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                         ImGuiUtils.AlignMiddle(size, availSize);
                         if (ImGui.Button("Search Online"))
                             CalculateCommunityMacro();
-                        ImGui.SetCursorPos(c + new Vector2(0, availSize.Y + ImGui.GetStyle().ItemSpacing.Y - 1));
+                        ImGui.SetCursorPos(c + new Vector2(0, availSize.Y + ImGui.GetStyle().ItemSpacing.Y));
                         break;
                     }
             }
