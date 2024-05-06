@@ -29,7 +29,7 @@ internal sealed class Simulator : SimulatorNoRandom
             State = state;
             pool = pool.Where(x => x.Item1.IsPossible(this));
         }
-        actionPoolObjects = pool.OrderBy(x => x.x).ToArray();
+        actionPoolObjects = [.. pool.OrderBy(x => x.x)];
         this.maxStepCount = maxStepCount;
     }
 

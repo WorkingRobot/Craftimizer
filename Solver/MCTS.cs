@@ -176,9 +176,8 @@ public sealed class MCTS
         }
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     [SkipLocalsInit]
-    private (Node ExpandedNode, float Score) ExpandAndRollout(Random random, Simulator simulator, Node initialNode)
+    private (Node ExpandedNode, float Score) ExpandAndRollout(Random random, Simulator simulator, Node initialNode, Span<ActionType> actionBuffer)
     {
         ref var initialState = ref initialNode.State;
         // expand once
@@ -194,7 +193,7 @@ public sealed class MCTS
         var currentActions = expandedNode.State.AvailableActions;
 
         byte actionCount = 0;
-        Span<ActionType> actions = stackalloc ActionType[Math.Min(config.MaxStepCount - currentState.ActionCount, config.MaxRolloutStepCount)];
+        var actions = actionBuffer[..Math.Min(config.MaxStepCount - currentState.ActionCount, config.MaxRolloutStepCount)];
         while (SimulationNode.GetCompletionState(currentCompletionState, currentActions) == CompletionState.Incomplete &&
             actionCount < actions.Length)
         {
@@ -260,16 +259,18 @@ public sealed class MCTS
         return !NodesIncomplete(rootNode, new());
     }
 
-    public void Search(int iterations, ref int progress, CancellationToken token)
+    [SkipLocalsInit]
+    public unsafe void Search(int iterations, ref int progress, CancellationToken token)
     {
         var simulator = new Simulator(config.ActionPool, config.MaxStepCount, rootNode.State.State);
         var random = rootNode.State.State.Input.Random;
         var staleCounter = 0;
         var i = 0;
+        Span<ActionType> actionBuffer = stackalloc ActionType[Math.Min(config.MaxStepCount, config.MaxRolloutStepCount)];
         for (; i < iterations || MaxScore == 0; i++)
         {
             var selectedNode = Select();
-            var (endNode, score) = ExpandAndRollout(random, simulator, selectedNode);
+            var (endNode, score) = ExpandAndRollout(random, simulator, selectedNode, actionBuffer);
             if (MaxScore == 0)
             {
                 if (endNode == selectedNode)

@@ -62,7 +62,7 @@ public readonly record struct SolverConfig
     }
 
     public static ActionType[] OptimizeActionPool(IEnumerable<ActionType> actions) =>
-        actions.Order().ToArray();
+        [.. actions.Order()];
 
     public static readonly ActionType[] DeterministicActionPool = OptimizeActionPool(new[]
     {
