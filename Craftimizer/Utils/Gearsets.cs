@@ -3,7 +3,7 @@ using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
-using Lumina.Excel.GeneratedSheets2;
+using ExdSheets;
 using System;
 using System.Linq;
 

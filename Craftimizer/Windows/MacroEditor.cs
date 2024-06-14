@@ -1060,12 +1060,12 @@ public sealed class MacroEditor : Window, IDisposable
                 DynamicBars.Draw(datas);
 
                 ImGui.TableNextColumn();
-                datas = new List<DynamicBars.BarData>(3)
-                {
+                datas =
+                [
                     new("Progress", Colors.Progress, Reliability.Progress, State.Progress, RecipeData.RecipeInfo.MaxProgress),
                     new("Quality", Colors.Quality, Reliability.Quality, State.Quality, RecipeData.RecipeInfo.MaxQuality),
                     new("CP", Colors.CP, State.CP, CharacterStats.CP)
-                };
+                ];
                 if (RecipeData.RecipeInfo.MaxQuality <= 0)
                     datas.RemoveAt(1);
                 DynamicBars.Draw(datas);

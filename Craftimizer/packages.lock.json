@@ -8,6 +8,15 @@
         "resolved": "2.1.12",
         "contentHash": "Sc0PVxvgg4NQjcI8n10/VfUQBAS4O+Fw2pZrAqBdRMbthYGeogzu5+xmIGCGmsEZ/ukMOBuAqiNiB5qA3MRalg=="
       },
+      "ExdSheets": {
+        "type": "Direct",
+        "requested": "[1.0.0, )",
+        "resolved": "1.0.0",
+        "contentHash": "Zf1btj6qUkrzEm+MVCd2vRWguXizb+Ucy49xWHhFJ5HQj6gtLOxAX2gJqebAtg/uDBbEb9BHx/5Kz7Kuha5+cw==",
+        "dependencies": {
+          "Lumina": "3.15.2"
+        }
+      },
       "MathNet.Numerics": {
         "type": "Direct",
         "requested": "[5.0.0, )",
@@ -16,9 +25,14 @@
       },
       "Meziantou.Analyzer": {
         "type": "Direct",
-        "requested": "[2.0.106, )",
-        "resolved": "2.0.106",
-        "contentHash": "ygz0oT+Sfkn7Zfhf05iQkrLsrhH9+laOHsab8zq1okOVNjWGbQsXIBgeITF1DLEB/gVYgHHyVEK8YoNnhed/GQ=="
+        "requested": "[2.0.157, )",
+        "resolved": "2.0.157",
+        "contentHash": "gQ9xAHvpYeqwOqcyRs5f8kFrTt7Kg2atzjsETGhRjuyGXqKYrN84n52Je6NcGEkZWRwhrQTBJl1wlcsh2se7Fw=="
+      },
+      "Lumina": {
+        "type": "Transitive",
+        "resolved": "3.15.2",
+        "contentHash": "EnoxYEYMepcvAoXdZhaFJiv2aiDBIPjgkgzxR/+ArOxlrALzCgheTsb5yD39a9sxNIi2tNECT93ulZvYjx8fZg=="
       },
       "craftimizer.simulator": {
         "type": "Project"

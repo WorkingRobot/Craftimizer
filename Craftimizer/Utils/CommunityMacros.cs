@@ -297,7 +297,7 @@ public sealed class CommunityMacros
 
             if (!string.IsNullOrEmpty(macro.Name))
             {
-                if (Uri.TryCreate(macro.Name, UriKind.Relative, out var uri))
+                if (Uri.TryCreate(macro.Name, UriKind.Relative, out _))
                 {
                     var rotationId = macro.Name.Split('/')[^1];
                     if (!string.IsNullOrEmpty(rotationId))
@@ -474,8 +474,7 @@ public sealed class CommunityMacros
 
     private static async Task<TResponse?> PostFromJsonAsync<TRequest, TResponse>(HttpClient client, [StringSyntax(StringSyntaxAttribute.Uri)] string? requestUri, TRequest value, JsonSerializerOptions? options = null, CancellationToken cancellationToken = default)
     {
-        if (client is null)
-            throw new ArgumentNullException(nameof(client));
+        ArgumentNullException.ThrowIfNull(client);
 
         var resp = client.PostAsJsonAsync(requestUri, value, options, cancellationToken);
         using var message = await resp.ConfigureAwait(false);

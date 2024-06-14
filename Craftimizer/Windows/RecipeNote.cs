@@ -401,7 +401,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             Service.Plugin.OpenMacroListWindow();
 
         if (ImGui.Button("Open in Macro Editor", new(availWidth, 0)))
-            Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), Enumerable.Empty<ActionType>(), null);
+            Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), [], null);
     }
 
     private void DrawCharacterStats()
@@ -978,8 +978,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
     private static void DrawRequiredStatsTable(int current, int required)
     {
-        if (current >= required)
-            throw new ArgumentOutOfRangeException(nameof(current));
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(current, required);
 
         using var table = ImRaii.Table("requiredStats", 2);
         if (table)
@@ -1048,8 +1047,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         return (ResolveNpcResidentName(level.Object.Row), territory, location, new(level.Territory.Row, level.Map.Row, location.X, location.Y));
     }
 
-    // MapUtil.WorldToMap but for GeneratedSheets2
-    private static Vector2 WorldToMap2(Vector2 worldCoordinates, Lumina.Excel.GeneratedSheets2.Map map)
+    private static Vector2 WorldToMap2(Vector2 worldCoordinates, ExdSheets.Map map)
     {
         return MapUtil.WorldToMap(worldCoordinates, map.OffsetX, map.OffsetY, map.SizeFactor);
     }

@@ -83,15 +83,12 @@ public static class MacroImport
         if (!TryParseUrl(url, out var uri))
             throw new ArgumentException("Unsupported url", nameof(url));
 
-        switch (uri.DnsSafeHost)
+        return uri.DnsSafeHost switch
         {
-            case "ffxivteamcraft.com":
-                return RetrieveTeamcraftUrl(uri, token);
-            case "craftingway.app":
-                return RetrieveCraftingwayUrl(uri, token);
-            default:
-                throw new UnreachableException("TryParseUrl should handle miscellaneous edge cases");
-        }
+            "ffxivteamcraft.com" => RetrieveTeamcraftUrl(uri, token),
+            "craftingway.app" => RetrieveCraftingwayUrl(uri, token),
+            _ => throw new UnreachableException("TryParseUrl should handle miscellaneous edge cases"),
+        };
     }
 
     private static async Task<CommunityMacro> RetrieveTeamcraftUrl(Uri uri, CancellationToken token)

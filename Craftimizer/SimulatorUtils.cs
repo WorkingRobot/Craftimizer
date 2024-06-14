@@ -3,20 +3,18 @@ using Craftimizer.Simulator.Actions;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface.Internal;
 using Dalamud.Utility;
-using FFXIVClientStructs.FFXIV.Client.Game;
-using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
-using Lumina.Excel.GeneratedSheets2;
+using ExdSheets;
 using System;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Text;
-using Action = Lumina.Excel.GeneratedSheets2.Action;
+using Action = ExdSheets.Action;
 using ActionType = Craftimizer.Simulator.Actions.ActionType;
 using ClassJob = Craftimizer.Simulator.ClassJob;
 using Condition = Craftimizer.Simulator.Condition;
-using Status = Lumina.Excel.GeneratedSheets2.Status;
+using Status = ExdSheets.Status;
 
 namespace Craftimizer.Plugin;
 

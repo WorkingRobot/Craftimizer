@@ -124,7 +124,7 @@ public sealed class Plugin : IDalamudPlugin
     public void OpenEmptyMacroEditor()
     {
         var stats = GetDefaultStats();
-        OpenMacroEditor(stats.Character, stats.Recipe, stats.Buffs, Enumerable.Empty<ActionType>(), null);
+        OpenMacroEditor(stats.Character, stats.Recipe, stats.Buffs, [], null);
     }
 
     public void OpenMacroEditor(CharacterStats characterStats, RecipeData recipeData, MacroEditor.CrafterBuffs buffs, IEnumerable<ActionType> actions, Action<IEnumerable<ActionType>>? setter)

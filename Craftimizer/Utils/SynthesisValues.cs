@@ -67,7 +67,7 @@ internal sealed unsafe class SynthesisValues(AddonSynthesis* addon)
         var value = Values[i];
         return value.Type switch
         {
-            ValueType.AllocatedString or
+            ValueType.ManagedString or
             ValueType.String =>
                 MemoryHelper.ReadSeStringNullTerminated((nint)value.String),
             _ => null

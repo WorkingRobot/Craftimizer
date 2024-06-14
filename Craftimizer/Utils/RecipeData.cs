@@ -1,6 +1,7 @@
 using Craftimizer.Plugin;
 using Craftimizer.Simulator;
-using Lumina.Excel.GeneratedSheets2;
+using ExdSheets;
+using Lumina.Excel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,58 +48,47 @@ public sealed record RecipeData
         };
 
         CollectableThresholds = null;
-        switch (Recipe.Unknown1)
+        if (Recipe.CollectableMetadata is LazyRow<CollectablesShopRefine> { Value: { } row })
+            CollectableThresholds = new int?[] { row.LowCollectability, row.MidCollectability, row.HighCollectability };
+        else if (Recipe.CollectableMetadata is LazyRow<HWDCrafterSupply> { Value: { } row2 })
         {
-            case 1:
-                var data1 = LuminaSheets.CollectablesShopRefineSheet.GetRow(Recipe.Unknown0);
-                if (data1 == null)
-                    break;
-                CollectableThresholds = new int?[] { data1.LowCollectability, data1.MidCollectability, data1.HighCollectability };
-                break;
-            case 2:
-                var data2 = LuminaSheets.HWDCrafterSupplySheet.GetRow(Recipe.Unknown0);
-                if (data2 == null)
-                    break;
-                foreach (var entry in data2.HWDCrafterSupplyParams)
+            foreach (var entry in row2.HWDCrafterSupplyParams)
+            {
+                if (entry.ItemTradeIn.Row == Recipe.ItemResult.Row)
                 {
-                    if (entry.ItemTradeIn.Row == Recipe.ItemResult.Row)
-                    {
-                        CollectableThresholds = new int?[] { entry.BaseCollectableRating, entry.MidCollectableRating, entry.HighCollectableRating };
-                        break;
-                    }
-                }
-                break;
-            case 3:
-                var subRowCount = LuminaSheets.SatisfactionSupplySheet.GetSubRowCount(Recipe.Unknown0);
-                if (subRowCount is not { } subRowValue)
+                    CollectableThresholds = new int?[] { entry.BaseCollectableRating, entry.MidCollectableRating, entry.HighCollectableRating };
                     break;
+                }
+            }
+        }
+        else if (Recipe.CollectableMetadata is LazyRow<SatisfactionSupply> { } row4)
+        {
+            var subRowCount = LuminaSheets.SatisfactionSupplySheet.GetSubRowCount(row4.Row);
+            if (subRowCount is { } subRowValue)
+            {
                 for (uint i = 0; i < subRowValue; ++i)
                 {
-                    var data3 = LuminaSheets.SatisfactionSupplySheet.GetRow(Recipe.Unknown0, i);
-                    if (data3 == null)
+                    var subRow = LuminaSheets.SatisfactionSupplySheet.GetRow(row4.Row, i);
+                    if (subRow == null)
                         continue;
-                    if (data3.Item.Row == Recipe.ItemResult.Row)
+                    if (subRow.Item.Row == Recipe.ItemResult.Row)
                     {
-                        CollectableThresholds = new int?[] { data3.CollectabilityLow, data3.CollectabilityMid, data3.CollectabilityHigh };
+                        CollectableThresholds = new int?[] { subRow.CollectabilityLow, subRow.CollectabilityMid, subRow.CollectabilityHigh };
                         break;
                     }
                 }
-                break;
-            case 4:
-                var data4 = LuminaSheets.SharlayanCraftWorksSupplySheet.GetRow(Recipe.Unknown0);
-                if (data4 == null)
-                    break;
-                foreach (var item in data4.Items)
+            }
+        }
+        else if (Recipe.CollectableMetadata is LazyRow<SharlayanCraftWorksSupply> { Value: { } row5 })
+        {
+            foreach (var item in row5.Item)
+            {
+                if (item.Id == Recipe.ItemResult.Row)
                 {
-                    if (item.Item.Row == Recipe.ItemResult.Row)
-                    {
-                        CollectableThresholds = new int?[] { null, item.CollectabilityMid, item.CollectabilityHigh };
-                        break;
-                    }
+                    CollectableThresholds = new int?[] { null, item.CollectabilityMid, item.CollectabilityHigh };
+                    break;
                 }
-                break;
-            default:
-                break;
+            }
         }
 
         Ingredients = Recipe.Ingredient.Zip(Recipe.AmountIngredient)
@@ -113,12 +103,10 @@ public sealed record RecipeData
 
     public int CalculateItemStartingQuality(int itemIdx, int amount)
     {
-        if (itemIdx >= Ingredients.Count)
-            throw new ArgumentOutOfRangeException(nameof(itemIdx));
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(itemIdx, Ingredients.Count);
 
         var ingredient = Ingredients[itemIdx];
-        if (amount > ingredient.Amount)
-            throw new ArgumentOutOfRangeException(nameof(amount));
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(amount, ingredient.Amount);
 
         if (!ingredient.Item.CanBeHq)
             return 0;

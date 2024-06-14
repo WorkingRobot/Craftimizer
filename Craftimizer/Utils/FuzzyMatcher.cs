@@ -50,7 +50,7 @@ internal readonly struct FuzzyMatcher
         if (wordStart >= 0)
             segments.Add((wordStart, span.Length - 1));
 
-        return segments.ToArray();
+        return [.. segments];
     }
 
     public int Matches(string value)

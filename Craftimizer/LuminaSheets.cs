@@ -1,11 +1,9 @@
 using Dalamud;
+using ExdSheets;
 using Lumina;
 using Lumina.Data;
 using Lumina.Excel;
-using Lumina.Excel.GeneratedSheets2;
 using System.Collections.Concurrent;
-using Action = Lumina.Excel.GeneratedSheets2.Action;
-using ItemFood = Lumina.Excel.GeneratedSheets.ItemFood; // BaseParam is too annoying with SoA
 
 namespace Craftimizer.Plugin;
 
@@ -44,50 +42,3 @@ public static class LuminaSheets
         return parser.RowCount;
     }
 }
-
-#nullable disable
-
-[Sheet("SharlayanCraftWorksSupply", columnHash: 0x903b128e)]
-public class SharlayanCraftWorksSupply : ExcelRow
-{
-    public class ItemData
-    {
-        public byte Level { get; set; }
-        public LazyRow<Item> Item { get; set; }
-        public ushort CollectabilityMid { get; set; }
-        public ushort CollectabilityHigh { get; set; }
-        public uint XPReward { get; set; }
-        public byte HighXPMultiplier { get; set; }
-        public ushort GilReward { get; set; }
-        public byte HighGilMultiplier { get; set; }
-        public byte Unknown8 { get; set; }
-        public byte ScripReward { get; set; }
-        public byte HighScripMultiplier { get; set; }
-    }
-
-    public ItemData[] Items { get; set; }
-
-    public override void PopulateData(RowParser parser, GameData gameData, Language language)
-    {
-        base.PopulateData(parser, gameData, language);
-
-        Items = new ItemData[4];
-        for (var i = 0; i < 4; i++)
-        {
-            Items[i] = new ItemData();
-            Items[i].Level = parser.ReadColumn<byte>(0 * 4 + i);
-            Items[i].Item = new LazyRow<Item>(gameData, parser.ReadColumn<uint>(1 * 4 + i), language);
-            Items[i].CollectabilityMid = parser.ReadColumn<ushort>(2 * 4 + i);
-            Items[i].CollectabilityHigh = parser.ReadColumn<ushort>(3 * 4 + i);
-            Items[i].XPReward = parser.ReadColumn<uint>(4 * 4 + i);
-            Items[i].HighXPMultiplier = parser.ReadColumn<byte>(5 * 4 + i);
-            Items[i].GilReward = parser.ReadColumn<ushort>(6 * 4 + i);
-            Items[i].HighGilMultiplier = parser.ReadColumn<byte>(7 * 4 + i);
-            Items[i].Unknown8 = parser.ReadColumn<byte>(8 * 4 + i);
-            Items[i].ScripReward = parser.ReadColumn<byte>(9 * 4 + i);
-            Items[i].HighScripMultiplier = parser.ReadColumn<byte>(10 * 4 + i);
-        }
-    }
-}
-
-#nullable restore
