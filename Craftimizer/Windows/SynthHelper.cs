@@ -218,7 +218,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
     }
 
     private SimulationState? hoveredState;
-    private SimulationState DisplayedState => hoveredState ?? Macro.State;
+    private SimulationState DisplayedState => hoveredState ?? (Service.Configuration.SynthHelperDisplayOnlyFirstStep ? Macro.FirstState : Macro.State);
     private void DrawMacro()
     {
         var spacing = ImGui.GetStyle().ItemSpacing.X;
@@ -278,7 +278,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             {
                 ImGuiUtils.Tooltip($"{action.GetName(RecipeData!.ClassJob)}\n" +
                     $"{actionBase.GetTooltip(CreateSim(lastState), true)}" +
-                    $"{(canExecute && i == 0 ? "Click to Execute" : string.Empty)}");
+                    $"{(canExecute && i == 0 ? "Click or run /craftaction to Execute" : string.Empty)}");
                 hoveredState = state;
             }
             lastState = state;
@@ -334,7 +334,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             }
         }
 
-        var reliability = Macro.GetReliability(RecipeData!);
+        var reliability = Macro.GetReliability(RecipeData!, Service.Configuration.SynthHelperDisplayOnlyFirstStep ? 0 : ^1);
         {
             var mainBars = new List<DynamicBars.BarData>()
             {

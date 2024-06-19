@@ -141,6 +141,7 @@ internal sealed class SimulatedMacro
     private object QueueLock { get; } = new();
     private List<Step> QueuedSteps { get; set; } = [];
 
+    public SimulationState FirstState => Macro.Count > 0 ? Macro[0].State : InitialState;
     public SimulationState State => Macro.Count > 0 ? Macro[^1].State : InitialState;
 
     public IEnumerable<ActionType> Actions => Macro.Select(m => m.Action);
@@ -155,9 +156,9 @@ internal sealed class SimulatedMacro
         }
     }
 
-    public Reliablity GetReliability(RecipeData recipeData) =>
+    public Reliablity GetReliability(RecipeData recipeData, Index? idx = null) =>
         Macro.Count > 0 ?
-            Macro[^1].GetReliability(InitialState, Macro.Select(m => m.Action), recipeData) :
+            Macro[idx ?? ^1].GetReliability(InitialState, Macro.Select(m => m.Action), recipeData) :
             new(InitialState, Array.Empty<ActionType>(), 0, recipeData);
 
     private void TryRecalculateFrom(int index)

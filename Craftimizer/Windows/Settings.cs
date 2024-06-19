@@ -166,9 +166,9 @@ public sealed class Settings : Window, IDisposable
         {
             DrawTabGeneral();
             DrawTabRecipeNote();
-            DrawTabMacroEditor();
             if (Config.EnableSynthHelper)
                 DrawTabSynthHelper();
+            DrawTabMacroEditor();
             DrawTabAbout();
 
             ImGui.EndTabBar();
@@ -886,8 +886,18 @@ public sealed class Settings : Window, IDisposable
         );
 
         DrawOption(
+            "Simulate Only First Step",
+            "Only the first step is simulated by default. You can still " +
+            "hover over the other steps to view their outcomes, but the " +
+            "reliability trials (when hovering over the macro stats) are hidden.",
+            Config.SynthHelperDisplayOnlyFirstStep,
+            v => Config.SynthHelperDisplayOnlyFirstStep = v,
+            ref isDirty
+        );
+
+        DrawOption(
             "Step Count",
-            "The number of future actions to solve for during an in-game craft.",
+            "The minimum number of future steps to solve for during an in-game craft.",
             Config.SynthHelperStepCount,
             1,
             100,
