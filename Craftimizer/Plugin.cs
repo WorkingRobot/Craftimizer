@@ -37,6 +37,7 @@ public sealed class Plugin : IDalamudPlugin
     public Chat Chat { get; }
     public IconManager IconManager { get; }
     public CommunityMacros CommunityMacros { get; }
+    public AttributeCommandManager AttributeCommandManager { get; }
 
     public Plugin([RequiredVersion("1.0")] DalamudPluginInterface pluginInterface)
     {
@@ -48,6 +49,7 @@ public sealed class Plugin : IDalamudPlugin
         Chat = new();
         IconManager = new();
         CommunityMacros = new();
+        AttributeCommandManager = new();
 
         var assembly = Assembly.GetExecutingAssembly();
         Version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion.Split('+')[0];
@@ -72,31 +74,6 @@ public sealed class Plugin : IDalamudPlugin
         Service.PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
         Service.PluginInterface.UiBuilder.OpenConfigUi += OpenSettingsWindow;
         Service.PluginInterface.UiBuilder.OpenMainUi += OpenCraftingLog;
-
-        Service.CommandManager.AddHandler("/craftimizer", new CommandInfo((_, _) => OpenSettingsWindow())
-        {
-            HelpMessage = "Open the settings window.",
-        });
-        Service.CommandManager.AddHandler("/craftmacros", new CommandInfo((_, _) => OpenMacroListWindow())
-        {
-            HelpMessage = "Open the crafting macros window.",
-        });
-        Service.CommandManager.AddHandler("/macrolist", new CommandInfo((_, _) => OpenMacroListWindow())
-        {
-            HelpMessage = "Open the crafting macros window.",
-        });
-        Service.CommandManager.AddHandler("/crafteditor", new CommandInfo((_, _) => OpenEmptyMacroEditor())
-        {
-            HelpMessage = "Open the crafting macro editor.",
-        });
-        Service.CommandManager.AddHandler("/macroeditor", new CommandInfo((_, _) => OpenEmptyMacroEditor())
-        {
-            HelpMessage = "Open the crafting macro editor.",
-        });
-        Service.CommandManager.AddHandler("/craftaction", new CommandInfo((_, _) => ExecuteSuggestedSynthHelperAction())
-        {
-            HelpMessage = "Execute the suggested action in the synthesis helper. Can also be run inside a macro. This command is useful for controller players.",
-        });
     }
 
     public (CharacterStats? Character, RecipeData? Recipe, MacroEditor.CrafterBuffs? Buffs) GetOpenedStats()
@@ -129,6 +106,7 @@ public sealed class Plugin : IDalamudPlugin
         );
     }
 
+    [Command(name: "/crafteditor", aliases: "/macroeditor", description: "Open the crafting macro editor.")]
     public void OpenEmptyMacroEditor()
     {
         var stats = GetDefaultStats();
@@ -141,9 +119,11 @@ public sealed class Plugin : IDalamudPlugin
         EditorWindow = new(characterStats, recipeData, buffs, actions, setter);
     }
 
+    [Command(name: "/craftaction", description: "Execute the suggested action in the synthesis helper. Can also be run inside a macro. This command is useful for controller players.")]
     public void ExecuteSuggestedSynthHelperAction() =>
         SynthHelperWindow.QueueSuggestedActionExecution();
 
+    [Command(name: "/craftimizer", description: "Open the settings window.")]
     public void OpenSettingsWindow()
     {
         if (SettingsWindow.IsOpen ^= true)
@@ -156,6 +136,7 @@ public sealed class Plugin : IDalamudPlugin
         SettingsWindow.SelectTab(selectedTabLabel);
     }
 
+    [Command(name: "/craftmacros", aliases: "/macrolist", description: "Open the crafting macros window.")]
     public void OpenMacroListWindow()
     {
         ListWindow.IsOpen = true;
@@ -187,10 +168,7 @@ public sealed class Plugin : IDalamudPlugin
 
     public void Dispose()
     {
-        Service.CommandManager.RemoveHandler("/craftimizer");
-        Service.CommandManager.RemoveHandler("/craftmacros");
-        Service.CommandManager.RemoveHandler("/crafteditor");
-        Service.CommandManager.RemoveHandler("/craftaction");
+        AttributeCommandManager.Dispose();
         SettingsWindow.Dispose();
         RecipeNoteWindow.Dispose();
         SynthHelperWindow.Dispose();
