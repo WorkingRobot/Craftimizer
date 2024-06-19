@@ -22,27 +22,6 @@ public static class FoodStatus
     static FoodStatus()
     {
         var lut = new Dictionary<uint, uint>();
-        foreach (var item in LuminaSheets.ItemSheet)
-        {
-            var isFood = item.ItemUICategory.Row == 46;
-            var isMedicine = item.ItemUICategory.Row == 44;
-            if (!isFood && !isMedicine)
-                continue;
-
-            if (item.ItemAction.Value == null)
-                continue;
-
-            if (!(item.ItemAction.Value.Type is 844 or 845 or 846))
-                continue;
-
-            var itemFood = LuminaSheets.ItemFoodSheet.GetRow(item.ItemAction.Value.Data[1]);
-            if (itemFood == null)
-                continue;
-
-            lut.TryAdd(itemFood.RowId, item.RowId);
-        }
-        ItemFoodToItemLUT = lut.ToFrozenDictionary();
-
         var foods = new Dictionary<uint, Food>();
         var medicines = new Dictionary<uint, Food>();
         foreach (var item in LuminaSheets.ItemSheet)
@@ -85,8 +64,11 @@ public static class FoodStatus
                 if (isMedicine)
                     medicines.Add(item.RowId, food);
             }
+
+            lut.TryAdd(itemFood.RowId, item.RowId);
         }
-        
+
+        ItemFoodToItemLUT = lut.ToFrozenDictionary();       
         FoodItems = foods.ToFrozenDictionary();
         MedicineItems = medicines.ToFrozenDictionary();
 

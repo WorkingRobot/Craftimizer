@@ -53,8 +53,8 @@ internal static class ActionUtils
                 var possibleActions = LuminaSheets.ActionSheet.Where(r =>
                         r.Icon == baseAction.Icon &&
                         r.ActionCategory.Row == baseAction.ActionCategory.Row &&
-                        r.Name.RawString.Equals(baseAction.Name.RawString, StringComparison.Ordinal)).ToArray();
-
+                        r.Name.RawString.Equals(baseAction.Name.RawString, StringComparison.Ordinal));
+                
                 foreach (var classJob in classJobs)
                     ActionRows[(int)actionType, (int)classJob] = (null, possibleActions.First(r => r.ClassJobCategory.Value?.IsClassJob(classJob) ?? false));
             }
