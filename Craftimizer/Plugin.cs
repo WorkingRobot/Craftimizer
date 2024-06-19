@@ -81,13 +81,21 @@ public sealed class Plugin : IDalamudPlugin
         {
             HelpMessage = "Open the crafting macros window.",
         });
+        Service.CommandManager.AddHandler("/macrolist", new CommandInfo((_, _) => OpenMacroListWindow())
+        {
+            HelpMessage = "Open the crafting macros window.",
+        });
         Service.CommandManager.AddHandler("/crafteditor", new CommandInfo((_, _) => OpenEmptyMacroEditor())
+        {
+            HelpMessage = "Open the crafting macro editor.",
+        });
+        Service.CommandManager.AddHandler("/macroeditor", new CommandInfo((_, _) => OpenEmptyMacroEditor())
         {
             HelpMessage = "Open the crafting macro editor.",
         });
         Service.CommandManager.AddHandler("/craftaction", new CommandInfo((_, _) => ExecuteSuggestedSynthHelperAction())
         {
-            HelpMessage = "Execute the suggested action in the synthesis helper. This command mostly exists for controller players.",
+            HelpMessage = "Execute the suggested action in the synthesis helper. Can also be run inside a macro. This command is useful for controller players.",
         });
     }
 
