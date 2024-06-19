@@ -33,7 +33,6 @@ namespace Craftimizer.Windows;
 public sealed unsafe class SynthHelper : Window, IDisposable
 {
     private const ImGuiWindowFlags WindowFlagsPinned = WindowFlagsFloating
-      | ImGuiWindowFlags.NoDecoration
       | ImGuiWindowFlags.NoSavedSettings;
 
     private const ImGuiWindowFlags WindowFlagsFloating = 
@@ -106,27 +105,47 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         Service.WindowSystem.AddWindow(this);
     }
 
-    private bool wasOpen;
-    public override bool DrawConditions()
+    private bool IsCollapsed { get; set; }
+    private bool ShouldOpen { get; set; }
+
+    private bool WasOpen { get; set; }
+    private bool WasCollapsed { get; set; }
+
+    private bool ShouldCalculate => !IsCollapsed && ShouldOpen;
+    private bool WasCalculatable { get; set; }
+
+    public override void Update()
     {
-        var isOpen = ShouldDraw();
-        if (isOpen != wasOpen)
+        base.Update();
+
+        ShouldOpen = CalculateShouldOpen();
+
+        if (ShouldCalculate != WasCalculatable)
         {
-            if (wasOpen)
+            if (WasCalculatable)
             {
                 IsCrafting = false;
                 HelperTaskTokenSource?.Cancel();
             }
+            else if (Macro.Count == 0)
+            {
+                OnStateUpdated();
+            }
         }
-        if (!isOpen)
+
+        if (!ShouldCalculate)
             IsSuggestedActionExecutionQueued = false;
 
-        wasOpen = isOpen;
-        return isOpen;
+        WasOpen = ShouldOpen;
+        WasCollapsed = IsCollapsed;
+        WasCalculatable = ShouldCalculate;
     }
 
+    public override bool DrawConditions() =>
+        ShouldOpen;
+
     private bool wasInCraftAction;
-    private bool ShouldDraw()
+    private bool CalculateShouldOpen()
     {
         if (Service.ClientState.LocalPlayer == null)
             return false;
@@ -174,6 +193,8 @@ public sealed unsafe class SynthHelper : Window, IDisposable
     {
         base.PreDraw();
 
+        IsCollapsed = true;
+
         if (Service.Configuration.PinSynthHelperToWindow)
         {
             ref var unit = ref Addon->AtkUnitBase;
@@ -197,11 +218,15 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
     public override void PostDraw()
     {
+        base.PostDraw();
+
         IsSuggestedActionExecutionQueued = false;
     }
 
     public override void Draw()
     {
+        IsCollapsed = false;
+
         DrawMacro();
 
         DrawMacroInfo();
