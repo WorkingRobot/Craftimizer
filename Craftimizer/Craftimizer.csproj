@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Authors>Asriel Camora</Authors>
-    <Version>2.4.2.0</Version>
+    <Version>2.4.3.0</Version>
     <PackageProjectUrl>https://github.com/WorkingRobot/craftimizer.git</PackageProjectUrl>
     <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
