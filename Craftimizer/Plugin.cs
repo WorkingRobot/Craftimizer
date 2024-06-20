@@ -67,7 +67,8 @@ public sealed class Plugin : IDalamudPlugin
         ListWindow = new();
 
         // Trigger static constructors so a huge hitch doesn't occur on first RecipeNote frame.
-        FoodStatus.Initialize();
+        _ = Task.Run(FoodStatus.Initialize);
+        _ = Task.Run(ActionUtils.Initialize);
         Gearsets.Initialize();
         ActionUtils.Initialize();
 
