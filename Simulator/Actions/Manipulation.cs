@@ -18,8 +18,7 @@ internal sealed class Manipulation() : BaseBuffAction(
 
         s.ActionStates.MutateState(this);
         s.ActionCount++;
-
-        if (IncreasesStepCount)
-            s.ActiveEffects.DecrementDuration();
+        
+        s.ActiveEffects.DecrementDuration();
     }
 }

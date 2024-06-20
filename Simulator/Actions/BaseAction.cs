@@ -69,20 +69,19 @@ public abstract class BaseAction(
         s.ReduceCP(CPCost(s));
         s.ReduceDurability(DurabilityCost);
 
-        if (s.Durability > 0)
-        {
-            if (s.HasEffect(EffectType.Manipulation))
-                s.RestoreDurability(5);
-        }
-
         if (IncreasesStepCount)
+        {
+            if (s.Durability > 0)
+                if (s.HasEffect(EffectType.Manipulation))
+                    s.RestoreDurability(5);
+
             s.IncreaseStepCount();
+
+            s.ActiveEffects.DecrementDuration();
+        }
 
         s.ActionStates.MutateState(this);
         s.ActionCount++;
-
-        if (IncreasesStepCount)
-            s.ActiveEffects.DecrementDuration();
     }
 
     public virtual void UseSuccess(Simulator s)
