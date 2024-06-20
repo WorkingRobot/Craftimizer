@@ -2,7 +2,6 @@ using Craftimizer.Plugin;
 using Dalamud.Game.Command;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 
 namespace Craftimizer.Utils;
@@ -66,7 +65,6 @@ public sealed class AttributeCommandManager : IDisposable
                     throw new InvalidOperationException($"Failed to register command '{alias}'.");
             }
         }
-        Log.Debug($"Initalized {RegisteredCommands.Count} commands");
     }
 
     public void Dispose()

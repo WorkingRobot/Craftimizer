@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Craftimizer.Plugin;
 
@@ -44,7 +45,7 @@ public sealed class Plugin : IDalamudPlugin
         Service.Initialize(this, pluginInterface);
 
         WindowSystem = new("Craftimizer");
-        Configuration = pluginInterface.GetPluginConfig() as Configuration ?? new();
+        Configuration = Configuration.Load();
         Hooks = new();
         Chat = new();
         IconManager = new();

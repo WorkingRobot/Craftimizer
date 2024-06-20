@@ -2,20 +2,21 @@ using Craftimizer.Simulator.Actions;
 using Craftimizer.Solver;
 using Craftimizer.Utils;
 using Dalamud.Configuration;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Craftimizer.Plugin;
 
-[Serializable]
 public class Macro
 {
     public static event Action<Macro>? OnMacroChanged;
 
     public string Name { get; set; } = string.Empty;
-    [JsonProperty(PropertyName = "Actions")]
-    private List<ActionType> actions { get; set; } = [];
+    [JsonInclude] [JsonPropertyName("Actions")]
+    internal List<ActionType> actions { get; set; } = [];
     [JsonIgnore]
     public IReadOnlyList<ActionType> Actions
     {
@@ -33,7 +34,6 @@ public class Macro
     }
 }
 
-[Serializable]
 public class MacroCopyConfiguration
 {
     public enum CopyType
@@ -72,26 +72,22 @@ public class MacroCopyConfiguration
     public bool CombineMacro { get; set; }
 }
 
-[Serializable]
-public class Configuration : IPluginConfiguration
+public partial class Configuration : IPluginConfiguration
 {
     public int Version { get; set; } = 1;
 
     public static event Action? OnMacroListChanged;
 
-    [JsonProperty(PropertyName = "Macros")]
-    private List<Macro> macros { get; set; } = [];
+    [JsonInclude] [JsonPropertyName("Macros")]
+    internal List<Macro> macros { get; private set; } = [];
     [JsonIgnore]
     public IReadOnlyList<Macro> Macros => macros;
     public int ReliabilitySimulationCount { get; set; } = 500;
     public bool ConditionRandomness { get; set; } = true;
 
-    [JsonConverter(typeof(PopulateConverter))]
-    [JsonProperty(PropertyName = "SimulatorSolverConfig")]
+    [JsonPropertyName("SimulatorSolverConfig")]
     public SolverConfig RecipeNoteSolverConfig { get; set; } = SolverConfig.RecipeNoteDefault;
-    [JsonConverter(typeof(PopulateConverter))]
     public SolverConfig EditorSolverConfig { get; set; } = SolverConfig.EditorDefault;
-    [JsonConverter(typeof(PopulateConverter))]
     public SolverConfig SynthHelperSolverConfig { get; set; } = SolverConfig.SynthHelperDefault;
 
     public bool EnableSynthHelper { get; set; } = true;
@@ -140,6 +136,26 @@ public class Configuration : IPluginConfiguration
         OnMacroListChanged?.Invoke();
     }
 
-    public void Save() =>
-        Service.PluginInterface.SavePluginConfig(this);
+    [JsonSerializable(typeof(Configuration))]
+    internal partial class JsonContext : JsonSerializerContext { }
+
+    public void Save()
+    {
+        var f = Service.PluginInterface.ConfigFile;
+        using var stream = new FileStream(f.FullName, FileMode.Create, FileAccess.Write);
+        JsonSerializer.Serialize(stream, this, JsonContext.Default.Configuration);
+    }
+
+    public static Configuration Load()
+    {
+        // return Service.PluginInterface.GetPluginConfig() as Configuration ?? new();
+
+        var f = Service.PluginInterface.ConfigFile;
+        if (f.Exists)
+        {
+            using var stream = f.OpenRead();
+            return JsonSerializer.Deserialize(stream, JsonContext.Default.Configuration) ?? new();
+        }
+        return new();
+    }
 }
