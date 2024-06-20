@@ -136,6 +136,12 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         if (!ShouldCalculate)
             IsSuggestedActionExecutionQueued = false;
 
+        if (!ShouldOpen)
+        {
+            StyleAlpha = LastAlpha = null;
+            LastPosition = null;
+        }
+
         WasOpen = ShouldOpen;
         WasCollapsed = IsCollapsed;
         WasCalculatable = ShouldCalculate;
@@ -189,6 +195,9 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         return true;
     }
 
+    private Vector2? LastPosition { get; set; }
+    private byte? StyleAlpha { get; set; }
+    private byte? LastAlpha { get; set; }
     public override void PreDraw()
     {
         base.PreDraw();
@@ -204,20 +213,31 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
             var offset = 5;
 
-            Position = ImGuiHelpers.MainViewport.Pos + pos + new Vector2(size.X, offset * scale);
+            var newAlpha = unit.WindowNode->AtkResNode.Alpha_2;
+            StyleAlpha = LastAlpha ?? newAlpha;
+            LastAlpha = newAlpha;
+
+            var newPosition = pos + new Vector2(size.X, offset * scale);
+            Position = ImGuiHelpers.MainViewport.Pos + (LastPosition ?? newPosition);
+            LastPosition = newPosition;
             Flags = WindowFlagsPinned;
             WindowName = WindowNamePinned;
         }
         else
         {
-            Position = null;
+            StyleAlpha = LastAlpha = null;
+            Position = LastPosition = null;
             Flags = WindowFlagsFloating;
             WindowName = WindowNameFloating;
         }
+
+        ImGui.PushStyleVar(ImGuiStyleVar.Alpha, StyleAlpha.HasValue ? (StyleAlpha.Value / 255f) : 1);
     }
 
     public override void PostDraw()
     {
+        ImGui.PopStyleVar();
+
         base.PostDraw();
 
         IsSuggestedActionExecutionQueued = false;
