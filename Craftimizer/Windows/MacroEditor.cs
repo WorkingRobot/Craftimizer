@@ -240,7 +240,7 @@ public sealed class MacroEditor : Window, IDisposable
                 void DrawStat(string name, int value, Action<int> setter)
                 {
                     ImGui.AlignTextToFramePadding();
-                    ImGui.Text(name);
+                    ImGui.TextUnformatted(name);
                     ImGui.SameLine(0, 5);
                     ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
 
@@ -280,7 +280,7 @@ public sealed class MacroEditor : Window, IDisposable
                     levelTextWidth);
 
                 ImGui.AlignTextToFramePadding();
-                ImGui.Text(SqText.LevelPrefix.ToIconString());
+                ImGui.TextUnformatted(SqText.LevelPrefix.ToIconString());
                 ImGui.SameLine(0, 3);
                 ImGui.SetNextItemWidth(levelTextWidth);
                 var levelText = SqText.ToLevelString(CharacterStats.Level);
@@ -759,7 +759,7 @@ public sealed class MacroEditor : Window, IDisposable
                     ImGui.Image(Service.IconManager.GetIcon(classJob.GetIconId()).ImGuiHandle, new Vector2(imageSize), uv0, uv1);
                     ImGui.SameLine(0, 5);
                     ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (fontHandle.ImFont.FontSize - textLevelSize.Y) / 2);
-                    ImGui.Text(textLevel);
+                    ImGui.TextUnformatted(textLevel);
                 }))
             {
                 newRecipe = (ushort)recipe.RowId;
@@ -767,7 +767,7 @@ public sealed class MacroEditor : Window, IDisposable
         }
 
         ImGui.SameLine(0, 5);
-        ImGui.Text(textLevel);
+        ImGui.TextUnformatted(textLevel);
         if (ImGui.IsItemHovered())
             ImGuiUtils.Tooltip($"RLvl {RecipeData.RecipeInfo.RLvl}");
 
@@ -808,17 +808,17 @@ public sealed class MacroEditor : Window, IDisposable
 
                 ImGui.TableNextColumn();
                 ImGui.AlignTextToFramePadding();
-                ImGui.Text("Progress");
+                ImGui.TextUnformatted("Progress");
                 ImGui.SameLine();
                 ImGuiUtils.TextRight($"{RecipeData.RecipeInfo.MaxProgress}");
 
                 ImGui.TableNextColumn();
-                ImGui.Text("Quality");
+                ImGui.TextUnformatted("Quality");
                 ImGui.SameLine();
                 ImGuiUtils.TextRight($"{RecipeData.RecipeInfo.MaxQuality}");
 
                 ImGui.TableNextColumn();
-                ImGui.Text("Durability");
+                ImGui.TextUnformatted("Durability");
                 ImGui.SameLine();
                 ImGuiUtils.TextRight($"{RecipeData.RecipeInfo.MaxDurability}");
             }
@@ -917,7 +917,7 @@ public sealed class MacroEditor : Window, IDisposable
         }
         ImGui.SameLine(0, 5);
         ImGui.AlignTextToFramePadding();
-        ImGui.Text("/");
+        ImGui.TextUnformatted("/");
         ImGui.SameLine(0, 5);
         ImGui.AlignTextToFramePadding();
         ImGuiUtils.TextCentered($"{ingredient.Amount}");
@@ -1019,7 +1019,7 @@ public sealed class MacroEditor : Window, IDisposable
                         ImGui.Dummy(new(ImGui.GetFrameHeight()));
                         ImGui.SameLine(0, spacing);
                         ImGui.AlignTextToFramePadding();
-                        ImGui.Text(condition.Name());
+                        ImGui.TextUnformatted(condition.Name());
                     }
                     if (ImGui.IsItemHovered())
                         ImGuiUtils.Tooltip(condition.Description(CharacterStats.HasSplendorousBuff));
@@ -1165,7 +1165,7 @@ public sealed class MacroEditor : Window, IDisposable
                 {
                     ImGuiUtils.TextRight($"{bar.Value:0}", maxSize);
                     ImGui.SameLine(0, spacing / 2);
-                    ImGui.Text("/");
+                    ImGui.TextUnformatted("/");
                     ImGui.SameLine(0, spacing / 2);
                     ImGuiUtils.TextRight($"{bar.Max:0}", maxSize);
                 }
@@ -1443,10 +1443,10 @@ public sealed class MacroEditor : Window, IDisposable
                 if (ImGui.IsItemHovered())
                 {
                     using var t = ImRaii.Tooltip();
-                    ImGui.Text("Supported sites:");
+                    ImGui.TextUnformatted("Supported sites:");
                     ImGui.BulletText("ffxivteamcraft.com");
                     ImGui.BulletText("craftingway.app");
-                    ImGui.Text("More suggestions are appreciated!");
+                    ImGui.TextUnformatted("More suggestions are appreciated!");
                 }
                 ImGui.SetNextItemWidth(availWidth);
                 submittedUrl = ImGui.InputTextWithHint("", ExampleUrl, ref popupImportUrl, 2048, ImGuiInputTextFlags.AutoSelectAll | ImGuiInputTextFlags.EnterReturnsTrue);

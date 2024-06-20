@@ -120,7 +120,7 @@ internal static class DynamicBars
                 {
                     ImGuiUtils.TextRight($"{bar.Value:0}", maxSize);
                     ImGui.SameLine(0, spacing / 2);
-                    ImGui.Text("/");
+                    ImGui.TextUnformatted("/");
                     ImGui.SameLine(0, spacing / 2);
                     ImGuiUtils.TextRight($"{bar.Max:0}", maxSize);
                 }

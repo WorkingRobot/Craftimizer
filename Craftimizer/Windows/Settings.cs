@@ -287,7 +287,7 @@ public sealed class Settings : Window, IDisposable
                 using (var color = ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudOrange))
                 {
                     using var font = ImRaii.PushFont(UiBuilder.IconFont);
-                    ImGui.Text(FontAwesomeIcon.ExclamationCircle.ToIconString());
+                    ImGui.TextUnformatted(FontAwesomeIcon.ExclamationCircle.ToIconString());
                 }
                 if (ImGui.IsItemHovered())
                     ImGuiUtils.Tooltip("Macro Chain is not installed");
@@ -522,7 +522,7 @@ public sealed class Settings : Window, IDisposable
         {
             poolWidth -= ImGui.GetStyle().ItemSpacing.X * 2;
 
-            ImGui.Text("Select the actions you want the solver to choose from.");
+            ImGui.TextUnformatted("Select the actions you want the solver to choose from.");
 
             var pool = config.ActionPool;
             DrawActionPool(ref pool, poolWidth, out var isPoolDirty);
@@ -954,11 +954,11 @@ public sealed class Settings : Window, IDisposable
                     ImGuiUtils.TextCentered($"v{plugin.Version} {plugin.BuildConfiguration}");
 
                 ImGuiUtils.AlignCentered(ImGui.CalcTextSize($"By {plugin.Author} (WorkingRobot)").X);
-                ImGui.Text($"By {plugin.Author} (");
+                ImGui.TextUnformatted($"By {plugin.Author} (");
                 ImGui.SameLine(0, 0);
                 ImGuiUtils.Hyperlink("WorkingRobot", "https://github.com/WorkingRobot");
                 ImGui.SameLine(0, 0);
-                ImGui.Text(")");
+                ImGui.TextUnformatted(")");
 
                 ImGuiUtils.AlignCentered(ImGui.CalcTextSize($"Ko-fi").X);
                 ImGuiUtils.Hyperlink("Ko-fi", "https://ko-fi.com/camora");

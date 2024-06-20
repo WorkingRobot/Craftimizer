@@ -462,7 +462,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
             if (level != 0)
             {
-                ImGui.Text(levelText);
+                ImGui.TextUnformatted(levelText);
                 if (ImGui.IsItemHovered())
                     ImGuiUtils.Tooltip($"CLvl {Gearsets.CalculateCLvl(level)}");
                 ImGui.SameLine(0, 3);
@@ -509,7 +509,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                     var unlockText = $"Unlock it from {questGiver}";
                     ImGuiUtils.AlignCentered(ImGui.CalcTextSize(unlockText).X + 5 + ImGui.GetFrameHeight());
                     ImGui.AlignTextToFramePadding();
-                    ImGui.Text(unlockText);
+                    ImGui.TextUnformatted(unlockText);
                     ImGui.SameLine(0, 5);
                     if (ImGuiComponents.IconButton(FontAwesomeIcon.Flag))
                         Service.GameGui.OpenMapWithMapLink(mapPayload);
@@ -544,7 +544,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                     var unlockText = $"Trade a Soul of the Crafter to {vendorName}";
                     ImGuiUtils.AlignCentered(ImGui.CalcTextSize(unlockText).X + 5 + ImGui.GetFrameHeight());
                     ImGui.AlignTextToFramePadding();
-                    ImGui.Text(unlockText);
+                    ImGui.TextUnformatted(unlockText);
                     ImGui.SameLine(0, 5);
                     if (ImGuiComponents.IconButton(FontAwesomeIcon.Flag))
                         Service.GameGui.OpenMapWithMapLink(mapPayload);
@@ -565,7 +565,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                     ImGui.AlignTextToFramePadding();
                     ImGui.Image(Service.IconManager.GetIcon(item.Icon).ImGuiHandle, new(imageSize));
                     ImGui.SameLine(0, 5);
-                    ImGui.Text(itemName);
+                    ImGui.TextUnformatted(itemName);
                 }
                 break;
             case CraftableStatus.RequiredStatus:
@@ -580,7 +580,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                     ImGui.AlignTextToFramePadding();
                     ImGui.Image(statusIcon.ImGuiHandle, imageSize);
                     ImGui.SameLine(0, 5);
-                    ImGui.Text(statusName);
+                    ImGui.TextUnformatted(statusName);
                 }
                 break;
             case CraftableStatus.CraftsmanshipTooLow:
@@ -606,17 +606,17 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                         ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthStretch);
 
                         ImGui.TableNextColumn();
-                        ImGui.Text("Craftsmanship");
+                        ImGui.TextUnformatted("Craftsmanship");
                         ImGui.TableNextColumn();
                         ImGuiUtils.TextRight($"{CharacterStats!.Craftsmanship}");
 
                         ImGui.TableNextColumn();
-                        ImGui.Text("Control");
+                        ImGui.TextUnformatted("Control");
                         ImGui.TableNextColumn();
                         ImGuiUtils.TextRight($"{CharacterStats.Control}");
 
                         ImGui.TableNextColumn();
-                        ImGui.Text("CP");
+                        ImGui.TextUnformatted("CP");
                         ImGui.TableNextColumn();
                         ImGuiUtils.TextRight($"{CharacterStats.CP}");
                     }
@@ -658,7 +658,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             ImGui.Image(Service.IconManager.GetIcon(RecipeData.Recipe.ItemResult.Value!.Icon).ImGuiHandle, new Vector2(imageSize));
 
             ImGui.SameLine(0, 5);
-            ImGui.Text(textLevel);
+            ImGui.TextUnformatted(textLevel);
             if (ImGui.IsItemHovered())
                 ImGuiUtils.Tooltip($"RLvl {RecipeData.RecipeInfo.RLvl}");
 
@@ -699,17 +699,17 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthStretch);
 
             ImGui.TableNextColumn();
-            ImGui.Text("Progress");
+            ImGui.TextUnformatted("Progress");
             ImGui.TableNextColumn();
             ImGuiUtils.TextRight($"{RecipeData.RecipeInfo.MaxProgress}");
 
             ImGui.TableNextColumn();
-            ImGui.Text("Quality");
+            ImGui.TextUnformatted("Quality");
             ImGui.TableNextColumn();
             ImGuiUtils.TextRight($"{RecipeData.RecipeInfo.MaxQuality}");
 
             ImGui.TableNextColumn();
-            ImGui.Text("Durability");
+            ImGui.TextUnformatted("Durability");
             ImGui.TableNextColumn();
             ImGuiUtils.TextRight($"{RecipeData.RecipeInfo.MaxDurability}");
         }
@@ -825,7 +825,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                         ImGui.SameLine(0, spacing);
 
                         ImGuiUtils.AlignMiddle(calcTextSize, new(calcTextSize.X, windowHeight));
-                        ImGui.Text("Calculating...");
+                        ImGui.TextUnformatted("Calculating...");
                         ImGui.SetCursorPos(c + new Vector2(0, windowHeight + ImGui.GetStyle().ItemSpacing.Y - 1));
                         break;
                     }
@@ -1013,19 +1013,19 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthStretch);
 
             ImGui.TableNextColumn();
-            ImGui.Text("Current");
+            ImGui.TextUnformatted("Current");
             ImGui.TableNextColumn();
             ImGui.TextColored(new(0, 1, 0, 1), $"{current}");
 
             ImGui.TableNextColumn();
-            ImGui.Text("Required");
+            ImGui.TextUnformatted("Required");
             ImGui.TableNextColumn();
             ImGui.TextColored(new(1, 0, 0, 1), $"{required}");
 
             ImGui.TableNextColumn();
-            ImGui.Text("You need");
+            ImGui.TextUnformatted("You need");
             ImGui.TableNextColumn();
-            ImGui.Text($"{required - current}");
+            ImGui.TextUnformatted($"{required - current}");
         }
     }
 
