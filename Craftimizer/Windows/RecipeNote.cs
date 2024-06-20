@@ -850,7 +850,8 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                     ImGuiUtils.TextMiddleNewLine("You have no macros!", new(ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset, windowHeight + 1));
                     break;
                 case MacroTaskType.Suggested:
-                    throw new ArgumentNullException(nameof(state), "Actions or State should not be null");
+                    // Cancelled?
+                    break;
                 case MacroTaskType.Community:
                     ImGuiUtils.TextMiddleNewLine("No macros found!", new(ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset, windowHeight + 1));
                     break;
