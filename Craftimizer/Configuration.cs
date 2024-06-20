@@ -137,7 +137,7 @@ public partial class Configuration : IPluginConfiguration
     }
 
     [JsonSerializable(typeof(Configuration))]
-    internal partial class JsonContext : JsonSerializerContext { }
+    internal sealed partial class JsonContext : JsonSerializerContext { }
 
     public void Save()
     {

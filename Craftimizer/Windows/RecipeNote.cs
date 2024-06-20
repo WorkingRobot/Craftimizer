@@ -735,6 +735,14 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         public Action<IEnumerable<ActionType>>? MacroEditorSetter;
     }
 
+    public static void DrawSolverTooltip(Solver.Solver solver)
+    {
+        var tooltip = $"Solver Progress: {solver.ProgressValue:N0} / {solver.ProgressMax:N0}";
+        if (solver.ProgressValue > solver.ProgressMax)
+            tooltip += $"\n\nThis is taking longer than expected. Check to see if your gear stats are good and the solver settings are adequate.";
+        ImGuiUtils.TooltipWrapped(tooltip);
+    }
+
     private void DrawMacro(in MacroTaskState state, float panelWidth)
     {
         var panelTitle = state.Type switch
@@ -812,7 +820,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                             ImGui.ColorConvertFloat4ToU32(progressColors.Background),
                             ImGui.ColorConvertFloat4ToU32(progressColors.Foreground));
                         if (ImGui.IsItemHovered())
-                            ImGuiUtils.Tooltip($"Solver Progress: {solver.ProgressValue} / {solver.ProgressMax}");
+                            DrawSolverTooltip(solver);
 
                         ImGui.SameLine(0, spacing);
 
