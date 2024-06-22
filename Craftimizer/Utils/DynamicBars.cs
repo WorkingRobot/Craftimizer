@@ -6,6 +6,7 @@ using System;
 using System.Numerics;
 using System.Linq;
 using Dalamud.Utility.Numerics;
+using Dalamud.Interface;
 
 namespace Craftimizer.Utils;
 
@@ -44,6 +45,31 @@ internal static class DynamicBars
                 defaultSize);
         });
 
+    private static ImRaii.Color? PushCollectableColor(this in BarData bar, float collectability, bool colorUnmetThreshold = true)
+    {
+        if (bar.Collectability is not { } collectabilities)
+            return null;
+
+        var ret = collectabilities.Count;
+        for (var i = 0; i < collectabilities.Count; ++i)
+        {
+            if (collectability < collectabilities[i])
+            {
+                ret = i;
+                break;
+            }
+        }
+
+        if (ret == 0)
+        {
+            if (colorUnmetThreshold)
+                return ImRaii.PushColor(ImGuiCol.Text, Colors.Collectability);
+            return null;
+        }
+
+        return ImRaii.PushColor(ImGuiCol.Text, Colors.CollectabilityThreshold[ret - 1]);
+    }
+
     public static void Draw(IEnumerable<BarData> bars, float? textSize = null)
     {
         var spacing = ImGui.GetStyle().ItemSpacing.X;
@@ -63,7 +89,6 @@ internal static class DynamicBars
                 var screenPos = ImGui.GetCursorScreenPos();
                 using (var color = ImRaii.PushColor(ImGuiCol.PlotHistogram, bar.Color))
                     ImGui.ProgressBar(Math.Clamp(bar.Value / bar.Max, 0, 1), new(barSize, ImGui.GetFrameHeight()), string.Empty);
-                var passedCollectabilityColor = 0;
                 if (bar.Collectability is { } collectability)
                 {
                     var i = 0;
@@ -78,8 +103,6 @@ internal static class DynamicBars
                         var isLast = i == collectability.Count;
                         var offsetNext = isLast ? barSize : barSize * collectability[i]!.Value / bar.Max;
                         var passedThreshold = bar.Value >= threshold;
-                        if (passedThreshold)
-                            passedCollectabilityColor = i;
                         ImGui.GetWindowDrawList().AddRectFilled(
                             screenPos + new Vector2(offset, 0),
                             screenPos + new Vector2(offsetNext, height),
@@ -103,17 +126,37 @@ internal static class DynamicBars
                             ImGui.SetCursorPos(pos);
                             ImGuiUtils.ViolinPlot(violinData, new(barSize, ImGui.GetFrameHeight()));
                             if (ImGui.IsItemHovered())
-                                ImGuiUtils.Tooltip(
-                                    $"Min: {reliability.Min}\n" +
-                                    $"Med: {reliability.Median:0.##}\n" +
-                                    $"Avg: {reliability.Average:0.##}\n" +
-                                    $"Max: {reliability.Max}");
+                            {
+                                using var _font = ImRaii.PushFont(UiBuilder.DefaultFont);
+                                using var _tooltip = ImRaii.Tooltip();
+                                using var _ = ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
+
+                                ImGui.TextUnformatted("Min: ");
+                                ImGui.SameLine(0, 0);
+                                using (var color = bar.PushCollectableColor(reliability.Min))
+                                    ImGui.TextUnformatted(reliability.Min.ToString());
+
+                                ImGui.TextUnformatted("Med: ");
+                                ImGui.SameLine(0, 0);
+                                using (var color = bar.PushCollectableColor(reliability.Median))
+                                    ImGui.TextUnformatted(reliability.Median.ToString());
+
+                                ImGui.TextUnformatted("Avg: ");
+                                ImGui.SameLine(0, 0);
+                                using (var color = bar.PushCollectableColor(reliability.Average))
+                                    ImGui.TextUnformatted(reliability.Average.ToString());
+
+                                ImGui.TextUnformatted("Max: ");
+                                ImGui.SameLine(0, 0);
+                                using (var color = bar.PushCollectableColor(reliability.Max))
+                                    ImGui.TextUnformatted(reliability.Max.ToString());
+                            }
                         }
                     }
                 }
                 ImGui.SameLine(0, spacing);
                 ImGui.AlignTextToFramePadding();
-                using var _color = ImRaii.PushColor(ImGuiCol.Text, passedCollectabilityColor != 0 ? Colors.CollectabilityThreshold[passedCollectabilityColor - 1] : default, passedCollectabilityColor != 0);
+                using var _color = bar.PushCollectableColor(bar.Value, false);
                 if (bar.Caption is { } caption)
                     ImGuiUtils.TextRight(caption, textSize.Value);
                 else
