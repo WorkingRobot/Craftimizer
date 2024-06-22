@@ -3,7 +3,7 @@
     "Name": "Craftimizer",
     "Punchline": "Simulate crafts, create computer-assisted macros, and get mid-craft suggestions from the comfort of your own game!",
     "Description": "Allows you to generate macros and simulate all sorts of crafts without having to open another app. Open your crafting log to get started!",
-    "RepoUrl": "https://github.com/WorkingRobot/craftimizer",
+    "RepoUrl": "https://github.com/WorkingRobot/Craftimizer",
     "InternalName": "Craftimizer",
     "ApplicableVersion": "any",
     "Tags": [
@@ -21,10 +21,10 @@
     "CategoryTags": [
         "Jobs"
     ],
-    "IconUrl": "https://git.camora.dev/asriel/craftimizer/raw/branch/main/icon.png",
+    "IconUrl": "https://git.camora.dev/asriel/Craftimizer/raw/branch/main/icon.png",
     "ImageUrls": [
-        "https://git.camora.dev/asriel/craftimizer/raw/branch/main/Images/RecipeNote.png",
-        "https://git.camora.dev/asriel/craftimizer/raw/branch/main/Images/SynthHelper.png",
-        "https://git.camora.dev/asriel/craftimizer/raw/branch/main/Images/MacroEditor.png",
+        "https://git.camora.dev/asriel/Craftimizer/raw/branch/main/Images/RecipeNote.png",
+        "https://git.camora.dev/asriel/Craftimizer/raw/branch/main/Images/SynthHelper.png",
+        "https://git.camora.dev/asriel/Craftimizer/raw/branch/main/Images/MacroEditor.png",
     ]
 }

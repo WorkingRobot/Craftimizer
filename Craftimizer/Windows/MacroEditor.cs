@@ -953,7 +953,7 @@ public sealed class MacroEditor : Window, IDisposable
                 {
                     var actionBase = actions[i].Base();
                     var canUse = actionBase.CanUse(sim);
-                    if (ImGui.ImageButton(actions[i].GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(imageSize), default, Vector2.One, 0, default, !canUse ? new(1, 1, 1, ImGui.GetStyle().DisabledAlpha) : Vector4.One))
+                    if (ImGui.ImageButton(actions[i].GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(imageSize), default, Vector2.One, 0, default, !canUse ? new(1, 1, 1, ImGui.GetStyle().DisabledAlpha) : Vector4.One) && !SolverRunning)
                         AddStep(actions[i]);
                     if (!canUse &&
                         (CharacterStats.Level < actionBase.Level ||
@@ -1223,23 +1223,26 @@ public sealed class MacroEditor : Window, IDisposable
                 if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
                     ImGuiUtils.Tooltip($"{action.GetName(RecipeData!.ClassJob)}\n{actionBase.GetTooltip(CreateSim(lastState), true)}");
 
-                using var _padding = ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, Vector2.Zero);
-                using (var _source = ImRaii.DragDropSource())
+                if (!SolverRunning)
                 {
-                    if (_source)
+                    using var _padding = ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+                    using (var _source = ImRaii.DragDropSource())
                     {
-                        ImGuiExtras.SetDragDropPayload("macroAction", i);
-                        ImGui.ImageButton(action.GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(imageSize));
+                        if (_source)
+                        {
+                            ImGuiExtras.SetDragDropPayload("macroAction", i);
+                            ImGui.ImageButton(action.GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(imageSize));
+                        }
                     }
-                }
-                using (var _target = ImRaii.DragDropTarget())
-                {
-                    if (_target)
+                    using (var _target = ImRaii.DragDropTarget())
                     {
-                        if (ImGuiExtras.AcceptDragDropPayload("macroAction", out int j))
-                            Macro.Move(j, i);
-                        else if (ImGuiExtras.AcceptDragDropPayload("macroActionInsert", out ActionType newAction))
-                            Macro.Insert(i, newAction);
+                        if (_target)
+                        {
+                            if (ImGuiExtras.AcceptDragDropPayload("macroAction", out int j))
+                                Macro.Move(j, i);
+                            else if (ImGuiExtras.AcceptDragDropPayload("macroActionInsert", out ActionType newAction))
+                                Macro.Insert(i, newAction);
+                        }
                     }
                 }
                 lastState = state;
