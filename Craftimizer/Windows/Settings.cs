@@ -272,10 +272,9 @@ public sealed class Settings : Window, IDisposable
             }
 
             DrawOption(
-                "Use Macro Chain's /nextmacro",
+                "Use Macro Chain",
                 "Replaces the last step with /nextmacro to run the next macro " +
-                "automatically. Overrides Add End Notification except for the " +
-                "last macro.",
+                "automatically. Overrides the Intermediate Notification Sound.",
                 Config.MacroCopy.UseNextMacro,
                 v => Config.MacroCopy.UseNextMacro = v,
                 ref isDirty
@@ -337,19 +336,22 @@ public sealed class Settings : Window, IDisposable
 
                 if (Config.MacroCopy.AddNotificationSound)
                 {
-                    DrawOption(
-                        "Intermediate Notification Sound",
-                        "Ending notification sound for an intermediary macro.\n" +
-                        "Uses <se.#>",
-                        Config.MacroCopy.IntermediateNotificationSound,
-                        1, 16,
-                        v =>
-                        {
-                            Config.MacroCopy.IntermediateNotificationSound = v;
-                            UIModule.PlayChatSoundEffect((uint)v);
-                        },
-                        ref isDirty
-                    );
+                    using (var d = ImRaii.Disabled(Config.MacroCopy.UseNextMacro))
+                    {
+                        DrawOption(
+                            "Intermediate Notification Sound",
+                            "Ending notification sound for an intermediary macro.\n" +
+                            "Uses <se.#>",
+                            Config.MacroCopy.IntermediateNotificationSound,
+                            1, 16,
+                            v =>
+                            {
+                                Config.MacroCopy.IntermediateNotificationSound = v;
+                                UIModule.PlayChatSoundEffect((uint)v);
+                            },
+                            ref isDirty
+                        );
+                    }
 
                     DrawOption(
                         "Final Notification Sound",

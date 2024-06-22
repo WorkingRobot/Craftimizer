@@ -1242,9 +1242,6 @@ public sealed class MacroEditor : Window, IDisposable
             {
                 using var _disabled = ImRaii.Disabled();
                 ImGui.Button("Stopping", new(halfWidth, height));
-                if (ImGui.IsItemHovered())
-                    ImGuiUtils.Tooltip("This might could a while, sorry! Please report " +
-                                     "if this takes longer than a second.");
             }
             else
             {
@@ -1256,10 +1253,6 @@ public sealed class MacroEditor : Window, IDisposable
         {
             if (ImGui.Button(SolverStartStepCount.HasValue ? "Regenerate" : "Generate", new(halfWidth, height)))
                 CalculateBestMacro();
-            if (ImGui.IsItemHovered())
-                ImGuiUtils.Tooltip("Suggest a way to finish the crafting recipe. " +
-                                 "Results aren't perfect, and levels of success " +
-                                 "can vary wildly depending on the solver's settings.");
         }
         ImGui.SameLine();
         if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Paste))

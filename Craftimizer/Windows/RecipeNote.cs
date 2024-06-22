@@ -801,6 +801,10 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                         ImGuiUtils.AlignMiddle(size, availSize);
                         if (ImGui.Button("Generate"))
                             CalculateSuggestedMacro();
+                        if (ImGui.IsItemHovered())
+                            ImGuiUtils.TooltipWrapped("Suggest a way to finish the crafting recipe. " +
+                                                      "Results aren't perfect, and levels of success " +
+                                                      "can vary wildly depending on the solver's settings.");
                         ImGui.SetCursorPos(c + new Vector2(0, availSize.Y + ImGui.GetStyle().ItemSpacing.Y));
                         break;
                     }
@@ -813,6 +817,8 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                         ImGuiUtils.AlignMiddle(size, availSize);
                         if (ImGui.Button("Search Online"))
                             CalculateCommunityMacro();
+                        if (ImGui.IsItemHovered())
+                            ImGuiUtils.TooltipWrapped("Searches FFXIV Teamcraft to find you the best macro");
                         ImGui.SetCursorPos(c + new Vector2(0, availSize.Y + ImGui.GetStyle().ItemSpacing.Y));
                         break;
                     }
