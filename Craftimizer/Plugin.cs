@@ -4,7 +4,6 @@ using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Craftimizer.Utils;
 using Craftimizer.Windows;
-using Dalamud.Game.Command;
 using Dalamud.Interface.ImGuiNotification;
 using Dalamud.Interface.Internal;
 using Dalamud.Interface.Windowing;
@@ -12,7 +11,6 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -68,10 +66,9 @@ public sealed class Plugin : IDalamudPlugin
         ListWindow = new();
 
         // Trigger static constructors so a huge hitch doesn't occur on first RecipeNote frame.
-        _ = Task.Run(FoodStatus.Initialize);
-        _ = Task.Run(ActionUtils.Initialize);
-        Gearsets.Initialize();
+        FoodStatus.Initialize();
         ActionUtils.Initialize();
+        Gearsets.Initialize();
 
         Service.PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
         Service.PluginInterface.UiBuilder.OpenConfigUi += OpenSettingsWindow;
