@@ -1,6 +1,5 @@
 using Craftimizer.Simulator.Actions;
 using Craftimizer.Solver;
-using Craftimizer.Utils;
 using Dalamud.Configuration;
 using System;
 using System.Collections.Generic;
@@ -72,10 +71,9 @@ public class MacroCopyConfiguration
     public bool CombineMacro { get; set; }
 }
 
-public partial class Configuration : IPluginConfiguration
+[JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
+public partial class Configuration
 {
-    public int Version { get; set; } = 1;
-
     public static event Action? OnMacroListChanged;
 
     [JsonInclude] [JsonPropertyName("Macros")]
@@ -148,13 +146,13 @@ public partial class Configuration : IPluginConfiguration
 
     public static Configuration Load()
     {
-        // return Service.PluginInterface.GetPluginConfig() as Configuration ?? new();
-
         var f = Service.PluginInterface.ConfigFile;
         if (f.Exists)
         {
             using var stream = f.OpenRead();
-            return JsonSerializer.Deserialize(stream, JsonContext.Default.Configuration) ?? new();
+            
+            // System.InvalidOperationException: Setting init-only properties is not supported in source generation mode.
+            return JsonSerializer.Deserialize<Configuration>(stream) ?? new();
         }
         return new();
     }

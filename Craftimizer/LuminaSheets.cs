@@ -1,7 +1,5 @@
 using Dalamud;
 using ExdSheets;
-using Lumina;
-using Lumina.Data;
 using Lumina.Excel;
 using System.Collections.Concurrent;
 
