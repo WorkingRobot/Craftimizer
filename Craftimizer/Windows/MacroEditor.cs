@@ -726,12 +726,13 @@ public sealed class MacroEditor : Window, IDisposable
         ushort? newRecipe = null;
         {
             var recipe = RecipeData.Recipe;
-            using var fontHandle = AxisFont.Lock();
+            using var lockedFontHandle = AxisFont.Available ? AxisFont.Lock() : null;
+            var fontHandle = lockedFontHandle?.ImFont ?? ImGui.GetFont();
             if (ImGuiUtils.SearchableCombo(
                 "combo",
                 ref recipe,
                 LuminaSheets.RecipeSheet.Where(r => r.RecipeLevelTable.Row != 0 && r.ItemResult.Row != 0),
-                fontHandle.ImFont,
+                fontHandle,
                 ImGui.GetContentRegionAvail().X - rightSideWidth,
                 r => r.ItemResult.Value!.Name.ToDalamudString().ToString(),
                 r => r.RowId.ToString(),
@@ -744,7 +745,7 @@ public sealed class MacroEditor : Window, IDisposable
                     var textLevelSize = ImGui.CalcTextSize(textLevel);
                     ImGui.SameLine();
 
-                    var imageSize = fontHandle.ImFont.FontSize;
+                    var imageSize = fontHandle.FontSize;
                     ImGuiUtils.AlignRight(
                         imageSize + 5 +
                         textLevelSize.X,
@@ -758,7 +759,7 @@ public sealed class MacroEditor : Window, IDisposable
                     ImGui.SetCursorPosY(ImGui.GetCursorPosY() + ImGui.GetStyle().FramePadding.Y / 2);
                     ImGui.Image(Service.IconManager.GetIcon(classJob.GetIconId()).ImGuiHandle, new Vector2(imageSize), uv0, uv1);
                     ImGui.SameLine(0, 5);
-                    ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (fontHandle.ImFont.FontSize - textLevelSize.Y) / 2);
+                    ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (fontHandle.FontSize - textLevelSize.Y) / 2);
                     ImGui.TextUnformatted(textLevel);
                 }))
             {
