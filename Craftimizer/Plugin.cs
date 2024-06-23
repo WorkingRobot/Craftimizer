@@ -7,12 +7,10 @@ using Craftimizer.Windows;
 using Dalamud.Interface.ImGuiNotification;
 using Dalamud.Interface.Internal;
 using Dalamud.Interface.Windowing;
-using Dalamud.IoC;
 using Dalamud.Plugin;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Threading.Tasks;
 
 namespace Craftimizer.Plugin;
 
@@ -38,7 +36,7 @@ public sealed class Plugin : IDalamudPlugin
     public CommunityMacros CommunityMacros { get; }
     public AttributeCommandManager AttributeCommandManager { get; }
 
-    public Plugin([RequiredVersion("1.0")] DalamudPluginInterface pluginInterface)
+    public Plugin(DalamudPluginInterface pluginInterface)
     {
         Service.Initialize(this, pluginInterface);
 
