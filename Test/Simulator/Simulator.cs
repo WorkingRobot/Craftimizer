@@ -114,7 +114,7 @@ public class SimulatorTests
                 ActionType.PreparatoryTouch,
                 ActionType.WasteNot2
             },
-            0, 890, 60, 335);
+            0, 1414, 60, 335);
     }
 
     [TestMethod]
@@ -165,7 +165,7 @@ public class SimulatorTests
                 ActionType.PrudentTouch,
                 ActionType.PreparatoryTouch
             },
-            0, 4064, 15, 332);
+            0, 4588, 15, 332);
         Assert.AreEqual(10, state.ActiveEffects.InnerQuiet);
         Assert.IsTrue(ActionType.TrainedFinesse.Base().CanUse(new SimulatorNoRandom() { State = state }));
     }
@@ -191,7 +191,7 @@ public class SimulatorTests
                 ActionType.Groundwork,
                 ActionType.Groundwork,
             },
-            3726, 8224, 5, 69);
+            3726, 8748, 5, 69);
     }
 
     [TestMethod]

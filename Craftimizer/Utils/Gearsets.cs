@@ -24,12 +24,12 @@ public static unsafe class Gearsets
 
     static Gearsets()
     {
-        LevelToCLvlLUT = new int[90];
+        LevelToCLvlLUT = new int[100];
         for (uint i = 0; i < 80; ++i) {
             var level = i + 1;
             LevelToCLvlLUT[i] = LuminaSheets.ParamGrowSheet.GetRow(level)!.CraftingLevel;
         }
-        for (var i = 80; i < 90; ++i)
+        for (var i = 80; i < 100; ++i)
         {
             var level = i + 1;
             LevelToCLvlLUT[i] = (int)LuminaSheets.RecipeLevelTableSheet.First(r => r.ClassJobLevel == level).RowId;

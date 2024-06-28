@@ -16,6 +16,8 @@ public record struct Effects
     public byte WasteNot2;
     public byte MuscleMemory;
     public byte Manipulation;
+    public bool Expedience;
+    public bool TrainedPerfection;
     public bool HeartAndSoul;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -51,6 +53,12 @@ public record struct Effects
             case EffectType.Manipulation:
                 Manipulation = duration;
                 break;
+            case EffectType.Expedience:
+                Expedience = duration != 0;
+                break;
+            case EffectType.TrainedPerfection:
+                TrainedPerfection = duration != 0;
+                break;
             case EffectType.HeartAndSoul:
                 HeartAndSoul = duration != 0;
                 break;
@@ -78,6 +86,8 @@ public record struct Effects
             EffectType.WasteNot2 => WasteNot2,
             EffectType.MuscleMemory => MuscleMemory,
             EffectType.Manipulation => Manipulation,
+            EffectType.Expedience => (byte)(Expedience ? 1 : 0),
+            EffectType.TrainedPerfection => (byte)(TrainedPerfection ? 1 : 0),
             EffectType.HeartAndSoul => (byte)(HeartAndSoul ? 1 : 0),
             _ => 0
         };
@@ -117,5 +127,8 @@ public record struct Effects
             MuscleMemory--;
         if (Manipulation > 0)
             Manipulation--;
+
+        Expedience = false;
+        TrainedPerfection = false;
     }
 }

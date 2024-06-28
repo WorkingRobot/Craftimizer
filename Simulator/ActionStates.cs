@@ -10,7 +10,9 @@ public record struct ActionStates
     public byte TouchComboIdx;
     public byte CarefulObservationCount;
     public bool UsedHeartAndSoul;
-    public bool Observed;
+    public bool UsedQuickInnovation;
+    public bool UsedTrainedPerfection;
+    public bool ObserveCombo;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void MutateState(BaseAction baseAction)
@@ -28,6 +30,12 @@ public record struct ActionStates
         if (baseAction is HeartAndSoul)
             UsedHeartAndSoul = true;
 
-        Observed = baseAction is Observe;
+        if (baseAction is QuickInnovation)
+            UsedQuickInnovation = true;
+
+        if (baseAction is TrainedPerfection)
+            UsedTrainedPerfection = true;
+
+        ObserveCombo = baseAction is Observe;
     }
 }

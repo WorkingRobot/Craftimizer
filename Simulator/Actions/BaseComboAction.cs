@@ -18,11 +18,14 @@ public abstract class BaseComboAction(
 
     private static bool VerifyDurability2(int durabilityA, int durability, in Effects effects)
     {
-        var wasteNots = effects.HasEffect(EffectType.WasteNot) || effects.HasEffect(EffectType.WasteNot2);
-        // -A
-        durability -= (int)MathF.Ceiling(durabilityA * (wasteNots ? .5f : 1f));
-        if (durability <= 0)
-            return false;
+        if (!effects.HasEffect(EffectType.TrainedPerfection))
+        {
+            var wasteNots = effects.HasEffect(EffectType.WasteNot) || effects.HasEffect(EffectType.WasteNot2);
+            // -A
+            durability -= (int)MathF.Ceiling(durabilityA * (wasteNots ? .5f : 1f));
+            if (durability <= 0)
+                return false;
+        }
 
         // If we can do the first action and still have durability left to survive to the next
         // step (even before the Manipulation modifier), we can certainly do the next action.
@@ -36,10 +39,14 @@ public abstract class BaseComboAction(
     {
         var wasteNots = Math.Max(effects.GetDuration(EffectType.WasteNot), effects.GetDuration(EffectType.WasteNot2));
         var manips = effects.HasEffect(EffectType.Manipulation);
+        var perfection = effects.HasEffect(EffectType.TrainedPerfection);
 
-        durability -= (int)MathF.Ceiling(durabilityA * wasteNots > 0 ? .5f : 1f);
-        if (durability <= 0)
-            return false;
+        if (!perfection)
+        {
+            durability -= (int)MathF.Ceiling(durabilityA * wasteNots > 0 ? .5f : 1f);
+            if (durability <= 0)
+                return false;
+        }
 
         if (manips)
             durability += 5;

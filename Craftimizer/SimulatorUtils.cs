@@ -310,6 +310,8 @@ internal static class EffectUtils
             EffectType.MuscleMemory => 2191,
             EffectType.Manipulation => 1164,
             EffectType.HeartAndSoul => 2665,
+            EffectType.Expedience => 3812,
+            EffectType.TrainedPerfection => 3813,
             _ => throw new ArgumentOutOfRangeException(nameof(me)),
         };
 

@@ -4,7 +4,7 @@ internal sealed class Reflect() : BaseAction(
     ActionCategory.FirstTurn, 69, 100387,
     increasesQuality: true,
     defaultCPCost: 6,
-    defaultEfficiency: 100
+    defaultEfficiency: 300
     )
 {
     public override bool IsPossible(Simulator s) => s.IsFirstStep && base.IsPossible(s);

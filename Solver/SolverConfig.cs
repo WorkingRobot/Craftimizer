@@ -72,7 +72,6 @@ public readonly record struct SolverConfig
 
         ActionType.BasicSynthesis,
         ActionType.CarefulSynthesis,
-        ActionType.FocusedSynthesis,
         ActionType.Groundwork,
         ActionType.DelicateSynthesis,
         ActionType.PrudentSynthesis,
@@ -81,26 +80,30 @@ public readonly record struct SolverConfig
         ActionType.StandardTouch,
         ActionType.ByregotsBlessing,
         ActionType.PrudentTouch,
-        ActionType.FocusedTouch,
-        ActionType.PreparatoryTouch,
         ActionType.AdvancedTouch,
+        ActionType.PreparatoryTouch,
         ActionType.TrainedFinesse,
+        ActionType.RefinedTouch,
 
         ActionType.MastersMend,
         ActionType.WasteNot,
         ActionType.WasteNot2,
         ActionType.Manipulation,
+        ActionType.ImmaculateMend,
+        ActionType.TrainedPerfection,
 
         ActionType.Veneration,
         ActionType.GreatStrides,
         ActionType.Innovation,
+        ActionType.QuickInnovation,
 
         ActionType.Observe,
+        ActionType.HeartAndSoul,
 
         ActionType.StandardTouchCombo,
         ActionType.AdvancedTouchCombo,
-        ActionType.FocusedTouchCombo,
-        ActionType.FocusedSynthesisCombo,
+        ActionType.ObservedAdvancedTouchCombo,
+        ActionType.RefinedTouchCombo,
     });
 
     // Same as deterministic, but with condition-specific actions added
@@ -112,7 +115,6 @@ public readonly record struct SolverConfig
 
         ActionType.BasicSynthesis,
         ActionType.CarefulSynthesis,
-        ActionType.FocusedSynthesis,
         ActionType.Groundwork,
         ActionType.DelicateSynthesis,
         ActionType.IntensiveSynthesis,
@@ -123,34 +125,37 @@ public readonly record struct SolverConfig
         ActionType.ByregotsBlessing,
         ActionType.PreciseTouch,
         ActionType.PrudentTouch,
-        ActionType.FocusedTouch,
-        ActionType.PreparatoryTouch,
         ActionType.AdvancedTouch,
+        ActionType.PreparatoryTouch,
         ActionType.TrainedFinesse,
+        ActionType.RefinedTouch,
 
         ActionType.MastersMend,
         ActionType.WasteNot,
         ActionType.WasteNot2,
         ActionType.Manipulation,
+        ActionType.ImmaculateMend,
+        ActionType.TrainedPerfection,
 
         ActionType.Veneration,
         ActionType.GreatStrides,
         ActionType.Innovation,
+        ActionType.QuickInnovation,
 
         ActionType.Observe,
+        ActionType.HeartAndSoul,
         ActionType.TricksOfTheTrade,
 
         ActionType.StandardTouchCombo,
         ActionType.AdvancedTouchCombo,
-        ActionType.FocusedTouchCombo,
-        ActionType.FocusedSynthesisCombo,
+        ActionType.ObservedAdvancedTouchCombo,
+        ActionType.RefinedTouchCombo,
     });
 
     public static readonly FrozenSet<ActionType> InefficientActions =
         new[]
         {
             ActionType.CarefulObservation,
-            ActionType.HeartAndSoul,
             ActionType.FinalAppraisal
         }.ToFrozenSet();
 
@@ -159,6 +164,7 @@ public readonly record struct SolverConfig
         {
             ActionType.RapidSynthesis,
             ActionType.HastyTouch,
+            ActionType.DaringTouch,
         }.ToFrozenSet();
 
     public static readonly SolverConfig RecipeNoteDefault = new SolverConfig() with

@@ -12,4 +12,6 @@ public enum EffectType
     MuscleMemory,
     Manipulation,
     HeartAndSoul,
+    Expedience,
+    TrainedPerfection
 }

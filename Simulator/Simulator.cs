@@ -181,6 +181,12 @@ public class Simulator
             Durability = Input.Recipe.MaxDurability;
     }
 
+    public void RestoreAllDurability()
+    {
+        Durability = Input.Recipe.MaxDurability;
+    }
+
+
     public void RestoreCP(int amount)
     {
         CP += amount;
