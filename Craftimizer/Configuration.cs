@@ -1,6 +1,5 @@
 using Craftimizer.Simulator.Actions;
 using Craftimizer.Solver;
-using Dalamud.Configuration;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,13 +8,101 @@ using System.Text.Json.Serialization;
 
 namespace Craftimizer.Plugin;
 
+public class StoredActionTypeConverter : JsonConverter<ActionType[]>
+{
+    public override ActionType[] Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options)
+    {
+        if (reader.TokenType != JsonTokenType.StartArray)
+            throw new JsonException();
+
+        var ret = new List<ActionType>();
+
+        while (reader.Read())
+        {
+            if (reader.TokenType == JsonTokenType.EndArray)
+                return [.. ret];
+            else if (reader.TokenType == JsonTokenType.String)
+            {
+                var name = reader.GetString();
+                if (Enum.TryParse(name, ignoreCase: false, out ActionType key))
+                    ret.Add(key);
+            }
+            else if (reader.TokenType == JsonTokenType.Number)
+            {
+                // https://github.com/WorkingRobot/Craftimizer/blob/90f53de3d88344084bb2413161c8051ef073dc3d/Simulator/Actions/ActionType.cs#L6
+                ActionType? key = reader.GetByte() switch
+                {
+                    0 => ActionType.AdvancedTouch,
+                    1 => ActionType.BasicSynthesis,
+                    2 => ActionType.BasicTouch,
+                    3 => ActionType.ByregotsBlessing,
+                    4 => ActionType.CarefulObservation,
+                    5 => ActionType.CarefulSynthesis,
+                    6 => ActionType.DelicateSynthesis,
+                    7 => ActionType.FinalAppraisal,
+                    // 8 => ActionType.FocusedSynthesis,
+                    // 9 => ActionType.FocusedTouch,
+                    10 => ActionType.GreatStrides,
+                    11 => ActionType.Groundwork,
+                    12 => ActionType.HastyTouch,
+                    13 => ActionType.HeartAndSoul,
+                    14 => ActionType.Innovation,
+                    15 => ActionType.IntensiveSynthesis,
+                    16 => ActionType.Manipulation,
+                    17 => ActionType.MastersMend,
+                    18 => ActionType.MuscleMemory,
+                    19 => ActionType.Observe,
+                    20 => ActionType.PreciseTouch,
+                    21 => ActionType.PreparatoryTouch,
+                    22 => ActionType.PrudentSynthesis,
+                    23 => ActionType.PrudentTouch,
+                    24 => ActionType.RapidSynthesis,
+                    25 => ActionType.Reflect,
+                    26 => ActionType.StandardTouch,
+                    27 => ActionType.TrainedEye,
+                    28 => ActionType.TrainedFinesse,
+                    29 => ActionType.TricksOfTheTrade,
+                    30 => ActionType.Veneration,
+                    31 => ActionType.WasteNot,
+                    32 => ActionType.WasteNot2,
+                    33 => ActionType.StandardTouchCombo,
+                    34 => ActionType.AdvancedTouchCombo,
+                    // 35 => ActionType.FocusedSynthesisCombo,
+                    // 36 => ActionType.FocusedTouchCombo,
+                    _ => null,
+                };
+                if (key is not null)
+                    ret.Add(key.Value);
+            }
+            else
+                throw new JsonException();
+        }
+
+        throw new JsonException();
+    }
+
+    public override void Write(
+        Utf8JsonWriter writer,
+        ActionType[] value,
+        JsonSerializerOptions options)
+    {
+        writer.WriteStartArray();
+        foreach (var item in value)
+            writer.WriteStringValue(Enum.GetName(item) ?? throw new JsonException());
+        writer.WriteEndArray();
+    }
+}
+
 public class Macro
 {
     public static event Action<Macro>? OnMacroChanged;
 
     public string Name { get; set; } = string.Empty;
     [JsonInclude] [JsonPropertyName("Actions")]
-    internal List<ActionType> actions { get; set; } = [];
+    internal ActionType[] actions { get; set; } = [];
     [JsonIgnore]
     public IReadOnlyList<ActionType> Actions
     {
@@ -27,7 +114,7 @@ public class Macro
     {
         set
         {
-            actions = new(value);
+            actions = [.. value];
             OnMacroChanged?.Invoke(this);
         }
     }
@@ -134,6 +221,7 @@ public partial class Configuration
         OnMacroListChanged?.Invoke();
     }
 
+    [JsonSourceGenerationOptions(Converters = [typeof(StoredActionTypeConverter)])]
     [JsonSerializable(typeof(Configuration))]
     internal sealed partial class JsonContext : JsonSerializerContext { }
 
@@ -150,9 +238,9 @@ public partial class Configuration
         if (f.Exists)
         {
             using var stream = f.OpenRead();
-            
+
             // System.InvalidOperationException: Setting init-only properties is not supported in source generation mode.
-            return JsonSerializer.Deserialize<Configuration>(stream) ?? new();
+            return JsonSerializer.Deserialize<Configuration>(stream, JsonContext.Default.Options) ?? new();
         }
         return new();
     }
