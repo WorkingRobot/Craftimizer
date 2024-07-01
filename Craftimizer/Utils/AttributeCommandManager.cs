@@ -29,9 +29,9 @@ public sealed class AttributeCommandManager : IDisposable
 
             var takesParams = method.GetParameters().Length != 0;
 
-            CommandInfo.HandlerDelegate handler;
+            IReadOnlyCommandInfo.HandlerDelegate handler;
             if (takesParams)
-                handler = method.CreateDelegate<CommandInfo.HandlerDelegate>(target);
+                handler = method.CreateDelegate<IReadOnlyCommandInfo.HandlerDelegate>(target);
             else
             {
                 var invoker = method.CreateDelegate<Action>(target);

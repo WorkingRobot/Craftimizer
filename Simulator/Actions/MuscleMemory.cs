@@ -14,6 +14,6 @@ internal sealed class MuscleMemory() : BaseAction(
     public override void UseSuccess(Simulator s)
     {
         base.UseSuccess(s);
-        s.AddEffect(EffectType.MuscleMemory, 5);
+        s.AddEffect(EffectType.MuscleMemory, 5 + 1);
     }
 }

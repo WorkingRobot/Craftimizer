@@ -12,13 +12,13 @@ public static unsafe class Gearsets
 {
     public record struct GearsetStats(int CP, int Craftsmanship, int Control);
     public record struct GearsetMateria(ushort Type, ushort Grade);
-    public record struct GearsetItem(uint itemId, bool isHq, GearsetMateria[] materia);
+    public record struct GearsetItem(uint ItemId, bool IsHq, GearsetMateria[] Materia);
 
     private static readonly GearsetStats BaseStats = new(180, 0, 0);
 
-    public const uint ParamCP = 11;
-    public const uint ParamCraftsmanship = 70;
-    public const uint ParamControl = 71;
+    public const int ParamCP = 11;
+    public const int ParamCraftsmanship = 70;
+    public const int ParamControl = 71;
 
     private static readonly int[] LevelToCLvlLUT;
 
@@ -44,26 +44,26 @@ public static unsafe class Gearsets
         for (var i = 0; i < container->Size; ++i)
         {
             var item = container->Items[i];
-            items[i] = new(item.ItemID, item.Flags.HasFlag(InventoryItem.ItemFlags.HQ), GetMaterias(item.Materia, item.MateriaGrade));
+            items[i] = new(item.ItemId, item.Flags.HasFlag(InventoryItem.ItemFlags.HighQuality), GetMaterias(item.Materia, item.MateriaGrades));
         }
         return items;
     }
 
     public static GearsetItem[] GetGearsetItems(RaptureGearsetModule.GearsetEntry* entry)
     {
-        var gearsetItems = entry->ItemsSpan;
+        var gearsetItems = entry->Items;
         var items = new GearsetItem[14];
         for (var i = 0; i < 14; ++i)
         {
             var item = gearsetItems[i];
-            items[i] = new(item.ItemID % 1000000, item.ItemID > 1000000, GetMaterias(item.Materia, item.MateriaGrade));
+            items[i] = new(item.ItemId % 1000000, item.ItemId > 1000000, GetMaterias(item.Materia, item.MateriaGrades));
         }
         return items;
     }
 
     public static GearsetStats CalculateGearsetItemStats(GearsetItem gearsetItem)
     {
-        var item = LuminaSheets.ItemSheet.GetRow(gearsetItem.itemId)!;
+        var item = LuminaSheets.ItemSheet.GetRow(gearsetItem.ItemId)!;
 
         int cp = 0, craftsmanship = 0, control = 0;
 
@@ -79,11 +79,11 @@ public static unsafe class Gearsets
 
         foreach (var statIncrease in item.BaseParam.Zip(item.BaseParamValue))
             IncreaseStat(statIncrease.First.Row, statIncrease.Second);
-        if (gearsetItem.isHq)
+        if (gearsetItem.IsHq)
             foreach (var statIncrease in item.BaseParamSpecial.Zip(item.BaseParamValueSpecial))
                 IncreaseStat(statIncrease.First.Row, statIncrease.Second);
 
-        foreach (var gearsetMateria in gearsetItem.materia)
+        foreach (var gearsetMateria in gearsetItem.Materia)
         {
             if (gearsetMateria.Type == 0)
                 continue;
@@ -131,23 +131,23 @@ public static unsafe class Gearsets
         };
 
     public static bool IsItem(GearsetItem item, uint itemId) =>
-        item.itemId == itemId;
+        item.ItemId == itemId;
 
     public static bool IsSpecialistSoulCrystal(GearsetItem item)
     {
-        if (item.itemId == 0)
+        if (item.ItemId == 0)
             return false;
 
-        var luminaItem = LuminaSheets.ItemSheet.GetRow(item.itemId)!;
+        var luminaItem = LuminaSheets.ItemSheet.GetRow(item.ItemId)!;
         //     Soul Crystal ItemUICategory                                          DoH Category
         return luminaItem.ItemUICategory.Row == 62 && luminaItem.ClassJobUse.Value!.ClassJobCategory.Row == 33;
     }
 
     public static bool IsSplendorousTool(GearsetItem item) =>
-        LuminaSheets.ItemSheetEnglish.GetRow(item.itemId)!.Description.ToDalamudString().TextValue.Contains("Increases to quality are 1.75 times higher than normal when material condition is Good.", StringComparison.Ordinal);
+        LuminaSheets.ItemSheetEnglish.GetRow(item.ItemId)!.Description.ToDalamudString().TextValue.Contains("Increases to quality are 1.75 times higher than normal when material condition is Good.", StringComparison.Ordinal);
 
     public static int CalculateCLvl(int level) =>
-        (level > 0 && level <= 90) ?
+        (level > 0 && level <= 100) ?
             LevelToCLvlLUT[level - 1] :
             throw new ArgumentOutOfRangeException(nameof(level), level, "Level is out of range.");
 
@@ -197,7 +197,7 @@ public static unsafe class Gearsets
         return cap == 0 ? int.MaxValue : cap;
     }
 
-    private static GearsetMateria[] GetMaterias(ushort* types, byte* grades)
+    private static GearsetMateria[] GetMaterias(ReadOnlySpan<ushort> types, ReadOnlySpan<byte> grades)
     {
         var materia = new GearsetMateria[5];
         for (var i = 0; i < 5; ++i)

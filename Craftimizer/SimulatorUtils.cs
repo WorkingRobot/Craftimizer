@@ -1,7 +1,6 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
-using Dalamud.Interface.Internal;
 using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using ExdSheets;
@@ -15,6 +14,8 @@ using ActionType = Craftimizer.Simulator.Actions.ActionType;
 using ClassJob = Craftimizer.Simulator.ClassJob;
 using Condition = Craftimizer.Simulator.Condition;
 using Status = ExdSheets.Status;
+using Dalamud.Interface.Textures;
+using Craftimizer.Utils;
 
 namespace Craftimizer.Plugin;
 
@@ -86,15 +87,15 @@ internal static class ActionUtils
         return "Unknown";
     }
 
-    public static IDalamudTextureWrap GetIcon(this ActionType me, ClassJob classJob)
+    public static ISharedImmediateTexture GetIcon(this ActionType me, ClassJob classJob)
     {
         var (craftAction, action) = GetActionRow(me, classJob);
         if (craftAction != null)
-            return Service.IconManager.GetIcon(craftAction.Icon);
+            return IconManager.GetIcon(craftAction.Icon);
         if (action != null)
-            return Service.IconManager.GetIcon(action.Icon);
+            return IconManager.GetIcon(action.Icon);
         // Old "Steady Hand" action icon
-        return Service.IconManager.GetIcon(1953);
+        return IconManager.GetIcon(1953);
     }
 
     public static ActionType? GetActionTypeFromId(uint actionId, ClassJob classJob, bool isCraftAction)
@@ -151,7 +152,7 @@ internal static class ClassJobUtils
         LuminaSheets.ClassJobSheet.GetRow(me.GetClassJobIndex())!.ExpArrayIndex;
 
     public static unsafe short GetPlayerLevel(this ClassJob me) =>
-        PlayerState.Instance()->ClassJobLevelArray[me.GetExpArrayIdx()];
+        PlayerState.Instance()->ClassJobLevels[me.GetExpArrayIdx()];
 
     public static unsafe bool CanPlayerUseManipulation(this ClassJob me) =>
         UIState.Instance()->IsUnlockLinkUnlockedOrQuestCompleted(ActionType.Manipulation.GetActionRow(me).Action!.UnlockLink.Row);
@@ -330,8 +331,8 @@ internal static class EffectUtils
         return (ushort)iconId;
     }
 
-    public static IDalamudTextureWrap GetIcon(this EffectType me, int strength) =>
-        Service.IconManager.GetIcon(me.GetIconId(strength));
+    public static ISharedImmediateTexture GetIcon(this EffectType me, int strength) =>
+        IconManager.GetIcon(me.GetIconId(strength));
 
     public static string GetTooltip(this EffectType me, int strength, int duration)
     {

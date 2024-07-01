@@ -310,7 +310,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
                 
                 isPressed = ImGuiExtras.ButtonBehavior(bb, id, out isHovered, out isHeld, ImGuiButtonFlags.None);
             }
-            ImGui.ImageButton(action.GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(imageSize), default, Vector2.One, 0, default, failedAction ? new(1, 1, 1, ImGui.GetStyle().DisabledAlpha) : Vector4.One);
+            ImGui.ImageButton(action.GetIcon(RecipeData!.ClassJob).GetHandle(), new(imageSize), default, Vector2.One, 0, default, failedAction ? new(1, 1, 1, ImGui.GetStyle().DisabledAlpha) : Vector4.One);
             if (isPressed || IsSuggestedActionExecutionQueued)
             {
                 if (canExecute && i == 0)
@@ -359,7 +359,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
                 using (var group = ImRaii.Group())
                 {
-                    var icon = effect.GetIcon(effects.GetStrength(effect));
+                    var icon = effect.GetIcon(effects.GetStrength(effect)).GetWrapOrEmpty();
                     var size = new Vector2(iconHeight * icon.Width / icon.Height, iconHeight);
 
                     ImGui.Image(icon.ImGuiHandle, size);
@@ -535,15 +535,15 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
         byte GetEffectStack(ushort id)
         {
-            foreach (var status in statusManager->StatusSpan)
-                if (status.StatusID == id)
+            foreach (var status in statusManager->Status)
+                if (status.StatusId == id)
                     return status.StackCount;
             return 0;
         }
         bool HasEffect(ushort id)
         {
-            foreach (var status in statusManager->StatusSpan)
-                if (status.StatusID == id)
+            foreach (var status in statusManager->Status)
+                if (status.StatusId == id)
                     return true;
             return false;
         }
@@ -568,8 +568,8 @@ public sealed unsafe class SynthHelper : Window, IDisposable
                 WasteNot2 = GetEffectStack((ushort)EffectType.WasteNot2.StatusId()),
                 MuscleMemory = GetEffectStack((ushort)EffectType.MuscleMemory.StatusId()),
                 Manipulation = GetEffectStack((ushort)EffectType.Manipulation.StatusId()),
-                Expedience = HasEffect((ushort)EffectType.Expedience.StatusId()),
-                TrainedPerfection = HasEffect((ushort)EffectType.TrainedPerfection.StatusId()),
+                Expedience = GetEffectStack((ushort)EffectType.Expedience.StatusId()),
+                TrainedPerfection = GetEffectStack((ushort)EffectType.TrainedPerfection.StatusId()),
                 HeartAndSoul = HasEffect((ushort)EffectType.HeartAndSoul.StatusId()),
             },
             ActionStates = CurrentActionStates

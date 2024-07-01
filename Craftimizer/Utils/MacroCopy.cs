@@ -1,7 +1,7 @@
 using Craftimizer.Plugin;
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
-using Dalamud.Interface.Internal.Notifications;
+using Dalamud.Interface.ImGuiNotification;
 using FFXIVClientStructs.FFXIV.Client.System.Memory;
 using FFXIVClientStructs.FFXIV.Client.System.String;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;

@@ -223,7 +223,13 @@ public partial class Configuration
 
     [JsonSourceGenerationOptions(Converters = [typeof(StoredActionTypeConverter)])]
     [JsonSerializable(typeof(Configuration))]
-    internal sealed partial class JsonContext : JsonSerializerContext { }
+    internal sealed partial class JsonContext : JsonSerializerContext
+    {
+        public static JsonSerializerOptions DeserializeOptions { get; } = new()
+        {
+            Converters = { new StoredActionTypeConverter() }
+        };
+    }
 
     public void Save()
     {
@@ -240,7 +246,7 @@ public partial class Configuration
             using var stream = f.OpenRead();
 
             // System.InvalidOperationException: Setting init-only properties is not supported in source generation mode.
-            return JsonSerializer.Deserialize<Configuration>(stream, JsonContext.Default.Options) ?? new();
+            return JsonSerializer.Deserialize<Configuration>(stream, JsonContext.DeserializeOptions) ?? new();
         }
         return new();
     }

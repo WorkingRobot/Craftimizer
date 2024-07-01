@@ -105,9 +105,6 @@ public class Simulator
         if (Condition == Condition.Primed)
             duration += 2;
 
-        // Duration will be decreased in the next step, so we need to add 1
-        duration++;
-
         ActiveEffects.SetDuration(effect, (byte)duration);
     }
 

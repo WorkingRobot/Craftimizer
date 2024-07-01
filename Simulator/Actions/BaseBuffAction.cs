@@ -21,9 +21,10 @@ internal abstract class BaseBuffAction(
     // Non-instanced properties
     public readonly EffectType Effect = effect;
     public readonly int Duration = duration;
+    private readonly int trueDuration = increasesStepCount ? duration + 1 : duration;
 
     public override void UseSuccess(Simulator s) =>
-        s.AddEffect(Effect, Duration);
+        s.AddEffect(Effect, trueDuration);
 
     public override string GetTooltip(Simulator s, bool addUsability)
     {

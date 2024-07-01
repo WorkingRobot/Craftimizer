@@ -1,6 +1,7 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Craftimizer.Solver;
+using Craftimizer.Utils;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.ManagedFontAtlas;
@@ -694,7 +695,7 @@ public sealed class Settings : Window, IDisposable
                         iconTint = new(1, 1f, .5f, 1);
                     else if (isRisky)
                         iconTint = new(1, .5f, .5f, 1);
-                    if (ImGui.ImageButton(actions[i].GetIcon(recipeData.ClassJob).ImGuiHandle, new(imageSize), default, Vector2.One, 0, default, iconTint))
+                    if (ImGui.ImageButton(actions[i].GetIcon(recipeData.ClassJob).GetHandle(), new(imageSize), default, Vector2.One, 0, default, iconTint))
                     {
                         isDirty = true;
                         if (isEnabled)
@@ -932,7 +933,7 @@ public sealed class Settings : Window, IDisposable
         ImGuiHelpers.ScaledDummy(5);
 
         var plugin = Service.Plugin;
-        var icon = plugin.Icon;
+        var icon = plugin.Icon.GetWrapOrEmpty();
 
         using (var table = ImRaii.Table("settingsAboutTable", 2))
         {

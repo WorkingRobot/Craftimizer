@@ -4,18 +4,24 @@
     "net8.0-windows7.0": {
       "DalamudPackager": {
         "type": "Direct",
-        "requested": "[2.1.12, )",
-        "resolved": "2.1.12",
-        "contentHash": "Sc0PVxvgg4NQjcI8n10/VfUQBAS4O+Fw2pZrAqBdRMbthYGeogzu5+xmIGCGmsEZ/ukMOBuAqiNiB5qA3MRalg=="
+        "requested": "[2.1.13, )",
+        "resolved": "2.1.13",
+        "contentHash": "rMN1omGe8536f4xLMvx9NwfvpAc9YFFfeXJ1t4P4PE6Gu8WCIoFliR1sh07hM+bfODmesk/dvMbji7vNI+B/pQ=="
       },
       "ExdSheets": {
         "type": "Direct",
-        "requested": "[1.0.0, )",
-        "resolved": "1.0.0",
-        "contentHash": "Zf1btj6qUkrzEm+MVCd2vRWguXizb+Ucy49xWHhFJ5HQj6gtLOxAX2gJqebAtg/uDBbEb9BHx/5Kz7Kuha5+cw==",
+        "requested": "[1.1.0, )",
+        "resolved": "1.1.0",
+        "contentHash": "Je/kV/jpZoIEmJVi1ICRnl1/ENB+nyFHX1KZUu3rkxMO8H9uJJ6CA1MdRiOD6OE6If1eGXAL1bLwEupC2Ikraw==",
         "dependencies": {
           "Lumina": "3.15.2"
         }
+      },
+      "Lumina": {
+        "type": "Direct",
+        "requested": "[3.15.2, )",
+        "resolved": "3.15.2",
+        "contentHash": "EnoxYEYMepcvAoXdZhaFJiv2aiDBIPjgkgzxR/+ArOxlrALzCgheTsb5yD39a9sxNIi2tNECT93ulZvYjx8fZg=="
       },
       "MathNet.Numerics": {
         "type": "Direct",
@@ -25,14 +31,9 @@
       },
       "Meziantou.Analyzer": {
         "type": "Direct",
-        "requested": "[2.0.157, )",
-        "resolved": "2.0.157",
-        "contentHash": "gQ9xAHvpYeqwOqcyRs5f8kFrTt7Kg2atzjsETGhRjuyGXqKYrN84n52Je6NcGEkZWRwhrQTBJl1wlcsh2se7Fw=="
-      },
-      "Lumina": {
-        "type": "Transitive",
-        "resolved": "3.15.2",
-        "contentHash": "EnoxYEYMepcvAoXdZhaFJiv2aiDBIPjgkgzxR/+ArOxlrALzCgheTsb5yD39a9sxNIi2tNECT93ulZvYjx8fZg=="
+        "requested": "[2.0.159, )",
+        "resolved": "2.0.159",
+        "contentHash": "+Lu4NktCK98/PkPCluTA+uRHS7uvMXa/Z2WLPE8TDsS/ybYtaOhfq8Wi745fO26wI8rNGaJlKsfFskcKWC5eDQ=="
       },
       "craftimizer.simulator": {
         "type": "Project"

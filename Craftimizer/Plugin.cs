@@ -5,7 +5,8 @@ using Craftimizer.Simulator.Actions;
 using Craftimizer.Utils;
 using Craftimizer.Windows;
 using Dalamud.Interface.ImGuiNotification;
-using Dalamud.Interface.Internal;
+using Dalamud.Interface.Textures;
+using Dalamud.Interface.Textures.TextureWraps;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
 using System;
@@ -19,7 +20,7 @@ public sealed class Plugin : IDalamudPlugin
     public string Version { get; }
     public string Author { get; }
     public string BuildConfiguration { get; }
-    public IDalamudTextureWrap Icon { get; }
+    public ISharedImmediateTexture Icon { get; }
 
     public WindowSystem WindowSystem { get; }
     public Settings SettingsWindow { get; }
@@ -32,11 +33,10 @@ public sealed class Plugin : IDalamudPlugin
     public Configuration Configuration { get; }
     public Hooks Hooks { get; }
     public Chat Chat { get; }
-    public IconManager IconManager { get; }
     public CommunityMacros CommunityMacros { get; }
     public AttributeCommandManager AttributeCommandManager { get; }
 
-    public Plugin(DalamudPluginInterface pluginInterface)
+    public Plugin(IDalamudPluginInterface pluginInterface)
     {
         Service.Initialize(this, pluginInterface);
 
@@ -44,7 +44,6 @@ public sealed class Plugin : IDalamudPlugin
         Configuration = Configuration.Load();
         Hooks = new();
         Chat = new();
-        IconManager = new();
         CommunityMacros = new();
         AttributeCommandManager = new();
 
@@ -156,10 +155,8 @@ public sealed class Plugin : IDalamudPlugin
 
     public IActiveNotification DisplayNotification(Notification notification)
     {
-        notification.InitialDuration = TimeSpan.FromSeconds(5);
         var ret = Service.NotificationManager.AddNotification(notification);
-        if (notification.Icon != null)
-            ret.SetIconTexture(Icon);
+        // ret.SetIconTexture(Icon.RentAsync().ContinueWith(t => (IDalamudTextureWrap?)t));
         return ret;
     }
 
@@ -173,6 +170,5 @@ public sealed class Plugin : IDalamudPlugin
         EditorWindow?.Dispose();
         ClipboardWindow?.Dispose();
         Hooks.Dispose();
-        IconManager.Dispose();
     }
 }

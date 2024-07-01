@@ -11,7 +11,7 @@ namespace Craftimizer.Plugin;
 public sealed class Service
 {
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    [PluginService] public static DalamudPluginInterface PluginInterface { get; private set; }
+    [PluginService] public static IDalamudPluginInterface PluginInterface { get; private set; }
     [PluginService] public static ICommandManager CommandManager { get; private set; }
     [PluginService] public static IObjectTable Objects { get; private set; }
     [PluginService] public static ISigScanner SigScanner { get; private set; }
@@ -30,11 +30,10 @@ public sealed class Service
     public static Configuration Configuration => Plugin.Configuration;
     public static WindowSystem WindowSystem => Plugin.WindowSystem;
     public static Chat Chat => Plugin.Chat;
-    public static IconManager IconManager => Plugin.IconManager;
     public static CommunityMacros CommunityMacros => Plugin.CommunityMacros;
 #pragma warning restore CS8618
 
-    internal static void Initialize(Plugin plugin, DalamudPluginInterface iface)
+    internal static void Initialize(Plugin plugin, IDalamudPluginInterface iface)
     {
         Plugin = plugin;
         iface.Create<Service>();

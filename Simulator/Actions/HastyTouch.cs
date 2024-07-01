@@ -8,5 +8,11 @@ internal sealed class HastyTouch() : BaseAction(
     defaultSuccessRate: 60
     )
 {
+    public override void UseSuccess(Simulator s)
+    {
+        base.UseSuccess(s);
 
+        if (s.Input.Stats.Level >= 96)
+            s.AddEffect(EffectType.Expedience, 1 + 1);
+    }
 }
