@@ -67,22 +67,32 @@ internal sealed class Simulator : SimulatorNoRandom
         if (action == ActionType.TrainedEye)
             return baseAction.CouldUse(this);
 
+        var isDifficult = Input.Recipe.ClassJobLevel >= Input.Stats.Level;
+
         // don't allow quality moves under Muscle Memory for difficult crafts
-        if (Input.Recipe.ClassJobLevel == 90 &&
+        if (isDifficult &&
             HasEffect(EffectType.MuscleMemory) &&
             baseAction.IncreasesQuality)
             return false;
 
         // use First Turn actions if it's available and the craft is difficult
         if (IsFirstStep &&
-            Input.Recipe.ClassJobLevel == 90 &&
+            Input.Stats.Level >= 69 &&
+            isDifficult &&
             baseAction.Category != ActionCategory.FirstTurn &&
-            CP > 10)
+            CP >= 6)
             return false;
 
         // don't allow combo actions if the combo is already in progress
         if (ActionStates.TouchComboIdx != 0 &&
-            (action == ActionType.StandardTouchCombo || action == ActionType.AdvancedTouchCombo))
+            (action is ActionType.StandardTouchCombo or ActionType.AdvancedTouchCombo or ActionType.RefinedTouchCombo))
+            return false;
+
+        // don't allow observe actions if the combo (or observe itself) is already in progress
+        if (ActionStates.ObserveCombo && action is ActionType.ObservedAdvancedTouchCombo)
+            return false;
+
+        if (action is ActionType.Observe && CP < 25)
             return false;
 
         // don't allow pure quality moves under Veneration
@@ -91,9 +101,14 @@ internal sealed class Simulator : SimulatorNoRandom
             baseAction.IncreasesQuality)
             return false;
 
+        var durability = CalculateDurabilityCost(baseAction.DurabilityCost);
+
         // don't allow pure quality moves when it won't be able to finish the craft
-        if (baseAction.IncreasesQuality &&
-            CalculateDurabilityCost(baseAction.DurabilityCost) > Durability)
+        if (!baseAction.IncreasesProgress && durability >= Durability)
+            return false;
+
+        // don't allow 0 durability moves under Trained Perfection
+        if (HasEffect(EffectType.TrainedPerfection) && durability < 10)
             return false;
 
         if (baseAction.IncreasesProgress)
@@ -126,7 +141,19 @@ internal sealed class Simulator : SimulatorNoRandom
             return false;
 
         if (action == ActionType.MastersMend &&
-            Input.Recipe.MaxDurability - Durability < 25)
+            Input.Recipe.MaxDurability - durability < 25)
+            return false;
+
+        if (action == ActionType.ImmaculateMend &&
+            Input.Recipe.MaxDurability - durability < 45)
+            return false;
+
+        if (action == ActionType.RefinedTouch &&
+            ActionStates.TouchComboIdx != 1)
+            return false;
+
+        if (action == ActionType.QuickInnovation &&
+            (Quality - Input.StartingQuality) < Input.Recipe.MaxQuality / 2)
             return false;
 
         if (action == ActionType.Manipulation &&
@@ -137,7 +164,7 @@ internal sealed class Simulator : SimulatorNoRandom
             HasEffect(EffectType.GreatStrides))
             return false;
 
-        if ((action == ActionType.Veneration || action == ActionType.Innovation) &&
+        if ((action is ActionType.Veneration or ActionType.Innovation) &&
             (GetEffectDuration(EffectType.Veneration) > 1 || GetEffectDuration(EffectType.Innovation) > 1))
             return false;
 
