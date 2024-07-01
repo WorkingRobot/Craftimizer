@@ -683,7 +683,7 @@ public sealed class Settings : Window, IDisposable
                         iconTint = new(1, 1f, .5f, 1);
                     else if (isRisky)
                         iconTint = new(1, .5f, .5f, 1);
-                    if (ImGui.ImageButton(actions[i].GetIcon(recipeData.ClassJob).GetHandle(), new(imageSize), default, Vector2.One, 0, default, iconTint))
+                    if (ImGui.ImageButton(actions[i].GetIcon(recipeData.ClassJob).ImGuiHandle, new(imageSize), default, Vector2.One, 0, default, iconTint))
                     {
                         isDirty = true;
                         if (isEnabled)
@@ -921,19 +921,20 @@ public sealed class Settings : Window, IDisposable
         ImGuiHelpers.ScaledDummy(5);
 
         var plugin = Service.Plugin;
-        var icon = plugin.Icon.GetWrapOrEmpty();
+        var icon = plugin.Icon;
+        var iconDim = icon.Dimensions ?? new(128);
 
         using (var table = ImRaii.Table("settingsAboutTable", 2))
         {
             if (table)
             {
-                ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, icon.Width);
+                ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, iconDim.X);
 
                 ImGui.TableNextColumn();
-                ImGui.Image(icon.ImGuiHandle, new(icon.Width, icon.Height));
+                ImGui.Image(icon.ImGuiHandle, iconDim);
 
                 ImGui.TableNextColumn();
-                ImGuiUtils.AlignMiddle(new(float.PositiveInfinity, HeaderFont.GetFontSize() + SubheaderFont.GetFontSize() + ImGui.GetFontSize() * 3 + ImGui.GetStyle().ItemSpacing.Y * 4), new(0, icon.Height));
+                ImGuiUtils.AlignMiddle(new(float.PositiveInfinity, HeaderFont.GetFontSize() + SubheaderFont.GetFontSize() + ImGui.GetFontSize() * 3 + ImGui.GetStyle().ItemSpacing.Y * 4), new(0, iconDim.Y));
 
                 using (HeaderFont.Push())
                 {

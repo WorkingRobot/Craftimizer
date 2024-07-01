@@ -310,7 +310,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
                 
                 isPressed = ImGuiExtras.ButtonBehavior(bb, id, out isHovered, out isHeld, ImGuiButtonFlags.None);
             }
-            ImGui.ImageButton(action.GetIcon(RecipeData!.ClassJob).GetHandle(), new(imageSize), default, Vector2.One, 0, default, failedAction ? new(1, 1, 1, ImGui.GetStyle().DisabledAlpha) : Vector4.One);
+            ImGui.ImageButton(action.GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(imageSize), default, Vector2.One, 0, default, failedAction ? new(1, 1, 1, ImGui.GetStyle().DisabledAlpha) : Vector4.One);
             if (isPressed || IsSuggestedActionExecutionQueued)
             {
                 if (canExecute && i == 0)
@@ -359,8 +359,8 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
                 using (var group = ImRaii.Group())
                 {
-                    var icon = effect.GetIcon(effects.GetStrength(effect)).GetWrapOrEmpty();
-                    var size = new Vector2(iconHeight * icon.Width / icon.Height, iconHeight);
+                    var icon = effect.GetIcon(effects.GetStrength(effect));
+                    var size = new Vector2(iconHeight * (icon.AspectRatio ?? 1), iconHeight);
 
                     ImGui.Image(icon.ImGuiHandle, size);
                     if (!effect.IsIndefinite())

@@ -92,16 +92,16 @@ public sealed class MacroEditor : Window, IDisposable
     private Solver.Solver? SolverObject { get; set; }
     private bool SolverRunning => SolverTokenSource != null;
 
-    private ISharedImmediateTexture ExpertBadge { get; }
-    private ISharedImmediateTexture CollectibleBadge { get; }
-    private ISharedImmediateTexture SplendorousBadge { get; }
-    private ISharedImmediateTexture SpecialistBadge { get; }
-    private ISharedImmediateTexture NoManipulationBadge { get; }
-    private ISharedImmediateTexture ManipulationBadge { get; }
-    private ISharedImmediateTexture WellFedBadge { get; }
-    private ISharedImmediateTexture MedicatedBadge { get; }
-    private ISharedImmediateTexture InControlBadge { get; }
-    private ISharedImmediateTexture EatFromTheHandBadge { get; }
+    private ILoadedTextureIcon ExpertBadge { get; }
+    private ILoadedTextureIcon CollectibleBadge { get; }
+    private ILoadedTextureIcon SplendorousBadge { get; }
+    private ILoadedTextureIcon SpecialistBadge { get; }
+    private ILoadedTextureIcon NoManipulationBadge { get; }
+    private ITextureIcon ManipulationBadge { get; }
+    private ILoadedTextureIcon WellFedBadge { get; }
+    private ILoadedTextureIcon MedicatedBadge { get; }
+    private ILoadedTextureIcon InControlBadge { get; }
+    private ILoadedTextureIcon EatFromTheHandBadge { get; }
     private IFontHandle AxisFont { get; }
 
     private string popupSaveAsMacroName = string.Empty;
@@ -224,7 +224,7 @@ public sealed class MacroEditor : Window, IDisposable
         uv0 /= new Vector2(56);
         uv1 /= new Vector2(56);
 
-        ImGui.Image(IconManager.GetIcon(RecipeData.ClassJob.GetIconId()).GetHandle(), new Vector2(imageSize), uv0, uv1);
+        ImGui.Image(Service.IconManager.GetIconCached(RecipeData.ClassJob.GetIconId()).ImGuiHandle, new Vector2(imageSize), uv0, uv1);
         ImGui.SameLine(0, 5);
         AxisFont.Text(textClassName);
 
@@ -311,7 +311,7 @@ public sealed class MacroEditor : Window, IDisposable
                     {
                         var v = CharacterStats.HasSplendorousBuff;
                         var tint = v ? Vector4.One : disabledTint;
-                        if (ImGui.ImageButton(SplendorousBadge.GetHandle(), new Vector2(imageButtonSize), default, Vector2.One, imageButtonPadding, default, tint))
+                        if (ImGui.ImageButton(SplendorousBadge.ImGuiHandle, new Vector2(imageButtonSize), default, Vector2.One, imageButtonPadding, default, tint))
                             CharacterStats = CharacterStats with { HasSplendorousBuff = !v };
                     }
                     if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
@@ -329,7 +329,7 @@ public sealed class MacroEditor : Window, IDisposable
                     using (var d = ImRaii.Disabled(specialistLevel > CharacterStats.Level))
                     {
                         var tint = new Vector4(0.99f, 0.97f, 0.62f, 1f) * (v ? Vector4.One : disabledTint);
-                        if (ImGui.ImageButton(SpecialistBadge.GetHandle(), new Vector2(imageButtonSize), default, Vector2.One, imageButtonPadding, default, tint))
+                        if (ImGui.ImageButton(SpecialistBadge.ImGuiHandle, new Vector2(imageButtonSize), default, Vector2.One, imageButtonPadding, default, tint))
                         {
                             v = !v;
                             newIsSpecialist = v;
@@ -345,7 +345,7 @@ public sealed class MacroEditor : Window, IDisposable
                     {
                         var v = CharacterStats.CanUseManipulation && manipLevel <= CharacterStats.Level;
                         var tint = (v || manipLevel > CharacterStats.Level) ? disabledTint : Vector4.One;
-                        if (ImGui.ImageButton(v ? ManipulationBadge.GetHandle() : NoManipulationBadge.GetHandle(), new Vector2(imageButtonSize), default, Vector2.One, imageButtonPadding, default, tint))
+                        if (ImGui.ImageButton((v ? ManipulationBadge : NoManipulationBadge).ImGuiHandle, new Vector2(imageButtonSize), default, Vector2.One, imageButtonPadding, default, tint))
                             CharacterStats = CharacterStats with { CanUseManipulation = !v };
                     }
                     if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
@@ -354,10 +354,10 @@ public sealed class MacroEditor : Window, IDisposable
 
                 ImGui.TableNextColumn();
 
+                var buffBadgeSize = new Vector2(imageSize * (WellFedBadge.AspectRatio ?? 1), imageSize);
+
                 (uint ItemId, bool HQ)? newFoodBuff = null;
-                var buffBadge = WellFedBadge.GetWrapOrEmpty();
-                var buffImageSize = new Vector2(imageSize * buffBadge.Width / buffBadge.Height, imageSize);
-                ImGui.Image(buffBadge.ImGuiHandle, buffImageSize);
+                ImGui.Image(WellFedBadge.ImGuiHandle, buffBadgeSize);
                 if (ImGui.IsItemHovered())
                     ImGuiUtils.Tooltip("Food");
                 ImGui.SameLine(0, 5);
@@ -392,9 +392,7 @@ public sealed class MacroEditor : Window, IDisposable
                 }
 
                 (uint ItemId, bool HQ)? newMedicineBuff = null;
-                buffBadge = MedicatedBadge.GetWrapOrEmpty();
-                buffImageSize = new Vector2(imageSize * buffBadge.Width / buffBadge.Height, imageSize);
-                ImGui.Image(buffBadge.ImGuiHandle, buffImageSize);
+                ImGui.Image(MedicatedBadge.ImGuiHandle, buffBadgeSize);
                 if (ImGui.IsItemHovered())
                     ImGuiUtils.Tooltip("Medicine");
                 ImGui.SameLine(0, 5);
@@ -431,9 +429,7 @@ public sealed class MacroEditor : Window, IDisposable
                 ImGui.TableNextColumn();
 
                 int? newFCCraftsmanshipBuff = null;
-                buffBadge = EatFromTheHandBadge.GetWrapOrEmpty();
-                buffImageSize = new Vector2(imageSize * buffBadge.Width / buffBadge.Height, imageSize);
-                ImGui.Image(buffBadge.ImGuiHandle, buffImageSize);
+                ImGui.Image(EatFromTheHandBadge.ImGuiHandle, buffBadgeSize);
                 var fcBuffName = "Eat from the Hand";
                 var fcStatName = "Craftsmanship";
                 if (ImGui.IsItemHovered())
@@ -460,9 +456,7 @@ public sealed class MacroEditor : Window, IDisposable
                 }
 
                 int? newFCControlBuff = null;
-                buffBadge = InControlBadge.GetWrapOrEmpty();
-                buffImageSize = new Vector2(imageSize * buffBadge.Width / buffBadge.Height, imageSize);
-                ImGui.Image(buffBadge.ImGuiHandle, buffImageSize);
+                ImGui.Image(InControlBadge.ImGuiHandle, buffBadgeSize);
                 fcBuffName = "In Control";
                 fcStatName = "Control";
                 if (ImGui.IsItemHovered())
@@ -712,8 +706,7 @@ public sealed class MacroEditor : Window, IDisposable
         var isCollectable = RecipeData.Recipe.ItemResult.Value!.IsCollectable;
         var imageSize = ImGui.GetFrameHeight();
         var textSize = ImGui.GetFontSize();
-        var badge = ExpertBadge.GetWrapOrEmpty();
-        var badgeSize = new Vector2(textSize * badge.Width / badge.Height, textSize);
+        var badgeSize = new Vector2(textSize * (ExpertBadge.AspectRatio ?? 1), textSize);
         var badgeOffset = (imageSize - badgeSize.Y) / 2;
 
         var rightSideWidth =
@@ -723,7 +716,7 @@ public sealed class MacroEditor : Window, IDisposable
             (isExpert ? badgeSize.X + 3 : 0);
         ImGui.AlignTextToFramePadding();
 
-        ImGui.Image(IconManager.GetIcon(RecipeData.Recipe.ItemResult.Value!.Icon).GetHandle(), new Vector2(imageSize));
+        ImGui.Image(Service.IconManager.GetIconCached(RecipeData.Recipe.ItemResult.Value!.Icon).ImGuiHandle, new Vector2(imageSize));
 
         ImGui.SameLine(0, 5);
 
@@ -761,7 +754,7 @@ public sealed class MacroEditor : Window, IDisposable
                     uv1 /= new Vector2(56);
 
                     ImGui.SetCursorPosY(ImGui.GetCursorPosY() + ImGui.GetStyle().FramePadding.Y / 2);
-                    ImGui.Image(IconManager.GetIcon(classJob.GetIconId()).GetHandle(), new Vector2(imageSize), uv0, uv1);
+                    ImGui.Image(Service.IconManager.GetIconCached(classJob.GetIconId()).ImGuiHandle, new Vector2(imageSize), uv0, uv1);
                     ImGui.SameLine(0, 5);
                     ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (fontHandle.FontSize - textLevelSize.Y) / 2);
                     ImGui.TextUnformatted(textLevel);
@@ -787,7 +780,7 @@ public sealed class MacroEditor : Window, IDisposable
         {
             ImGui.SameLine(0, 3);
             ImGui.SetCursorPosY(ImGui.GetCursorPosY() + badgeOffset);
-            ImGui.Image(CollectibleBadge.GetHandle(), badgeSize);
+            ImGui.Image(CollectibleBadge.ImGuiHandle, badgeSize);
             if (ImGui.IsItemHovered())
                 ImGuiUtils.Tooltip($"Collectible");
         }
@@ -796,7 +789,7 @@ public sealed class MacroEditor : Window, IDisposable
         {
             ImGui.SameLine(0, 3);
             ImGui.SetCursorPosY(ImGui.GetCursorPosY() + badgeOffset);
-            ImGui.Image(ExpertBadge.GetHandle(), badgeSize);
+            ImGui.Image(ExpertBadge.ImGuiHandle, badgeSize);
             if (ImGui.IsItemHovered())
                 ImGuiUtils.Tooltip($"Expert Recipe");
         }
@@ -883,11 +876,11 @@ public sealed class MacroEditor : Window, IDisposable
         var hqCount = HQIngredientCounts[idx];
 
         var canHq = ingredient.Item.CanBeHq;
-        var icon = IconManager.GetIcon(ingredient.Item.Icon, canHq);
+        var icon = Service.IconManager.GetIconCached(ingredient.Item.Icon, canHq);
         var imageSize = ImGui.GetFrameHeight();
 
         using (var d = ImRaii.Disabled(!canHq))
-            ImGui.Image(icon.GetHandle(), new Vector2(imageSize));
+            ImGui.Image(icon.ImGuiHandle, new Vector2(imageSize));
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
         {
             if (canHq)
@@ -955,7 +948,7 @@ public sealed class MacroEditor : Window, IDisposable
                 {
                     var actionBase = actions[i].Base();
                     var canUse = actionBase.CanUse(sim);
-                    if (ImGui.ImageButton(actions[i].GetIcon(RecipeData!.ClassJob).GetHandle(), new(imageSize), default, Vector2.One, 0, default, !canUse ? new(1, 1, 1, ImGui.GetStyle().DisabledAlpha) : Vector4.One) && !SolverRunning)
+                    if (ImGui.ImageButton(actions[i].GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(imageSize), default, Vector2.One, 0, default, !canUse ? new(1, 1, 1, ImGui.GetStyle().DisabledAlpha) : Vector4.One) && !SolverRunning)
                         AddStep(actions[i]);
                     if (!canUse &&
                         (CharacterStats.Level < actionBase.Level ||
@@ -979,7 +972,7 @@ public sealed class MacroEditor : Window, IDisposable
                         if (_source)
                         {
                             ImGuiExtras.SetDragDropPayload("macroActionInsert", actions[i]);
-                            ImGui.ImageButton(actions[i].GetIcon(RecipeData!.ClassJob).GetHandle(), new(imageSize));
+                            ImGui.ImageButton(actions[i].GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(imageSize));
                         }
                     }
                 }
@@ -1093,8 +1086,8 @@ public sealed class MacroEditor : Window, IDisposable
 
                 using (var group = ImRaii.Group())
                 {
-                    var icon = effect.GetIcon(effects.GetStrength(effect)).GetWrapOrEmpty();
-                    var size = new Vector2(iconHeight * icon.Width / icon.Height, iconHeight);
+                    var icon = effect.GetIcon(effects.GetStrength(effect));
+                    var size = new Vector2(iconHeight * (icon.AspectRatio ?? 1), iconHeight);
 
                     ImGui.Image(icon.ImGuiHandle, size);
                     if (!effect.IsIndefinite())
@@ -1143,7 +1136,7 @@ public sealed class MacroEditor : Window, IDisposable
                 var actionBase = action.Base();
                 var failedAction = response != ActionResponse.UsedAction;
                 using var id = ImRaii.PushId(i);
-                if (ImGui.ImageButton(action.GetIcon(RecipeData!.ClassJob).GetHandle(), new(imageSize), default, Vector2.One, 0, default, failedAction ? new(1, 1, 1, ImGui.GetStyle().DisabledAlpha) : Vector4.One))
+                if (ImGui.ImageButton(action.GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(imageSize), default, Vector2.One, 0, default, failedAction ? new(1, 1, 1, ImGui.GetStyle().DisabledAlpha) : Vector4.One))
                     RemoveStep(i);
                 if (response is ActionResponse.ActionNotUnlocked ||
                     (
@@ -1172,7 +1165,7 @@ public sealed class MacroEditor : Window, IDisposable
                         if (_source)
                         {
                             ImGuiExtras.SetDragDropPayload("macroAction", i);
-                            ImGui.ImageButton(action.GetIcon(RecipeData!.ClassJob).GetHandle(), new(imageSize));
+                            ImGui.ImageButton(action.GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(imageSize));
                         }
                     }
                     using (var _target = ImRaii.DragDropTarget())
@@ -1598,6 +1591,15 @@ public sealed class MacroEditor : Window, IDisposable
     {
         Service.WindowSystem.RemoveWindow(this);
 
+        ExpertBadge.Dispose();
+        CollectibleBadge.Dispose();
+        SplendorousBadge.Dispose();
+        SpecialistBadge.Dispose();
+        NoManipulationBadge.Dispose();
+        WellFedBadge.Dispose();
+        MedicatedBadge.Dispose();
+        InControlBadge.Dispose();
+        EatFromTheHandBadge.Dispose();
         AxisFont.Dispose();
     }
 }

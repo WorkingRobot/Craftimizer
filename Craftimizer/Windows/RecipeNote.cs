@@ -107,11 +107,11 @@ public sealed unsafe class RecipeNote : Window, IDisposable
     private Solver.Solver? BestMacroSolver { get; set; }
     public bool HasSavedMacro { get; private set; }
 
-    private ISharedImmediateTexture ExpertBadge { get; }
-    private ISharedImmediateTexture CollectibleBadge { get; }
-    private ISharedImmediateTexture SplendorousBadge { get; }
-    private ISharedImmediateTexture SpecialistBadge { get; }
-    private ISharedImmediateTexture NoManipulationBadge { get; }
+    private ILoadedTextureIcon ExpertBadge { get; }
+    private ILoadedTextureIcon CollectibleBadge { get; }
+    private ILoadedTextureIcon SplendorousBadge { get; }
+    private ILoadedTextureIcon SpecialistBadge { get; }
+    private ILoadedTextureIcon NoManipulationBadge { get; }
     private IFontHandle AxisFont { get; }
 
     public RecipeNote() : base(WindowNamePinned)
@@ -481,7 +481,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             uv0 /= new Vector2(56);
             uv1 /= new Vector2(56);
 
-            ImGui.Image(IconManager.GetIcon(RecipeData.ClassJob.GetIconId()).GetHandle(), new Vector2(imageSize), uv0, uv1);
+            ImGui.Image(Service.IconManager.GetIconCached(RecipeData.ClassJob.GetIconId()).ImGuiHandle, new Vector2(imageSize), uv0, uv1);
             ImGui.SameLine(0, 5);
 
             if (level != 0)
@@ -495,7 +495,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             if (hasSplendorous)
             {
                 ImGui.SameLine(0, 3);
-                ImGui.Image(SplendorousBadge.GetHandle(), new Vector2(imageSize));
+                ImGui.Image(SplendorousBadge.ImGuiHandle, new Vector2(imageSize));
                 if (ImGui.IsItemHovered())
                     ImGuiUtils.Tooltip($"Splendorous Tool");
             }
@@ -503,7 +503,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             if (hasSpecialist)
             {
                 ImGui.SameLine(0, 3);
-                ImGui.Image(SpecialistBadge.GetHandle(), new Vector2(imageSize), Vector2.Zero, Vector2.One, new(0.99f, 0.97f, 0.62f, 1f));
+                ImGui.Image(SpecialistBadge.ImGuiHandle, new Vector2(imageSize), Vector2.Zero, Vector2.One, new(0.99f, 0.97f, 0.62f, 1f));
                 if (ImGui.IsItemHovered())
                     ImGuiUtils.Tooltip($"Specialist");
             }
@@ -511,7 +511,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             if (shouldHaveManip)
             {
                 ImGui.SameLine(0, 3);
-                ImGui.Image(NoManipulationBadge.GetHandle(), new Vector2(imageSize));
+                ImGui.Image(NoManipulationBadge.ImGuiHandle, new Vector2(imageSize));
                 if (ImGui.IsItemHovered())
                     ImGuiUtils.Tooltip($"No Manipulation (Missing Job Quest)");
             }
@@ -585,7 +585,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                     ImGuiUtils.TextCentered($"You are missing the required equipment.");
                     ImGuiUtils.AlignCentered(imageSize + 5 + ImGui.CalcTextSize(itemName).X);
                     ImGui.AlignTextToFramePadding();
-                    ImGui.Image(IconManager.GetIcon(item.Icon).GetHandle(), new(imageSize));
+                    ImGui.Image(Service.IconManager.GetIconCached(item.Icon).ImGuiHandle, new(imageSize));
                     ImGui.SameLine(0, 5);
                     ImGui.TextUnformatted(itemName);
                 }
@@ -594,8 +594,8 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 {
                     var status = RecipeData.Recipe.StatusRequired.Value!;
                     var statusName = status.Name.ToDalamudString().ToString();
-                    var statusIcon = IconManager.GetIcon(status.Icon).GetWrapOrEmpty();
-                    var imageSize = new Vector2(ImGui.GetFrameHeight() * statusIcon.Width / statusIcon.Height, ImGui.GetFrameHeight());
+                    var statusIcon = Service.IconManager.GetIconCached(status.Icon);
+                    var imageSize = new Vector2(ImGui.GetFrameHeight() * (statusIcon.AspectRatio ?? 1), ImGui.GetFrameHeight());
 
                     ImGuiUtils.TextCentered($"You are missing the required status effect.");
                     ImGuiUtils.AlignCentered(imageSize.X + 5 + ImGui.CalcTextSize(statusName).X);
@@ -665,8 +665,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             var isCollectable = RecipeData.Recipe.ItemResult.Value!.IsCollectable;
             var imageSize = ImGui.GetFrameHeight();
             var textSize = ImGui.GetFontSize();
-            var badge = ExpertBadge.GetWrapOrEmpty();
-            var badgeSize = new Vector2(textSize * badge.Width / badge.Height, textSize);
+            var badgeSize = new Vector2(textSize * (ExpertBadge.AspectRatio ?? 1), textSize);
             var badgeOffset = (imageSize - badgeSize.Y) / 2;
 
             ImGuiUtils.AlignCentered(
@@ -678,7 +677,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 );
             ImGui.AlignTextToFramePadding();
 
-            ImGui.Image(IconManager.GetIcon(RecipeData.Recipe.ItemResult.Value!.Icon).GetHandle(), new Vector2(imageSize));
+            ImGui.Image(Service.IconManager.GetIconCached(RecipeData.Recipe.ItemResult.Value!.Icon).ImGuiHandle, new Vector2(imageSize));
 
             ImGui.SameLine(0, 5);
             ImGui.TextUnformatted(textLevel);
@@ -696,7 +695,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             {
                 ImGui.SameLine(0, 3);
                 ImGui.SetCursorPosY(ImGui.GetCursorPosY() + badgeOffset);
-                ImGui.Image(CollectibleBadge.GetHandle(), badgeSize);
+                ImGui.Image(CollectibleBadge.ImGuiHandle, badgeSize);
                 if (ImGui.IsItemHovered())
                     ImGuiUtils.Tooltip($"Collectible");
             }
@@ -705,7 +704,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             {
                 ImGui.SameLine(0, 3);
                 ImGui.SetCursorPosY(ImGui.GetCursorPosY() + badgeOffset);
-                ImGui.Image(ExpertBadge.GetHandle(), badgeSize);
+                ImGui.Image(ExpertBadge.ImGuiHandle, badgeSize);
                 if (ImGui.IsItemHovered())
                     ImGuiUtils.Tooltip($"Expert Recipe");
             }
@@ -1006,7 +1005,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                             var shouldShowMore = i + 1 == itemsPerRow * 2 && i + 1 < itemCount;
                             if (!shouldShowMore)
                             {
-                                ImGui.Image(actions[i].GetIcon(RecipeData!.ClassJob).GetHandle(), new(miniRowHeight));
+                                ImGui.Image(actions[i].GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(miniRowHeight));
                                 if (ImGui.IsItemHovered())
                                     ImGuiUtils.Tooltip(actions[i].GetName(RecipeData!.ClassJob));
                             }
@@ -1014,7 +1013,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                             {
                                 var amtMore = itemCount - itemsPerRow * 2;
                                 var pos = ImGui.GetCursorPos();
-                                ImGui.Image(actions[i].GetIcon(RecipeData!.ClassJob).GetHandle(), new(miniRowHeight), default, Vector2.One, new(1, 1, 1, .5f));
+                                ImGui.Image(actions[i].GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(miniRowHeight), default, Vector2.One, new(1, 1, 1, .5f));
                                 if (ImGui.IsItemHovered())
                                     ImGuiUtils.Tooltip($"{actions[i].GetName(RecipeData!.ClassJob)}\nand {amtMore} more");
                                 ImGui.SetCursorPos(pos);
@@ -1226,5 +1225,10 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         CommunityMacroTask?.Dispose();
         Service.WindowSystem.RemoveWindow(this);
         AxisFont?.Dispose();
+        ExpertBadge.Dispose();
+        CollectibleBadge.Dispose();
+        SplendorousBadge.Dispose();
+        SpecialistBadge.Dispose();
+        NoManipulationBadge.Dispose();
     }
 }

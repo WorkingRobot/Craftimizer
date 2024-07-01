@@ -87,15 +87,15 @@ internal static class ActionUtils
         return "Unknown";
     }
 
-    public static ISharedImmediateTexture GetIcon(this ActionType me, ClassJob classJob)
+    public static ITextureIcon GetIcon(this ActionType me, ClassJob classJob)
     {
         var (craftAction, action) = GetActionRow(me, classJob);
         if (craftAction != null)
-            return IconManager.GetIcon(craftAction.Icon);
+            return Service.IconManager.GetIconCached(craftAction.Icon);
         if (action != null)
-            return IconManager.GetIcon(action.Icon);
+            return Service.IconManager.GetIconCached(action.Icon);
         // Old "Steady Hand" action icon
-        return IconManager.GetIcon(1953);
+        return Service.IconManager.GetIconCached(1953);
     }
 
     public static ActionType? GetActionTypeFromId(uint actionId, ClassJob classJob, bool isCraftAction)
@@ -331,8 +331,8 @@ internal static class EffectUtils
         return (ushort)iconId;
     }
 
-    public static ISharedImmediateTexture GetIcon(this EffectType me, int strength) =>
-        IconManager.GetIcon(me.GetIconId(strength));
+    public static ITextureIcon GetIcon(this EffectType me, int strength) =>
+        Service.IconManager.GetIconCached(me.GetIconId(strength));
 
     public static string GetTooltip(this EffectType me, int strength, int duration)
     {

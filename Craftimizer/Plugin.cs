@@ -1,12 +1,9 @@
-using Craftimizer.Plugin.Utils;
 using Craftimizer.Plugin.Windows;
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Craftimizer.Utils;
 using Craftimizer.Windows;
 using Dalamud.Interface.ImGuiNotification;
-using Dalamud.Interface.Textures;
-using Dalamud.Interface.Textures.TextureWraps;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
 using System;
@@ -20,7 +17,7 @@ public sealed class Plugin : IDalamudPlugin
     public string Version { get; }
     public string Author { get; }
     public string BuildConfiguration { get; }
-    public ISharedImmediateTexture Icon { get; }
+    public ILoadedTextureIcon Icon { get; }
 
     public WindowSystem WindowSystem { get; }
     public Settings SettingsWindow { get; }
@@ -31,6 +28,7 @@ public sealed class Plugin : IDalamudPlugin
     public MacroClipboard? ClipboardWindow { get; private set; }
 
     public Configuration Configuration { get; }
+    public IconManager IconManager { get; }
     public Hooks Hooks { get; }
     public Chat Chat { get; }
     public CommunityMacros CommunityMacros { get; }
@@ -42,6 +40,7 @@ public sealed class Plugin : IDalamudPlugin
 
         WindowSystem = new("Craftimizer");
         Configuration = Configuration.Load();
+        IconManager = new();
         Hooks = new();
         Chat = new();
         CommunityMacros = new();
@@ -51,8 +50,7 @@ public sealed class Plugin : IDalamudPlugin
         Version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion.Split('+')[0];
         Author = assembly.GetCustomAttribute<AssemblyCompanyAttribute>()!.Company;
         BuildConfiguration = assembly.GetCustomAttribute<AssemblyConfigurationAttribute>()!.Configuration;
-        var now = DateTime.Now;
-        if (now.Day == 1 && now.Month == 4)
+        if (DateTime.Now is { Day: 1, Month: 4 })
             Icon = IconManager.GetAssemblyTexture("horse_icon.png");
         else
             Icon = IconManager.GetAssemblyTexture("icon.png");
@@ -167,6 +165,8 @@ public sealed class Plugin : IDalamudPlugin
         ListWindow.Dispose();
         EditorWindow?.Dispose();
         ClipboardWindow?.Dispose();
+        IconManager.Dispose();
         Hooks.Dispose();
+        Icon.Dispose();
     }
 }
