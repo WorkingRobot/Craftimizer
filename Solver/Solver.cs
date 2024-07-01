@@ -188,18 +188,6 @@ public sealed class Solver : IDisposable
 
             var bestActions = tasks.Select(t => t.Result).OrderByDescending(r => r.MaxScore).Take(Config.FurcatedActionCount).ToArray();
 
-            var bestAction = bestActions[0];
-            if (bestAction.MaxScore >= Config.ScoreStorageThreshold)
-            {
-                var (_, furcatedActionIdx, solution) = bestAction;
-                (IEnumerable<ActionType> activeActions, _) = activeStates[furcatedActionIdx];
-
-                activeActions = activeActions.Concat(solution.Actions);
-                foreach (var action in activeActions.Skip(definiteActionCount))
-                    InvokeNewAction(action);
-                return solution with { ActionEnumerable = activeActions };
-            }
-
             var newStates = new List<SolverSolution>(Config.FurcatedActionCount);
             for (var i = 0; i < bestActions.Length; ++i)
             {
@@ -312,14 +300,6 @@ public sealed class Solver : IDisposable
 
             var (maxScore, solution) = tasks.Select(t => t.Result).MaxBy(r => r.MaxScore);
 
-            if (maxScore >= Config.ScoreStorageThreshold)
-            {
-                actions.AddRange(solution.Actions);
-                foreach (var action in solution.Actions)
-                    InvokeNewAction(action);
-                return solution with { Actions = actions };
-            }
-
             var chosenAction = solution.Actions[0];
             InvokeNewAction(chosenAction);
 
@@ -354,14 +334,6 @@ public sealed class Solver : IDisposable
             OnLog?.Invoke($"{s.Elapsed.TotalMilliseconds:0.00}ms {progress / s.Elapsed.TotalSeconds / 1000:0.00} kI/s");
 
             var solution = solver.Solution();
-
-            if (solver.MaxScore >= Config.ScoreStorageThreshold)
-            {
-                actions.AddRange(solution.Actions);
-                foreach (var action in solution.Actions)
-                    InvokeNewAction(action);
-                return Task.FromResult(solution with { Actions = actions });
-            }
 
             var chosenAction = solution.Actions[0];
             InvokeNewAction(chosenAction);

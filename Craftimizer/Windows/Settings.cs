@@ -539,18 +539,6 @@ public sealed class Settings : Window, IDisposable
         using (var panel = ImRaii2.GroupPanel("Advanced", -1, out _))
         {
             DrawOption(
-                "Score Storage Threshold",
-                "If a craft achieves this certain arbitrary score, the solver will " +
-                "throw away all other possible combinations in favor of that one. " +
-                "Only change this value if you absolutely know what you're doing.",
-                config.ScoreStorageThreshold,
-                0,
-                1,
-                v => config = config with { ScoreStorageThreshold = v },
-                ref isDirty
-            );
-
-            DrawOption(
                 "Max Rollout Step Count",
                 "The maximum number of crafting steps every iteration can consider. " +
                 "Decreasing this value can have unintended side effects. Only change " +
@@ -575,7 +563,7 @@ public sealed class Settings : Window, IDisposable
 
         using (var panel = ImRaii2.GroupPanel("Score Weights (Advanced)", -1, out _))
         {
-            ImGui.TextWrapped("All values should add up to 1. Otherwise, the Score Storage Threshold should be changed.");
+            ImGui.TextWrapped("All values should add up to 1.");
             ImGuiHelpers.ScaledDummy(10);
 
             DrawOption(

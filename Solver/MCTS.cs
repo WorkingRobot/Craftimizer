@@ -1,7 +1,6 @@
 using Craftimizer.Simulator.Actions;
 using Craftimizer.Simulator;
 using System.Diagnostics.Contracts;
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using Node = Craftimizer.Solver.ArenaNode<Craftimizer.Solver.SimulationNode>;
 using System.Runtime.Intrinsics;
@@ -206,16 +205,7 @@ public sealed class MCTS
             currentActions = simulator.AvailableActionsHeuristic(true);
         }
 
-        // store the result if a max score was reached
         var score = SimulationNode.CalculateScoreForState(currentState, currentCompletionState, config) ?? 0;
-        if (currentCompletionState == CompletionState.ProgressComplete)
-        {
-            if (score >= config.ScoreStorageThreshold && score >= MaxScore)
-            {
-                var terminalNode = ExecuteActions(simulator, expandedNode, actions[..actionCount], true);
-                return (terminalNode, score);
-            }
-        }
         return (expandedNode, score);
     }
 
