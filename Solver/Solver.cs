@@ -60,7 +60,7 @@ public sealed class Solver : IDisposable
             SolverAlgorithm.OneshotForked => (SearchOneshotForked, false),
             SolverAlgorithm.Stepwise => (SearchStepwise, true),
             SolverAlgorithm.StepwiseForked => (SearchStepwiseForked, true),
-            SolverAlgorithm.StepwiseFurcated => (SearchStepwiseFurcated, true),
+            SolverAlgorithm.StepwiseGenetic => (SearchStepwiseGenetic, true),
             _ => throw new ArgumentOutOfRangeException(nameof(config), config, $"Invalid algorithm: {config.Algorithm}")
         });
 
@@ -136,7 +136,7 @@ public sealed class Solver : IDisposable
         Interlocked.Increment(ref progressStage);
     }
 
-    private async Task<SolverSolution> SearchStepwiseFurcated()
+    private async Task<SolverSolution> SearchStepwiseGenetic()
     {
         var iterCount = Config.Iterations / Config.ForkCount;
         maxProgress = iterCount * Config.ForkCount;

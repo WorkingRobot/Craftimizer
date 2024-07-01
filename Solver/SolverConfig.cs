@@ -10,7 +10,7 @@ public enum SolverAlgorithm
     OneshotForked,
     Stepwise,
     StepwiseForked,
-    StepwiseFurcated,
+    StepwiseGenetic,
 }
 
 [StructLayout(LayoutKind.Auto)]
@@ -58,7 +58,7 @@ public readonly record struct SolverConfig
         ScoreSteps = .05f;
 
         ActionPool = DeterministicActionPool;
-        Algorithm = SolverAlgorithm.StepwiseFurcated;
+        Algorithm = SolverAlgorithm.StepwiseGenetic;
     }
 
     public static ActionType[] OptimizeActionPool(IEnumerable<ActionType> actions) =>

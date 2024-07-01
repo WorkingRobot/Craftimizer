@@ -124,7 +124,7 @@ public sealed class Settings : Window, IDisposable
             SolverAlgorithm.OneshotForked => "Oneshot Forked",
             SolverAlgorithm.Stepwise => "Stepwise",
             SolverAlgorithm.StepwiseForked => "Stepwise Forked",
-            SolverAlgorithm.StepwiseFurcated => "Stepwise Furcated",
+            SolverAlgorithm.StepwiseGenetic => "Stepwise Genetic",
             _ => "Unknown",
         };
 
@@ -136,7 +136,7 @@ public sealed class Settings : Window, IDisposable
             SolverAlgorithm.Stepwise =>         "Run through all iterations and pick the next best step, " +
                                                 "and repeat using previous steps as a starting point",
             SolverAlgorithm.StepwiseForked =>   "Stepwise, but using multiple solvers simultaneously",
-            SolverAlgorithm.StepwiseFurcated => "Stepwise Forked, but the top N next best steps are " +
+            SolverAlgorithm.StepwiseGenetic => "Stepwise Forked, but the top N next best steps are " +
                                                 "selected from the solvers, and each one is equally " +
                                                 "used as a starting point",
             _ => "Unknown"
@@ -412,7 +412,7 @@ public sealed class Settings : Window, IDisposable
                 "Algorithm",
                 "The algorithm to use when solving for a macro. Different " +
                 "algorithms provide different pros and cons for using them. " +
-                "By far, the Stepwise Furcated algorithm provides the best " +
+                "By far, the Stepwise Genetic algorithm provides the best " +
                 "results, especially for very difficult crafts.",
                 GetAlgorithmName,
                 GetAlgorithmTooltip,
@@ -473,7 +473,7 @@ public sealed class Settings : Window, IDisposable
                 ref isDirty
             );
 
-            using (var d = ImRaii.Disabled(config.Algorithm is not (SolverAlgorithm.OneshotForked or SolverAlgorithm.StepwiseForked or SolverAlgorithm.StepwiseFurcated)))
+            using (var d = ImRaii.Disabled(config.Algorithm is not (SolverAlgorithm.OneshotForked or SolverAlgorithm.StepwiseForked or SolverAlgorithm.StepwiseGenetic)))
                 DrawOption(
                     "Max Core Count",
                     "The number of cores to use when solving. You should use as many " +
@@ -481,7 +481,7 @@ public sealed class Settings : Window, IDisposable
                     $"experience. A good estimate would be 1 or 2 cores less than your " +
                     $"system (FYI, you have {Environment.ProcessorCount} cores), but make sure to accomodate " +
                     $"for any other tasks you have in the background, if you have any.\n" +
-                    "(Only used in the Forked and Furcated algorithms)",
+                    "(Only used in the Forked and Genetic algorithms)",
                     config.MaxThreadCount,
                     1,
                     Environment.ProcessorCount,
@@ -489,7 +489,7 @@ public sealed class Settings : Window, IDisposable
                     ref isDirty
                 );
 
-            using (var d = ImRaii.Disabled(config.Algorithm is not (SolverAlgorithm.OneshotForked or SolverAlgorithm.StepwiseForked or SolverAlgorithm.StepwiseFurcated)))
+            using (var d = ImRaii.Disabled(config.Algorithm is not (SolverAlgorithm.OneshotForked or SolverAlgorithm.StepwiseForked or SolverAlgorithm.StepwiseGenetic)))
                 DrawOption(
                     "Fork Count",
                     "Split the number of iterations across different solvers. In general, " +
@@ -498,7 +498,7 @@ public sealed class Settings : Window, IDisposable
                     "The higher the number, the more chance you have of finding a " +
                     "better local maximum; this concept similar but not equivalent " +
                     "to the exploration constant.\n" +
-                    "(Only used in the Forked and Furcated algorithms)",
+                    "(Only used in the Forked and Genetic algorithms)",
                     config.ForkCount,
                     1,
                     500,
@@ -506,13 +506,13 @@ public sealed class Settings : Window, IDisposable
                     ref isDirty
                 );
 
-            using (var d = ImRaii.Disabled(config.Algorithm is not SolverAlgorithm.StepwiseFurcated))
+            using (var d = ImRaii.Disabled(config.Algorithm is not SolverAlgorithm.StepwiseGenetic))
                 DrawOption(
-                    "Furcated Action Count",
+                    "Elitist Action Count",
                     "On every craft step, pick this many top solutions and use them as " +
                     "the input for the next craft step. For best results, use Fork Count / 2 " +
                     "and add about 1 or 2 more if needed.\n" +
-                    "(Only used in the Stepwise Furcated algorithm)",
+                    "(Only used in the Stepwise Genetic algorithm)",
                     config.FurcatedActionCount,
                     1,
                     500,
