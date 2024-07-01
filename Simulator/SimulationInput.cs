@@ -20,14 +20,14 @@ public sealed class SimulationInput
         // https://github.com/NotRanged/NotRanged.github.io/blob/0f4aee074f969fb05aad34feaba605057c08ffd1/app/js/ffxivcraftmodel.js#L88
         {
             var baseIncrease = (Stats.Craftsmanship * 10f / Recipe.ProgressDivider) + 2;
-            if (Stats.CLvl <= Recipe.RLvl)
-                baseIncrease *= Recipe.ProgressModifier / 100f;
+            if (Stats.Level <= Recipe.ClassJobLevel)
+                baseIncrease *= Recipe.ProgressModifier * 0.01f;
             BaseProgressGain = (int)baseIncrease;
         }
         {
             var baseIncrease = (Stats.Control * 10f / Recipe.QualityDivider) + 35;
-            if (Stats.CLvl <= Recipe.RLvl)
-                baseIncrease *= Recipe.QualityModifier / 100f;
+            if (Stats.Level <= Recipe.ClassJobLevel)
+                baseIncrease *= Recipe.QualityModifier * 0.01f;
             BaseQualityGain = (int)baseIncrease;
         }
     }

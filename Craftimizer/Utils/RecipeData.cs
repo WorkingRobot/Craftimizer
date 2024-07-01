@@ -36,7 +36,6 @@ public sealed record RecipeData
         {
             IsExpert = Recipe.IsExpert,
             ClassJobLevel = Table.ClassJobLevel,
-            RLvl = (int)Table.RowId,
             ConditionsFlag = Table.ConditionsFlag,
             MaxDurability = Table.Durability * Recipe.DurabilityFactor / 100,
             MaxQuality = (Recipe.CanHq || Recipe.IsExpert) ? (int)Table.Quality * Recipe.QualityFactor / 100 : 0,

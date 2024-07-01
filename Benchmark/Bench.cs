@@ -37,13 +37,11 @@ public class Bench
             CanUseManipulation = true,
             HasSplendorousBuff = false,
             IsSpecialist = false,
-            CLvl = 560,
         },
         new()
         {
             IsExpert = false,
             ClassJobLevel = 90,
-            RLvl = 560,
             ConditionsFlag = 0b1111,
             MaxDurability = 80,
             MaxQuality = 7200,
@@ -65,13 +63,11 @@ public class Bench
             CanUseManipulation = true,
             HasSplendorousBuff = false,
             IsSpecialist = false,
-            CLvl = 560,
         },
         new()
         {
             IsExpert = false,
             ClassJobLevel = 90,
-            RLvl = 580,
             ConditionsFlag = 0b1111,
             MaxDurability = 70,
             MaxQuality = 10920,

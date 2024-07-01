@@ -487,8 +487,6 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             if (level != 0)
             {
                 ImGui.TextUnformatted(levelText);
-                if (ImGui.IsItemHovered())
-                    ImGuiUtils.Tooltip($"CLvl {Gearsets.CalculateCLvl(level)}");
                 ImGui.SameLine(0, 3);
             }
 
@@ -684,8 +682,6 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
             ImGui.SameLine(0, 5);
             ImGui.TextUnformatted(textLevel);
-            if (ImGui.IsItemHovered())
-                ImGuiUtils.Tooltip($"RLvl {RecipeData.RecipeInfo.RLvl}");
 
             if (textStarsSize != Vector2.Zero)
             {
@@ -1202,7 +1198,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             var config = Service.Configuration.RecipeNoteSolverConfig;
             var mctsConfig = new MCTSConfig(config);
             var simulator = new SimulatorNoRandom();
-            var macros = Service.CommunityMacros.RetrieveRotations(input.Recipe.RLvl, token).GetAwaiter().GetResult();
+            var macros = Service.CommunityMacros.RetrieveRotations((int)RecipeData.Table.RowId, token).GetAwaiter().GetResult();
 
             token.ThrowIfCancellationRequested();
 

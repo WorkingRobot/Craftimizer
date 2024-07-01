@@ -65,7 +65,6 @@ public sealed class Plugin : IDalamudPlugin
         // Trigger static constructors so a huge hitch doesn't occur on first RecipeNote frame.
         FoodStatus.Initialize();
         ActionUtils.Initialize();
-        Gearsets.Initialize();
 
         Service.PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
         Service.PluginInterface.UiBuilder.OpenConfigUi += OpenSettingsWindow;
@@ -95,7 +94,6 @@ public sealed class Plugin : IDalamudPlugin
                 CanUseManipulation = false,
                 HasSplendorousBuff = false,
                 IsSpecialist = false,
-                CLvl = 10,
             },
             stats.Recipe ?? new(1023),
             stats.Buffs ?? new(null)

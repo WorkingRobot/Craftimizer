@@ -9,5 +9,4 @@ public sealed record CharacterStats
     public bool CanUseManipulation { get; init; }
     public bool HasSplendorousBuff { get; init; }
     public bool IsSpecialist { get; init; }
-    public int CLvl { get; init; }
 }

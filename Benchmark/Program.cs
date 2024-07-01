@@ -54,13 +54,11 @@ internal static class Program
                 CanUseManipulation = true,
                 HasSplendorousBuff = false,
                 IsSpecialist = false,
-                CLvl = 560,
             },
             new RecipeInfo()
             {
                 IsExpert = false,
                 ClassJobLevel = 90,
-                RLvl = 640,
                 ConditionsFlag = 15,
                 MaxDurability = 70,
                 MaxQuality = 14040,
@@ -102,13 +100,11 @@ internal static class Program
                 CanUseManipulation = true,
                 HasSplendorousBuff = false,
                 IsSpecialist = false,
-                CLvl = 560,
             },
             new RecipeInfo()
             {
                 IsExpert = false,
                 ClassJobLevel = 90,
-                RLvl = 640,
                 ConditionsFlag = 15,
                 MaxDurability = 70,
                 MaxQuality = 14040,

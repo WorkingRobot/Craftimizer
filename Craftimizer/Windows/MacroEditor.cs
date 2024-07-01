@@ -45,7 +45,6 @@ public sealed class MacroEditor : Window, IDisposable
                 Control = Math.Clamp(value.Control, 0, 9000),
                 CP = Math.Clamp(value.CP, 180, 1000),
                 Level = Math.Clamp(value.Level, 1, 100),
-                CLvl = Gearsets.CalculateCLvl(value.Level),
             };
         }
     }
@@ -299,8 +298,6 @@ public sealed class MacroEditor : Window, IDisposable
                             ? Math.Clamp(newLevel, 1, 100)
                             : 1
                     };
-                if (ImGui.IsItemHovered())
-                    ImGuiUtils.Tooltip($"CLvl {Gearsets.CalculateCLvl(CharacterStats.Level)}");
 
                 var disabledTint = new Vector4(0.5f, 0.5f, 0.5f, 0.75f);
                 var imageButtonPadding = (int)(ImGui.GetStyle().FramePadding.Y / 2f);
@@ -776,8 +773,6 @@ public sealed class MacroEditor : Window, IDisposable
 
         ImGui.SameLine(0, 5);
         ImGui.TextUnformatted(textLevel);
-        if (ImGui.IsItemHovered())
-            ImGuiUtils.Tooltip($"RLvl {RecipeData.RecipeInfo.RLvl}");
 
         if (textStarsSize != Vector2.Zero)
         {
