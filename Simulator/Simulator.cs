@@ -64,9 +64,9 @@ public class Simulator
                 return ActionResponse.ActionNotUnlocked;
             if (action == ActionType.Manipulation && !Input.Stats.CanUseManipulation)
                 return ActionResponse.ActionNotUnlocked;
-            if (action is ActionType.CarefulObservation or ActionType.HeartAndSoul && !Input.Stats.IsSpecialist)
+            if (action is ActionType.CarefulObservation or ActionType.HeartAndSoul or ActionType.QuickInnovation && !Input.Stats.IsSpecialist)
                 return ActionResponse.ActionNotUnlocked;
-            if (baseAction.CPCost(this) > CP)
+            if (CalculateCPCost(baseAction.CPCost(this)) > CP)
                 return ActionResponse.NotEnoughCP;
             return ActionResponse.CannotUseAction;
         }

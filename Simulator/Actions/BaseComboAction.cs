@@ -43,7 +43,8 @@ public abstract class BaseComboAction(
 
         if (!perfection)
         {
-            durability -= (int)MathF.Ceiling(durabilityA * wasteNots > 0 ? .5f : 1f);
+            durability -= (int)MathF.Ceiling(durabilityA * (wasteNots > 0 ? .5f : 1f));
+
             if (durability <= 0)
                 return false;
         }
@@ -54,7 +55,7 @@ public abstract class BaseComboAction(
         if (wasteNots > 0)
             wasteNots--;
 
-        durability -= (int)MathF.Ceiling(durabilityB * wasteNots > 0 ? .5f : 1f);
+        durability -= (int)MathF.Ceiling(durabilityB * (wasteNots > 0 ? .5f : 1f));
 
         if (durability <= 0)
             return false;
