@@ -5,9 +5,11 @@ using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
 namespace Craftimizer.Solver;
+
+[SkipLocalsInit]
+[Pure]
 internal static class Intrinsics
 {
-    [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     // https://stackoverflow.com/a/73439472
     private static Vector128<float> HMax(Vector256<float> v1)
@@ -21,7 +23,6 @@ internal static class Intrinsics
         return v7;
     }
 
-    [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int HMaxIndexScalar(Vector256<float> v, int len)
     {
@@ -34,7 +35,6 @@ internal static class Intrinsics
         return m;
     }
 
-    [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Vector256<float> ClearLastN(Vector256<float> data, int len)
     {
@@ -43,7 +43,6 @@ internal static class Intrinsics
         return Avx.And(Avx2.CompareGreaterThan(threshold, index).AsSingle(), data);
     }
 
-    [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     // https://stackoverflow.com/a/23592221
     private static int HMaxIndexAVX2(Vector256<float> v, int len)
@@ -57,21 +56,17 @@ internal static class Intrinsics
 
         // Find the highest index with that value, respecting len
         var vcmp = Avx.CompareEqual(vfilt, vmax);
-        var mask = unchecked((uint)Avx2.MoveMask(vcmp.AsByte()));
+        var mask = unchecked((uint)Avx.MoveMask(vcmp));
 
-        var inverseIdx = BitOperations.LeadingZeroCount(mask << ((8 - len) << 2)) >> 2;
-
-        return len - 1 - inverseIdx;
+        return BitOperations.TrailingZeroCount(mask);
     }
 
-    [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int HMaxIndex(Vector256<float> v, int len) =>
         Avx2.IsSupported ?
         HMaxIndexAVX2(v, len) :
         HMaxIndexScalar(v, len);
 
-    [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int NthBitSetScalar(ulong value, int n)
     {
@@ -101,12 +96,10 @@ internal static class Intrinsics
         return _base;
     }
 
-    [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int NthBitSetBMI2(ulong value, int n) =>
         BitOperations.TrailingZeroCount(Bmi2.X64.ParallelBitDeposit(1ul << n, value));
 
-    [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int NthBitSet(ulong value, int n)
     {
@@ -118,12 +111,10 @@ internal static class Intrinsics
             NthBitSetScalar(value, n);
     }
 
-    [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [SkipLocalsInit]
     public static Vector256<float> ReciprocalSqrt(Vector256<float> data)
     {
-        if (Avx.IsSupported && Vector256<float>.Count >= Vector256<float>.Count)
+        if (Avx.IsSupported)
             return Avx.ReciprocalSqrt(data);
 
         Unsafe.SkipInit(out Vector256<float> ret);
