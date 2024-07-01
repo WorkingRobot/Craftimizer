@@ -939,7 +939,7 @@ public sealed class Settings : Window, IDisposable
                 using (HeaderFont.Push())
                 {
                     ImGuiUtils.AlignCentered(ImGui.CalcTextSize("Craftimizer").X);
-                    ImGuiUtils.Hyperlink("Craftimizer", "https://github.com/WorkingRobot/craftimizer", false);
+                    ImGuiUtils.Hyperlink("Craftimizer", "https://github.com/WorkingRobot/Craftimizer", false);
                 }
 
                 using (SubheaderFont.Push())

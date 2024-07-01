@@ -889,7 +889,7 @@ public sealed class MacroEditor : Window, IDisposable
                 var total = RecipeData.CalculateItemStartingQuality(idx, hqCount);
                 ImGuiUtils.Tooltip($"{ingredient.Item.Name.ToDalamudString()} {SeIconChar.HighQuality.ToIconString()}\n+{perItem} Quality/Item{(total > 0 ? $"\n+{total} Quality" : "")}");
             }
-            else
+            else if (ingredient.Amount != 0)
                 ImGuiUtils.Tooltip($"{ingredient.Item.Name.ToDalamudString()}");
         }
         ImGui.SameLine(0, 5);
