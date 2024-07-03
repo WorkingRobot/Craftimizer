@@ -65,7 +65,7 @@ public sealed class Plugin : IDalamudPlugin
         ActionUtils.Initialize();
 
         Service.PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
-        Service.PluginInterface.UiBuilder.OpenConfigUi += OpenSettingsWindow;
+        Service.PluginInterface.UiBuilder.OpenConfigUi += OpenSettingsWindowForced;
         Service.PluginInterface.UiBuilder.OpenMainUi += OpenCraftingLog;
     }
 
@@ -116,15 +116,18 @@ public sealed class Plugin : IDalamudPlugin
         SynthHelperWindow.QueueSuggestedActionExecution();
 
     [Command(name: "/craftimizer", description: "Open the settings window.")]
-    public void OpenSettingsWindow()
+    private void OpenSettingsWindowForced() =>
+        OpenSettingsWindow(true);
+
+    public void OpenSettingsWindow(bool force = false)
     {
-        if (SettingsWindow.IsOpen ^= true)
+        if (SettingsWindow.IsOpen ^= !force || !SettingsWindow.IsOpen)
             SettingsWindow.BringToFront();
     }
 
     public void OpenSettingsTab(string selectedTabLabel)
     {
-        OpenSettingsWindow();
+        OpenSettingsWindow(true);
         SettingsWindow.SelectTab(selectedTabLabel);
     }
 

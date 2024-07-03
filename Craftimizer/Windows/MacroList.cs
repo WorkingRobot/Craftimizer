@@ -43,7 +43,7 @@ public sealed class MacroList : Window, IDisposable
             {
                 Icon = FontAwesomeIcon.Cog,
                 IconOffset = new(2.5f, 1),
-                Click = _ => Service.Plugin.OpenSettingsWindow(),
+                Click = _ => Service.Plugin.OpenSettingsTab("General"),
                 ShowTooltip = () => ImGuiUtils.Tooltip("Open Craftimizer Settings")
             }
         ];
