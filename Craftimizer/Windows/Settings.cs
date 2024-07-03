@@ -374,7 +374,7 @@ public sealed class Settings : Window, IDisposable
             {
                 DrawOption(
                     "Remove Wait Times",
-                    "Remove <wait.#> at the end of every action. Useful for SomethingNeedDoing.",
+                    "Remove <wait.#> at the end of every action.",
                     Config.MacroCopy.RemoveWaitTimes,
                     v => Config.MacroCopy.RemoveWaitTimes = v,
                     ref isDirty
@@ -382,7 +382,7 @@ public sealed class Settings : Window, IDisposable
 
                 DrawOption(
                     "Combine Macro",
-                    "Doesn't split the macro into smaller macros. Useful for SomethingNeedDoing.",
+                    "Doesn't split the macro into smaller macros.",
                     Config.MacroCopy.CombineMacro,
                     v => Config.MacroCopy.CombineMacro = v,
                     ref isDirty
