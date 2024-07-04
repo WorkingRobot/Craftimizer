@@ -1,7 +1,6 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Craftimizer.Solver;
-using Craftimizer.Utils;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.ManagedFontAtlas;
@@ -24,7 +23,7 @@ public sealed class Settings : Window, IDisposable
 
     private static Configuration Config => Service.Configuration;
 
-    private const int OptionWidth = 200;
+    private static float OptionWidth => 200 * ImGuiHelpers.GlobalScale;
     private static Vector2 OptionButtonSize => new(OptionWidth, ImGui.GetFrameHeight());
 
     private string? SelectedTab { get; set; }
@@ -922,7 +921,7 @@ public sealed class Settings : Window, IDisposable
 
         var plugin = Service.Plugin;
         var icon = plugin.Icon;
-        var iconDim = icon.Dimensions ?? new(128);
+        var iconDim = new Vector2(128) * ImGuiHelpers.GlobalScale;
 
         using (var table = ImRaii.Table("settingsAboutTable", 2))
         {

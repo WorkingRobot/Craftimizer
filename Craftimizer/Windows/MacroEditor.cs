@@ -1,5 +1,4 @@
 using Craftimizer.Plugin;
-using Craftimizer.Plugin.Utils;
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Craftimizer.Utils;
@@ -9,10 +8,8 @@ using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.GameFonts;
 using Dalamud.Interface.ImGuiNotification;
-using Dalamud.Interface.Internal;
 using Dalamud.Interface.ManagedFontAtlas;
-using Dalamud.Interface.Textures;
-using Dalamud.Interface.Textures.TextureWraps;
+using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Dalamud.Utility;
@@ -143,8 +140,6 @@ public sealed class MacroEditor : Window, IDisposable
         CollapsedCondition = ImGuiCond.Appearing;
         Collapsed = false;
 
-        SizeConstraints = new() { MinimumSize = new(821, 750), MaximumSize = new(float.PositiveInfinity) };
-
         TitleBarButtons =
         [
             new()
@@ -156,7 +151,48 @@ public sealed class MacroEditor : Window, IDisposable
             }
         ];
 
+        MinWindowHeight = float.PositiveInfinity;
+
         Service.WindowSystem.AddWindow(this);
+    }
+
+    private float MinWindowHeight { get; set; }
+    private static ReadOnlySpan<(float Scale, int MinWidth)> MinWindowWidths =>
+        new[]
+        {
+            (0.80f, 715),
+            (0.90f, 745),
+            (0.95f, 775),
+            (1.00f, 805),
+            (1.10f, 865),
+            (1.25f, 944),
+            (1.50f, 1128),
+            (2.00f, 1504),
+            (3.00f, 2184),
+        };
+
+    public override void PreDraw()
+    {
+        base.PreDraw();
+
+        var scale = ImGuiHelpers.GlobalScale;
+        var widths = MinWindowWidths;
+        var height = MinWindowWidths[^1].MinWidth;
+        for (var i = 0; i < widths.Length; ++i)
+        {
+            if (scale <= widths[i].Scale)
+            {
+                if (i == 0)
+                    height = widths[i].MinWidth;
+                else
+                    height = (int)float.Lerp(
+                        widths[i - 1].MinWidth, widths[i].MinWidth,
+                        (scale - widths[i - 1].Scale) / (widths[i].Scale - widths[i - 1].Scale)
+                    );
+                break;
+            }
+        }
+        ImGui.SetNextWindowSizeConstraints(new Vector2(height, MinWindowHeight), new Vector2(float.PositiveInfinity));
     }
 
     public override void OnClose()
@@ -960,7 +996,7 @@ public sealed class MacroEditor : Window, IDisposable
                         Vector2 v1 = ImGui.GetItemRectMin(), v2 = ImGui.GetItemRectMax();
                         ImGui.PushClipRect(v1, v2, true);
                         (v1.X, v2.X) = (v2.X, v1.X);
-                        ImGui.GetWindowDrawList().AddLine(v1, v2, ImGui.GetColorU32(new Vector4(1, 0, 0, ImGui.GetStyle().DisabledAlpha / 2)), 5);
+                        ImGui.GetWindowDrawList().AddLine(v1, v2, ImGui.GetColorU32(new Vector4(1, 0, 0, ImGui.GetStyle().DisabledAlpha / 2)), 5 * ImGuiHelpers.GlobalScale);
                         ImGui.PopClipRect();
                     }
                     if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
@@ -982,8 +1018,8 @@ public sealed class MacroEditor : Window, IDisposable
         }
 
         var minY = ImGui.GetCursorPosY() + ImGui.GetStyle().WindowPadding.Y - ImGui.GetStyle().CellPadding.Y;
-        if (SizeConstraints!.Value.MinimumSize.Y != minY)
-            SizeConstraints = SizeConstraints.Value with { MinimumSize = SizeConstraints.Value.MinimumSize with { Y = minY } };
+        if (MinWindowHeight != minY)
+            MinWindowHeight = minY;
     }
 
     private void DrawMacroInfo()
@@ -1151,7 +1187,7 @@ public sealed class MacroEditor : Window, IDisposable
                     Vector2 v1 = ImGui.GetItemRectMin(), v2 = ImGui.GetItemRectMax();
                     ImGui.PushClipRect(v1, v2, true);
                     (v1.X, v2.X) = (v2.X, v1.X);
-                    ImGui.GetWindowDrawList().AddLine(v1, v2, ImGui.GetColorU32(new Vector4(1, 0, 0, ImGui.GetStyle().DisabledAlpha / 2)), 5);
+                    ImGui.GetWindowDrawList().AddLine(v1, v2, ImGui.GetColorU32(new Vector4(1, 0, 0, ImGui.GetStyle().DisabledAlpha / 2)), 5 * ImGuiHelpers.GlobalScale);
                     ImGui.PopClipRect();
                 }
                 if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))

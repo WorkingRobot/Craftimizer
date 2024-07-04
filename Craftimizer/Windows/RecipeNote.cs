@@ -365,8 +365,8 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             {
                 if (StatsChanged)
                 {
-                    ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 150);
-                    ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 150);
+                    ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 150 * ImGuiHelpers.GlobalScale);
+                    ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 150 * ImGuiHelpers.GlobalScale);
                 }
 
                 ImGui.TableNextColumn();
@@ -624,7 +624,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                     using var table = ImRaii.Table("characterStats", 2);
                     if (table)
                     {
-                        ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 100);
+                        ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 100 * ImGuiHelpers.GlobalScale);
                         ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthStretch);
 
                         ImGui.TableNextColumn();
@@ -715,7 +715,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         using var table = ImRaii.Table("recipeStats", 2);
         if (table)
         {
-            ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 100 * ImGuiHelpers.GlobalScale);
             ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthStretch);
 
             ImGui.TableNextColumn();
@@ -1036,7 +1036,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         using var table = ImRaii.Table("requiredStats", 2);
         if (table)
         {
-            ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 100 * ImGuiHelpers.GlobalScale);
             ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthStretch);
 
             ImGui.TableNextColumn();

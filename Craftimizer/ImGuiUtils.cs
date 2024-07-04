@@ -1,6 +1,7 @@
 using Craftimizer.Utils;
 using Dalamud.Interface;
 using Dalamud.Interface.ManagedFontAtlas;
+using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
 using ImPlotNET;
@@ -12,7 +13,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -534,7 +534,7 @@ internal static class ImGuiUtils
             iconOffset = Vector2.Zero;
         }
 
-        ImGui.GetWindowDrawList().AddText(UiBuilder.IconFont, UiBuilder.IconFont.FontSize * scale, offset + iconOffset, ImGui.GetColorU32(!isDisabled ? ImGuiCol.Text : ImGuiCol.TextDisabled), icon.ToIconString());
+        ImGui.GetWindowDrawList().AddText(UiBuilder.IconFont, UiBuilder.IconFont.FontSize * ImGuiHelpers.GlobalScale * scale, offset + iconOffset, ImGui.GetColorU32(!isDisabled ? ImGuiCol.Text : ImGuiCol.TextDisabled), icon.ToIconString());
     }
 
     public static bool IconButtonSquare(FontAwesomeIcon icon, float size = -1)
@@ -592,7 +592,7 @@ internal static class ImGuiUtils
     {
         using var _font = ImRaii.PushFont(UiBuilder.DefaultFont);
         using var _tooltip = ImRaii.Tooltip();
-        using var _wrap = ImRaii2.TextWrapPos(width);
+        using var _wrap = ImRaii2.TextWrapPos(width * ImGuiHelpers.GlobalScale);
         ImGui.TextUnformatted(text);
     }
 
@@ -612,7 +612,7 @@ internal static class ImGuiUtils
             currentWrapWidth = wrapPosX - currentPos;
 
         var textBuf = text.AsSpan();
-        var lineSize = font.CalcWordWrapPositionA(1, textBuf, currentWrapWidth) ?? textBuf.Length;
+        var lineSize = font.CalcWordWrapPositionA(ImGuiHelpers.GlobalScale, textBuf, currentWrapWidth) ?? textBuf.Length;
         var lineBuf = textBuf[..lineSize];
         ImGui.TextUnformatted(lineBuf.ToString());
         var remainingBuf = textBuf[lineSize..].TrimStart();

@@ -51,9 +51,9 @@ public sealed class Plugin : IDalamudPlugin
         Author = assembly.GetCustomAttribute<AssemblyCompanyAttribute>()!.Company;
         BuildConfiguration = assembly.GetCustomAttribute<AssemblyConfigurationAttribute>()!.Configuration;
         if (DateTime.Now is { Day: 1, Month: 4 })
-            Icon = IconManager.GetAssemblyTexture("horse_icon.png");
+            Icon = IconManager.GetAssemblyTexture("Graphics.horse_icon.png");
         else
-            Icon = IconManager.GetAssemblyTexture("icon.png");
+            Icon = IconManager.GetAssemblyTexture("Graphics.icon.png");
 
         SettingsWindow = new();
         RecipeNoteWindow = new();
