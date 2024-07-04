@@ -8,14 +8,14 @@ internal sealed class PreciseTouch() : BaseAction(
     )
 {
     public override bool CouldUse(Simulator s) =>
-        (s.Condition == Condition.Good || s.Condition == Condition.Excellent || s.HasEffect(EffectType.HeartAndSoul))
+        (s.Condition is Condition.Good or Condition.Excellent || s.HasEffect(EffectType.HeartAndSoul))
         && base.CouldUse(s);
 
     public override void UseSuccess(Simulator s)
     {
         base.UseSuccess(s);
         s.StrengthenEffect(EffectType.InnerQuiet);
-        if (s.Condition != Condition.Good && s.Condition != Condition.Excellent)
+        if (s.Condition is not (Condition.Good or Condition.Excellent))
             s.RemoveEffect(EffectType.HeartAndSoul);
     }
 }

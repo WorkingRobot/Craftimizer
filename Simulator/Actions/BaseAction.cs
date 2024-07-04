@@ -67,8 +67,7 @@ public abstract class BaseAction(
             UseSuccess(s);
 
         s.ReduceCP(CPCost(s));
-        if (!s.HasEffect(EffectType.TrainedPerfection))
-            s.ReduceDurability(DurabilityCost);
+        s.ReduceDurability(DurabilityCost);
 
         if (IncreasesStepCount)
         {

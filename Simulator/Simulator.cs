@@ -183,7 +183,6 @@ public class Simulator
         Durability = Input.Recipe.MaxDurability;
     }
 
-
     public void RestoreCP(int amount)
     {
         CP += amount;
@@ -200,8 +199,18 @@ public class Simulator
         return Math.Clamp(successRate, 0, 100);
     }
 
-    public int CalculateDurabilityCost(int amount)
+    public int CalculateDurabilityCost(int amount, bool dryRun = true)
     {
+        if (amount == 0)
+            return 0;
+
+        if (HasEffect(EffectType.TrainedPerfection))
+        {
+            if (!dryRun)
+                RemoveEffect(EffectType.TrainedPerfection);
+            return 0;
+        }
+
         var amt = (double)amount;
         if (HasEffect(EffectType.WasteNot) || HasEffect(EffectType.WasteNot2))
             amt /= 2;
@@ -295,7 +304,7 @@ public class Simulator
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ReduceDurability(int amount) =>
-        ReduceDurabilityRaw(CalculateDurabilityCost(amount));
+        ReduceDurabilityRaw(CalculateDurabilityCost(amount, false));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ReduceCP(int amount) =>

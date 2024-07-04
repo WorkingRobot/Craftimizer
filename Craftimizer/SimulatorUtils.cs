@@ -317,7 +317,7 @@ internal static class EffectUtils
         };
 
     public static bool IsIndefinite(this EffectType me) =>
-        me is EffectType.InnerQuiet or EffectType.HeartAndSoul;
+        me is EffectType.InnerQuiet or EffectType.HeartAndSoul or EffectType.TrainedPerfection;
 
     public static Status Status(this EffectType me) =>
         LuminaSheets.StatusSheet.GetRow(me.StatusId())!;

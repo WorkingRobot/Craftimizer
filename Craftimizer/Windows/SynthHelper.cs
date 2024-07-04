@@ -587,7 +587,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
                 MuscleMemory = GetEffectStack((ushort)EffectType.MuscleMemory.StatusId()),
                 Manipulation = GetEffectStack((ushort)EffectType.Manipulation.StatusId()),
                 Expedience = GetEffectStack((ushort)EffectType.Expedience.StatusId()),
-                TrainedPerfection = GetEffectStack((ushort)EffectType.TrainedPerfection.StatusId()),
+                TrainedPerfection = HasEffect((ushort)EffectType.TrainedPerfection.StatusId()),
                 HeartAndSoul = HasEffect((ushort)EffectType.HeartAndSoul.StatusId()),
             },
             ActionStates = CurrentActionStates

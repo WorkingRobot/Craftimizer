@@ -10,4 +10,7 @@ internal sealed class TrainedPerfection() : BaseBuffAction(
 
     public override bool CouldUse(Simulator s) =>
         !s.ActionStates.UsedTrainedPerfection;
+
+    public override string GetTooltip(Simulator s, bool addUsability) =>
+        GetBaseTooltip(s, addUsability);
 }
