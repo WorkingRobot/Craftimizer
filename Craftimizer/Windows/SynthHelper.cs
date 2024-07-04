@@ -46,6 +46,8 @@ public sealed unsafe class SynthHelper : Window, IDisposable
     public RecipeData? RecipeData { get; private set; }
     public CharacterStats? CharacterStats { get; private set; }
     public SimulationInput? SimulationInput { get; private set; }
+    public ActionType? NextAction => (ShouldOpen && Macro.Count > 0) ? Macro[0].Action : null;
+    public bool ShouldDrawAnts => ShouldOpen;
 
     public bool IsCrafting { get; private set; }
     private int CurrentActionCount { get; set; }
@@ -64,8 +66,6 @@ public sealed unsafe class SynthHelper : Window, IDisposable
     }
     private SimulationState currentState;
     private SimulatedMacro Macro { get; } = new();
-
-    private bool IsSuggestedActionExecutionQueued { get; set; }
 
     private CancellationTokenSource? HelperTaskTokenSource { get; set; }
     private Exception? HelperTaskException { get; set; }
@@ -133,9 +133,6 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             }
         }
 
-        if (!ShouldCalculate)
-            IsSuggestedActionExecutionQueued = false;
-
         if (!ShouldOpen)
         {
             StyleAlpha = LastAlpha = null;
@@ -159,10 +156,24 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         if (!Service.Configuration.EnableSynthHelper)
             return false;
 
-        if (Service.Configuration.DisableSynthHelperOnMacro &&
-            RaptureShellModule.Instance()->MacroCurrentLine >= 0 &&
-            !IsSuggestedActionExecutionQueued)
-            return false;
+        if (Service.Configuration.DisableSynthHelperOnMacro)
+        {
+            var module = RaptureShellModule.Instance();
+            if (module->MacroCurrentLine >= 0)
+            {
+                var hasCraftAction = false;
+                foreach (ref var line in module->MacroLines)
+                {
+                    if (line.EqualToString("/craftaction"))
+                    {
+                        hasCraftAction = true;
+                        break;
+                    }
+                }
+                if (!hasCraftAction)
+                    return false;
+            }
+        }
 
         Addon = (AddonSynthesis*)Service.GameGui.GetAddonByName("Synthesis");
 
@@ -239,8 +250,6 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         ImGui.PopStyleVar();
 
         base.PostDraw();
-
-        IsSuggestedActionExecutionQueued = false;
     }
 
     public override void Draw()
@@ -311,19 +320,16 @@ public sealed unsafe class SynthHelper : Window, IDisposable
                 isPressed = ImGuiExtras.ButtonBehavior(bb, id, out isHovered, out isHeld, ImGuiButtonFlags.None);
             }
             ImGui.ImageButton(action.GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(imageSize), default, Vector2.One, 0, default, failedAction ? new(1, 1, 1, ImGui.GetStyle().DisabledAlpha) : Vector4.One);
-            if (isPressed || IsSuggestedActionExecutionQueued)
+            if (isPressed && i == 0)
             {
-                if (canExecute && i == 0)
-                {
-                    Service.Chat.SendMessage($"/ac \"{action.GetName(RecipeData.ClassJob)}\"");
+                if (ExecuteNextAction())
                     break;
-                }
             }
             if (isHovered)
             {
                 ImGuiUtils.Tooltip($"{action.GetName(RecipeData!.ClassJob)}\n" +
                     $"{actionBase.GetTooltip(CreateSim(lastState), true)}" +
-                    $"{(canExecute && i == 0 ? "Click or run /craftaction to Execute" : string.Empty)}");
+                    $"{(canExecute && i == 0 ? "Click or run /craftaction to execute" : string.Empty)}");
                 hoveredState = state;
             }
             lastState = state;
@@ -473,6 +479,18 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
         if (ImGui.Button("Open in Macro Editor", new(-1, 0)))
             Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), [], null);
+    }
+
+    public bool ExecuteNextAction()
+    {
+        var canExecute = !Service.Condition[ConditionFlag.Crafting40];
+        var action = NextAction;
+        if (canExecute && action != null)
+        {
+            Service.Chat.SendMessage($"/ac \"{action.Value.GetName(RecipeData!.ClassJob)}\"");
+            return true;
+        }
+        return false;
     }
 
     private void OnStartCrafting(ushort recipeId)
@@ -650,11 +668,6 @@ public sealed unsafe class SynthHelper : Window, IDisposable
     {
         if (Macro.Enqueue(action) >= Service.Configuration.SynthHelperStepCount)
             HelperTaskTokenSource?.Cancel();
-    }
-
-    public void QueueSuggestedActionExecution()
-    {
-        IsSuggestedActionExecutionQueued = true;
     }
 
     private static Sim CreateSim(in SimulationState state) =>

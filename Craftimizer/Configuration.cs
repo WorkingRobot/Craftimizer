@@ -181,8 +181,9 @@ public partial class Configuration
     public bool SuggestMacroAutomatically { get; set; }
     public bool ShowCommunityMacros { get; set; } = true;
     public bool SearchCommunityMacroAutomatically { get; set; }
-    public int SynthHelperStepCount { get; set; } = 5;
+    public int SynthHelperStepCount { get; set; } = 3;
     public bool SynthHelperDisplayOnlyFirstStep { get; set; }
+    public bool SynthHelperAbilityAnts { get; set; }
 
     public bool PinSynthHelperToWindow { get; set; } = true;
     public bool PinRecipeNoteToWindow { get; set; } = true;

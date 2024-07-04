@@ -886,6 +886,16 @@ public sealed class Settings : Window, IDisposable
         );
 
         DrawOption(
+            "Draw Ability Ants",
+            "Turns your hotbar into a whack-a-mole game! Draws ants for " +
+            "the next action that should be executed. Also disables ants " +
+            "for things like combo actions and condition procs.",
+            Config.SynthHelperAbilityAnts,
+            v => Config.SynthHelperAbilityAnts = v,
+            ref isDirty
+        );
+
+        DrawOption(
             "Step Count",
             "The minimum number of future steps to solve for during an in-game craft.",
             Config.SynthHelperStepCount,

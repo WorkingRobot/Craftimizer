@@ -113,7 +113,7 @@ public sealed class Plugin : IDalamudPlugin
 
     [Command(name: "/craftaction", description: "Execute the suggested action in the synthesis helper. Can also be run inside a macro. This command is useful for controller players.")]
     public void ExecuteSuggestedSynthHelperAction() =>
-        SynthHelperWindow.QueueSuggestedActionExecution();
+        SynthHelperWindow.ExecuteNextAction();
 
     [Command(name: "/craftimizer", description: "Open the settings window.")]
     private void OpenSettingsWindowForced() =>
