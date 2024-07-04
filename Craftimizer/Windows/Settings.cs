@@ -951,8 +951,15 @@ public sealed class Settings : Window, IDisposable
                 ImGui.SameLine(0, 0);
                 ImGui.TextUnformatted(")");
 
-                ImGuiUtils.AlignCentered(ImGui.CalcTextSize($"Ko-fi").X);
-                ImGuiUtils.Hyperlink("Ko-fi", "https://ko-fi.com/camora");
+                using (ImRaii.PushColor(ImGuiCol.Text, new Vector4(0.07f, 0.76f, 1.00f, 1f)))
+                {
+                    ImGuiUtils.AlignCentered(ImGui.CalcTextSize($"Support me on Ko-fi!").X);
+                    ImGui.TextUnformatted($"Support me on ");
+                    ImGui.SameLine(0, 0);
+                    ImGuiUtils.Hyperlink("Ko-fi", "https://ko-fi.com/camora");
+                    ImGui.SameLine(0, 0);
+                    ImGui.TextUnformatted("!");
+                }
             }
         }
 
