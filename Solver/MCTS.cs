@@ -191,18 +191,21 @@ public sealed class MCTS
         var currentCompletionState = expandedNode.State.SimulationCompletionState;
         var currentActions = expandedNode.State.AvailableActions;
 
-        byte actionCount = 0;
-        var actions = actionBuffer[..Math.Min(config.MaxStepCount - currentState.ActionCount, config.MaxRolloutStepCount)];
-        while (SimulationNode.GetCompletionState(currentCompletionState, currentActions) == CompletionState.Incomplete &&
-            actionCount < actions.Length)
+        if (currentState.ActionCount < config.MaxStepCount)
         {
-            var nextAction = currentActions.SelectRandom(random);
-            actions[actionCount++] = nextAction;
-            currentState = simulator.ExecuteUnchecked(currentState, nextAction);
-            currentCompletionState = simulator.CompletionState;
-            if (currentCompletionState != CompletionState.Incomplete)
-                break;
-            currentActions = simulator.AvailableActionsHeuristic(true);
+            var actions = actionBuffer[..Math.Min(config.MaxStepCount - currentState.ActionCount, config.MaxRolloutStepCount)];
+            byte actionCount = 0;
+            while (SimulationNode.GetCompletionState(currentCompletionState, currentActions) == CompletionState.Incomplete &&
+                actionCount < actions.Length)
+            {
+                var nextAction = currentActions.SelectRandom(random);
+                actions[actionCount++] = nextAction;
+                currentState = simulator.ExecuteUnchecked(currentState, nextAction);
+                currentCompletionState = simulator.CompletionState;
+                if (currentCompletionState != CompletionState.Incomplete)
+                    break;
+                currentActions = simulator.AvailableActionsHeuristic(true);
+            }
         }
 
         var score = SimulationNode.CalculateScoreForState(currentState, currentCompletionState, config) ?? 0;

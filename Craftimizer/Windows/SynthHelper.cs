@@ -372,6 +372,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
                     if (!effect.IsIndefinite())
                     {
                         ImGui.SetCursorPosY(ImGui.GetCursorPosY() - durationShift);
+                        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 1);
                         ImGuiUtils.TextCentered($"{effects.GetDuration(effect)}", size.X);
                     }
                 }
