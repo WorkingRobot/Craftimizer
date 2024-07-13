@@ -3,6 +3,7 @@ namespace Craftimizer.Simulator.Actions;
 internal sealed class TrainedEye() : BaseAction(
     ActionCategory.FirstTurn, 80, 100283,
     increasesQuality: true,
+    durabilityCost: 0,
     defaultCPCost: 250
     )
 {

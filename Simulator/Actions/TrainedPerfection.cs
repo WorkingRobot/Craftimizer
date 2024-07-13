@@ -2,7 +2,8 @@ namespace Craftimizer.Simulator.Actions;
 
 internal sealed class TrainedPerfection() : BaseBuffAction(
     ActionCategory.Durability, 100, 100475,
-    EffectType.TrainedPerfection, duration: 1
+    EffectType.TrainedPerfection, duration: 1,
+    macroWaitTime: 3
     )
 {
     public override bool IsPossible(Simulator s) =>
