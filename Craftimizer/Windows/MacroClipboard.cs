@@ -13,7 +13,7 @@ namespace Craftimizer.Windows;
 
 public sealed class MacroClipboard : Window, IDisposable
 {
-    private const ImGuiWindowFlags WindowFlags = ImGuiWindowFlags.None;
+    private const ImGuiWindowFlags WindowFlags = ImGuiWindowFlags.NoCollapse;
 
     private List<string> Macros { get; }
 
@@ -22,6 +22,9 @@ public sealed class MacroClipboard : Window, IDisposable
         Macros = new(macros);
 
         IsOpen = true;
+        AllowPinning = false;
+        AllowClickthrough = false;
+        BringToFront();
 
         Service.WindowSystem.AddWindow(this);
     }

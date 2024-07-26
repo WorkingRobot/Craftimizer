@@ -14,7 +14,7 @@ public sealed unsafe class Hooks : IDisposable
 
     public event OnActionUsedDelegate? OnActionUsed;
 
-    public delegate bool UseActionDelegate(ActionManager* manager, CSActionType actionType, uint actionId, ulong targetId, uint param, uint useType, int pvp, nint a8);
+    public delegate bool UseActionDelegate(ActionManager* manager, CSActionType actionType, uint actionId, ulong targetId, uint extraParam, ActionManager.UseActionMode mode, uint comboRouteId, bool* outOptAreaTargeted);
 
     public readonly Hook<UseActionDelegate> UseActionHook = null!;
 
@@ -31,10 +31,10 @@ public sealed unsafe class Hooks : IDisposable
         IsActionHighlightedHook.Enable();
     }
 
-    private bool UseActionDetour(ActionManager* manager, CSActionType actionType, uint actionId, ulong targetId, uint param, uint useType, int pvp, nint a8)
+    private bool UseActionDetour(ActionManager* manager, CSActionType actionType, uint actionId, ulong targetId, uint extraParam, ActionManager.UseActionMode mode, uint comboRouteId, bool* optOutAreaTargeted)
     {
         var canCast = manager->GetActionStatus(actionType, actionId) == 0;
-        var ret = UseActionHook.Original(manager, actionType, actionId, targetId, param, useType, pvp, a8);
+        var ret = UseActionHook.Original(manager, actionType, actionId, targetId, extraParam, mode, comboRouteId, optOutAreaTargeted);
         if (canCast && ret && actionType is CSActionType.CraftAction or CSActionType.Action)
         {
             var classJob = ClassJobUtils.GetClassJobFromIdx((byte)(Service.ClientState.LocalPlayer?.ClassJob.Id ?? 0));
@@ -42,7 +42,16 @@ public sealed unsafe class Hooks : IDisposable
             {
                 var simActionType = ActionUtils.GetActionTypeFromId(actionId, classJob.Value, actionType == CSActionType.CraftAction);
                 if (simActionType != null)
-                    OnActionUsed?.Invoke(simActionType.Value);
+                {
+                    try
+                    {
+                        OnActionUsed?.Invoke(simActionType.Value);
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(e, "Failed to invoke OnActionUsed");
+                    }
+                }
             }
         }
         return ret;
@@ -52,29 +61,37 @@ public sealed unsafe class Hooks : IDisposable
     {
         var ret = IsActionHighlightedHook.Original(manager, actionType, actionId);
 
-        if (!Service.Configuration.SynthHelperAbilityAnts)
-            return ret;
+        try
+        {
+            if (!Service.Configuration.SynthHelperAbilityAnts)
+                return ret;
 
-        if (!Service.Plugin.SynthHelperWindow.ShouldDrawAnts)
-            return ret;
+            if (!Service.Plugin.SynthHelperWindow.ShouldDrawAnts)
+                return ret;
 
-        if (actionType is not (CSActionType.CraftAction or CSActionType.Action))
-            return ret;
+            if (actionType is not (CSActionType.CraftAction or CSActionType.Action))
+                return ret;
 
-        var jobId = Service.ClientState.LocalPlayer?.ClassJob.Id;
-        if (jobId == null)
-            return ret;
+            var jobId = Service.ClientState.LocalPlayer?.ClassJob.Id;
+            if (jobId == null)
+                return ret;
 
-        var classJob = ClassJobUtils.GetClassJobFromIdx((byte)jobId.Value);
-        if (classJob == null)
-            return ret;
+            var classJob = ClassJobUtils.GetClassJobFromIdx((byte)jobId.Value);
+            if (classJob == null)
+                return ret;
 
-        var simActionType = ActionUtils.GetActionTypeFromId(actionId, classJob.Value, actionType == CSActionType.CraftAction);
-        if (simActionType == null)
-            return ret;
+            var simActionType = ActionUtils.GetActionTypeFromId(actionId, classJob.Value, actionType == CSActionType.CraftAction);
+            if (simActionType == null)
+                return ret;
 
-        if (Service.Plugin.SynthHelperWindow.NextAction != simActionType)
-            return 0;
+            if (Service.Plugin.SynthHelperWindow.NextAction != simActionType)
+                return 0;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to check if action should be highlighted");
+            return ret;
+        }
 
         return 1;
     }
