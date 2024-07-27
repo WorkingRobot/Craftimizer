@@ -529,7 +529,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
     private void OnUseAction(ActionType action)
     {
-        if (!IsCrafting)
+        if (!IsCrafting || !ShouldOpen || IsCollapsed)
             return;
 
         (_, CurrentState) = new SimNoRandom().Execute(GetCurrentState(), action);
@@ -539,7 +539,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
     private void OnFinishedUsingAction()
     {
-        if (!IsCrafting)
+        if (!IsCrafting || !ShouldOpen || IsCollapsed)
             return;
 
         CurrentState = GetCurrentState();
@@ -596,7 +596,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
     private void OnStateUpdated()
     {
-        if (!IsCrafting)
+        if (!IsCrafting || !ShouldOpen || IsCollapsed)
             return;
 
         Macro.Clear();

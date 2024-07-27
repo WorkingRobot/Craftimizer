@@ -83,11 +83,10 @@ public sealed class MacroEditor : Window, IDisposable
     private ActionType[] DefaultActions { get; }
     private Action<IEnumerable<ActionType>>? MacroSetter { get; set; }
 
-    private CancellationTokenSource? SolverTokenSource { get; set; }
-    private Exception? SolverException { get; set; }
-    private int? SolverStartStepCount { get; set; }
+    private BackgroundTask<int>? SolverTask { get; set; }
+    private bool SolverRunning => (!SolverTask?.Completed) ?? false;
     private Solver.Solver? SolverObject { get; set; }
-    private bool SolverRunning => SolverTokenSource != null;
+    private int? SolverStartStepCount { get; set; }
 
     private ILoadedTextureIcon ExpertBadge { get; }
     private ILoadedTextureIcon CollectibleBadge { get; }
@@ -197,7 +196,8 @@ public sealed class MacroEditor : Window, IDisposable
 
     public override void OnClose()
     {
-        SolverTokenSource?.Cancel();
+        base.OnClose();
+        SolverTask?.Cancel();
     }
 
     public override void Update()
@@ -1270,7 +1270,7 @@ public sealed class MacroEditor : Window, IDisposable
         ImGui.SameLine();
         if (SolverRunning)
         {
-            if (SolverTokenSource?.IsCancellationRequested ?? false)
+            if (SolverTask?.Cancelling ?? false)
             {
                 using var _disabled = ImRaii.Disabled();
                 ImGui.Button("Stopping", new(halfWidth, height));
@@ -1278,7 +1278,7 @@ public sealed class MacroEditor : Window, IDisposable
             else
             {
                 if (ImGui.Button("Stop", new(halfWidth, height)))
-                    SolverTokenSource?.Cancel();
+                    SolverTask?.Cancel();
             }
         }
         else
@@ -1524,9 +1524,7 @@ public sealed class MacroEditor : Window, IDisposable
 
     private void CalculateBestMacro()
     {
-        SolverTokenSource?.Cancel();
-        SolverTokenSource = new();
-        SolverException = null;
+        SolverTask?.Cancel();
         Macro.ClearQueue();
 
         RevertPreviousMacro();
@@ -1540,49 +1538,27 @@ public sealed class MacroEditor : Window, IDisposable
 
         SolverStartStepCount = Macro.Count;
 
-        var token = SolverTokenSource.Token;
         var state = State;
-        var task = Task.Run(() => CalculateBestMacroTask(state, token), token);
-        _ = task.ContinueWith(t =>
-        {
-            if (token == SolverTokenSource.Token)
-            {
-                SolverTokenSource = null;
-                SolverObject = null;
-            }
-        });
-        _ = task.ContinueWith(t =>
-        {
-            if (token.IsCancellationRequested)
-                return;
-
-            try
-            {
-                t.Exception!.Flatten().Handle(ex => ex is TaskCanceledException or OperationCanceledException);
-            }
-            catch (AggregateException e)
-            {
-                SolverException = e;
-                Log.Error(e, "Calculating macro failed");
-            }
-        }, TaskContinuationOptions.OnlyOnFaulted);
+        SolverTask = new(token => CalculateBestMacroTask(state, token));
+        SolverTask.Start();
     }
 
-    private void CalculateBestMacroTask(SimulationState state, CancellationToken token)
+    private int CalculateBestMacroTask(SimulationState state, CancellationToken token)
     {
         var config = Service.Configuration.EditorSolverConfig;
 
         token.ThrowIfCancellationRequested();
 
-        using (SolverObject = new Solver.Solver(config, state) { Token = token })
-        {
-            SolverObject.OnLog += Log.Debug;
-            SolverObject.OnNewAction += a => Macro.Enqueue(a);
-            SolverObject.Start();
-            _ = SolverObject.GetTask().GetAwaiter().GetResult();
-        }
+        var solver = new Solver.Solver(config, state) { Token = token };
+        solver.OnLog += Log.Debug;
+        solver.OnNewAction += a => Macro.Enqueue(a);
+        SolverObject = solver;
+        solver.Start();
+        _ = solver.GetTask().GetAwaiter().GetResult();
 
         token.ThrowIfCancellationRequested();
+
+        return 0;
     }
 
     private void RevertPreviousMacro()

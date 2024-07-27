@@ -60,44 +60,6 @@ public sealed unsafe class RecipeNote : Window, IDisposable
     public CharacterStats? CharacterStats { get; private set; }
     public CraftableStatus CraftStatus { get; private set; }
 
-    public sealed class BackgroundTask<T>(Func<CancellationToken, T> func) : IDisposable where T : struct
-    {
-        public T? Result { get; private set; }
-        public Exception? Exception { get; private set; }
-        public bool Completed { get; private set; }
-
-        private CancellationTokenSource TokenSource { get; } = new();
-        private Func<CancellationToken, T> Func { get; } = func;
-
-        public void Start()
-        {
-            var token = TokenSource.Token;
-            var task = Task.Run(() => Result = Func(token), token);
-            _ = task.ContinueWith(t => Completed = true);
-            _ = task.ContinueWith(t =>
-            {
-                if (token.IsCancellationRequested)
-                    return;
-
-                try
-                {
-                    t.Exception!.Flatten().Handle(ex => ex is TaskCanceledException or OperationCanceledException);
-                }
-                catch (AggregateException e)
-                {
-                    Exception = e;
-                    Log.Error(e, "Calculating macros failed");
-                }
-            }, TaskContinuationOptions.OnlyOnFaulted);
-        }
-
-        public void Cancel() =>
-            TokenSource.Cancel();
-
-        public void Dispose() =>
-            Cancel();
-    }
-
     private BackgroundTask<(Macro?, SimulationState?)>? SavedMacroTask { get; set; }
     private BackgroundTask<SolverSolution>? SuggestedMacroTask { get; set; }
     private BackgroundTask<(CommunityMacros.CommunityMacro?, SimulationState?)>? CommunityMacroTask { get; set; }
