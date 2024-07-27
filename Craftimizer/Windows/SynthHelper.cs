@@ -66,10 +66,9 @@ public sealed unsafe class SynthHelper : Window, IDisposable
     private SimulationState currentState;
     private SimulatedMacro Macro { get; } = new();
 
-    private CancellationTokenSource? HelperTaskTokenSource { get; set; }
-    private Exception? HelperTaskException { get; set; }
-    private Solver.Solver? HelperTaskObject { get; set; }
-    private bool HelperTaskRunning => HelperTaskTokenSource != null;
+    private BackgroundTask<int>? SolverTask { get; set; }
+    private bool SolverRunning => (!SolverTask?.Completed) ?? false;
+    private Solver.Solver? SolverObject { get; set; }
 
     private IFontHandle AxisFont { get; }
 
@@ -124,7 +123,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             if (WasCalculatable)
             {
                 IsCrafting = false;
-                HelperTaskTokenSource?.Cancel();
+                SolverTask?.Cancel();
             }
             else if (Macro.Count == 0)
             {
@@ -263,7 +262,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
         DrawMacroActions();
 
-        if (HelperTaskRunning && HelperTaskObject is { } solver)
+        if (SolverRunning && SolverObject is { } solver)
         {
             ImGuiHelpers.ScaledDummy(5);
             DrawHelperTaskProgress(solver);
@@ -334,7 +333,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             lastState = state;
         }
 
-        var rows = (int)Math.Max(1, MathF.Ceiling(Service.Configuration.SynthHelperStepCount / itemsPerRow));
+        var rows = (int)Math.Max(1, MathF.Ceiling(Service.Configuration.SynthHelperMaxDisplayCount / itemsPerRow));
         for (var i = 0; i < rows; ++i)
         {
             if (count <= i * itemsPerRow)
@@ -452,9 +451,9 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
     private void DrawMacroActions()
     {
-        if (HelperTaskRunning)
+        if (SolverRunning)
         {
-            if (HelperTaskTokenSource?.IsCancellationRequested ?? false)
+            if (SolverTask?.Cancelling ?? false)
             {
                 using var _disabled = ImRaii.Disabled();
                 ImGui.Button("Stopping", new(-1, 0));
@@ -464,7 +463,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             else
             {
                 if (ImGui.Button("Stop", new(-1, 0)))
-                    HelperTaskTokenSource?.Cancel();
+                    SolverTask?.Cancel();
             }
         }
         else
@@ -511,7 +510,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
             var gearItems = Gearsets.GetGearsetItems(container);
 
-            var characterStats = Gearsets.CalculateCharacterStats(gearStats, gearItems, RecipeData.ClassJob.GetPlayerLevel(), RecipeData.ClassJob.CanPlayerUseManipulation());
+            var characterStats = Gearsets.CalculateCharacterStats(gearStats, gearItems, RecipeData.ClassJob.GetPlayerLevel(), RecipeData.ClassJob.CanPlayerUseManipulation(), Service.Configuration.CheckDelineations);
             if (characterStats != CharacterStats)
             {
                 CharacterStats = characterStats;
@@ -606,9 +605,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
     private void CalculateBestMacro()
     {
-        HelperTaskTokenSource?.Cancel();
-        HelperTaskTokenSource = new();
-        HelperTaskException = null;
+        SolverTask?.Cancel();
         Macro.ClearQueue();
         Macro.Clear();
 
@@ -619,55 +616,34 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             Macro.RecalculateState();
         }
 
-        var token = HelperTaskTokenSource.Token;
         var state = CurrentState;
-        var task = Task.Run(() => CalculateBestMacroTask(state, token), token);
-        _ = task.ContinueWith(t =>
-        {
-            if (token == HelperTaskTokenSource.Token)
-            {
-                HelperTaskTokenSource = null;
-                HelperTaskObject = null;
-            }
-        });
-        _ = task.ContinueWith(t =>
-        {
-            if (token.IsCancellationRequested)
-                return;
-
-            try
-            {
-                t.Exception!.Flatten().Handle(ex => ex is TaskCanceledException or OperationCanceledException);
-            }
-            catch (AggregateException e)
-            {
-                HelperTaskException = e;
-                Log.Error(e, "Calculating macro failed");
-            }
-        }, TaskContinuationOptions.OnlyOnFaulted);
+        SolverTask = new(token => CalculateBestMacroTask(state, token));
+        SolverTask.Start();
     }
 
-    private void CalculateBestMacroTask(SimulationState state, CancellationToken token)
+    private int CalculateBestMacroTask(SimulationState state, CancellationToken token)
     {
         var config = Service.Configuration.SynthHelperSolverConfig;
 
         token.ThrowIfCancellationRequested();
 
-        using (HelperTaskObject = new Solver.Solver(config, state) { Token = token })
-        {
-            HelperTaskObject.OnLog += Log.Debug;
-            HelperTaskObject.OnNewAction += EnqueueAction;
-            HelperTaskObject.Start();
-            _ = HelperTaskObject.GetTask().GetAwaiter().GetResult();
-        }
+        var solver = new Solver.Solver(config, state) { Token = token };
+        solver.OnLog += Log.Debug;
+        solver.OnNewAction += EnqueueAction;
+        SolverObject = solver;
+        solver.Start();
+        _ = solver.GetTask().GetAwaiter().GetResult();
 
         token.ThrowIfCancellationRequested();
+
+        return 0;
     }
 
     private void EnqueueAction(ActionType action)
     {
-        if (Macro.Enqueue(action) >= Service.Configuration.SynthHelperStepCount)
-            HelperTaskTokenSource?.Cancel();
+        var newSize = Macro.Enqueue(action, Service.Configuration.SynthHelperMaxDisplayCount);
+        if (newSize >= Service.Configuration.SynthHelperStepCount || newSize >= Service.Configuration.SynthHelperMaxDisplayCount)
+            SolverTask?.Cancel();
     }
 
     private static Sim CreateSim(in SimulationState state) =>

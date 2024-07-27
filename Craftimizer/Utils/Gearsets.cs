@@ -98,10 +98,10 @@ public static unsafe class Gearsets
         };
     }
 
-    public static CharacterStats CalculateCharacterStats(GearsetItem[] gearsetItems, int characterLevel, bool canUseManipulation) =>
-        CalculateCharacterStats(CalculateGearsetStats(gearsetItems), gearsetItems, characterLevel, canUseManipulation);
+    public static CharacterStats CalculateCharacterStats(GearsetItem[] gearsetItems, int characterLevel, bool canUseManipulation, bool checkDelineations) =>
+        CalculateCharacterStats(CalculateGearsetStats(gearsetItems), gearsetItems, characterLevel, canUseManipulation, checkDelineations);
 
-    public static CharacterStats CalculateCharacterStats(GearsetStats gearsetStats, GearsetItem[] gearsetItems, int characterLevel, bool canUseManipulation) =>
+    public static CharacterStats CalculateCharacterStats(GearsetStats gearsetStats, GearsetItem[] gearsetItems, int characterLevel, bool canUseManipulation, bool checkDelineations) =>
         new()
         {
             CP = gearsetStats.CP,
@@ -110,8 +110,11 @@ public static unsafe class Gearsets
             Level = characterLevel,
             CanUseManipulation = canUseManipulation,
             HasSplendorousBuff = gearsetItems.Any(IsSplendorousTool),
-            IsSpecialist = gearsetItems.Any(IsSpecialistSoulCrystal),
+            IsSpecialist = gearsetItems.Any(IsSpecialistSoulCrystal) && (!checkDelineations || HasDelineations()),
         };
+
+    public static bool HasDelineations() =>
+        InventoryManager.Instance()->GetInventoryItemCount(28724) > 0;
 
     public static bool IsItem(GearsetItem item, uint itemId) =>
         item.ItemId == itemId;

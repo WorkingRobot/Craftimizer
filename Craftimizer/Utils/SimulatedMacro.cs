@@ -213,10 +213,13 @@ internal sealed class SimulatedMacro
         TryRecalculateFrom(Math.Min(fromIdx, toIdx));
     }
 
-    public int Enqueue(ActionType action)
+    public int Enqueue(ActionType action, int? maxSize = null)
     {
         lock (QueueLock)
         {
+            if (maxSize is { } size && QueuedSteps.Count + Macro.Count >= size)
+                return size;
+                
             QueuedSteps.Add(new(action));
             return QueuedSteps.Count + Macro.Count;
         }

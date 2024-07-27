@@ -96,10 +96,10 @@ public sealed class Settings : Window, IDisposable
     private static void DrawOption(string label, string tooltip, string value, Action<string> setter, ref bool isDirty)
     {
         ImGui.SetNextItemWidth(OptionWidth);
-        var text = value.ToString();
+        var text = value;
         if (ImGui.InputText(label, ref text, 255, ImGuiInputTextFlags.AutoSelectAll))
         {
-            if (value != text)
+            if (!string.Equals(value, text, StringComparison.Ordinal))
             {
                 setter(text);
                 isDirty = true;
@@ -220,6 +220,15 @@ public sealed class Settings : Window, IDisposable
             "hidden.",
             Config.ShowOptimalMacroStat,
             v => Config.ShowOptimalMacroStat = v,
+            ref isDirty
+        );
+
+        DrawOption(
+            "Check For Delineations",
+            "Your inventory will be checked to ensure that you have delineations available " +
+            "before suggesting any specialist acitons.",
+            Config.CheckDelineations,
+            v => Config.CheckDelineations = v,
             ref isDirty
         );
 
@@ -943,12 +952,24 @@ public sealed class Settings : Window, IDisposable
         );
 
         DrawOption(
-            "Step Count",
-            "The minimum number of future steps to solve for during an in-game craft.",
+            "Solver Step Count",
+            "The minimum number of future steps to solve for during an in-game craft. " +
+            "The solver may still give more than this amount if it's at no cost to you.",
             Config.SynthHelperStepCount,
             1,
             100,
             v => Config.SynthHelperStepCount = v,
+            ref isDirty
+        );
+
+        DrawOption(
+            "Max Step Display Count",
+            "Enforces a maximum number of steps to display in the synth helper to " +
+            "get rid of clutter.",
+            Config.SynthHelperMaxDisplayCount,
+            1,
+            100,
+            v => Config.SynthHelperMaxDisplayCount = v,
             ref isDirty
         );
 
