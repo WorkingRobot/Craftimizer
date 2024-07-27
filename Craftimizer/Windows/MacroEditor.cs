@@ -1288,7 +1288,7 @@ public sealed class MacroEditor : Window, IDisposable
         }
         ImGui.SameLine();
         if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Paste))
-            Service.Plugin.CopyMacro(Macro.Actions.ToArray());
+            MacroCopy.Copy(Macro.Actions.ToArray());
         if (ImGui.IsItemHovered())
             ImGuiUtils.Tooltip("Copy to Clipboard");
         ImGui.SameLine();

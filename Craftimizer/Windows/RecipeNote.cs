@@ -1,5 +1,4 @@
 using Craftimizer.Plugin;
-using Craftimizer.Plugin.Utils;
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Craftimizer.Solver;
@@ -11,7 +10,6 @@ using Dalamud.Interface.Colors;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.GameFonts;
 using Dalamud.Interface.ManagedFontAtlas;
-using Dalamud.Interface.Textures;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
@@ -987,7 +985,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                     if (ImGui.IsItemHovered())
                         ImGuiUtils.Tooltip("Open in Macro Editor");
                     if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Paste, miniRowHeight))
-                        Service.Plugin.CopyMacro(actions);
+                        MacroCopy.Copy(actions);
                     if (ImGui.IsItemHovered())
                         ImGuiUtils.Tooltip("Copy to Clipboard");
                 }

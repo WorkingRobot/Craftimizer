@@ -149,9 +149,6 @@ public sealed class Plugin : IDalamudPlugin
         ClipboardWindow = new(macros);
     }
 
-    public void CopyMacro(IReadOnlyList<ActionType> actions) =>
-        MacroCopy.Copy(actions);
-
     public IActiveNotification DisplayNotification(Notification notification)
     {
         var ret = Service.NotificationManager.AddNotification(notification);

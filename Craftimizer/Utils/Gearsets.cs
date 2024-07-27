@@ -6,8 +6,10 @@ using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using ExdSheets;
 using System;
 using System.Linq;
+using Craftimizer.Plugin;
 
-namespace Craftimizer.Plugin.Utils;
+namespace Craftimizer.Utils;
+
 public static unsafe class Gearsets
 {
     public record struct GearsetStats(int CP, int Craftsmanship, int Control);

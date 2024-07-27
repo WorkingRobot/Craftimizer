@@ -1,5 +1,4 @@
 using Craftimizer.Plugin;
-using Craftimizer.Plugin.Utils;
 using ExdSheets;
 using System.Collections.Frozen;
 using System.Collections.Generic;

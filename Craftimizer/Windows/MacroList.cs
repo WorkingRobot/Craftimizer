@@ -248,7 +248,7 @@ public sealed class MacroList : Window, IDisposable
                     ImGuiUtils.Tooltip("Rename");
 
                 if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Paste, miniRowHeight))
-                    Service.Plugin.CopyMacro(macro.Actions);
+                    MacroCopy.Copy(macro.Actions);
                 if (ImGui.IsItemHovered())
                     ImGuiUtils.Tooltip("Copy to Clipboard");
                 ImGui.SameLine(0, spacing);
