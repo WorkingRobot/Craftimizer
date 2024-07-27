@@ -127,6 +127,7 @@ public class MacroCopyConfiguration
         OpenWindow, // useful for big macros
         CopyToMacro, // (add option for down or right) (max macro count; open copy-paste window if too much)
         CopyToClipboard,
+        CopyToMacroMate
     }
 
     public CopyType Type { get; set; } = CopyType.OpenWindow;
@@ -136,6 +137,10 @@ public class MacroCopyConfiguration
     public bool SharedMacro { get; set; }
     public int StartMacroIdx { get; set; } = 1;
     public int MaxMacroCount { get; set; } = 5;
+
+    // CopyToMacroMate
+    public string MacroMateName { get; set; } = "Craftimizer";
+    public string MacroMateParent { get; set; } = string.Empty;
 
     // Add /nextmacro [down]
     public bool UseNextMacro { get; set; }
@@ -156,6 +161,8 @@ public class MacroCopyConfiguration
 
     // For SND; Cannot use CopyToMacro
     public bool CombineMacro { get; set; }
+
+    public bool ShowCopiedMessage { get; set; } = true;
 }
 
 [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]

@@ -30,57 +30,72 @@ public static class MacroCopy
             return;
         }
 
-        var config = Service.Configuration.MacroCopy;
-        var macros = new List<string>();
-        var s = new List<string>();
-        for (var i = 0; i < actions.Count; ++i)
-        {
-            if (config.UseMacroLock && s.Count == 0)
-            {
-                s.Add("/mlock");
-            }
+        var macros = GetMacros(actions, Service.Configuration.MacroCopy);
 
-            s.Add(GetActionCommand(actions[i], config));
-            
-            if (config.Type == MacroCopyConfiguration.CopyType.CopyToMacro || !config.CombineMacro)
-            {
-                if (i != actions.Count - 1 && (i != actions.Count - 2 || config.ForceNotification))
-                {
-                    if (s.Count == MacroSize - 1)
-                    {
-                        if (GetEndCommand(macros.Count, false, config) is { } endCommand)
-                            s.Add(endCommand);
-                    }
-                    if (s.Count == MacroSize)
-                    {
-                        macros.Add(string.Join(Environment.NewLine, s));
-                        s.Clear();
-                    }
-                }
-            }
-        }
-        if (s.Count > 0)
-        {
-            if (s.Count < MacroSize || (config.Type != MacroCopyConfiguration.CopyType.CopyToMacro && config.CombineMacro))
-            {
-                if (GetEndCommand(macros.Count, true, config) is { } endCommand)
-                    s.Add(endCommand);
-            }
-            macros.Add(string.Join(Environment.NewLine, s));
-        }
-
-        switch (config.Type)
+        switch (Service.Configuration.MacroCopy.Type)
         {
             case MacroCopyConfiguration.CopyType.OpenWindow:
                 Service.Plugin.OpenMacroClipboard(macros);
                 break;
             case MacroCopyConfiguration.CopyType.CopyToMacro:
-                CopyToMacro(macros, config);
+                CopyToMacro(macros);
                 break;
             case MacroCopyConfiguration.CopyType.CopyToClipboard:
                 CopyToClipboard(macros);
                 break;
+            case MacroCopyConfiguration.CopyType.CopyToMacroMate:
+                CopyToMacroMate(macros[0]);
+                break;
         }
+    }
+
+    private static List<string> GetMacros(IReadOnlyList<ActionType> actions, MacroCopyConfiguration config)
+    {
+        var mustSplit = (config.Type == MacroCopyConfiguration.CopyType.CopyToMacro || !config.CombineMacro) && config.Type != MacroCopyConfiguration.CopyType.CopyToMacroMate;
+
+        var macros = new List<string>();
+        
+        var m = new List<string>();
+
+        for (var i = 0; i < actions.Count; ++i)
+        {
+            var a = actions[i];
+            var isLast = i == actions.Count - 1;
+            var isSecondLast = i == actions.Count - 2;
+
+            if (config.UseMacroLock && m.Count == 0)
+                m.Add("/mlock");
+
+            m.Add(GetActionCommand(a, config));
+
+            if (mustSplit && !isLast)
+            {
+                var endLine = GetEndCommand(macros.Count, false, config);
+
+                if (endLine != null && m.Count == MacroSize - 1)
+                {
+                    if (!isSecondLast || config.ForceNotification)
+                        m.Add(endLine);
+                }
+            }
+
+            if (mustSplit && m.Count == MacroSize)
+            {
+                macros.Add(string.Join(Environment.NewLine, m));
+                m.Clear();
+            }
+        }
+
+        if (m.Count != MacroSize && m.Count != 0)
+        {
+            if (GetEndCommand(macros.Count, true, config) is { } endLine)
+                m.Add(endLine);
+        }
+
+        if (m.Count != 0)
+            macros.Add(string.Join(Environment.NewLine, m));
+
+        return macros;
     }
 
     private static string GetActionCommand(ActionType action, MacroCopyConfiguration config)
@@ -124,22 +139,27 @@ public static class MacroCopy
         return null;
     }
 
-    private static void CopyToMacro(List<string> macros, MacroCopyConfiguration config)
+    private static void CopyToMacro(List<string> macros)
     {
+        var config = Service.Configuration.MacroCopy;
+
         int i, macroIdx;
         for (
             i = 0, macroIdx = config.StartMacroIdx;
             i < macros.Count && i < config.MaxMacroCount && macroIdx < 100;
             i++, macroIdx += config.CopyDown ? 10 : 1)
-            SetMacro(macroIdx, config.SharedMacro, macros[i]);
+            SetMacro(macroIdx, config.SharedMacro, macros[i], i + 1);
 
-        Service.Plugin.DisplayNotification(new()
+        if (config.ShowCopiedMessage)
         {
-            Content = i > 1 ? "Copied macro to User Macros." : $"Copied {i} macros to User Macros.",
-            MinimizedText = i > 1 ? "Copied macro" : $"Copied {i} macros",
-            Title = "Macro Copied",
-            Type = NotificationType.Success
-        });
+            Service.Plugin.DisplayNotification(new()
+            {
+                Content = i > 1 ? "Copied macro to User Macros." : $"Copied {i} macros to User Macros.",
+                MinimizedText = i > 1 ? "Copied macro" : $"Copied {i} macros",
+                Title = "Macro Copied",
+                Type = NotificationType.Success
+            });
+        }
         if (i < macros.Count)
         {
             Service.Plugin.OpenMacroClipboard(macros);
@@ -154,28 +174,85 @@ public static class MacroCopy
         }
     }
 
-    private static unsafe void SetMacro(int idx, bool isShared, string macroText)
+    private static unsafe void SetMacro(int idx, bool isShared, string macroText, int macroIdx)
     {
         if (idx >= 100 || idx < 0)
             throw new ArgumentOutOfRangeException(nameof(idx), "Macro index must be between 0 and 99");
 
+        var set = isShared ? 1u : 0u;
+
         var module = RaptureMacroModule.Instance();
-        var macro = module->GetMacro(isShared ? 1u : 0u, (uint)idx);
+        var macro = module->GetMacro(set, (uint)idx);
+        if (macro->IsEmpty())
+        {
+            macro->Name.SetString($"Craftimizer Macro {macroIdx}");
+            macro->SetIcon((uint)(macroIdx > 10 ? 66161 : (66161 + macroIdx)));
+        }
         var text = Utf8String.FromString(macroText.ReplaceLineEndings("\n"));
         module->ReplaceMacroLines(macro, text);
         text->Dtor();
         IMemorySpace.Free(text);
+
+        RaptureHotbarModule.Instance()->ReloadMacroSlots((byte)set, (byte)idx);
     }
 
     private static void CopyToClipboard(List<string> macros)
     {
         ImGui.SetClipboardText(string.Join(Environment.NewLine + Environment.NewLine, macros));
-        Service.Plugin.DisplayNotification(new()
+        if (Service.Configuration.MacroCopy.ShowCopiedMessage)
         {
-            Content = macros.Count > 1 ? "Copied macro to clipboard." : $"Copied {macros.Count} macros to clipboard.",
-            MinimizedText = macros.Count > 1 ? "Copied macro" : $"Copied {macros.Count} macros",
-            Title = "Macro Copied",
-            Type = NotificationType.Success
-        });
+            Service.Plugin.DisplayNotification(new()
+            {
+                Content = macros.Count == 1 ? "Copied macro to clipboard." : $"Copied {macros.Count} macros to clipboard.",
+                MinimizedText = macros.Count == 1 ? "Copied macro" : $"Copied {macros.Count} macros",
+                Title = "Macro Copied",
+                Type = NotificationType.Success
+            });
+        }
+    }
+
+    private static void CopyToMacroMate(string macro)
+    {
+        if (!Service.Ipc.MacroMateIsAvailable())
+        {
+            Service.Plugin.DisplayNotification(new()
+            {
+                Content = "Please check if it installed and enabled.",
+                MinimizedText = "Macro Mate is unavailable",
+                Title = "Macro Mate Unavailable",
+                Type = NotificationType.Error
+            });
+            return;
+        }
+
+        var parentPath = Service.Configuration.MacroCopy.MacroMateParent;
+        if (string.IsNullOrWhiteSpace(parentPath))
+            parentPath = "/";
+
+        var (isValidParent, parentError) = Service.Ipc.MacroMateValidateGroupPath(parentPath);
+        if (!isValidParent)
+        {
+            Service.Plugin.DisplayNotification(new()
+            {
+                Content = parentError!,
+                MinimizedText = parentError,
+                Title = "Macro Mate Invalid Parent",
+                Type = NotificationType.Error
+            });
+            return;
+        }
+
+        Service.Ipc.MacroMateCreateMacro(Service.Configuration.MacroCopy.MacroMateName, macro, parentPath, null);
+
+        if (Service.Configuration.MacroCopy.ShowCopiedMessage)
+        {
+            Service.Plugin.DisplayNotification(new()
+            {
+                Content = "Copied macro to Macro Mate.",
+                MinimizedText = "Copied macro",
+                Title = "Macro Copied",
+                Type = NotificationType.Success
+            });
+        }
     }
 }

@@ -32,6 +32,7 @@ public sealed class Plugin : IDalamudPlugin
     public Hooks Hooks { get; }
     public Chat Chat { get; }
     public CommunityMacros CommunityMacros { get; }
+    public Ipc Ipc { get; }
     public AttributeCommandManager AttributeCommandManager { get; }
 
     public Plugin(IDalamudPluginInterface pluginInterface)
@@ -44,6 +45,7 @@ public sealed class Plugin : IDalamudPlugin
         Hooks = new();
         Chat = new();
         CommunityMacros = new();
+        Ipc = new();
         AttributeCommandManager = new();
 
         var assembly = Assembly.GetExecutingAssembly();

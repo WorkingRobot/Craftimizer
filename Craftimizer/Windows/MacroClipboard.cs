@@ -39,7 +39,7 @@ public sealed class MacroClipboard : Window, IDisposable
     private void DrawMacro(int idx, string macro)
     {
         using var id = ImRaii.PushId(idx);
-        using var panel = ImRaii2.GroupPanel($"Macro {idx + 1}", -1, out var availWidth);
+        using var panel = ImRaii2.GroupPanel(Macros.Count == 1 ? "Macro" : $"Macro {idx + 1}", -1, out var availWidth);
 
         var cursor = ImGui.GetCursorPos();
 
@@ -56,13 +56,16 @@ public sealed class MacroClipboard : Window, IDisposable
             if (buttonClicked)
             {
                 ImGui.SetClipboardText(macro);
-                Service.Plugin.DisplayNotification(new()
+                if (Service.Configuration.MacroCopy.ShowCopiedMessage)
                 {
-                    Content = $"Macro {idx + 1} copied to clipboard.",
-                    MinimizedText = $"Copied macro {idx + 1}",
-                    Title = "Macro Copied",
-                    Type = NotificationType.Success
-                });
+                    Service.Plugin.DisplayNotification(new()
+                    {
+                        Content = Macros.Count == 1 ? "Copied macro to clipboard." : $"Copied macro {idx + 1} to clipboard.",
+                        MinimizedText = Macros.Count == 1 ? "Copied macro" : $"Copied macro {idx + 1}",
+                        Title = "Macro Copied",
+                        Type = NotificationType.Success
+                    });
+                }
             }
         }
         if (buttonHovered)

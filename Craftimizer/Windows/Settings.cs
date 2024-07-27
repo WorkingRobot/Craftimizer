@@ -93,6 +93,22 @@ public sealed class Settings : Window, IDisposable
             ImGuiUtils.TooltipWrapped(tooltip);
     }
 
+    private static void DrawOption(string label, string tooltip, string value, Action<string> setter, ref bool isDirty)
+    {
+        ImGui.SetNextItemWidth(OptionWidth);
+        var text = value.ToString();
+        if (ImGui.InputText(label, ref text, 255, ImGuiInputTextFlags.AutoSelectAll))
+        {
+            if (value != text)
+            {
+                setter(text);
+                isDirty = true;
+            }
+        }
+        if (ImGui.IsItemHovered())
+            ImGuiUtils.TooltipWrapped(tooltip);
+    }
+
     private static void DrawOption<T>(string label, string tooltip, Func<T, string> getName, Func<T, string> getTooltip, T value, Action<T> setter, ref bool isDirty) where T : struct, Enum
     {
         ImGui.SetNextItemWidth(OptionWidth);
@@ -147,6 +163,7 @@ public sealed class Settings : Window, IDisposable
             MacroCopyConfiguration.CopyType.OpenWindow => "Open a Window",
             MacroCopyConfiguration.CopyType.CopyToMacro => "Copy to Macros",
             MacroCopyConfiguration.CopyType.CopyToClipboard => "Copy to Clipboard",
+            MacroCopyConfiguration.CopyType.CopyToMacroMate => "Copy to Macro Mate",
             _ => "Unknown",
         };
 
@@ -157,6 +174,7 @@ public sealed class Settings : Window, IDisposable
                                                                 "Copy, view, and choose at your own leisure.",
             MacroCopyConfiguration.CopyType.CopyToMacro =>      "Copy directly to the game's macro system.",
             MacroCopyConfiguration.CopyType.CopyToClipboard =>  "Copy to your clipboard. Macros are separated by a blank line.",
+            MacroCopyConfiguration.CopyType.CopyToMacroMate =>  "Copy directly to a Macro Mate macro. Requires the Macro Mate plugin.",
             _ => "Unknown"
         };
 
@@ -270,26 +288,55 @@ public sealed class Settings : Window, IDisposable
                     ref isDirty
                 );
             }
+            else if (Config.MacroCopy.Type == MacroCopyConfiguration.CopyType.CopyToMacroMate)
+            {
+                DrawOption(
+                    "Macro Name",
+                    "The name of the macro to be created or updated in Macro Mate.",
+                    Config.MacroCopy.MacroMateName,
+                    v => Config.MacroCopy.MacroMateName = v,
+                    ref isDirty
+                );
+
+                DrawOption(
+                    "Macro Parent",
+                    "The name of the parent group of the new macro. Leave blank or \"/\" if there is none.",
+                    Config.MacroCopy.MacroMateParent,
+                    v => Config.MacroCopy.MacroMateParent = v,
+                    ref isDirty
+                );
+            }
 
             DrawOption(
-                "Use Macro Chain",
-                "Replaces the last step with /nextmacro to run the next macro " +
-                "automatically. Overrides the Intermediate Notification Sound.",
-                Config.MacroCopy.UseNextMacro,
-                v => Config.MacroCopy.UseNextMacro = v,
+                "Show Copied Message",
+                "Shows a notification in the bottom right when a macro is copied successfully.",
+                Config.MacroCopy.ShowCopiedMessage,
+                v => Config.MacroCopy.ShowCopiedMessage = v,
                 ref isDirty
             );
 
-            if (Config.MacroCopy.UseNextMacro && !Service.PluginInterface.InstalledPlugins.Any(p => p.IsLoaded && string.Equals(p.InternalName, "MacroChain", StringComparison.Ordinal)))
+            if (Config.MacroCopy.Type != MacroCopyConfiguration.CopyType.CopyToMacroMate)
             {
-                ImGui.SameLine();
-                using (var color = ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudOrange))
+                DrawOption(
+                    "Use Macro Chain",
+                    "Replaces the last step with /nextmacro to run the next macro " +
+                    "automatically. Overrides the Intermediate Notification Sound.",
+                    Config.MacroCopy.UseNextMacro,
+                    v => Config.MacroCopy.UseNextMacro = v,
+                    ref isDirty
+                );
+
+                if (Config.MacroCopy.UseNextMacro && !Service.PluginInterface.InstalledPlugins.Any(p => p.IsLoaded && string.Equals(p.InternalName, "MacroChain", StringComparison.Ordinal)))
                 {
-                    using var font = ImRaii.PushFont(UiBuilder.IconFont);
-                    ImGui.TextUnformatted(FontAwesomeIcon.ExclamationCircle.ToIconString());
+                    ImGui.SameLine();
+                    using (var color = ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudOrange))
+                    {
+                        using var font = ImRaii.PushFont(UiBuilder.IconFont);
+                        ImGui.TextUnformatted(FontAwesomeIcon.ExclamationCircle.ToIconString());
+                    }
+                    if (ImGui.IsItemHovered())
+                        ImGuiUtils.Tooltip("Macro Chain is not installed");
                 }
-                if (ImGui.IsItemHovered())
-                    ImGuiUtils.Tooltip("Macro Chain is not installed");
             }
 
             DrawOption(
@@ -311,8 +358,7 @@ public sealed class Settings : Window, IDisposable
 
             if (Config.MacroCopy.AddNotification)
             {
-                var isForceUseful = Config.MacroCopy.Type == MacroCopyConfiguration.CopyType.CopyToMacro || !Config.MacroCopy.CombineMacro;
-                using (var d = ImRaii.Disabled(!isForceUseful))
+                if ((Config.MacroCopy.Type == MacroCopyConfiguration.CopyType.CopyToMacro || !Config.MacroCopy.CombineMacro) && Config.MacroCopy.Type != MacroCopyConfiguration.CopyType.CopyToMacroMate)
                 {
                     DrawOption(
                         "Force Notification",
@@ -323,8 +369,6 @@ public sealed class Settings : Window, IDisposable
                         ref isDirty
                     );
                 }
-                if (!isForceUseful && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-                    ImGuiUtils.Tooltip("Only useful when Combine Macro is off");
 
                 DrawOption(
                     "Add Notification Sound",
@@ -336,7 +380,7 @@ public sealed class Settings : Window, IDisposable
 
                 if (Config.MacroCopy.AddNotificationSound)
                 {
-                    using (var d = ImRaii.Disabled(Config.MacroCopy.UseNextMacro))
+                    if (!Config.MacroCopy.UseNextMacro && Config.MacroCopy.Type != MacroCopyConfiguration.CopyType.CopyToMacroMate)
                     {
                         DrawOption(
                             "Intermediate Notification Sound",
@@ -379,13 +423,16 @@ public sealed class Settings : Window, IDisposable
                     ref isDirty
                 );
 
-                DrawOption(
-                    "Combine Macro",
-                    "Doesn't split the macro into smaller macros.",
-                    Config.MacroCopy.CombineMacro,
-                    v => Config.MacroCopy.CombineMacro = v,
-                    ref isDirty
-                );
+                if (Config.MacroCopy.Type != MacroCopyConfiguration.CopyType.CopyToMacroMate)
+                {
+                    DrawOption(
+                        "Combine Macro",
+                        "Doesn't split the macro into smaller macros.",
+                        Config.MacroCopy.CombineMacro,
+                        v => Config.MacroCopy.CombineMacro = v,
+                        ref isDirty
+                    );
+                }
             }
         }
 
