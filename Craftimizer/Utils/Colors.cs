@@ -1,5 +1,7 @@
+using Craftimizer.Plugin;
 using Dalamud.Interface.Colors;
 using ImGuiNET;
+using System;
 using System.Numerics;
 
 namespace Craftimizer.Utils;
@@ -15,7 +17,8 @@ public static class Colors
 
     private static Vector4 SolverProgressBg => ImGui.ColorConvertU32ToFloat4(ImGui.GetColorU32(ImGuiCol.TableBorderLight));
     private static Vector4 SolverProgressFgBland => ImGuiColors.DalamudWhite2;
-    private static readonly Vector4[] SolverProgressFg =
+
+    private static readonly Vector4[] SolverProgressFgColorful =
     [
         new(0.87f, 0.19f, 0.30f, 1f),
         new(0.96f, 0.62f, 0.12f, 1f),
@@ -26,6 +29,16 @@ public static class Colors
         new(0.70f, 0.49f, 0.88f, 1f),
     ];
 
+    private static readonly Vector4[] SolverProgressFgMonochromatic =
+    [
+        new(0.33f, 0.33f, 0.33f, 1f),
+        new(0.44f, 0.44f, 0.44f, 1f),
+        new(0.56f, 0.56f, 0.56f, 1f),
+        new(0.68f, 0.68f, 0.68f, 1f),
+        new(0.81f, 0.81f, 0.81f, 1f),
+        new(0.93f, 0.93f, 0.93f, 1f),
+    ];
+
     public static readonly Vector4[] CollectabilityThreshold =
     [
         new(0.47f, 0.78f, 0.93f, 1f), // Blue
@@ -33,10 +46,21 @@ public static class Colors
         new(0.75f, 1f, 0.75f, 1f), // Green
     ];
 
-    public static (Vector4 Background, Vector4 Foreground) GetSolverProgressColors(int? stageValue) => 
-        stageValue is not { } stage ?
-            (SolverProgressBg, SolverProgressFgBland) :
-            stage == 0 ?
-                (SolverProgressBg, SolverProgressFg[0]) :
-                (SolverProgressFg[(stage - 1) % SolverProgressFg.Length], SolverProgressFg[stage % SolverProgressFg.Length]);
+    public static (Vector4 Background, Vector4 Foreground) GetSolverProgressColors(int? stageValue)
+    {
+        var fg = Service.Configuration.ProgressType switch
+        {
+            Configuration.ProgressBarType.Colorful => SolverProgressFgColorful,
+            Configuration.ProgressBarType.Simple => SolverProgressFgMonochromatic,
+            _ => throw new InvalidOperationException("No progress bar should be visible")
+        };
+
+        if (stageValue is not { } stage)
+            return (SolverProgressBg, SolverProgressFgBland);
+
+        if (stage == 0)
+            return (SolverProgressBg, fg[0]);
+
+        return (fg[(stage - 1) % fg.Length], fg[stage % fg.Length]);
+    }
 }

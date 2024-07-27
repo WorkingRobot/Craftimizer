@@ -715,14 +715,6 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         public Action<IEnumerable<ActionType>>? MacroEditorSetter;
     }
 
-    public static void DrawSolverTooltip(Solver.Solver solver)
-    {
-        var tooltip = $"Solver Progress: {solver.ProgressValue:N0} / {solver.ProgressMax:N0}";
-        if (solver.ProgressValue > solver.ProgressMax)
-            tooltip += $"\n\nThis is taking longer than expected. Check to see if your gear stats are good and the solver settings are adequate.";
-        ImGuiUtils.TooltipWrapped(tooltip);
-    }
-
     private void DrawMacro(in MacroTaskState state, float panelWidth)
     {
         var panelTitle = state.Type switch
@@ -794,19 +786,31 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                         var calcTextSize = ImGui.CalcTextSize("Calculating...");
                         var spacing = ImGui.GetStyle().ItemSpacing.X;
                         var fraction = Math.Clamp((float)solver.ProgressValue / solver.ProgressMax, 0, 1);
-                        var progressColors = Colors.GetSolverProgressColors(solver.ProgressStage);
 
                         var c = ImGui.GetCursorPos();
                         ImGuiUtils.AlignCentered(windowHeight + spacing + calcTextSize.X, ImGui.GetContentRegionAvail().X - stepsAvailWidthOffset);
 
-                        ImGuiUtils.ArcProgress(
-                            fraction,
-                            windowHeight / 2f + 2,
-                            .5f,
-                            ImGui.ColorConvertFloat4ToU32(progressColors.Background),
-                            ImGui.ColorConvertFloat4ToU32(progressColors.Foreground));
+                        if (Service.Configuration.ProgressType == Configuration.ProgressBarType.None)
+                        {
+                            var textSize = ImGui.CalcTextSize($"{fraction * 100:N0}%");
+                            var cursor = ImGui.GetCursorPos();
+                            ImGuiUtils.AlignMiddle(textSize, new(windowHeight));
+                            ImGui.TextUnformatted($"{fraction * 100:N0}%");
+                            ImGui.SetCursorPos(cursor);
+                            ImGui.Dummy(new Vector2(windowHeight + 4));
+                        }
+                        else
+                        {
+                            var progressColors = Colors.GetSolverProgressColors(solver.ProgressStage);
+                            ImGuiUtils.ArcProgress(
+                                fraction,
+                                windowHeight / 2f + 2,
+                                .5f,
+                                ImGui.ColorConvertFloat4ToU32(progressColors.Background),
+                                ImGui.ColorConvertFloat4ToU32(progressColors.Foreground));
+                        }
                         if (ImGui.IsItemHovered())
-                            DrawSolverTooltip(solver);
+                            DynamicBars.DrawProgressBarTooltip(solver);
 
                         ImGui.SameLine(0, spacing);
 

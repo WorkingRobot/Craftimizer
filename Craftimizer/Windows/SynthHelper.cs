@@ -265,7 +265,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         if (SolverRunning && SolverObject is { } solver)
         {
             ImGuiHelpers.ScaledDummy(5);
-            DrawHelperTaskProgress(solver);
+            DynamicBars.DrawProgressBar(solver);
         }
     }
 
@@ -427,26 +427,6 @@ public sealed unsafe class SynthHelper : Window, IDisposable
                 DynamicBars.Draw(mainBars.Concat(halfBars));
             }
         }
-    }
-
-    private void DrawHelperTaskProgress(Solver.Solver solver)
-    {
-        var spacing = ImGui.GetStyle().ItemSpacing.X;
-        var availSpace = ImGui.GetContentRegionAvail().X;
-
-        var percentWidth = ImGui.CalcTextSize("100%").X;
-        var progressWidth = availSpace - percentWidth - spacing;
-        var fraction = (float)solver.ProgressValue / solver.ProgressMax;
-        var progressColors = Colors.GetSolverProgressColors(solver.ProgressStage);
-        
-        using (ImRaii.PushColor(ImGuiCol.FrameBg, progressColors.Background))
-            using (ImRaii.PushColor(ImGuiCol.PlotHistogram, progressColors.Foreground))
-                ImGui.ProgressBar(Math.Clamp(fraction, 0, 1), new(progressWidth, ImGui.GetFrameHeight()), string.Empty);
-        if (ImGui.IsItemHovered())
-            RecipeNote.DrawSolverTooltip(solver);
-        ImGui.SameLine(0, spacing);
-        ImGui.AlignTextToFramePadding();
-        ImGuiUtils.TextRight($"{fraction * 100:N0}%", percentWidth);
     }
 
     private void DrawMacroActions()

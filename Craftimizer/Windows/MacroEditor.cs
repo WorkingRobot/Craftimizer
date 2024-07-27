@@ -1224,21 +1224,7 @@ public sealed class MacroEditor : Window, IDisposable
         ImGui.GetWindowDrawList().AddLine(pos, pos + new Vector2(availSpace, 0), ImGui.GetColorU32(ImGuiCol.Border));
         ImGui.Dummy(default);
         if (SolverRunning && SolverObject is { } solver)
-        {
-            var percentWidth = ImGui.CalcTextSize("100%").X;
-            var progressWidth = availSpace - percentWidth - spacing;
-            var fraction = (float)solver.ProgressValue / solver.ProgressMax;
-            var progressColors = Colors.GetSolverProgressColors(solver.ProgressStage);
-
-            using (ImRaii.PushColor(ImGuiCol.FrameBg, progressColors.Background))
-                using (ImRaii.PushColor(ImGuiCol.PlotHistogram, progressColors.Foreground))
-                    ImGui.ProgressBar(Math.Clamp(fraction, 0, 1), new(progressWidth, ImGui.GetFrameHeight()), string.Empty);
-            if (ImGui.IsItemHovered())
-                RecipeNote.DrawSolverTooltip(solver);
-            ImGui.SameLine(0, spacing);
-            ImGui.AlignTextToFramePadding();
-            ImGuiUtils.TextRight($"{fraction * 100:N0}%", percentWidth);
-        }
+            DynamicBars.DrawProgressBar(solver, availSpace);
         DrawMacroActions(availSpace);
     }
 

@@ -170,4 +170,42 @@ internal static class DynamicBars
             }
         }
     }
+
+    public static void DrawProgressBar(Solver.Solver solver, float? availSpace = null)
+    {
+        var spacing = ImGui.GetStyle().ItemSpacing.X;
+        availSpace ??= ImGui.GetContentRegionAvail().X;
+
+        var fraction = (float)solver.ProgressValue / solver.ProgressMax;
+        if (Service.Configuration.ProgressType == Configuration.ProgressBarType.None)
+        {
+            ImGui.AlignTextToFramePadding();
+            ImGuiUtils.TextCentered($"{fraction * 100:N0}%", availSpace.Value);
+
+            if (ImGui.IsItemHovered())
+                DrawProgressBarTooltip(solver);
+            return;
+        }
+
+        var percentWidth = ImGui.CalcTextSize("100%").X;
+        var progressWidth = availSpace.Value - percentWidth - spacing;
+        var progressColors = Colors.GetSolverProgressColors(solver.ProgressStage);
+
+        using (ImRaii.PushColor(ImGuiCol.FrameBg, progressColors.Background))
+        using (ImRaii.PushColor(ImGuiCol.PlotHistogram, progressColors.Foreground))
+            ImGui.ProgressBar(Math.Clamp(fraction, 0, 1), new(progressWidth, ImGui.GetFrameHeight()), string.Empty);
+        if (ImGui.IsItemHovered())
+            DrawProgressBarTooltip(solver);
+        ImGui.SameLine(0, spacing);
+        ImGui.AlignTextToFramePadding();
+        ImGuiUtils.TextRight($"{fraction * 100:N0}%", percentWidth);
+    }
+
+    public static void DrawProgressBarTooltip(Solver.Solver solver)
+    {
+        var tooltip = $"Solver Progress: {solver.ProgressValue:N0} / {solver.ProgressMax:N0}";
+        if (solver.ProgressValue > solver.ProgressMax)
+            tooltip += $"\n\nThis is taking longer than expected. Check to see if your gear stats are good and the solver settings are adequate.";
+        ImGuiUtils.TooltipWrapped(tooltip);
+    }
 }

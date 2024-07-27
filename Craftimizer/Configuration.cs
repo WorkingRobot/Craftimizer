@@ -168,6 +168,13 @@ public class MacroCopyConfiguration
 [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
 public partial class Configuration
 {
+    public enum ProgressBarType
+    {
+        Colorful,
+        Simple,
+        None
+    }
+
     public static event Action? OnMacroListChanged;
 
     [JsonInclude] [JsonPropertyName("Macros")]
@@ -193,6 +200,7 @@ public partial class Configuration
     public bool SynthHelperDisplayOnlyFirstStep { get; set; }
     public bool SynthHelperAbilityAnts { get; set; }
     public bool CheckDelineations { get; set; } = true;
+    public ProgressBarType ProgressType { get; set; } = ProgressBarType.Colorful;
 
     public bool PinSynthHelperToWindow { get; set; } = true;
     public bool PinRecipeNoteToWindow { get; set; } = true;

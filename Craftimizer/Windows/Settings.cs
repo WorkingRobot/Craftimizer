@@ -178,6 +178,24 @@ public sealed class Settings : Window, IDisposable
             _ => "Unknown"
         };
 
+    private static string GetProgressBarTypeName(Configuration.ProgressBarType type) =>
+        type switch
+        {
+            Configuration.ProgressBarType.Colorful => "Colorful",
+            Configuration.ProgressBarType.Simple => "Simple",
+            Configuration.ProgressBarType.None => "None",
+            _ => "Unknown",
+        };
+
+    private static string GetProgressBarTooltip(Configuration.ProgressBarType type) =>
+        type switch
+        {
+            Configuration.ProgressBarType.Colorful => "Colorful, rainbow colors",
+            Configuration.ProgressBarType.Simple => "Simple, grayscale colors",
+            Configuration.ProgressBarType.None => "No progress bar; only percent completion is shown",
+            _ => "Unknown"
+        };
+
     public override void Draw()
     {
         if (ImGui.BeginTabBar("settingsTabBar"))
@@ -241,6 +259,16 @@ public sealed class Settings : Window, IDisposable
             5,
             5000,
             v => Config.ReliabilitySimulationCount = v,
+            ref isDirty
+        );
+
+        DrawOption(
+            "Progress Bar Style",
+            "The style of progress bar to use when solving for a macro.",
+            GetProgressBarTypeName,
+            GetProgressBarTooltip,
+            Config.ProgressType,
+            v => Config.ProgressType = v,
             ref isDirty
         );
 
