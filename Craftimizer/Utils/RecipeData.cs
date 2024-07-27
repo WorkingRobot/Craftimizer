@@ -46,16 +46,16 @@ public sealed record RecipeData
             ProgressDivider = Table.ProgressDivider,
         };
 
-        CollectableThresholds = null;
+        int[]? thresholds = null;
         if (Recipe.CollectableMetadata is LazyRow<CollectablesShopRefine> { Value: { } row })
-            CollectableThresholds = new int?[] { row.LowCollectability, row.MidCollectability, row.HighCollectability };
+            thresholds = [row.LowCollectability, row.MidCollectability, row.HighCollectability];
         else if (Recipe.CollectableMetadata is LazyRow<HWDCrafterSupply> { Value: { } row2 })
         {
             foreach (var entry in row2.HWDCrafterSupplyParams)
             {
                 if (entry.ItemTradeIn.Row == Recipe.ItemResult.Row)
                 {
-                    CollectableThresholds = new int?[] { entry.BaseCollectableRating, entry.MidCollectableRating, entry.HighCollectableRating };
+                    thresholds = [entry.BaseCollectableRating, entry.MidCollectableRating, entry.HighCollectableRating];
                     break;
                 }
             }
@@ -72,7 +72,7 @@ public sealed record RecipeData
                         continue;
                     if (subRow.Item.Row == Recipe.ItemResult.Row)
                     {
-                        CollectableThresholds = new int?[] { subRow.CollectabilityLow, subRow.CollectabilityMid, subRow.CollectabilityHigh };
+                        thresholds = [subRow.CollectabilityLow, subRow.CollectabilityMid, subRow.CollectabilityHigh];
                         break;
                     }
                 }
@@ -82,13 +82,22 @@ public sealed record RecipeData
         {
             foreach (var item in row5.Item)
             {
-                if (item.Id == Recipe.ItemResult.Row)
+                if (item.ItemId.Row == Recipe.ItemResult.Row)
                 {
-                    CollectableThresholds = new int?[] { null, item.CollectabilityMid, item.CollectabilityHigh };
+                    thresholds = [0, item.CollectabilityMid, item.CollectabilityHigh];
                     break;
                 }
             }
         }
+        else if (Recipe.CollectableMetadata is LazyRow<CollectablesRefine> { Value: { } row6 })
+        {
+            if (row6.CollectabilityHigh != 0)
+                thresholds = [row6.CollectabilityLow, row6.CollectabilityMid, row6.CollectabilityHigh];
+            else
+                thresholds = [0, row6.CollectabilityLow, row6.CollectabilityMid];
+        }
+
+        CollectableThresholds = thresholds?.Select<int, int?>(t => t == 0 ? null : t).ToArray();
 
         Ingredients = Recipe.Ingredient.Zip(Recipe.AmountIngredient)
             .Take(6)

@@ -10,9 +10,9 @@
       },
       "ExdSheets": {
         "type": "Direct",
-        "requested": "[1.1.0, )",
-        "resolved": "1.1.0",
-        "contentHash": "Je/kV/jpZoIEmJVi1ICRnl1/ENB+nyFHX1KZUu3rkxMO8H9uJJ6CA1MdRiOD6OE6If1eGXAL1bLwEupC2Ikraw==",
+        "requested": "[1.2.2, )",
+        "resolved": "1.2.2",
+        "contentHash": "oS1oUBhlOpUWY1Wc3SwOLzfAMuSRzBn54I8p84euVUHrUEOzRZwA9vuNKNMAIY66eT1dpc/DxT+C7LNH0nK0jg==",
         "dependencies": {
           "Lumina": "3.15.2"
         }
@@ -31,9 +31,22 @@
       },
       "Meziantou.Analyzer": {
         "type": "Direct",
-        "requested": "[2.0.159, )",
-        "resolved": "2.0.159",
-        "contentHash": "+Lu4NktCK98/PkPCluTA+uRHS7uvMXa/Z2WLPE8TDsS/ybYtaOhfq8Wi745fO26wI8rNGaJlKsfFskcKWC5eDQ=="
+        "requested": "[2.0.162, )",
+        "resolved": "2.0.162",
+        "contentHash": "lU5ZkiNx6Jj++yYhkUkn2qsgl+PSfAy+BDFc0IkoVVeSCnmUOGBa0Eb1XzGLAeyAuIoz6vYN4J97Q/uiGdIkhw=="
+      },
+      "DotNext": {
+        "type": "Transitive",
+        "resolved": "5.8.0",
+        "contentHash": "5PwF7lUwgJKMcQRrMnFo8ilqrFq9OyaQ5Lq/zFHn0LahhLriNeySCPs08Zd15FdBV0G0KpZvPHBC8Rp1LIsrhg==",
+        "dependencies": {
+          "System.IO.Hashing": "8.0.0"
+        }
+      },
+      "System.IO.Hashing": {
+        "type": "Transitive",
+        "resolved": "8.0.0",
+        "contentHash": "ne1843evDugl0md7Fjzy6QjJrzsjh46ZKbhf8GwBXb5f/gw97J4bxMs0NQKifDuThh/f0bZ0e62NPl1jzTuRqA=="
       },
       "craftimizer.simulator": {
         "type": "Project"
@@ -41,7 +54,8 @@
       "craftimizer.solver": {
         "type": "Project",
         "dependencies": {
-          "Craftimizer.Simulator": "[1.0.0, )"
+          "Craftimizer.Simulator": "[1.0.0, )",
+          "DotNext": "[5.8.0, )"
         }
       }
     }
