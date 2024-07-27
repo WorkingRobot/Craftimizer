@@ -17,6 +17,7 @@ public enum SolverAlgorithm
 public readonly record struct SolverConfig
 {
     public int Iterations { get; init; }
+    public int MaxIterations { get; init; }
     public float MaxScoreWeightingConstant { get; init; }
     public float ExplorationConstant { get; init; }
     public int MaxStepCount { get; init; }
@@ -38,6 +39,7 @@ public readonly record struct SolverConfig
     public SolverConfig()
     {
         Iterations = 100_000;
+        MaxIterations = 1_500_000;
         MaxScoreWeightingConstant = 0.1f;
         ExplorationConstant = 4;
         MaxStepCount = 30;

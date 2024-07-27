@@ -113,7 +113,7 @@ public class Bench
 
         var solver = new MCTS(config, State);
         var progress = 0;
-        solver.Search(Config.Data.Iterations, ref progress, CancellationToken.None);
+        solver.Search(Config.Data.Iterations, Config.Data.MaxIterations, ref progress, CancellationToken.None);
         var solution = solver.Solution();
 
         return (solver.MaxScore, solution);

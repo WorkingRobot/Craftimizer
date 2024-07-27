@@ -139,6 +139,7 @@ public sealed class Solver : IDisposable
     private async Task<SolverSolution> SearchStepwiseGenetic()
     {
         var iterCount = Config.Iterations / Config.ForkCount;
+        var maxIterCount = Math.Max(Config.Iterations, Config.MaxIterations) / Config.ForkCount;
         maxProgress = iterCount * Config.ForkCount;
 
         var definiteActionCount = 0;
@@ -165,7 +166,7 @@ public sealed class Solver : IDisposable
                         await semaphore.WaitAsync(Token).ConfigureAwait(false);
                         try
                         {
-                            solver.Search(iterCount, ref progress, Token);
+                            solver.Search(iterCount, maxIterCount, ref progress, Token);
                         }
                         finally
                         {
@@ -256,6 +257,7 @@ public sealed class Solver : IDisposable
     private async Task<SolverSolution> SearchStepwiseForked()
     {
         var iterCount = Config.Iterations / Config.ForkCount;
+        var maxIterCount = Math.Max(Config.Iterations, Config.MaxIterations) / Config.ForkCount;
         maxProgress = iterCount * Config.ForkCount;
 
         var actions = new List<ActionType>();
@@ -278,7 +280,7 @@ public sealed class Solver : IDisposable
                     await semaphore.WaitAsync(Token).ConfigureAwait(false);
                     try
                     {
-                        solver.Search(iterCount, ref progress, Token);
+                        solver.Search(iterCount, maxIterCount, ref progress, Token);
                     }
                     finally
                     {
@@ -329,7 +331,7 @@ public sealed class Solver : IDisposable
             var solver = new MCTS(MCTSConfig, state);
 
             var s = Stopwatch.StartNew();
-            solver.Search(Config.Iterations, ref progress, Token);
+            solver.Search(Config.Iterations, Config.MaxIterations, ref progress, Token);
             s.Stop();
             OnLog?.Invoke($"{s.Elapsed.TotalMilliseconds:0.00}ms {progress / s.Elapsed.TotalSeconds / 1000:0.00} kI/s");
 
@@ -350,6 +352,7 @@ public sealed class Solver : IDisposable
     private async Task<SolverSolution> SearchOneshotForked()
     {
         var iterCount = Config.Iterations / Config.ForkCount;
+        var maxIterCount = Math.Max(Config.Iterations, Config.MaxIterations) / Config.ForkCount;
         maxProgress = iterCount * Config.ForkCount;
 
         using var semaphore = new SemaphoreSlim(0, Config.MaxThreadCount);
@@ -362,7 +365,7 @@ public sealed class Solver : IDisposable
                 await semaphore.WaitAsync(Token).ConfigureAwait(false);
                 try
                 {
-                    solver.Search(iterCount, ref progress, Token);
+                    solver.Search(iterCount, maxIterCount, ref progress, Token);
                 }
                 finally
                 {
@@ -394,7 +397,7 @@ public sealed class Solver : IDisposable
         var solver = new MCTS(MCTSConfig, State);
 
         var s = Stopwatch.StartNew();
-        solver.Search(Config.Iterations, ref progress, Token);
+        solver.Search(Config.Iterations, Config.MaxIterations, ref progress, Token);
         s.Stop();
         OnLog?.Invoke($"{s.Elapsed.TotalMilliseconds:0.00}ms {progress / s.Elapsed.TotalSeconds / 1000:0.00} kI/s");
 

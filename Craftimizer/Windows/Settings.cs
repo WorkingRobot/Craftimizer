@@ -89,6 +89,15 @@ public sealed class Settings : Window, IDisposable
                 }
             }
         }
+        else
+        {
+            var newValue = T.Clamp(value, min, max);
+            if (value != newValue)
+            {
+                setter(newValue);
+                isDirty = true;
+            }
+        }
         if (ImGui.IsItemHovered())
             ImGuiUtils.TooltipWrapped(tooltip);
     }
@@ -505,7 +514,7 @@ public sealed class Settings : Window, IDisposable
             );
 
             DrawOption(
-                "Iterations",
+                "Target Iterations",
                 "The total number of iterations to run per crafting step. " +
                 "Higher values require more computational power. Higher values " +
                 "also may decrease variance, so other values should be tweaked " +
@@ -514,6 +523,20 @@ public sealed class Settings : Window, IDisposable
                 1000,
                 1000000,
                 v => config = config with { Iterations = v },
+                ref isDirty
+            );
+
+            DrawOption(
+                "Max Iterations",
+                "The solver may go about the target iteration value if the craft " +
+                "is sufficiently difficult, and it wasn't able to find any way to " +
+                "complete it yet. In rare cases, the solver might go on for a very " +
+                "long time. This maximum is here to prevent the solver from stealing " +
+                "all your RAM.",
+                config.MaxIterations,
+                config.Iterations,
+                5000000,
+                v => config = config with { MaxIterations = v },
                 ref isDirty
             );
 
@@ -995,7 +1018,7 @@ public sealed class Settings : Window, IDisposable
             "Enforces a maximum number of steps to display in the synth helper to " +
             "get rid of clutter.",
             Config.SynthHelperMaxDisplayCount,
-            1,
+            Config.SynthHelperStepCount,
             100,
             v => Config.SynthHelperMaxDisplayCount = v,
             ref isDirty
