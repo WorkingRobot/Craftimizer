@@ -662,7 +662,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             }
             var textLevel = SqText.LevelPrefix.ToIconChar() + SqText.ToLevelString(RecipeData.RecipeInfo.ClassJobLevel);
             var isExpert = RecipeData.RecipeInfo.IsExpert;
-            var isCollectable = RecipeData.Recipe.ItemResult.Value!.IsCollectable;
+            var isCollectable = RecipeData.IsCollectable;
             var imageSize = ImGui.GetFrameHeight();
             var textSize = ImGui.GetFontSize();
             var badgeSize = new Vector2(textSize * (ExpertBadge.AspectRatio ?? 1), textSize);

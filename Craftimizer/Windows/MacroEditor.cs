@@ -739,7 +739,7 @@ public sealed class MacroEditor : Window, IDisposable
             textStarsSize = AxisFont.CalcTextSize(textStars);
         var textLevel = SqText.LevelPrefix.ToIconChar() + SqText.ToLevelString(RecipeData.RecipeInfo.ClassJobLevel);
         var isExpert = RecipeData.RecipeInfo.IsExpert;
-        var isCollectable = RecipeData.Recipe.ItemResult.Value!.IsCollectable;
+        var isCollectable = RecipeData.IsCollectable;
         var imageSize = ImGui.GetFrameHeight();
         var textSize = ImGui.GetFontSize();
         var badgeSize = new Vector2(textSize * (ExpertBadge.AspectRatio ?? 1), textSize);
@@ -1080,7 +1080,7 @@ public sealed class MacroEditor : Window, IDisposable
                     new("Durability", Colors.Durability, State.Durability, RecipeData.RecipeInfo.MaxDurability),
                     new("Condition", DrawCondition)
                 };
-                if (RecipeData.Recipe.ItemResult.Value!.IsCollectable)
+                if (RecipeData.IsCollectable)
                     datas.Add(new("Collectability", Colors.Collectability, Reliability.ParamScore, State.Collectability, State.MaxCollectability, RecipeData.CollectableThresholds, $"{State.Collectability}", $"{State.MaxCollectability:0}"));
                 else if (RecipeData.Recipe.RequiredQuality > 0)
                 {

@@ -18,6 +18,7 @@ public sealed record RecipeData
 
     public ClassJob ClassJob { get; }
     public RecipeInfo RecipeInfo { get; }
+    public bool IsCollectable => Recipe.ItemResult.Value?.AlwaysCollectable ?? false;
     public IReadOnlyList<int?>? CollectableThresholds { get; }
     public IReadOnlyList<(Item Item, int Amount)> Ingredients { get; }
     public int MaxStartingQuality { get; }

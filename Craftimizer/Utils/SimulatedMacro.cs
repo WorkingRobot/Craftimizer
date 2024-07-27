@@ -66,7 +66,7 @@ internal sealed class SimulatedMacro
         public Reliablity(in SimulationState startState, IEnumerable<ActionType> actions, int iterCount, RecipeData recipeData)
         {
             Func<SimulationState, int> getParam;
-            if (recipeData.Recipe.ItemResult.Value!.IsCollectable)
+            if (recipeData.IsCollectable)
                 getParam = s => s.Collectability;
             else if (recipeData.Recipe.RequiredQuality > 0)
             {

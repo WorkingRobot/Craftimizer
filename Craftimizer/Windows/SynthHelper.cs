@@ -400,7 +400,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             {
                 new("Durability", Colors.Durability, state.Durability, RecipeData.RecipeInfo.MaxDurability),
             };
-            if (RecipeData.Recipe.ItemResult.Value!.IsCollectable)
+            if (RecipeData.IsCollectable)
                 halfBars.Add(new("Collectability", Colors.Collectability, reliability.ParamScore, state.Collectability, state.MaxCollectability, RecipeData.CollectableThresholds, $"{state.Collectability}", $"{state.MaxCollectability:0}"));
             else if (RecipeData.Recipe.RequiredQuality > 0)
             {
