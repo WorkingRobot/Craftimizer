@@ -320,6 +320,7 @@ public sealed class MacroList : Window, IDisposable
                 if (!string.IsNullOrWhiteSpace(popupMacroName))
                 {
                     popupMacro!.Name = popupMacroName;
+                    Service.Configuration.Save();
                     ImGui.CloseCurrentPopup();
                 }
             }
