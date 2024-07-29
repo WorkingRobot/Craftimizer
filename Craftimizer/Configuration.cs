@@ -181,7 +181,7 @@ public partial class Configuration
     internal List<Macro> macros { get; private set; } = [];
     [JsonIgnore]
     public IReadOnlyList<Macro> Macros => macros;
-    public int ReliabilitySimulationCount { get; set; } = 500;
+    public int ReliabilitySimulationCount { get; set; } = 1000;
     public bool ConditionRandomness { get; set; } = true;
 
     [JsonPropertyName("SimulatorSolverConfig")]
