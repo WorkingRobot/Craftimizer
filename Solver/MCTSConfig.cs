@@ -32,11 +32,17 @@ public readonly record struct MCTSConfig
         MaxScoreWeightingConstant = config.MaxScoreWeightingConstant;
         ExplorationConstant = config.ExplorationConstant;
 
-        ScoreProgress = config.ScoreProgress;
-        ScoreQuality = config.ScoreQuality;
-        ScoreDurability = config.ScoreDurability;
-        ScoreCP = config.ScoreCP;
-        ScoreSteps = config.ScoreSteps;
+        var total = config.ScoreProgress +
+                    config.ScoreQuality +
+                    config.ScoreDurability +
+                    config.ScoreCP +
+                    config.ScoreSteps;
+
+        ScoreProgress = config.ScoreProgress / total;
+        ScoreQuality = config.ScoreQuality / total;
+        ScoreDurability = config.ScoreDurability / total;
+        ScoreCP = config.ScoreCP / total;
+        ScoreSteps = config.ScoreSteps / total;
 
         ActionPool = config.ActionPool;
     }

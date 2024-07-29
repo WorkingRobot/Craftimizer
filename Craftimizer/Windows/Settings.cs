@@ -669,9 +669,6 @@ public sealed class Settings : Window, IDisposable
 
         using (var panel = ImRaii2.GroupPanel("Score Weights (Advanced)", -1, out _))
         {
-            ImGui.TextWrapped("All values should add up to 1.");
-            ImGuiHelpers.ScaledDummy(10);
-
             DrawOption(
                 "Progress",
                 "Amount of weight to give to the craft's progress.",
@@ -722,26 +719,6 @@ public sealed class Settings : Window, IDisposable
                 v => config = config with { ScoreSteps = v },
                 ref isDirty
             );
-
-            if (ImGui.Button("Normalize Weights", OptionButtonSize))
-            {
-                var total = config.ScoreProgress +
-                            config.ScoreQuality +
-                            config.ScoreDurability +
-                            config.ScoreCP +
-                            config.ScoreSteps;
-                config = config with
-                {
-                    ScoreProgress = config.ScoreProgress / total,
-                    ScoreQuality = config.ScoreQuality / total,
-                    ScoreDurability = config.ScoreDurability / total,
-                    ScoreCP = config.ScoreCP / total,
-                    ScoreSteps = config.ScoreSteps / total
-                };
-                isDirty = true;
-            }
-            if (ImGui.IsItemHovered())
-                ImGuiUtils.Tooltip("Normalize all weights to sum up to 1");
         }
 
         if (isDirty)
