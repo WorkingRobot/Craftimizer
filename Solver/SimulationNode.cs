@@ -32,40 +32,59 @@ public struct SimulationNode(in SimulationState state, ActionType? action, Compl
         if (completionState != CompletionState.ProgressComplete)
             return null;
 
+        var stepScore = 1f - ((float)(state.ActionCount + 1) / config.MaxStepCount);
+
         if (state.Input.Recipe.MaxQuality == 0)
-            return 1f - ((float)(state.ActionCount + 1) / config.MaxStepCount);
+            return stepScore;
 
         [Pure]
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        static float Apply(float bonus, float value, float target) =>
-            bonus * (target > 0 ? Math.Clamp(value / target, 0, 1) : 1);
+        static float Apply(float multiplier, float value, float target) =>
+            multiplier * (target > 0 ? Math.Clamp(value / target, 0, 1) : 1);
 
-        var progressScore = Apply(
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        static float ApplyNondominant(float multiplier, float dominance, float value, float target) =>
+            Apply(float.Lerp(multiplier, 0, dominance), value, target);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        static float ApplyNondominant2(float multiplier, float dominance, float score) =>
+            float.Lerp(multiplier, 0, dominance) * score;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        static float ApplyDominant(float multiplier, float dominance, float value, float target) =>
+            Apply(float.Lerp(multiplier, 1, dominance), value, target);
+
+        var qualityDominance = state.ActionCount / config.MaxStepCount;
+
+        var progressScore = ApplyNondominant(
             config.ScoreProgress,
+            qualityDominance,
             state.Progress,
             state.Input.Recipe.MaxProgress
         );
 
-        var qualityScore = Apply(
+        var qualityScore = ApplyDominant(
             config.ScoreQuality,
+            qualityDominance,
             state.Quality,
             state.Input.Recipe.MaxQuality
         );
 
-        var durabilityScore = Apply(
+        var durabilityScore = ApplyNondominant(
             config.ScoreDurability,
+            qualityDominance,
             state.Durability,
             state.Input.Recipe.MaxDurability
         );
 
-        var cpScore = Apply(
+        var cpScore = ApplyNondominant(
             config.ScoreCP,
+            qualityDominance,
             state.CP,
             state.Input.Stats.CP
         );
 
-        var fewerStepsScore =
-            config.ScoreSteps * (1f - ((float)(state.ActionCount + 1) / config.MaxStepCount));
+        var fewerStepsScore = ApplyNondominant2(config.ScoreSteps, qualityDominance, stepScore);
 
         return progressScore + qualityScore + durabilityScore + cpScore + fewerStepsScore;
     }
