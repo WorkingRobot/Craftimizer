@@ -112,7 +112,7 @@ internal sealed class Simulator : SimulatorNoRandom
             if (wouldFinish)
             {
                 // don't allow finishing the craft if there is significant quality remaining
-                if (Quality < Input.Recipe.MaxQuality / 5)
+                if (Quality * 5 < Input.Recipe.MaxQuality)
                     return false;
             }
             else
@@ -166,7 +166,7 @@ internal sealed class Simulator : SimulatorNoRandom
             return false;
 
         if (action is ActionType.QuickInnovation &&
-            Quality <= Input.Recipe.MaxQuality / 3)
+            Quality * 3 <= Input.Recipe.MaxQuality)
             return false;
 
         return baseAction.CouldUse(this);
