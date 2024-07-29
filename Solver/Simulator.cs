@@ -67,7 +67,7 @@ internal sealed class Simulator : SimulatorNoRandom
         if (action == ActionType.TrainedEye)
             return baseAction.CouldUse(this);
 
-        var isDifficult = Input.Stats.Level - Input.Recipe.ClassJobLevel < 10;
+        var isDifficult = Input.Stats.Level - Input.Recipe.ClassJobLevel < 10 || Input.Recipe.IsExpert;
 
         // don't allow quality moves under Muscle Memory for difficult crafts
         if (isDifficult &&

@@ -674,7 +674,7 @@ public sealed class Settings : Window, IDisposable
                 "Amount of weight to give to the craft's progress.",
                 config.ScoreProgress,
                 0,
-                1,
+                100,
                 v => config = config with { ScoreProgress = v },
                 ref isDirty
             );
@@ -684,7 +684,7 @@ public sealed class Settings : Window, IDisposable
                 "Amount of weight to give to the craft's quality.",
                 config.ScoreQuality,
                 0,
-                1,
+                100,
                 v => config = config with { ScoreQuality = v },
                 ref isDirty
             );
@@ -694,7 +694,7 @@ public sealed class Settings : Window, IDisposable
                 "Amount of weight to give to the craft's remaining durability.",
                 config.ScoreDurability,
                 0,
-                1,
+                100,
                 v => config = config with { ScoreDurability = v },
                 ref isDirty
             );
@@ -704,7 +704,7 @@ public sealed class Settings : Window, IDisposable
                 "Amount of weight to give to the craft's remaining CP.",
                 config.ScoreCP,
                 0,
-                1,
+                100,
                 v => config = config with { ScoreCP = v },
                 ref isDirty
             );
@@ -715,7 +715,7 @@ public sealed class Settings : Window, IDisposable
                 "the step count, the higher the score.",
                 config.ScoreSteps,
                 0,
-                1,
+                100,
                 v => config = config with { ScoreSteps = v },
                 ref isDirty
             );

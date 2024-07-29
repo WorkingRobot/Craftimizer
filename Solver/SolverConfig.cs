@@ -44,18 +44,18 @@ public readonly record struct SolverConfig
         ExplorationConstant = 4;
         MaxStepCount = 30;
         MaxRolloutStepCount = 99;
-        // Use 80% of all cores if less than 20 cores are available, otherwise use all but 4 cores. Keep at least 1 core.
-        MaxThreadCount = Math.Max(1, Math.Max(Environment.ProcessorCount - 4, (int)MathF.Floor(Environment.ProcessorCount * 0.8f)));
+        // Use 75% of all cores if less than 12 cores are available, otherwise use all but 4 cores. Keep at least 1 core.
+        MaxThreadCount = Math.Max(1, Math.Max(Environment.ProcessorCount - 4, (int)MathF.Floor(Environment.ProcessorCount * 0.75f)));
         // Use 32 forks at minimum, or the number of cores, whichever is higher.
         ForkCount = Math.Max(Environment.ProcessorCount, 32);
         FurcatedActionCount = ForkCount / 2;
         StrictActions = true;
 
-        ScoreProgress = .20f;
-        ScoreQuality = .65f;
-        ScoreDurability = .05f;
-        ScoreCP = .05f;
-        ScoreSteps = .05f;
+        ScoreProgress = 10;
+        ScoreQuality = 80;
+        ScoreDurability = 2;
+        ScoreCP = 3;
+        ScoreSteps = 5;
 
         ActionPool = DeterministicActionPool;
         Algorithm = SolverAlgorithm.StepwiseGenetic;
