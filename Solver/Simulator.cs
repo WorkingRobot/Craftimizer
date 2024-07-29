@@ -67,7 +67,7 @@ internal sealed class Simulator : SimulatorNoRandom
         if (action == ActionType.TrainedEye)
             return baseAction.CouldUse(this);
 
-        var isDifficult = Input.Recipe.ClassJobLevel >= Input.Stats.Level;
+        var isDifficult = Input.Stats.Level - Input.Recipe.ClassJobLevel < 10;
 
         // don't allow quality moves under Muscle Memory for difficult crafts
         if (isDifficult &&
@@ -88,11 +88,8 @@ internal sealed class Simulator : SimulatorNoRandom
             (action is ActionType.StandardTouchCombo or ActionType.AdvancedTouchCombo or ActionType.RefinedTouchCombo))
             return false;
 
-        // don't allow observe actions if the combo (or observe itself) is already in progress
-        if (ActionStates.ObserveCombo && action is ActionType.ObservedAdvancedTouchCombo)
-            return false;
-
-        if (action is ActionType.Observe && CP < 25)
+        // only allow Advanced Touch when Observing
+        if (ActionStates.ObserveCombo && action is not ActionType.AdvancedTouch)
             return false;
 
         // don't allow pure quality moves under Veneration
@@ -105,10 +102,6 @@ internal sealed class Simulator : SimulatorNoRandom
 
         // don't allow pure quality moves when it won't be able to finish the craft
         if (!baseAction.IncreasesProgress && durability >= Durability)
-            return false;
-
-        // don't allow 0 durability moves under Trained Perfection
-        if (HasEffect(EffectType.TrainedPerfection) && durability < 10)
             return false;
 
         if (baseAction.IncreasesProgress)
@@ -132,40 +125,48 @@ internal sealed class Simulator : SimulatorNoRandom
             }
         }
 
-        if (action == ActionType.ByregotsBlessing &&
+        if (action is ActionType.ByregotsBlessing &&
             GetEffectStrength(EffectType.InnerQuiet) <= 1)
             return false;
 
-        if ((action == ActionType.WasteNot || action == ActionType.WasteNot2) &&
+        // use of Waste Not should be efficient
+        if ((action is ActionType.WasteNot or ActionType.WasteNot2) &&
             (HasEffect(EffectType.WasteNot) || HasEffect(EffectType.WasteNot2)))
             return false;
 
-        if (action == ActionType.MastersMend &&
-            Input.Recipe.MaxDurability - durability < 25)
+        // don't Observe when Advanced Touch is impossible (7 + 18)
+        if (action is ActionType.Observe && CP < 25)
             return false;
 
-        if (action == ActionType.ImmaculateMend &&
-            Input.Recipe.MaxDurability - durability < 45)
-            return false;
-
-        if (action == ActionType.RefinedTouch &&
+        // don't allow Refined Touch without a combo
+        if (action is ActionType.RefinedTouch &&
             ActionStates.TouchComboIdx != 1)
             return false;
 
-        if (action == ActionType.QuickInnovation &&
-            (Quality - Input.StartingQuality) < Input.Recipe.MaxQuality / 2)
+        // don't allow Immaculate Mends that are too inefficient
+        if (action is ActionType.ImmaculateMend &&
+            (Input.Recipe.MaxDurability - durability <= 45 || HasEffect(EffectType.Manipulation)))
             return false;
 
-        if (action == ActionType.Manipulation &&
+        // don't allow buffs too early
+        if (action is ActionType.MastersMend &&
+            Input.Recipe.MaxDurability - durability < 25)
+            return false;
+
+        if (action is ActionType.Manipulation &&
             HasEffect(EffectType.Manipulation))
             return false;
 
-        if (action == ActionType.GreatStrides &&
+        if (action is ActionType.GreatStrides &&
             HasEffect(EffectType.GreatStrides))
             return false;
 
         if ((action is ActionType.Veneration or ActionType.Innovation) &&
             (GetEffectDuration(EffectType.Veneration) > 1 || GetEffectDuration(EffectType.Innovation) > 1))
+            return false;
+
+        if (action is ActionType.QuickInnovation &&
+            Quality <= Input.Recipe.MaxQuality / 3)
             return false;
 
         return baseAction.CouldUse(this);
