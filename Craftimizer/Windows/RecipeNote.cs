@@ -483,7 +483,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         {
             case CraftableStatus.LockedClassJob:
                 {
-                    ImGuiUtils.TextCentered($"You do not have {RecipeData.ClassJob.GetName().ToLowerInvariant()} unlocked.");
+                    ImGuiUtils.TextCentered($"You do not have {RecipeData.ClassJob.GetName()} unlocked.");
                     ImGui.Separator();
                     var unlockQuest = RecipeData.ClassJob.GetUnlockQuest();
                     var (questGiver, questTerritory, questLocation, mapPayload) = ResolveLevelData(unlockQuest.IssuerLocation.Row);
@@ -503,11 +503,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 break;
             case CraftableStatus.WrongClassJob:
                 {
-                    var fullClassName = RecipeData.ClassJob.GetName().ToLowerInvariant();
-                    var classArticle = "a";
-                    if (fullClassName == "Alchemist" || fullClassName == "Armorer")
-                        classArticle = "an";
-                    ImGuiUtils.TextCentered($"You are not {classArticle} {fullClassName}.");
+                    ImGuiUtils.TextCentered($"You are not {RecipeData.ClassJob.GetNameArticle()} {RecipeData.ClassJob.GetName()}.");
                     var gearsetId = GetGearsetForJob(RecipeData.ClassJob);
                     if (gearsetId.HasValue)
                     {
@@ -517,7 +513,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                             ImGuiUtils.Tooltip($"Swap to gearset {gearsetId + 1}");
                     }
                     else
-                        ImGuiUtils.TextCentered($"You do not have any {RecipeData.ClassJob.GetName().ToLowerInvariant()} gearsets.");
+                        ImGuiUtils.TextCentered($"You do not have any {RecipeData.ClassJob.GetName()} gearsets.");
                     ImGui.Dummy(default);
                 }
                 break;

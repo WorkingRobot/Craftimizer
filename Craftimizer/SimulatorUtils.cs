@@ -160,7 +160,18 @@ internal static class ClassJobUtils
     public static string GetName(this ClassJob me)
     {
         var job = LuminaSheets.ClassJobSheet.GetRow(me.GetClassJobIndex())!;
-        return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(job.Name.ToDalamudString().TextValue);
+        return job.Name.ToDalamudString().TextValue.ToLowerInvariant();
+    }
+
+    public static string GetNameArticle(this ClassJob me)
+    {
+        var job = LuminaSheets.ClassJobSheet.GetRow(me.GetClassJobIndex())!;
+        if (job.SheetLanguage == Lumina.Data.Language.English)
+        {
+            if (me is ClassJob.Alchemist or ClassJob.Armorer)
+                return "an";
+        }
+        return "a";
     }
 
     public static string GetAbbreviation(this ClassJob me)
