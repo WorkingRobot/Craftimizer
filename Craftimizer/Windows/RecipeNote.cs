@@ -503,7 +503,11 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 break;
             case CraftableStatus.WrongClassJob:
                 {
-                    ImGuiUtils.TextCentered($"You are not a {RecipeData.ClassJob.GetName().ToLowerInvariant()}.");
+                    var fullClassName = RecipeData.ClassJob.GetName().ToLowerInvariant();
+                    var classArticle = "a";
+                    if (fullClassName == "Alchemist" || fullClassName == "Armorer")
+                        classArticle = "an";
+                    ImGuiUtils.TextCentered($"You are not {classArticle} {fullClassName}.");
                     var gearsetId = GetGearsetForJob(RecipeData.ClassJob);
                     if (gearsetId.HasValue)
                     {
