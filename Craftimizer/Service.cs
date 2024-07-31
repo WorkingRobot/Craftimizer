@@ -5,6 +5,7 @@ using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
+using Dalamud.Storage.Assets;
 
 namespace Craftimizer.Plugin;
 
@@ -19,6 +20,7 @@ public sealed class Service
     [PluginService] public static IClientState ClientState { get; private set; }
     [PluginService] public static IDataManager DataManager { get; private set; }
     [PluginService] public static ITextureProvider TextureProvider { get; private set; }
+    [PluginService] public static IDalamudAssetManager DalamudAssetManager { get; private set; }
     [PluginService] public static ITargetManager TargetManager { get; private set; }
     [PluginService] public static ICondition Condition { get; private set; }
     [PluginService] public static IFramework Framework { get; private set; }

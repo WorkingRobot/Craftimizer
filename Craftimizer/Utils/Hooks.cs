@@ -66,7 +66,10 @@ public sealed unsafe class Hooks : IDisposable
             if (!Service.Configuration.SynthHelperAbilityAnts)
                 return ret;
 
-            if (!Service.Plugin.SynthHelperWindow.ShouldDrawAnts)
+            if (Service.Plugin.SynthHelperWindow is not { } window)
+                return ret;
+
+            if (!window.ShouldDrawAnts)
                 return ret;
 
             if (actionType is not (CSActionType.CraftAction or CSActionType.Action))
@@ -84,7 +87,7 @@ public sealed unsafe class Hooks : IDisposable
             if (simActionType == null)
                 return ret;
 
-            if (Service.Plugin.SynthHelperWindow.NextAction != simActionType)
+            if (window.NextAction != simActionType)
                 return 0;
         }
         catch (Exception ex)

@@ -46,9 +46,8 @@ public sealed unsafe class SynthHelper : Window, IDisposable
     public CharacterStats? CharacterStats { get; private set; }
     public SimulationInput? SimulationInput { get; private set; }
     public ActionType? NextAction => (ShouldOpen && Macro.Count > 0) ? Macro[0].Action : null;
-    public bool ShouldDrawAnts => ShouldOpen;
+    public bool ShouldDrawAnts => ShouldOpen && !IsCollapsed;
 
-    public bool IsCrafting { get; private set; }
     private int CurrentActionCount { get; set; }
     private ActionStates CurrentActionStates { get; set; }
     private SimulationState CurrentState
@@ -112,6 +111,8 @@ public sealed unsafe class SynthHelper : Window, IDisposable
     private bool ShouldCalculate => !IsCollapsed && ShouldOpen;
     private bool WasCalculatable { get; set; }
 
+    private bool IsRecalculateQueued { get; set; }
+
     public override void Update()
     {
         base.Update();
@@ -121,14 +122,15 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         if (ShouldCalculate != WasCalculatable)
         {
             if (WasCalculatable)
-            {
-                IsCrafting = false;
                 SolverTask?.Cancel();
-            }
             else if (Macro.Count == 0)
-            {
                 OnStateUpdated();
-            }
+        }
+
+        if (Macro.Count == 0)
+        {
+            if (ShouldOpen != WasOpen || IsCollapsed != WasCollapsed)
+                OnStateUpdated();
         }
 
         if (!ShouldOpen)
@@ -188,11 +190,11 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         if (agent->ActiveCraftRecipeId == 0)
             return false;
 
-        if (!IsCrafting)
-        {
-            IsCrafting = true;
+        if (RecipeData?.RecipeId != agent->ActiveCraftRecipeId)
             OnStartCrafting(recipeId);
-        }
+
+        if (IsRecalculateQueued)
+            OnStateUpdated();
 
         Macro.FlushQueue();
 
@@ -474,6 +476,8 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
     private void OnStartCrafting(ushort recipeId)
     {
+        Log.Debug("On Start craftgin begin!");
+
         var shouldUpdateInput = false;
         if (recipeId != RecipeData?.RecipeId)
         {
@@ -504,13 +508,12 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         CurrentActionCount = 0;
         CurrentActionStates = new();
         CurrentState = GetCurrentState();
+
+        Log.Debug("On Start craftgin end!");
     }
 
     private void OnUseAction(ActionType action)
     {
-        if (!IsCrafting || !ShouldOpen || IsCollapsed)
-            return;
-
         (_, CurrentState) = new SimNoRandom().Execute(GetCurrentState(), action);
         CurrentActionCount = CurrentState.ActionCount;
         CurrentActionStates = CurrentState.ActionStates;
@@ -518,9 +521,6 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
     private void OnFinishedUsingAction()
     {
-        if (!IsCrafting || !ShouldOpen || IsCollapsed)
-            return;
-
         CurrentState = GetCurrentState();
     }
 
@@ -575,9 +575,13 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
     private void OnStateUpdated()
     {
-        if (!IsCrafting || !ShouldOpen || IsCollapsed)
+        if (!ShouldOpen || IsCollapsed)
+        {
+            IsRecalculateQueued = true;
             return;
+        }
 
+        IsRecalculateQueued = false;
         Macro.Clear();
         Macro.InitialState = CurrentState;
         CalculateBestMacro();

@@ -28,9 +28,6 @@ public sealed class IconManager : IDisposable
 {
     private sealed class LoadedIcon : ILoadedTextureIcon
     {
-        // 10: DXGI_FORMAT_R16G16B16A16_FLOAT
-        public static IDalamudTextureWrap EmptyTexture { get; } = Service.TextureProvider.CreateEmpty(new(4, 4, 10), false, false);
-
         public ISharedImmediateTexture Source { get; }
 
         public Vector2? Dimensions => GetWrap()?.Size;
@@ -54,7 +51,7 @@ public sealed class IconManager : IDisposable
             return null;
         }
 
-        public IDalamudTextureWrap GetWrapOrEmpty() => GetWrap() ?? EmptyTexture;
+        public IDalamudTextureWrap GetWrapOrEmpty() => GetWrap() ?? Service.DalamudAssetManager.Empty4X4;
 
         public void Dispose()
         {
