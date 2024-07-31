@@ -459,7 +459,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         }
 
         if (ImGui.Button("Open in Macro Editor", new(-1, 0)))
-            Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), [], null);
+            Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), null, [], null);
     }
 
     public bool ExecuteNextAction()

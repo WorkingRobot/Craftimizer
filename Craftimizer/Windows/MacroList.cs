@@ -352,7 +352,7 @@ public sealed class MacroList : Window, IDisposable
     private void OpenEditor(Macro? macro)
     {
         var stats = Service.Plugin.GetDefaultStats();
-        Service.Plugin.OpenMacroEditor(stats.Character, stats.Recipe, stats.Buffs, macro?.Actions ?? Enumerable.Empty<ActionType>(), macro != null ? (actions => { macro.ActionEnumerable = actions; Service.Configuration.Save(); }) : null);
+        Service.Plugin.OpenMacroEditor(stats.Character, stats.Recipe, stats.Buffs, null, macro?.Actions ?? Enumerable.Empty<ActionType>(), macro != null ? (actions => { macro.ActionEnumerable = actions; Service.Configuration.Save(); }) : null);
     }
 
     private void OnMacroChanged(Macro macro)

@@ -104,13 +104,13 @@ public sealed class Plugin : IDalamudPlugin
     public void OpenEmptyMacroEditor()
     {
         var stats = GetDefaultStats();
-        OpenMacroEditor(stats.Character, stats.Recipe, stats.Buffs, [], null);
+        OpenMacroEditor(stats.Character, stats.Recipe, stats.Buffs, null, [], null);
     }
 
-    public void OpenMacroEditor(CharacterStats characterStats, RecipeData recipeData, MacroEditor.CrafterBuffs buffs, IEnumerable<ActionType> actions, Action<IEnumerable<ActionType>>? setter)
+    public void OpenMacroEditor(CharacterStats characterStats, RecipeData recipeData, MacroEditor.CrafterBuffs buffs, IEnumerable<int>? ingredientHqCounts, IEnumerable<ActionType> actions, Action<IEnumerable<ActionType>>? setter)
     {
         EditorWindow?.Dispose();
-        EditorWindow = new(characterStats, recipeData, buffs, actions, setter);
+        EditorWindow = new(characterStats, recipeData, buffs, ingredientHqCounts, actions, setter);
     }
 
     [Command(name: "/craftaction", description: "Execute the suggested action in the synthesis helper. Can also be run inside a macro. This command is useful for controller players.")]

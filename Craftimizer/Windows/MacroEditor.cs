@@ -108,7 +108,7 @@ public sealed class MacroEditor : Window, IDisposable
     private CancellationTokenSource? popupImportUrlTokenSource;
     private CommunityMacros.CommunityMacro? popupImportUrlMacro;
 
-    public MacroEditor(CharacterStats characterStats, RecipeData recipeData, CrafterBuffs buffs, IEnumerable<ActionType> actions, Action<IEnumerable<ActionType>>? setter) : base("Craftimizer Macro Editor", WindowFlags)
+    public MacroEditor(CharacterStats characterStats, RecipeData recipeData, CrafterBuffs buffs, IEnumerable<int>? ingredientHqCounts, IEnumerable<ActionType> actions, Action<IEnumerable<ActionType>>? setter) : base("Craftimizer Macro Editor", WindowFlags)
     {
         CharacterStats = characterStats;
         RecipeData = recipeData;
@@ -116,7 +116,7 @@ public sealed class MacroEditor : Window, IDisposable
         MacroSetter = setter;
         DefaultActions = actions.ToArray();
 
-        HQIngredientCounts = [.. Enumerable.Repeat(0, RecipeData.Ingredients.Count)];
+        HQIngredientCounts = [.. ingredientHqCounts ?? Enumerable.Repeat(0, RecipeData.Ingredients.Count)];
 
         RecalculateState();
         foreach (var action in DefaultActions)

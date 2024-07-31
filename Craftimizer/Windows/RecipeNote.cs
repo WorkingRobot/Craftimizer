@@ -16,6 +16,7 @@ using Dalamud.Interface.Windowing;
 using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using FFXIVClientStructs.FFXIV.Client.System.String;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using ImGuiNET;
@@ -23,8 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 using ActionType = Craftimizer.Simulator.Actions.ActionType;
 using ClassJob = Craftimizer.Simulator.ClassJob;
 using CSRecipeNote = FFXIVClientStructs.FFXIV.Client.Game.UI.RecipeNote;
@@ -58,6 +58,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
     public AddonRecipeNote* Addon { get; private set; }
     public RecipeData? RecipeData { get; private set; }
     public CharacterStats? CharacterStats { get; private set; }
+    private int StartingQuality { get; set; }
     public CraftableStatus CraftStatus { get; private set; }
 
     private BackgroundTask<(Macro?, SimulationState?)>? SavedMacroTask { get; set; }
@@ -238,7 +239,12 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             StatsChanged = true;
         }
 
-        if (StatsChanged && CraftStatus == CraftableStatus.OK)
+        var startingQuality = RecipeData.CalculateStartingQuality(CalculateIngredientHqCounts());
+        var qualityChanged = startingQuality != StartingQuality;
+        if (qualityChanged)
+            StartingQuality = startingQuality;
+
+        if ((StatsChanged || qualityChanged) && CraftStatus == CraftableStatus.OK)
         {
             // Stats changed and we are still craftable, so we need to recalculate
             CalculateSavedMacro();
@@ -265,6 +271,41 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         }
 
         return true;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 136)]
+    public struct RecipeIngredient2
+    {
+        [FieldOffset(8)]
+        public byte NQCount;
+
+        [FieldOffset(9)]
+        public byte HQCount;
+
+        [FieldOffset(16)]
+        public Utf8String Name;
+
+        [FieldOffset(120)]
+        public uint ItemId;
+
+        [FieldOffset(124)]
+        public uint IconId;
+
+        [FieldOffset(130)]
+        public byte Amount;
+
+        [FieldOffset(131)]
+        public byte Flags;
+    }
+
+    private IEnumerable<int> CalculateIngredientHqCounts()
+    {
+        if (RecipeData == null)
+            throw new InvalidOperationException("RecipeData must not be null");
+
+        var ingredientCount = RecipeData.Ingredients.Count;
+        var ingredientSpan = MemoryMarshal.Cast<CSRecipeNote.RecipeIngredient, RecipeIngredient2>(CSRecipeNote.Instance()->RecipeList->SelectedRecipe->Ingredients);
+        return ingredientSpan.ToArray().Take(ingredientCount).Select(i => (int)i.HQCount);
     }
 
     private Vector2? LastPosition { get; set; }
@@ -403,7 +444,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             Service.Plugin.OpenMacroListWindow();
 
         if (ImGui.Button("Open in Macro Editor", new(availWidth, 0)))
-            Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), [], null);
+            Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), CalculateIngredientHqCounts(), [], null);
     }
 
     private void DrawCharacterStats()
@@ -947,7 +988,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 ImGui.TableNextColumn();
                 {
                     if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Edit, miniRowHeight))
-                        Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), actions, state.MacroEditorSetter);
+                        Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), CalculateIngredientHqCounts(), actions, state.MacroEditorSetter);
                     if (ImGui.IsItemHovered())
                         ImGuiUtils.Tooltip("Open in Macro Editor");
                     if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Paste, miniRowHeight))
@@ -1028,7 +1069,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         if (PlayerState.Instance()->CurrentClassJobId != RecipeData.ClassJob.GetClassJobIndex())
             return CraftableStatus.WrongClassJob;
 
-        if (RecipeData.Recipe.IsSpecializationRequired && !(CharacterStats!.IsSpecialist))
+        if (RecipeData.Recipe.IsSpecializationRequired && !CharacterStats!.IsSpecialist)
             return CraftableStatus.SpecialistRequired;
 
         var itemRequired = RecipeData.Recipe.ItemRequired;
@@ -1101,7 +1142,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         SavedMacroTask?.Cancel();
         SavedMacroTask = new(token =>
         {
-            var input = new SimulationInput(CharacterStats!, RecipeData!.RecipeInfo);
+            var input = new SimulationInput(CharacterStats!, RecipeData!.RecipeInfo, StartingQuality);
             var state = new SimulationState(input);
             var config = Service.Configuration.RecipeNoteSolverConfig;
             var mctsConfig = new MCTSConfig(config);
@@ -1132,7 +1173,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         SuggestedMacroTask?.Cancel();
         SuggestedMacroTask = new(token =>
         {
-            var input = new SimulationInput(CharacterStats!, RecipeData!.RecipeInfo);
+            var input = new SimulationInput(CharacterStats!, RecipeData!.RecipeInfo, StartingQuality);
             var state = new SimulationState(input);
             var config = Service.Configuration.RecipeNoteSolverConfig;
 
@@ -1156,7 +1197,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         CommunityMacroTask?.Cancel();
         CommunityMacroTask = new(token =>
         {
-            var input = new SimulationInput(CharacterStats!, RecipeData!.RecipeInfo);
+            var input = new SimulationInput(CharacterStats!, RecipeData!.RecipeInfo, StartingQuality);
             var state = new SimulationState(input);
             var config = Service.Configuration.RecipeNoteSolverConfig;
             var mctsConfig = new MCTSConfig(config);
