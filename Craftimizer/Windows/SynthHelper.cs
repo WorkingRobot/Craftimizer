@@ -476,8 +476,6 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
     private void OnStartCrafting(ushort recipeId)
     {
-        Log.Debug("On Start craftgin begin!");
-
         var shouldUpdateInput = false;
         if (recipeId != RecipeData?.RecipeId)
         {
@@ -508,8 +506,6 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         CurrentActionCount = 0;
         CurrentActionStates = new();
         CurrentState = GetCurrentState();
-
-        Log.Debug("On Start craftgin end!");
     }
 
     private void OnUseAction(ActionType action)
