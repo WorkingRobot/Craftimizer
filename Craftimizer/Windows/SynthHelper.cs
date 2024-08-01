@@ -124,13 +124,13 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             if (WasCalculatable)
                 SolverTask?.Cancel();
             else if (Macro.Count == 0)
-                OnStateUpdated();
+                CurrentState = GetCurrentState();
         }
 
-        if (Macro.Count == 0)
+        if (Macro.Count == 0 && ShouldOpen)
         {
             if (ShouldOpen != WasOpen || IsCollapsed != WasCollapsed)
-                OnStateUpdated();
+                CurrentState = GetCurrentState();
         }
 
         if (!ShouldOpen)
@@ -188,7 +188,10 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         var recipeId = (ushort)agent->ActiveCraftRecipeId;
 
         if (agent->ActiveCraftRecipeId == 0)
+        {
+            RecipeData = null;
             return false;
+        }
 
         if (RecipeData?.RecipeId != agent->ActiveCraftRecipeId)
             OnStartCrafting(recipeId);
