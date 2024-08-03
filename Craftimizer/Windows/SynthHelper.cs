@@ -93,9 +93,9 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             new()
             {
                 Icon = FontAwesomeIcon.Cog,
-                IconOffset = new(2.5f, 1),
+                IconOffset = new(2, 1),
                 Click = _ => Service.Plugin.OpenSettingsTab("Synthesis Helper"),
-                ShowTooltip = () => ImGuiUtils.Tooltip("Open Craftimizer Settings")
+                ShowTooltip = () => ImGuiUtils.Tooltip("Open Settings")
             }
         ];
 
