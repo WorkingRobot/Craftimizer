@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading;
-using System.Threading.Tasks;
 using ActionType = Craftimizer.Simulator.Actions.ActionType;
 using Sim = Craftimizer.Simulator.Simulator;
 using SimNoRandom = Craftimizer.Simulator.SimulatorNoRandom;
@@ -124,13 +123,13 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             if (WasCalculatable)
                 SolverTask?.Cancel();
             else if (Macro.Count == 0)
-                CurrentState = GetCurrentState();
+                RefreshCurrentState();
         }
 
         if (Macro.Count == 0 && ShouldOpen)
         {
             if (ShouldOpen != WasOpen || IsCollapsed != WasCollapsed)
-                CurrentState = GetCurrentState();
+                RefreshCurrentState();
         }
 
         if (!ShouldOpen)
@@ -156,6 +155,24 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         if (!Service.Configuration.EnableSynthHelper)
             return false;
 
+        var agent = AgentRecipeNote.Instance();
+        var recipeId = (ushort)agent->ActiveCraftRecipeId;
+
+        if (agent->ActiveCraftRecipeId == 0)
+        {
+            RecipeData = null;
+            return false;
+        }
+
+        Addon = (AddonSynthesis*)Service.GameGui.GetAddonByName("Synthesis");
+
+        if (Addon == null)
+            return false;
+
+        // Check if Synthesis addon is visible
+        if (Addon->AtkUnitBase.WindowNode == null)
+            return false;
+
         if (Service.Configuration.DisableSynthHelperOnMacro)
         {
             var module = RaptureShellModule.Instance();
@@ -175,24 +192,6 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             }
         }
 
-        Addon = (AddonSynthesis*)Service.GameGui.GetAddonByName("Synthesis");
-
-        if (Addon == null)
-            return false;
-
-        // Check if Synthesis addon is visible
-        if (Addon->AtkUnitBase.WindowNode == null)
-            return false;
-
-        var agent = AgentRecipeNote.Instance();
-        var recipeId = (ushort)agent->ActiveCraftRecipeId;
-
-        if (agent->ActiveCraftRecipeId == 0)
-        {
-            RecipeData = null;
-            return false;
-        }
-
         if (RecipeData?.RecipeId != agent->ActiveCraftRecipeId)
             OnStartCrafting(recipeId);
 
@@ -203,7 +202,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
         var isInCraftAction = Service.Condition[ConditionFlag.Crafting40];
         if (!isInCraftAction && wasInCraftAction)
-            OnFinishedUsingAction();
+            RefreshCurrentState();
         wasInCraftAction = isInCraftAction;
 
         return true;
@@ -518,10 +517,8 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         CurrentActionStates = CurrentState.ActionStates;
     }
 
-    private void OnFinishedUsingAction()
-    {
+    private void RefreshCurrentState() =>
         CurrentState = GetCurrentState();
-    }
 
     private SimulationState GetCurrentState()
     {
