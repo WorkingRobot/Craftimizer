@@ -69,7 +69,7 @@ public sealed class Settings : Window, IDisposable
             setter(val);
             isDirty = true;
         }
-        if (ImGui.IsItemHovered())
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
             ImGuiUtils.TooltipWrapped(tooltip);
     }
 
@@ -98,7 +98,7 @@ public sealed class Settings : Window, IDisposable
                 isDirty = true;
             }
         }
-        if (ImGui.IsItemHovered())
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
             ImGuiUtils.TooltipWrapped(tooltip);
     }
 
@@ -114,7 +114,7 @@ public sealed class Settings : Window, IDisposable
                 isDirty = true;
             }
         }
-        if (ImGui.IsItemHovered())
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
             ImGuiUtils.TooltipWrapped(tooltip);
     }
 
@@ -137,7 +137,7 @@ public sealed class Settings : Window, IDisposable
                 }
             }
         }
-        if (ImGui.IsItemHovered())
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
             ImGuiUtils.TooltipWrapped(tooltip);
     }
 
@@ -295,6 +295,19 @@ public sealed class Settings : Window, IDisposable
                 ref isDirty
             );
 
+            if (Config.MacroCopy.Type == MacroCopyConfiguration.CopyType.CopyToMacroMate &&
+                !Service.PluginInterface.InstalledPlugins.Any(p => p.IsLoaded && string.Equals(p.InternalName, "MacroMate", StringComparison.Ordinal)))
+            {
+                ImGui.SameLine();
+                using (var color = ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudOrange))
+                {
+                    using var font = ImRaii.PushFont(UiBuilder.IconFont);
+                    ImGui.TextUnformatted(FontAwesomeIcon.ExclamationCircle.ToIconString());
+                }
+                if (ImGui.IsItemHovered())
+                    ImGuiUtils.Tooltip("Macro Mate is not installed");
+            }
+
             if (Config.MacroCopy.Type == MacroCopyConfiguration.CopyType.CopyToMacro)
             {
                 DrawOption(
@@ -372,7 +385,8 @@ public sealed class Settings : Window, IDisposable
                     ref isDirty
                 );
 
-                if (Config.MacroCopy.UseNextMacro && !Service.PluginInterface.InstalledPlugins.Any(p => p.IsLoaded && string.Equals(p.InternalName, "MacroChain", StringComparison.Ordinal)))
+                if (Config.MacroCopy.UseNextMacro &&
+                    !Service.PluginInterface.InstalledPlugins.Any(p => p.IsLoaded && string.Equals(p.InternalName, "MacroChain", StringComparison.Ordinal)))
                 {
                     ImGui.SameLine();
                     using (var color = ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudOrange))
