@@ -253,7 +253,7 @@ public sealed class Settings : Window, IDisposable
         DrawOption(
             "Check For Delineations",
             "Your inventory will be checked to ensure that you have delineations available " +
-            "before suggesting any specialist acitons.",
+            "before suggesting any specialist actions.",
             Config.CheckDelineations,
             v => Config.CheckDelineations = v,
             ref isDirty

@@ -1,5 +1,4 @@
 using Craftimizer.Simulator;
-using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
@@ -98,10 +97,10 @@ public static unsafe class Gearsets
         };
     }
 
-    public static CharacterStats CalculateCharacterStats(GearsetItem[] gearsetItems, int characterLevel, bool canUseManipulation, bool checkDelineations) =>
-        CalculateCharacterStats(CalculateGearsetStats(gearsetItems), gearsetItems, characterLevel, canUseManipulation, checkDelineations);
+    public static CharacterStats CalculateCharacterStats(GearsetItem[] gearsetItems, int characterLevel, bool canUseManipulation) =>
+        CalculateCharacterStats(CalculateGearsetStats(gearsetItems), gearsetItems, characterLevel, canUseManipulation);
 
-    public static CharacterStats CalculateCharacterStats(GearsetStats gearsetStats, GearsetItem[] gearsetItems, int characterLevel, bool canUseManipulation, bool checkDelineations) =>
+    public static CharacterStats CalculateCharacterStats(GearsetStats gearsetStats, GearsetItem[] gearsetItems, int characterLevel, bool canUseManipulation) =>
         new()
         {
             CP = gearsetStats.CP,
@@ -110,7 +109,7 @@ public static unsafe class Gearsets
             Level = characterLevel,
             CanUseManipulation = canUseManipulation,
             HasSplendorousBuff = gearsetItems.Any(IsSplendorousTool),
-            IsSpecialist = gearsetItems.Any(IsSpecialistSoulCrystal) && (!checkDelineations || HasDelineations()),
+            IsSpecialist = gearsetItems.Any(IsSpecialistSoulCrystal),
         };
 
     public static bool HasDelineations() =>

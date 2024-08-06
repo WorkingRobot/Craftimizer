@@ -64,6 +64,9 @@ public readonly record struct SolverConfig
     public static ActionType[] OptimizeActionPool(IEnumerable<ActionType> actions) =>
         [.. actions.Order()];
 
+    public SolverConfig FilterSpecialistActions() =>
+        this with { ActionPool = ActionPool.Where(action => !SpecialistActions.Contains(action)).ToArray() };
+
     public static readonly ActionType[] DeterministicActionPool = OptimizeActionPool(new[]
     {
         ActionType.MuscleMemory,
@@ -165,6 +168,14 @@ public readonly record struct SolverConfig
             ActionType.RapidSynthesis,
             ActionType.HastyTouch,
             ActionType.DaringTouch,
+        }.ToFrozenSet();
+
+    public static readonly FrozenSet<ActionType> SpecialistActions =
+        new[]
+        {
+            ActionType.CarefulObservation,
+            ActionType.HeartAndSoul,
+            ActionType.QuickInnovation,
         }.ToFrozenSet();
 
     public static readonly SolverConfig RecipeNoteDefault = new SolverConfig() with

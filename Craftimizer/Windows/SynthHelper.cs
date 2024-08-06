@@ -493,7 +493,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
             var gearItems = Gearsets.GetGearsetItems(container);
 
-            var characterStats = Gearsets.CalculateCharacterStats(gearStats, gearItems, RecipeData.ClassJob.GetPlayerLevel(), RecipeData.ClassJob.CanPlayerUseManipulation(), Service.Configuration.CheckDelineations);
+            var characterStats = Gearsets.CalculateCharacterStats(gearStats, gearItems, RecipeData.ClassJob.GetPlayerLevel(), RecipeData.ClassJob.CanPlayerUseManipulation());
             if (characterStats != CharacterStats)
             {
                 CharacterStats = characterStats;
@@ -596,13 +596,16 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         }
 
         var state = CurrentState;
-        SolverTask = new(token => CalculateBestMacroTask(state, token));
+        SolverTask = new(token => CalculateBestMacroTask(state, token, Gearsets.HasDelineations()));
         SolverTask.Start();
     }
 
-    private int CalculateBestMacroTask(SimulationState state, CancellationToken token)
+    private int CalculateBestMacroTask(SimulationState state, CancellationToken token, bool hasDelineations)
     {
         var config = Service.Configuration.SynthHelperSolverConfig;
+        var canUseDelineations = !Service.Configuration.CheckDelineations || hasDelineations;
+        if (!canUseDelineations)
+            config = config.FilterSpecialistActions();
 
         token.ThrowIfCancellationRequested();
 

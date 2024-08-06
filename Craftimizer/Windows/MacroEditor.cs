@@ -1535,13 +1535,16 @@ public sealed class MacroEditor : Window, IDisposable
         SolverStartStepCount = Macro.Count;
 
         var state = State;
-        SolverTask = new(token => CalculateBestMacroTask(state, token));
+        SolverTask = new(token => CalculateBestMacroTask(state, token, Gearsets.HasDelineations()));
         SolverTask.Start();
     }
 
-    private int CalculateBestMacroTask(SimulationState state, CancellationToken token)
+    private int CalculateBestMacroTask(SimulationState state, CancellationToken token, bool hasDelineations)
     {
         var config = Service.Configuration.EditorSolverConfig;
+        var canUseDelineations = !Service.Configuration.CheckDelineations || hasDelineations;
+        if (!canUseDelineations)
+            config = config.FilterSpecialistActions();
 
         token.ThrowIfCancellationRequested();
 

@@ -224,7 +224,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
             gearItems = Gearsets.GetGearsetItems(container);
 
-            var characterStats = Gearsets.CalculateCharacterStats(gearStats, gearItems, RecipeData.ClassJob.GetPlayerLevel(), RecipeData.ClassJob.CanPlayerUseManipulation(), Service.Configuration.CheckDelineations);
+            var characterStats = Gearsets.CalculateCharacterStats(gearStats, gearItems, RecipeData.ClassJob.GetPlayerLevel(), RecipeData.ClassJob.CanPlayerUseManipulation());
             if (characterStats != CharacterStats)
             {
                 CharacterStats = characterStats;
@@ -1140,11 +1140,15 @@ public sealed unsafe class RecipeNote : Window, IDisposable
     private void CalculateSavedMacro()
     {
         SavedMacroTask?.Cancel();
+        var hasDelineations = Gearsets.HasDelineations();
         SavedMacroTask = new(token =>
         {
             var input = new SimulationInput(CharacterStats!, RecipeData!.RecipeInfo, StartingQuality);
             var state = new SimulationState(input);
             var config = Service.Configuration.RecipeNoteSolverConfig;
+            var canUseDelineations = !Service.Configuration.CheckDelineations || hasDelineations;
+            if (!canUseDelineations)
+                config = config.FilterSpecialistActions();
             var mctsConfig = new MCTSConfig(config);
             var simulator = new SimulatorNoRandom();
             List<Macro> macros = new(Service.Configuration.Macros);
@@ -1171,11 +1175,15 @@ public sealed unsafe class RecipeNote : Window, IDisposable
     private void CalculateSuggestedMacro()
     {
         SuggestedMacroTask?.Cancel();
+        var hasDelineations = Gearsets.HasDelineations();
         SuggestedMacroTask = new(token =>
         {
             var input = new SimulationInput(CharacterStats!, RecipeData!.RecipeInfo, StartingQuality);
             var state = new SimulationState(input);
             var config = Service.Configuration.RecipeNoteSolverConfig;
+            var canUseDelineations = !Service.Configuration.CheckDelineations || hasDelineations;
+            if (!canUseDelineations)
+                config = config.FilterSpecialistActions();
 
             token.ThrowIfCancellationRequested();
 
@@ -1195,11 +1203,15 @@ public sealed unsafe class RecipeNote : Window, IDisposable
     public void CalculateCommunityMacro()
     {
         CommunityMacroTask?.Cancel();
+        var hasDelineations = Gearsets.HasDelineations();
         CommunityMacroTask = new(token =>
         {
             var input = new SimulationInput(CharacterStats!, RecipeData!.RecipeInfo, StartingQuality);
             var state = new SimulationState(input);
             var config = Service.Configuration.RecipeNoteSolverConfig;
+            var canUseDelineations = !Service.Configuration.CheckDelineations || hasDelineations;
+            if (!canUseDelineations)
+                config = config.FilterSpecialistActions();
             var mctsConfig = new MCTSConfig(config);
             var simulator = new SimulatorNoRandom();
             var macros = Service.CommunityMacros.RetrieveRotations((int)RecipeData.Table.RowId, token).GetAwaiter().GetResult();
