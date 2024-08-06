@@ -1,5 +1,5 @@
 using Craftimizer.Plugin;
-using ExdSheets;
+using ExdSheets.Sheets;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -25,28 +25,27 @@ public static class FoodStatus
         var medicines = new Dictionary<uint, Food>();
         foreach (var item in LuminaSheets.ItemSheet)
         {
-            var isFood = item.ItemUICategory.Row == 46;
-            var isMedicine = item.ItemUICategory.Row == 44;
+            var isFood = item.ItemUICategory.RowId == 46;
+            var isMedicine = item.ItemUICategory.RowId == 44;
             if (!isFood && !isMedicine)
                 continue;
 
-            if (item.ItemAction.Value == null)
+            if (item.ItemAction.ValueNullable is not { } itemAction)
                 continue;
 
-            if (!(item.ItemAction.Value.Type is 844 or 845 or 846))
+            if (itemAction.Type is not (844 or 845 or 846))
                 continue;
 
-            var itemFood = LuminaSheets.ItemFoodSheet.GetRow(item.ItemAction.Value.Data[1]);
-            if (itemFood == null)
+            if (LuminaSheets.ItemFoodSheet.TryGetRow(itemAction.Data[1]) is not { } itemFood)
                 continue;
 
             FoodStat? craftsmanship = null, control = null, cp = null;
             foreach (var stat in itemFood.Params)
             {
-                if (stat.BaseParam.Row == 0)
+                if (stat.BaseParam.RowId == 0)
                     continue;
                 var foodStat = new FoodStat(stat.IsRelative, stat.Value, stat.Max, stat.ValueHQ, stat.MaxHQ);
-                switch (stat.BaseParam.Row)
+                switch (stat.BaseParam.RowId)
                 {
                     case Gearsets.ParamCraftsmanship: craftsmanship = foodStat; break;
                     case Gearsets.ParamControl: control = foodStat; break;
@@ -71,8 +70,8 @@ public static class FoodStatus
         FoodItems = foods.ToFrozenDictionary();
         MedicineItems = medicines.ToFrozenDictionary();
 
-        FoodOrder = FoodItems.OrderByDescending(a => a.Value.Item.LevelItem.Row).Select(a => a.Key).ToImmutableArray();
-        MedicineOrder = MedicineItems.OrderByDescending(a => a.Value.Item.LevelItem.Row).Select(a => a.Key).ToImmutableArray();
+        FoodOrder = FoodItems.OrderByDescending(a => a.Value.Item.LevelItem.RowId).Select(a => a.Key).ToImmutableArray();
+        MedicineOrder = MedicineItems.OrderByDescending(a => a.Value.Item.LevelItem.RowId).Select(a => a.Key).ToImmutableArray();
     }
 
     public static void Initialize() { }

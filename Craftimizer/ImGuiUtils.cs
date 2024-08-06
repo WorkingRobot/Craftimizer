@@ -290,7 +290,7 @@ internal static class ImGuiUtils
         }
     }
 
-    private sealed class SearchableComboData<T> where T : class
+    private sealed class SearchableComboData<T> where T : IEquatable<T>
     {
         public readonly ImmutableArray<T> items;
         public List<T> filteredItems;
@@ -314,7 +314,7 @@ internal static class ImGuiUtils
 
         public void SetItem(T selectedItem)
         {
-            if (this.selectedItem != selectedItem)
+            if (!this.selectedItem.Equals(selectedItem))
             {
                 input = GetString(selectedItem);
                 this.selectedItem = selectedItem;
@@ -364,14 +364,14 @@ internal static class ImGuiUtils
     }
     private static readonly Dictionary<uint, object> ComboData = [];
 
-    private static SearchableComboData<T> GetComboData<T>(uint comboKey, IEnumerable<T> items, T selectedItem, Func<T, string> getString) where T : class =>
+    private static SearchableComboData<T> GetComboData<T>(uint comboKey, IEnumerable<T> items, T selectedItem, Func<T, string> getString) where T : IEquatable<T> =>
         (SearchableComboData<T>)(
             ComboData.TryGetValue(comboKey, out var data)
             ? data
             : ComboData[comboKey] = new SearchableComboData<T>(items, selectedItem, getString));
 
     // https://github.com/ocornut/imgui/issues/718#issuecomment-1563162222
-    public static bool SearchableCombo<T>(string id, ref T selectedItem, IEnumerable<T> items, ImFontPtr selectableFont, float width, Func<T, string> getString, Func<T, string> getId, Action<T> draw) where T : class
+    public static bool SearchableCombo<T>(string id, ref T selectedItem, IEnumerable<T> items, ImFontPtr selectableFont, float width, Func<T, string> getString, Func<T, string> getId, Action<T> draw) where T : IEquatable<T>
     {
         var comboKey = ImGui.GetID(id);
         var data = GetComboData(comboKey, items, selectedItem, getString);

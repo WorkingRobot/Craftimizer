@@ -527,7 +527,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                     ImGuiUtils.TextCentered($"You do not have {RecipeData.ClassJob.GetName()} unlocked.");
                     ImGui.Separator();
                     var unlockQuest = RecipeData.ClassJob.GetUnlockQuest();
-                    var (questGiver, questTerritory, questLocation, mapPayload) = ResolveLevelData(unlockQuest.IssuerLocation.Row);
+                    var (questGiver, questTerritory, questLocation, mapPayload) = ResolveLevelData(unlockQuest.IssuerLocation.RowId);
 
                     var unlockText = $"Unlock it from {questGiver}";
                     ImGuiUtils.AlignCentered(ImGui.CalcTextSize(unlockText).X + 5 + ImGui.GetFrameHeight());
@@ -580,7 +580,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             case CraftableStatus.RequiredItem:
                 {
                     var item = RecipeData.Recipe.ItemRequired.Value!;
-                    var itemName = item.Name.ToDalamudString().ToString();
+                    var itemName = item.Name.ExtractText();
                     var imageSize = ImGui.GetFrameHeight();
 
                     ImGuiUtils.TextCentered($"You are missing the required equipment.");
@@ -594,7 +594,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             case CraftableStatus.RequiredStatus:
                 {
                     var status = RecipeData.Recipe.StatusRequired.Value!;
-                    var statusName = status.Name.ToDalamudString().ToString();
+                    var statusName = status.Name.ExtractText();
                     var statusIcon = Service.IconManager.GetIconCached(status.Icon);
                     var imageSize = new Vector2(ImGui.GetFrameHeight() * (statusIcon.AspectRatio ?? 1), ImGui.GetFrameHeight());
 
@@ -1073,16 +1073,16 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             return CraftableStatus.SpecialistRequired;
 
         var itemRequired = RecipeData.Recipe.ItemRequired;
-        if (itemRequired.Row != 0 && itemRequired.Value != null)
+        if (itemRequired.RowId != 0 && itemRequired.IsValid)
         {
-            if (!gearItems.Any(i => Gearsets.IsItem(i, itemRequired.Row)))
+            if (!gearItems.Any(i => Gearsets.IsItem(i, itemRequired.RowId)))
                 return CraftableStatus.RequiredItem;
         }
 
         var statusRequired = RecipeData.Recipe.StatusRequired;
-        if (statusRequired.Row != 0 && statusRequired.Value != null)
+        if (statusRequired.RowId != 0 && statusRequired.IsValid)
         {
-            if (!Service.ClientState.LocalPlayer!.StatusList.Any(s => s.StatusId == statusRequired.Row))
+            if (!Service.ClientState.LocalPlayer!.StatusList.Any(s => s.StatusId == statusRequired.RowId))
                 return CraftableStatus.RequiredStatus;
         }
 
@@ -1097,24 +1097,24 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
     private static (string NpcName, string Territory, Vector2 MapLocation, MapLinkPayload Payload) ResolveLevelData(uint levelRowId)
     {
-        var level = LuminaSheets.LevelSheet.GetRow(levelRowId) ??
+        var level = LuminaSheets.LevelSheet.TryGetRow(levelRowId) ??
             throw new ArgumentNullException(nameof(levelRowId), $"Invalid level row {levelRowId}");
-        var territory = level.Territory.Value!.PlaceName.Value!.Name.ToDalamudString().ToString();
+        var territory = level.Territory.Value.PlaceName.Value.Name.ExtractText();
         var location = WorldToMap2(new(level.X, level.Z), level.Map.Value!);
 
-        return (ResolveNpcResidentName(level.Object.Row), territory, location, new(level.Territory.Row, level.Map.Row, location.X, location.Y));
+        return (ResolveNpcResidentName(level.Object.RowId), territory, location, new(level.Territory.RowId, level.Map.RowId, location.X, location.Y));
     }
 
-    private static Vector2 WorldToMap2(Vector2 worldCoordinates, ExdSheets.Map map)
+    private static Vector2 WorldToMap2(Vector2 worldCoordinates, ExdSheets.Sheets.Map map)
     {
         return MapUtil.WorldToMap(worldCoordinates, map.OffsetX, map.OffsetY, map.SizeFactor);
     }
 
     private static string ResolveNpcResidentName(uint npcRowId)
     {
-        var resident = LuminaSheets.ENpcResidentSheet.GetRow(npcRowId) ??
+        var resident = LuminaSheets.ENpcResidentSheet.TryGetRow(npcRowId) ??
             throw new ArgumentNullException(nameof(npcRowId), $"Invalid npc row {npcRowId}");
-        return resident.Singular.ToDalamudString().ToString();
+        return resident.Singular.ExtractText();
     }
 
     private static int? GetGearsetForJob(ClassJob job)

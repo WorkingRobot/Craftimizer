@@ -1,21 +1,19 @@
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
-using Dalamud.Game.Text.SeStringHandling.Payloads;
-using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
-using ExdSheets;
 using System;
-using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Text;
-using Action = ExdSheets.Action;
+using Action = ExdSheets.Sheets.Action;
 using ActionType = Craftimizer.Simulator.Actions.ActionType;
 using ClassJob = Craftimizer.Simulator.ClassJob;
 using Condition = Craftimizer.Simulator.Condition;
-using Status = ExdSheets.Status;
-using Dalamud.Interface.Textures;
+using Status = ExdSheets.Sheets.Status;
 using Craftimizer.Utils;
+using ExdSheets.Sheets;
+using Lumina.Text.ReadOnly;
+using Lumina.Text.Payloads;
 
 namespace Craftimizer.Plugin;
 
@@ -31,33 +29,33 @@ internal static class ActionUtils
         foreach (var actionType in actionTypes)
         {
             var actionId = actionType.Base().ActionId;
-            if (LuminaSheets.CraftActionSheet.GetRow(actionId) is CraftAction baseCraftAction)
+            if (LuminaSheets.CraftActionSheet.TryGetRow(actionId) is { } baseCraftAction)
             {
                 foreach (var classJob in classJobs)
                 {
                     ActionRows[(int)actionType, (int)classJob] = (classJob switch
                     {
-                        ClassJob.Carpenter => baseCraftAction.CRP.Value!,
-                        ClassJob.Blacksmith => baseCraftAction.BSM.Value!,
-                        ClassJob.Armorer => baseCraftAction.ARM.Value!,
-                        ClassJob.Goldsmith => baseCraftAction.GSM.Value!,
-                        ClassJob.Leatherworker => baseCraftAction.LTW.Value!,
-                        ClassJob.Weaver => baseCraftAction.WVR.Value!,
-                        ClassJob.Alchemist => baseCraftAction.ALC.Value!,
-                        ClassJob.Culinarian => baseCraftAction.CUL.Value!,
+                        ClassJob.Carpenter => baseCraftAction.CRP.Value,
+                        ClassJob.Blacksmith => baseCraftAction.BSM.Value,
+                        ClassJob.Armorer => baseCraftAction.ARM.Value,
+                        ClassJob.Goldsmith => baseCraftAction.GSM.Value,
+                        ClassJob.Leatherworker => baseCraftAction.LTW.Value,
+                        ClassJob.Weaver => baseCraftAction.WVR.Value,
+                        ClassJob.Alchemist => baseCraftAction.ALC.Value,
+                        ClassJob.Culinarian => baseCraftAction.CUL.Value,
                         _ => baseCraftAction
                     }, null);
                 }
             }
-            if (LuminaSheets.ActionSheet.GetRow(actionId) is Action baseAction)
+            if (LuminaSheets.ActionSheet.TryGetRow(actionId) is { } baseAction)
             {
                 var possibleActions = LuminaSheets.ActionSheet.Where(r =>
                         r.Icon == baseAction.Icon &&
-                        r.ActionCategory.Row == baseAction.ActionCategory.Row &&
-                        r.Name.RawString.Equals(baseAction.Name.RawString, StringComparison.Ordinal));
+                        r.ActionCategory.RowId == baseAction.ActionCategory.RowId &&
+                        r.Name.Equals(baseAction.Name));
                 
                 foreach (var classJob in classJobs)
-                    ActionRows[(int)actionType, (int)classJob] = (null, possibleActions.First(r => r.ClassJobCategory.Value?.IsClassJob(classJob) ?? false));
+                    ActionRows[(int)actionType, (int)classJob] = (null, possibleActions.First(r => r.ClassJobCategory.ValueNullable?.IsClassJob(classJob) ?? false));
             }
         }
     }
@@ -70,32 +68,20 @@ internal static class ActionUtils
     public static uint GetId(this ActionType me, ClassJob classJob)
     {
         var (craftAction, action) = GetActionRow(me, classJob);
-        if (craftAction != null)
-            return craftAction.RowId;
-        if (action != null)
-            return action.RowId;
-        return 0;
+        return craftAction?.RowId ?? action?.RowId ?? 0;
     }
 
     public static string GetName(this ActionType me, ClassJob classJob)
     {
         var (craftAction, action) = GetActionRow(me, classJob);
-        if (craftAction != null)
-            return craftAction.Name.ToDalamudString().TextValue;
-        if (action != null)
-            return action.Name.ToDalamudString().TextValue;
-        return "Unknown";
+        return (craftAction?.Name ?? action?.Name)?.AsSpan().ExtractText() ?? "Unknown";
     }
 
     public static ITextureIcon GetIcon(this ActionType me, ClassJob classJob)
     {
         var (craftAction, action) = GetActionRow(me, classJob);
-        if (craftAction != null)
-            return Service.IconManager.GetIconCached(craftAction.Icon);
-        if (action != null)
-            return Service.IconManager.GetIconCached(action.Icon);
-        // Old "Steady Hand" action icon
-        return Service.IconManager.GetIconCached(1953);
+        // 1953 = Old "Steady Hand" action icon
+        return Service.IconManager.GetIconCached(craftAction?.Icon ?? action?.Icon ?? 1953);
     }
 
     public static ActionType? GetActionTypeFromId(uint actionId, ClassJob classJob, bool isCraftAction)
@@ -155,18 +141,18 @@ internal static class ClassJobUtils
         PlayerState.Instance()->ClassJobLevels[me.GetExpArrayIdx()];
 
     public static unsafe bool CanPlayerUseManipulation(this ClassJob me) =>
-        UIState.Instance()->IsUnlockLinkUnlockedOrQuestCompleted(ActionType.Manipulation.GetActionRow(me).Action!.UnlockLink.Row);
+        UIState.Instance()->IsUnlockLinkUnlockedOrQuestCompleted(ActionType.Manipulation.GetActionRow(me).Action!.Value.UnlockLink.RowId);
 
     public static string GetName(this ClassJob me)
     {
-        var job = LuminaSheets.ClassJobSheet.GetRow(me.GetClassJobIndex())!;
-        return job.Name.ToDalamudString().TextValue.ToLowerInvariant();
+        var job = LuminaSheets.ClassJobSheet.GetRow(me.GetClassJobIndex());
+        return job.Name.ExtractText().ToLowerInvariant();
     }
 
     public static string GetNameArticle(this ClassJob me)
     {
-        var job = LuminaSheets.ClassJobSheet.GetRow(me.GetClassJobIndex())!;
-        if (job.SheetLanguage == Lumina.Data.Language.English)
+        var job = LuminaSheets.ClassJobSheet.GetRow(me.GetClassJobIndex());
+        if (LuminaSheets.ClassJobSheet.Language == Lumina.Data.Language.English)
         {
             if (me is ClassJob.Alchemist or ClassJob.Armorer)
                 return "an";
@@ -176,12 +162,12 @@ internal static class ClassJobUtils
 
     public static string GetAbbreviation(this ClassJob me)
     {
-        var job = LuminaSheets.ClassJobSheet.GetRow(me.GetClassJobIndex())!;
-        return job.Abbreviation.ToDalamudString().TextValue;
+        var job = LuminaSheets.ClassJobSheet.GetRow(me.GetClassJobIndex());
+        return job.Abbreviation.ExtractText();
     }
 
     public static Quest GetUnlockQuest(this ClassJob me) =>
-        LuminaSheets.QuestSheet.GetRow(65720 + (uint)me) ?? throw new ArgumentException($"Could not get unlock quest for {me}", nameof(me));
+        LuminaSheets.QuestSheet.GetRow(65720 + (uint)me);
 
     public static ushort GetIconId(this ClassJob me) =>
         (ushort)(62000 + me.GetClassJobIndex());
@@ -295,15 +281,23 @@ internal static class ConditionUtils
     }
 
     public static string Name(this Condition me) =>
-        LuminaSheets.AddonSheet.GetRow(me.AddonIds().Name)!.Text.ToDalamudString().TextValue;
+        LuminaSheets.AddonSheet.GetRow(me.AddonIds().Name).Text.ExtractText();
 
     public static string Description(this Condition me, bool isRelic)
     {
-        var text = LuminaSheets.AddonSheet.GetRow(me.AddonIds().Description)!.Text.ToDalamudString();
-        for (var i = 0; i < text.Payloads.Count; ++i)
-            if (text.Payloads[i] is RawPayload)
-                text.Payloads[i] = new TextPayload(isRelic ? "1.75" : "1.5");
-        return text.TextValue;
+        var text = LuminaSheets.AddonSheet.GetRow(me.AddonIds().Description).Text;
+        if (!text.Any(p => p is { Type: ReadOnlySePayloadType.Macro, MacroCode: MacroCode.Float }))
+            return text.ExtractText();
+
+        ReadOnlySeString finalText = new();
+        foreach (var payload in text)
+        {
+            if (payload is { Type: ReadOnlySePayloadType.Macro, MacroCode: MacroCode.Float })
+                finalText += new ReadOnlySePayload(ReadOnlySePayloadType.Text, default, Encoding.UTF8.GetBytes(isRelic ? "1.75" : "1.5"));
+            else
+                finalText += payload;
+        }
+        return finalText.ExtractText();
     }
 }
 
@@ -349,7 +343,7 @@ internal static class EffectUtils
     {
         var status = me.Status();
         var name = new StringBuilder();
-        name.Append(status.Name.ToDalamudString().TextValue);
+        name.Append(status.Name.ExtractText());
         if (status.MaxStacks != 0)
             name.Append($" {strength}");
         if (!status.IsPermanent)

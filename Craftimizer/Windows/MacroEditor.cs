@@ -12,7 +12,6 @@ using Dalamud.Interface.ManagedFontAtlas;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
-using Dalamud.Utility;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
@@ -23,6 +22,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Sim = Craftimizer.Simulator.Simulator;
 using SimNoRandom = Craftimizer.Simulator.SimulatorNoRandom;
+using Recipe = ExdSheets.Sheets.Recipe;
 
 namespace Craftimizer.Windows;
 
@@ -376,7 +376,7 @@ public sealed class MacroEditor : Window, IDisposable
                 }
                 ImGui.SameLine(0, 5);
                 {
-                    var manipLevel = ActionType.Manipulation.GetActionRow(RecipeData.ClassJob).Action!.ClassJobLevel;
+                    var manipLevel = ActionType.Manipulation.GetActionRow(RecipeData.ClassJob).Action!.Value.ClassJobLevel;
                     using (var d = ImRaii.Disabled(manipLevel > CharacterStats.Level))
                     {
                         var v = CharacterStats.CanUseManipulation && manipLevel <= CharacterStats.Level;
@@ -586,7 +586,7 @@ public sealed class MacroEditor : Window, IDisposable
         if (input.ItemId == 0)
             return "None";
 
-        var name = LuminaSheets.ItemSheet.GetRow(input.ItemId)?.Name.ToDalamudString().ToString() ?? $"Unknown ({input.ItemId})";
+        var name = LuminaSheets.ItemSheet.TryGetRow(input.ItemId)?.Name.ExtractText() ?? $"Unknown ({input.ItemId})";
         return input.IsHQ ? $"{name} (HQ)" : name;
     }
 
@@ -727,6 +727,16 @@ public sealed class MacroEditor : Window, IDisposable
             return (int)Math.Ceiling((y - b) / (c + 1));
     }
 
+    private readonly struct RecipeWrapper(Recipe recipe) : IEquatable<RecipeWrapper>
+    {
+        public readonly Recipe Recipe = recipe;
+
+        public bool Equals(RecipeWrapper other) =>
+            Recipe.RowId == other.Recipe.RowId;
+    }
+
+    private readonly List<RecipeWrapper> searchableRecipes = LuminaSheets.RecipeSheet.Where(r => r.RecipeLevelTable.RowId != 0 && r.ItemResult.RowId != 0).Select(r => new RecipeWrapper(r)).ToList();
+
     private bool DrawRecipeParams()
     {
         var oldStartingQuality = StartingQuality;
@@ -752,29 +762,29 @@ public sealed class MacroEditor : Window, IDisposable
             (isExpert ? badgeSize.X + 3 : 0);
         ImGui.AlignTextToFramePadding();
 
-        ImGui.Image(Service.IconManager.GetIconCached(RecipeData.Recipe.ItemResult.Value!.Icon).ImGuiHandle, new Vector2(imageSize));
+        ImGui.Image(Service.IconManager.GetIconCached(RecipeData.Recipe.ItemResult.Value.Icon).ImGuiHandle, new Vector2(imageSize));
 
         ImGui.SameLine(0, 5);
 
         ushort? newRecipe = null;
         {
-            var recipe = RecipeData.Recipe;
+            var recipe = new RecipeWrapper(RecipeData.Recipe);
             using var lockedFontHandle = AxisFont.Available ? AxisFont.Lock() : null;
             var fontHandle = lockedFontHandle?.ImFont ?? ImGui.GetFont();
             if (ImGuiUtils.SearchableCombo(
                 "combo",
                 ref recipe,
-                LuminaSheets.RecipeSheet.Where(r => r.RecipeLevelTable.Row != 0 && r.ItemResult.Row != 0),
+                searchableRecipes,
                 fontHandle,
                 ImGui.GetContentRegionAvail().X - rightSideWidth,
-                r => r.ItemResult.Value!.Name.ToDalamudString().ToString(),
-                r => r.RowId.ToString(),
+                r => r.Recipe.ItemResult.Value.Name.ExtractText(),
+                r => r.Recipe.RowId.ToString(),
                 r =>
                 {
-                    ImGui.TextUnformatted($"{r.ItemResult.Value!.Name.ToDalamudString()}");
+                    ImGui.TextUnformatted($"{r.Recipe.ItemResult.Value.Name.ExtractText()}");
 
-                    var classJob = (ClassJob)r.CraftType.Row;
-                    var textLevel = SqText.LevelPrefix.ToIconChar() + SqText.ToLevelString(r.RecipeLevelTable.Value!.ClassJobLevel);
+                    var classJob = (ClassJob)r.Recipe.CraftType.RowId;
+                    var textLevel = SqText.LevelPrefix.ToIconChar() + SqText.ToLevelString(r.Recipe.RecipeLevelTable.Value!.ClassJobLevel);
                     var textLevelSize = ImGui.CalcTextSize(textLevel);
                     ImGui.SameLine();
 
@@ -796,7 +806,7 @@ public sealed class MacroEditor : Window, IDisposable
                     ImGui.TextUnformatted(textLevel);
                 }))
             {
-                newRecipe = (ushort)recipe.RowId;
+                newRecipe = (ushort)recipe.Recipe.RowId;
             }
         }
 
@@ -923,10 +933,10 @@ public sealed class MacroEditor : Window, IDisposable
             {
                 var perItem = RecipeData.CalculateItemStartingQuality(idx, 1);
                 var total = RecipeData.CalculateItemStartingQuality(idx, hqCount);
-                ImGuiUtils.Tooltip($"{ingredient.Item.Name.ToDalamudString()} {SeIconChar.HighQuality.ToIconString()}\n+{perItem} Quality/Item{(total > 0 ? $"\n+{total} Quality" : "")}");
+                ImGuiUtils.Tooltip($"{ingredient.Item.Name.ExtractText()} {SeIconChar.HighQuality.ToIconString()}\n+{perItem} Quality/Item{(total > 0 ? $"\n+{total} Quality" : "")}");
             }
             else if (ingredient.Amount != 0)
-                ImGuiUtils.Tooltip($"{ingredient.Item.Name.ToDalamudString()}");
+                ImGuiUtils.Tooltip($"{ingredient.Item.Name.ExtractText()}");
         }
         ImGui.SameLine(0, 5);
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - (5 + ImGui.CalcTextSize("/").X + 5 + ImGui.CalcTextSize($"99").X));
@@ -1137,7 +1147,7 @@ public sealed class MacroEditor : Window, IDisposable
                 {
                     var status = effect.Status();
                     using var _reset = ImRaii.DefaultFont();
-                    ImGuiUtils.Tooltip($"{status.Name.ToDalamudString()}\n{status.Description.ToDalamudString()}");
+                    ImGuiUtils.Tooltip($"{status.Name.ExtractText()}\n{status.Description.ExtractText()}");
                 }
                 ImGui.SameLine();
             }

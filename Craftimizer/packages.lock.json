@@ -10,18 +10,21 @@
       },
       "ExdSheets": {
         "type": "Direct",
-        "requested": "[1.2.2, )",
-        "resolved": "1.2.2",
-        "contentHash": "oS1oUBhlOpUWY1Wc3SwOLzfAMuSRzBn54I8p84euVUHrUEOzRZwA9vuNKNMAIY66eT1dpc/DxT+C7LNH0nK0jg==",
+        "requested": "[2.1.0, )",
+        "resolved": "2.1.0",
+        "contentHash": "SfvLFyL8LYsW4AzPLFVfFwtKPl9xegGraIe9oFar3IlWW8Z4kf5dkM+1CiSr/J+PQt4xt2QZc/ydZ4ibs3RosA==",
         "dependencies": {
-          "Lumina": "3.15.2"
+          "Lumina": "4.1.1"
         }
       },
       "Lumina": {
         "type": "Direct",
-        "requested": "[3.15.2, )",
-        "resolved": "3.15.2",
-        "contentHash": "EnoxYEYMepcvAoXdZhaFJiv2aiDBIPjgkgzxR/+ArOxlrALzCgheTsb5yD39a9sxNIi2tNECT93ulZvYjx8fZg=="
+        "requested": "[4.1.1, )",
+        "resolved": "4.1.1",
+        "contentHash": "Hd+iTtdaPACTpViXaJ/+sQ3ZQ8MEpApCSD+mxTXnUTYDSZOAipuC4LsZqhAkLMeQHSK/R/jiXEXaXS7e0mTXyA==",
+        "dependencies": {
+          "Microsoft.Extensions.ObjectPool": "9.0.0-preview.1.24081.5"
+        }
       },
       "MathNet.Numerics": {
         "type": "Direct",
@@ -31,14 +34,20 @@
       },
       "Meziantou.Analyzer": {
         "type": "Direct",
-        "requested": "[2.0.162, )",
-        "resolved": "2.0.162",
-        "contentHash": "lU5ZkiNx6Jj++yYhkUkn2qsgl+PSfAy+BDFc0IkoVVeSCnmUOGBa0Eb1XzGLAeyAuIoz6vYN4J97Q/uiGdIkhw=="
+        "requested": "[2.0.163, )",
+        "resolved": "2.0.163",
+        "contentHash": "vN0YmOkuvPLukMsefLHYCWYaLPzpc6SfoR74aPwuLeK8QdxgxkavywQ1q/II0shLEEaN1RhlMjmL1RxMPW853w=="
+      },
+      "Microsoft.Extensions.ObjectPool": {
+        "type": "Direct",
+        "requested": "[9.0.0-preview.1.24081.5, )",
+        "resolved": "9.0.0-preview.1.24081.5",
+        "contentHash": "aAR7YW+pUUdvHk3vj7GtAi71dWGDIuY9270lsmQ6lKw23zzY+r8pLP3cGNbJdlnA9VWl+S+gnIVkBCqj2ROlEg=="
       },
       "DotNext": {
         "type": "Transitive",
-        "resolved": "5.8.0",
-        "contentHash": "5PwF7lUwgJKMcQRrMnFo8ilqrFq9OyaQ5Lq/zFHn0LahhLriNeySCPs08Zd15FdBV0G0KpZvPHBC8Rp1LIsrhg==",
+        "resolved": "5.11.0",
+        "contentHash": "aLWtURne05gwWFFsOg9/X1g4V5yHyuWHX5paQIN7pJIDLCbaCDHcQlLeRRvzvksjAflZJ7tTHkowN/Xi1NXPrA==",
         "dependencies": {
           "System.IO.Hashing": "8.0.0"
         }
@@ -55,7 +64,7 @@
         "type": "Project",
         "dependencies": {
           "Craftimizer.Simulator": "[1.0.0, )",
-          "DotNext": "[5.8.0, )"
+          "DotNext": "[5.11.0, )"
         }
       }
     }

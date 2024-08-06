@@ -1,37 +1,27 @@
-using Dalamud.Game;
+using Dalamud.Utility;
 using ExdSheets;
-using Lumina.Excel;
-using System.Collections.Concurrent;
+using ExdSheets.Sheets;
+using Lumina.Data;
 
 namespace Craftimizer.Plugin;
 
 public static class LuminaSheets
 {
-    public static readonly ExcelSheet<Recipe> RecipeSheet = Service.DataManager.GetExcelSheet<Recipe>()!;
-    public static readonly ExcelSheet<Action> ActionSheet = Service.DataManager.GetExcelSheet<Action>()!;
-    public static readonly ExcelSheet<CraftAction> CraftActionSheet = Service.DataManager.GetExcelSheet<CraftAction>()!;
-    public static readonly ExcelSheet<Status> StatusSheet = Service.DataManager.GetExcelSheet<Status>()!;
-    public static readonly ExcelSheet<Addon> AddonSheet = Service.DataManager.GetExcelSheet<Addon>()!;
-    public static readonly ExcelSheet<ClassJob> ClassJobSheet = Service.DataManager.GetExcelSheet<ClassJob>()!;
-    public static readonly ExcelSheet<Item> ItemSheet = Service.DataManager.GetExcelSheet<Item>()!;
-    public static readonly ExcelSheet<Item> ItemSheetEnglish = Service.DataManager.GetExcelSheet<Item>(ClientLanguage.English)!;
-    public static readonly ExcelSheet<ENpcResident> ENpcResidentSheet = Service.DataManager.GetExcelSheet<ENpcResident>()!;
-    public static readonly ExcelSheet<Level> LevelSheet = Service.DataManager.GetExcelSheet<Level>()!;
-    public static readonly ExcelSheet<Quest> QuestSheet = Service.DataManager.GetExcelSheet<Quest>()!;
-    public static readonly ExcelSheet<Materia> MateriaSheet = Service.DataManager.GetExcelSheet<Materia>()!;
-    public static readonly ExcelSheet<BaseParam> BaseParamSheet = Service.DataManager.GetExcelSheet<BaseParam>()!;
-    public static readonly ExcelSheet<ItemFood> ItemFoodSheet = Service.DataManager.GetExcelSheet<ItemFood>()!;
-    public static readonly ExcelSheet<SatisfactionSupply> SatisfactionSupplySheet = Service.DataManager.GetExcelSheet<SatisfactionSupply>()!;
+    private static readonly Module Module = new(Service.DataManager.GameData, Service.DataManager.Language.ToLumina());
 
-    private static ConcurrentDictionary<(ExcelSheetImpl, uint), uint> SubRowCountCache { get; } = new();
-    public static uint? GetSubRowCount<T>(this ExcelSheet<T> sheet, uint row) where T : ExcelRow
-    {
-        if (SubRowCountCache.TryGetValue((sheet, row), out var count))
-            return count;
-        var parser = sheet.GetRowParser(row);
-        if (parser == null)
-            return null;
-        SubRowCountCache.TryAdd((sheet, row), parser.RowCount);
-        return parser.RowCount;
-    }
+    public static readonly Sheet<Recipe> RecipeSheet = Module.GetSheet<Recipe>();
+    public static readonly Sheet<Action> ActionSheet = Module.GetSheet<Action>();
+    public static readonly Sheet<CraftAction> CraftActionSheet = Module.GetSheet<CraftAction>();
+    public static readonly Sheet<Status> StatusSheet = Module.GetSheet<Status>();
+    public static readonly Sheet<Addon> AddonSheet = Module.GetSheet<Addon>();
+    public static readonly Sheet<ClassJob> ClassJobSheet = Module.GetSheet<ClassJob>();
+    public static readonly Sheet<Item> ItemSheet = Module.GetSheet<Item>();
+    public static readonly Sheet<Item> ItemSheetEnglish = Module.GetSheet<Item>(Language.English)!;
+    public static readonly Sheet<ENpcResident> ENpcResidentSheet = Module.GetSheet<ENpcResident>();
+    public static readonly Sheet<Level> LevelSheet = Module.GetSheet<Level>();
+    public static readonly Sheet<Quest> QuestSheet = Module.GetSheet<Quest>();
+    public static readonly Sheet<Materia> MateriaSheet = Module.GetSheet<Materia>();
+    public static readonly Sheet<BaseParam> BaseParamSheet = Module.GetSheet<BaseParam>();
+    public static readonly Sheet<ItemFood> ItemFoodSheet = Module.GetSheet<ItemFood>();
+    public static readonly Sheet<SatisfactionSupply> SatisfactionSupplySheet = Module.GetSheet<SatisfactionSupply>();
 }

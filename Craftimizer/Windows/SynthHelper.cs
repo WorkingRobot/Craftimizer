@@ -10,7 +10,6 @@ using Dalamud.Interface.ManagedFontAtlas;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
-using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.UI;
@@ -382,7 +381,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
                 {
                     var status = effect.Status();
                     using var _reset = ImRaii.DefaultFont();
-                    ImGuiUtils.Tooltip($"{status.Name.ToDalamudString()}\n{status.Description.ToDalamudString()}");
+                    ImGuiUtils.Tooltip($"{status.Name.ExtractText()}\n{status.Description.ExtractText()}");
                 }
                 ImGui.SameLine();
             }

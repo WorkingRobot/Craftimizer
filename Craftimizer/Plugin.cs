@@ -62,7 +62,7 @@ public sealed class Plugin : IDalamudPlugin
         SynthHelperWindow = new();
         ListWindow = new();
 
-        // Trigger static constructors so a huge hitch doesn't occur on first RecipeNote frame.
+        // Trigger static constructors so a hitch doesn't occur on first RecipeNote frame.
         FoodStatus.Initialize();
         ActionUtils.Initialize();
 

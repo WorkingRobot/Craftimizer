@@ -3,7 +3,7 @@ using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
-using ExdSheets;
+using ExdSheets.Sheets;
 using System;
 using System.Linq;
 using Craftimizer.Plugin;
@@ -62,10 +62,10 @@ public static unsafe class Gearsets
         }
 
         foreach (var statIncrease in item.BaseParam.Zip(item.BaseParamValue))
-            IncreaseStat(statIncrease.First.Row, statIncrease.Second);
+            IncreaseStat(statIncrease.First.RowId, statIncrease.Second);
         if (gearsetItem.IsHq)
             foreach (var statIncrease in item.BaseParamSpecial.Zip(item.BaseParamValueSpecial))
-                IncreaseStat(statIncrease.First.Row, statIncrease.Second);
+                IncreaseStat(statIncrease.First.RowId, statIncrease.Second);
 
         foreach (var gearsetMateria in gearsetItem.Materia)
         {
@@ -73,7 +73,7 @@ public static unsafe class Gearsets
                 continue;
 
             var materia = LuminaSheets.MateriaSheet.GetRow(gearsetMateria.Type)!;
-            IncreaseStat(materia.BaseParam.Row, materia.Value[gearsetMateria.Grade]);
+            IncreaseStat(materia.BaseParam.RowId, materia.Value[gearsetMateria.Grade]);
         }
 
         cp = Math.Min(cp, CalculateParamCap(item, ParamCP));
@@ -125,17 +125,17 @@ public static unsafe class Gearsets
             return false;
 
         var luminaItem = LuminaSheets.ItemSheet.GetRow(item.ItemId)!;
-        //     Soul Crystal ItemUICategory                                          DoH Category
-        return luminaItem.ItemUICategory.Row == 62 && luminaItem.ClassJobUse.Value!.ClassJobCategory.Row == 33;
+        //     Soul Crystal ItemUICategory                                           DoH Category
+        return luminaItem.ItemUICategory.RowId == 62 && luminaItem.ClassJobUse.Value.ClassJobCategory.RowId == 33;
     }
 
     public static bool IsSplendorousTool(GearsetItem item) =>
-        LuminaSheets.ItemSheetEnglish.GetRow(item.ItemId)!.Description.ToDalamudString().TextValue.Contains("Increases to quality are 1.75 times higher than normal when material condition is Good.", StringComparison.Ordinal);
+        LuminaSheets.ItemSheetEnglish.GetRow(item.ItemId).Description.ExtractText().Contains("Increases to quality are 1.75 times higher than normal when material condition is Good.", StringComparison.Ordinal);
 
     // https://github.com/ffxiv-teamcraft/ffxiv-teamcraft/blob/24d0db2d9676f264edf53651b21005305267c84c/apps/client/src/app/modules/gearsets/materia.service.ts#L265
     private static int CalculateParamCap(Item item, uint paramId)
     {
-        var ilvl = item.LevelItem.Value!;
+        var ilvl = item.LevelItem.Value;
         var param = LuminaSheets.BaseParamSheet.GetRow(paramId)!;
 
         var baseValue = paramId switch
@@ -146,7 +146,7 @@ public static unsafe class Gearsets
             _ => 0
         };
         // https://github.com/ffxiv-teamcraft/ffxiv-teamcraft/blob/24d0db2d9676f264edf53651b21005305267c84c/apps/data-extraction/src/extractors/items.extractor.ts#L6
-        var slotMod = item.EquipSlotCategory.Row switch
+        var slotMod = item.EquipSlotCategory.RowId switch
         {
             1 => param.OneHandWeaponPercent, // column 4
             2 => param.OffHandPercent,       // column 5
