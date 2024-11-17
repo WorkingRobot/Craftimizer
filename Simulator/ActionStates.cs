@@ -7,22 +7,21 @@ namespace Craftimizer.Simulator;
 [StructLayout(LayoutKind.Auto)]
 public record struct ActionStates
 {
-    public byte TouchComboIdx;
+    public ActionProc Combo;
     public byte CarefulObservationCount;
     public bool UsedHeartAndSoul;
     public bool UsedQuickInnovation;
     public bool UsedTrainedPerfection;
-    public bool ObserveCombo;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void MutateState(BaseAction baseAction)
     {
         if (baseAction is BasicTouch)
-            TouchComboIdx = 1;
-        else if (TouchComboIdx == 1 && baseAction is StandardTouch)
-            TouchComboIdx = 2;
+            Combo = ActionProc.UsedBasicTouch;
+        else if ((Combo == ActionProc.UsedBasicTouch && baseAction is StandardTouch) || baseAction is Observe)
+            Combo = ActionProc.AdvancedTouch;
         else
-            TouchComboIdx = 0;
+            Combo = ActionProc.None;
 
         if (baseAction is CarefulObservation)
             CarefulObservationCount++;
@@ -35,7 +34,5 @@ public record struct ActionStates
 
         if (baseAction is TrainedPerfection)
             UsedTrainedPerfection = true;
-
-        ObserveCombo = baseAction is Observe;
     }
 }

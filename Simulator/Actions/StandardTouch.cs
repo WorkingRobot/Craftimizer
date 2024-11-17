@@ -8,5 +8,5 @@ internal sealed class StandardTouch() : BaseAction(
     )
 {
     public override int CPCost(Simulator s) =>
-        s.ActionStates.TouchComboIdx == 1 ? 18 : 32;
+        s.ActionStates.Combo == ActionProc.UsedBasicTouch ? 18 : 32;
 }

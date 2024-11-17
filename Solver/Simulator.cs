@@ -84,12 +84,12 @@ internal sealed class Simulator : SimulatorNoRandom
             return false;
 
         // don't allow combo actions if the combo is already in progress
-        if (ActionStates.TouchComboIdx != 0 &&
+        if (ActionStates.Combo != ActionProc.None &&
             (action is ActionType.StandardTouchCombo or ActionType.AdvancedTouchCombo or ActionType.RefinedTouchCombo))
             return false;
 
-        // only allow Advanced Touch when Observing
-        if (ActionStates.ObserveCombo && action is not ActionType.AdvancedTouch)
+        // when combo'd, only allow Advanced Touch
+        if (ActionStates.Combo == ActionProc.AdvancedTouch && action is not ActionType.AdvancedTouch)
             return false;
 
         // don't allow pure quality moves under Veneration
@@ -140,7 +140,7 @@ internal sealed class Simulator : SimulatorNoRandom
 
         // don't allow Refined Touch without a combo
         if (action is ActionType.RefinedTouch &&
-            ActionStates.TouchComboIdx != 1)
+            ActionStates.Combo != ActionProc.UsedBasicTouch)
             return false;
 
         // don't allow Immaculate Mends that are too inefficient
