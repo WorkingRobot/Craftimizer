@@ -22,7 +22,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Sim = Craftimizer.Simulator.Simulator;
 using SimNoRandom = Craftimizer.Simulator.SimulatorNoRandom;
-using Recipe = ExdSheets.Sheets.Recipe;
+using Recipe = Lumina.Excel.Sheets.Recipe;
 
 namespace Craftimizer.Windows;
 
@@ -585,8 +585,16 @@ public sealed class MacroEditor : Window, IDisposable
     {
         if (input.ItemId == 0)
             return "None";
-
-        var name = LuminaSheets.ItemSheet.TryGetRow(input.ItemId)?.Name.ExtractText() ?? $"Unknown ({input.ItemId})";
+        var name = "";
+        if (LuminaSheets.ItemSheet.TryGetRow(input.ItemId, out var row))
+        {
+            name = row.Name.ExtractText();
+        }
+        else
+        {
+            name = $"Unknown ({input.ItemId})";   
+        }
+         
         return input.IsHQ ? $"{name} (HQ)" : name;
     }
 

@@ -11,9 +11,7 @@ public sealed unsafe class Chat
 {
     private delegate void SendChatDelegate(UIModule* @this, Utf8String* message, Utf8String* historyMessage, bool pushToHistory);
 
-    [Signature("48 89 5C 24 ?? 57 48 83 EC 20 48 8B FA 48 8B D9 45 84 C9")]
-    private readonly SendChatDelegate sendChat = null!;
-
+   
     public Chat()
     {
         Service.GameInteropProvider.InitializeFromAttributes(this);
@@ -25,7 +23,7 @@ public sealed unsafe class Chat
 
         var str = Utf8String.FromString(message);
         str->SanitizeString(0x27F, null);
-        sendChat(UIModule.Instance(), str, null, false);
+        //sendChat(UIModule.Instance(), str, null, false);
         str->Dtor(true);
     }
 }

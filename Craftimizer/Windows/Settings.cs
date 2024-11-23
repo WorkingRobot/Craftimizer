@@ -451,7 +451,7 @@ public sealed class Settings : Window, IDisposable
                             v =>
                             {
                                 Config.MacroCopy.IntermediateNotificationSound = v;
-                                UIModule.PlayChatSoundEffect((uint)v);
+                                UIGlobals.PlayChatSoundEffect((uint)v);
                             },
                             ref isDirty
                         );
@@ -466,7 +466,7 @@ public sealed class Settings : Window, IDisposable
                         v =>
                         {
                             Config.MacroCopy.EndNotificationSound = v;
-                            UIModule.PlayChatSoundEffect((uint)v);
+                            UIGlobals.PlayChatSoundEffect((uint)v);
                         },
                         ref isDirty
                     );

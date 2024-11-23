@@ -5,13 +5,13 @@ using System;
 using System.Linq;
 using System.Numerics;
 using System.Text;
-using Action = ExdSheets.Sheets.Action;
+using Action = Lumina.Excel.Sheets.Action;
 using ActionType = Craftimizer.Simulator.Actions.ActionType;
 using ClassJob = Craftimizer.Simulator.ClassJob;
 using Condition = Craftimizer.Simulator.Condition;
-using Status = ExdSheets.Sheets.Status;
+using Status = Lumina.Excel.Sheets.Status;
 using Craftimizer.Utils;
-using ExdSheets.Sheets;
+using Lumina.Excel.Sheets;
 using Lumina.Text.ReadOnly;
 using Lumina.Text.Payloads;
 
@@ -29,7 +29,7 @@ internal static class ActionUtils
         foreach (var actionType in actionTypes)
         {
             var actionId = actionType.Base().ActionId;
-            if (LuminaSheets.CraftActionSheet.TryGetRow(actionId) is { } baseCraftAction)
+            if (LuminaSheets.CraftActionSheet.TryGetRow(actionId, out var baseCraftAction ))
             {
                 foreach (var classJob in classJobs)
                 {
@@ -47,7 +47,7 @@ internal static class ActionUtils
                     }, null);
                 }
             }
-            if (LuminaSheets.ActionSheet.TryGetRow(actionId) is { } baseAction)
+            if (LuminaSheets.ActionSheet.TryGetRow(actionId, out var baseAction))
             {
                 var possibleActions = LuminaSheets.ActionSheet.Where(r =>
                         r.Icon == baseAction.Icon &&

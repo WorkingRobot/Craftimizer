@@ -2,7 +2,7 @@ using Craftimizer.Simulator;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
-using ExdSheets.Sheets;
+using Lumina.Excel.Sheets;
 using System;
 using System.Linq;
 using Craftimizer.Plugin;

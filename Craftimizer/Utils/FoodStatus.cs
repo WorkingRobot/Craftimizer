@@ -1,5 +1,5 @@
 using Craftimizer.Plugin;
-using ExdSheets.Sheets;
+using Lumina.Excel.Sheets;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -36,7 +36,7 @@ public static class FoodStatus
             if (itemAction.Type is not (844 or 845 or 846))
                 continue;
 
-            if (LuminaSheets.ItemFoodSheet.TryGetRow(itemAction.Data[1]) is not { } itemFood)
+            if (!LuminaSheets.ItemFoodSheet.TryGetRow(itemAction.Data[1], out var itemFood))
                 continue;
 
             FoodStat? craftsmanship = null, control = null, cp = null;

@@ -1,27 +1,28 @@
 using Dalamud.Utility;
-using ExdSheets;
-using ExdSheets.Sheets;
+using FFXIVClientStructs.FFXIV.Component.Excel;
+using Lumina.Excel.Sheets;
 using Lumina.Data;
+using Lumina.Excel;
 
 namespace Craftimizer.Plugin;
 
 public static class LuminaSheets
 {
-    private static readonly Module Module = new(Service.DataManager.GameData, Service.DataManager.Language.ToLumina());
+    private static readonly ExcelModule ExcelModule = new(Service.DataManager.GameData);
 
-    public static readonly Sheet<Recipe> RecipeSheet = Module.GetSheet<Recipe>();
-    public static readonly Sheet<Action> ActionSheet = Module.GetSheet<Action>();
-    public static readonly Sheet<CraftAction> CraftActionSheet = Module.GetSheet<CraftAction>();
-    public static readonly Sheet<Status> StatusSheet = Module.GetSheet<Status>();
-    public static readonly Sheet<Addon> AddonSheet = Module.GetSheet<Addon>();
-    public static readonly Sheet<ClassJob> ClassJobSheet = Module.GetSheet<ClassJob>();
-    public static readonly Sheet<Item> ItemSheet = Module.GetSheet<Item>();
-    public static readonly Sheet<Item> ItemSheetEnglish = Module.GetSheet<Item>(Language.English)!;
-    public static readonly Sheet<ENpcResident> ENpcResidentSheet = Module.GetSheet<ENpcResident>();
-    public static readonly Sheet<Level> LevelSheet = Module.GetSheet<Level>();
-    public static readonly Sheet<Quest> QuestSheet = Module.GetSheet<Quest>();
-    public static readonly Sheet<Materia> MateriaSheet = Module.GetSheet<Materia>();
-    public static readonly Sheet<BaseParam> BaseParamSheet = Module.GetSheet<BaseParam>();
-    public static readonly Sheet<ItemFood> ItemFoodSheet = Module.GetSheet<ItemFood>();
-    public static readonly Sheet<SatisfactionSupply> SatisfactionSupplySheet = Module.GetSheet<SatisfactionSupply>();
+    public static readonly ExcelSheet<Recipe> RecipeSheet = ExcelModule.GetSheet<Recipe>();
+    public static readonly ExcelSheet<Action> ActionSheet = ExcelModule.GetSheet<Action>();
+    public static readonly ExcelSheet<CraftAction> CraftActionSheet = ExcelModule.GetSheet<CraftAction>();
+    public static readonly ExcelSheet<Status> StatusSheet = ExcelModule.GetSheet<Status>();
+    public static readonly ExcelSheet<Addon> AddonSheet = ExcelModule.GetSheet<Addon>();
+    public static readonly ExcelSheet<ClassJob> ClassJobSheet = ExcelModule.GetSheet<ClassJob>();
+    public static readonly ExcelSheet<Item> ItemSheet = ExcelModule.GetSheet<Item>();
+    public static readonly ExcelSheet<Item> ItemSheetEnglish = ExcelModule.GetSheet<Item>(Language.English)!;
+    public static readonly ExcelSheet<ENpcResident> ENpcResidentSheet = ExcelModule.GetSheet<ENpcResident>();
+    public static readonly ExcelSheet<Level> LevelSheet = ExcelModule.GetSheet<Level>();
+    public static readonly ExcelSheet<Quest> QuestSheet = ExcelModule.GetSheet<Quest>();
+    public static readonly ExcelSheet<Materia> MateriaSheet = ExcelModule.GetSheet<Materia>();
+    public static readonly ExcelSheet<BaseParam> BaseParamSheet = ExcelModule.GetSheet<BaseParam>();
+    public static readonly ExcelSheet<ItemFood> ItemFoodSheet = ExcelModule.GetSheet<ItemFood>();
+    public static readonly SubrowExcelSheet<SatisfactionSupply> SatisfactionSupplySheet = ExcelModule.GetSubrowSheet<SatisfactionSupply>();
 }
