@@ -27,7 +27,7 @@ jobs:
 
       - name: Download Dalamud
         run: |
-          wget https://goatcorp.github.io/dalamud-distrib/apiX/latest.zip
+          wget https://goatcorp.github.io/dalamud-distrib/latest.zip
           unzip latest.zip -d dalamud/
           echo "DALAMUD_HOME=$PWD/dalamud" >> $GITHUB_ENV
 
