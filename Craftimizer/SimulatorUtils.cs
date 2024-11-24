@@ -5,15 +5,15 @@ using System;
 using System.Linq;
 using System.Numerics;
 using System.Text;
-using Action = ExdSheets.Sheets.Action;
+using Action = Lumina.Excel.Sheets.Action;
 using ActionType = Craftimizer.Simulator.Actions.ActionType;
 using ClassJob = Craftimizer.Simulator.ClassJob;
 using Condition = Craftimizer.Simulator.Condition;
-using Status = ExdSheets.Sheets.Status;
+using Status = Lumina.Excel.Sheets.Status;
 using Craftimizer.Utils;
-using ExdSheets.Sheets;
 using Lumina.Text.ReadOnly;
 using Lumina.Text.Payloads;
+using Lumina.Excel.Sheets;
 
 namespace Craftimizer.Plugin;
 
@@ -29,7 +29,7 @@ internal static class ActionUtils
         foreach (var actionType in actionTypes)
         {
             var actionId = actionType.Base().ActionId;
-            if (LuminaSheets.CraftActionSheet.TryGetRow(actionId) is { } baseCraftAction)
+            if (LuminaSheets.CraftActionSheet.GetRowOrDefault(actionId) is { } baseCraftAction)
             {
                 foreach (var classJob in classJobs)
                 {
@@ -47,7 +47,7 @@ internal static class ActionUtils
                     }, null);
                 }
             }
-            if (LuminaSheets.ActionSheet.TryGetRow(actionId) is { } baseAction)
+            if (LuminaSheets.ActionSheet.GetRowOrDefault(actionId) is { } baseAction)
             {
                 var possibleActions = LuminaSheets.ActionSheet.Where(r =>
                         r.Icon == baseAction.Icon &&
@@ -327,13 +327,13 @@ internal static class EffectUtils
     public static Status Status(this EffectType me) =>
         LuminaSheets.StatusSheet.GetRow(me.StatusId())!;
 
-    public static ushort GetIconId(this EffectType me, int strength)
+    public static uint GetIconId(this EffectType me, int strength)
     {
         var status = me.Status();
         var iconId = status.Icon;
         if (status.MaxStacks != 0)
             iconId += (uint)Math.Clamp(strength, 1, status.MaxStacks) - 1;
-        return (ushort)iconId;
+        return iconId;
     }
 
     public static ITextureIcon GetIcon(this EffectType me, int strength) =>

@@ -11,7 +11,7 @@ public sealed unsafe class Chat
 {
     private delegate void SendChatDelegate(UIModule* @this, Utf8String* message, Utf8String* historyMessage, bool pushToHistory);
 
-    [Signature("48 89 5C 24 ?? 57 48 83 EC 20 48 8B FA 48 8B D9 45 84 C9")]
+    [Signature("48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC 20 48 8B F2 48 8B F9 45 84 C9")]
     private readonly SendChatDelegate sendChat = null!;
 
     public Chat()

@@ -1097,23 +1097,21 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
     private static (string NpcName, string Territory, Vector2 MapLocation, MapLinkPayload Payload) ResolveLevelData(uint levelRowId)
     {
-        var level = LuminaSheets.LevelSheet.TryGetRow(levelRowId) ??
-            throw new ArgumentNullException(nameof(levelRowId), $"Invalid level row {levelRowId}");
+        var level = LuminaSheets.LevelSheet.GetRow(levelRowId);
         var territory = level.Territory.Value.PlaceName.Value.Name.ExtractText();
         var location = WorldToMap2(new(level.X, level.Z), level.Map.Value!);
 
         return (ResolveNpcResidentName(level.Object.RowId), territory, location, new(level.Territory.RowId, level.Map.RowId, location.X, location.Y));
     }
 
-    private static Vector2 WorldToMap2(Vector2 worldCoordinates, ExdSheets.Sheets.Map map)
+    private static Vector2 WorldToMap2(Vector2 worldCoordinates, Lumina.Excel.Sheets.Map map)
     {
         return MapUtil.WorldToMap(worldCoordinates, map.OffsetX, map.OffsetY, map.SizeFactor);
     }
 
     private static string ResolveNpcResidentName(uint npcRowId)
     {
-        var resident = LuminaSheets.ENpcResidentSheet.TryGetRow(npcRowId) ??
-            throw new ArgumentNullException(nameof(npcRowId), $"Invalid npc row {npcRowId}");
+        var resident = LuminaSheets.ENpcResidentSheet.GetRow(npcRowId);
         return resident.Singular.ExtractText();
     }
 

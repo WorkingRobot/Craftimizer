@@ -1,6 +1,6 @@
 using Craftimizer.Plugin;
 using Craftimizer.Simulator;
-using ExdSheets.Sheets;
+using Lumina.Excel.Sheets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,7 +27,7 @@ public sealed record RecipeData
     {
         RecipeId = recipeId;
 
-        Recipe = LuminaSheets.RecipeSheet.TryGetRow(recipeId) ??
+        Recipe = LuminaSheets.RecipeSheet.GetRowOrDefault(recipeId) ??
             throw new ArgumentException($"Invalid recipe id {recipeId}", nameof(recipeId));
 
         Table = Recipe.RecipeLevelTable.Value;
@@ -47,9 +47,9 @@ public sealed record RecipeData
         };
 
         int[]? thresholds = null;
-        if (Recipe.CollectableMetadata.TryGetValue<CollectablesShopRefine>() is { } row)
+        if (Recipe.CollectableMetadata.GetValueOrDefault<CollectablesShopRefine>() is { } row)
             thresholds = [row.LowCollectability, row.MidCollectability, row.HighCollectability];
-        else if (Recipe.CollectableMetadata.TryGetValue<HWDCrafterSupply>() is { } row2)
+        else if (Recipe.CollectableMetadata.GetValueOrDefault<HWDCrafterSupply>() is { } row2)
         {
             foreach (var entry in row2.HWDCrafterSupplyParams)
             {
@@ -60,12 +60,10 @@ public sealed record RecipeData
                 }
             }
         }
-        else if (Recipe.CollectableMetadata.TryGetValue<SatisfactionSupply>() is { } row3)
+        else if (Recipe.CollectableMetadata.GetValueOrDefaultSubrow<SatisfactionSupply>() is { } row3)
         {
-            var subrowCount = LuminaSheets.SatisfactionSupplySheet.GetSubrowCount(row3.RowId);
-            for (ushort i = 0; i < subrowCount; ++i)
+            foreach (var subrow in row3)
             {
-                var subrow = LuminaSheets.SatisfactionSupplySheet.GetRow(row3.RowId, i);
                 if (subrow.Item.RowId == Recipe.ItemResult.RowId)
                 {
                     thresholds = [subrow.CollectabilityLow, subrow.CollectabilityMid, subrow.CollectabilityHigh];
@@ -73,7 +71,7 @@ public sealed record RecipeData
                 }
             }
         }
-        else if (Recipe.CollectableMetadata.TryGetValue<SharlayanCraftWorksSupply>() is { } row5)
+        else if (Recipe.CollectableMetadata.GetValueOrDefault<SharlayanCraftWorksSupply>() is { } row5)
         {
             foreach (var item in row5.Item)
             {
@@ -84,7 +82,7 @@ public sealed record RecipeData
                 }
             }
         }
-        else if (Recipe.CollectableMetadata.TryGetValue<CollectablesRefine>() is { } row6)
+        else if (Recipe.CollectableMetadata.GetValueOrDefault<CollectablesRefine>() is { } row6)
         {
             if (row6.CollectabilityHigh != 0)
                 thresholds = [row6.CollectabilityLow, row6.CollectabilityMid, row6.CollectabilityHigh];

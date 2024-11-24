@@ -183,7 +183,7 @@ public static class MacroCopy
 
         var module = RaptureMacroModule.Instance();
         var macro = module->GetMacro(set, (uint)idx);
-        if (macro->IsEmpty())
+        if (!macro->IsNotEmpty())
         {
             macro->Name.SetString($"Craftimizer Macro {macroIdx}");
             macro->SetIcon((uint)(macroIdx > 10 ? 66161 : (66161 + macroIdx)));
