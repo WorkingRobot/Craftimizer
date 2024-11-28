@@ -23,7 +23,7 @@ internal static class Program
         {
             var solver = new MCTS(config, initState);
             var progress = 0;
-            solver.Search(initConfig.Data.Iterations, ref progress, CancellationToken.None);
+            solver.Search(initConfig.Data.Iterations, initConfig.Data.MaxIterations, ref progress, CancellationToken.None);
             var solution = solver.Solution();
             Console.WriteLine($"{i+1}");
         }
