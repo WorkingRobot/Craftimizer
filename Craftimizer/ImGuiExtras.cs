@@ -23,6 +23,12 @@ internal static unsafe class ImGuiExtras
     private static extern bool igItemSize_Vec2(Vector2 size, float text_baseline_y = -1.0f);
 
     [DllImport("cimgui", CallingConvention = CallingConvention.Cdecl)]
+    private static extern void igRenderFrame(Vector2 p_min, Vector2 p_max, uint fill_col, bool border = true, float rounding = 0.0f);
+
+    [DllImport("cimgui", CallingConvention = CallingConvention.Cdecl)]
+    private static extern void igRenderRectFilledRangeH(ImDrawList* draw_list, Vector4* rect, uint col, float x_start_norm, float x_end_norm, float rounding);
+
+    [DllImport("cimgui", CallingConvention = CallingConvention.Cdecl)]
     private static extern ImGuiItemFlags igGetItemFlags();
 
     // https://github.com/ImGuiNET/ImGui.NET/blob/069363672fed940ebdaa02f9b032c282b66467c7/src/ImGui.NET/Util.cs
@@ -149,7 +155,10 @@ internal static unsafe class ImGuiExtras
         return result != 0;
     }
 
-    public static unsafe bool ItemAdd(Vector4 bb, uint id, out Vector4 navBb, uint flags)
+    public static unsafe bool ItemAdd(Vector4 bb, uint id) =>
+        ItemAdd(bb, id, out _);
+
+    public static unsafe bool ItemAdd(Vector4 bb, uint id, out Vector4 navBb, uint flags = 0)
     {
         fixed (Vector4* navBbPtr = &navBb)
         {
@@ -165,6 +174,12 @@ internal static unsafe class ImGuiExtras
             return igButtonBehavior(bb, id, hoveredPtr, heldPtr, flags);
         }
     }
+
+    public static unsafe void RenderFrame(Vector2 p_min, Vector2 p_max, uint fill_col, bool border = true, float rounding = 0.0f) =>
+        igRenderFrame(p_min, p_max, fill_col, border, rounding);
+
+    public static unsafe void RenderRectFilledRangeH(ImDrawListPtr draw_list, Vector4 rect, uint col, float x_start_norm, float x_end_norm, float rounding) =>
+        igRenderRectFilledRangeH(draw_list.NativePtr, &rect, col, x_start_norm, x_end_norm, rounding);
 
     public static unsafe bool ItemSize(Vector2 size, float text_baseline_y = -1.0f) =>
         igItemSize_Vec2(size, text_baseline_y);

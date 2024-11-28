@@ -247,6 +247,38 @@ internal static class ImGuiUtils
         Arc(startAngle, endAngle, radius, ratio, backgroundColor, filledColor);
     }
 
+    public static void ProgressBar(float value, Vector2 size)
+    {
+        var style = ImGui.GetStyle();
+        var pos = ImGui.GetCursorScreenPos();
+        
+        //size = ImGuiExtras.CalcItemSize(size, ImGui.CalcItemWidth(), ImGui.GetFontSize() + style.FramePadding.Y * 2.0f);
+
+        var bbMin = pos;
+        var bbMax = pos + size;
+        ImGuiExtras.ItemSize(size, style.FramePadding.Y);
+        if (!ImGuiExtras.ItemAdd(new(bbMin.X, bbMin.Y, bbMax.X, bbMax.Y), 0))
+            return;
+    
+        var bar_begin = 0.0f;
+        var bar_end = Math.Clamp(value, 0, 1);
+    
+        var indeterminate = value < 0.0f;
+        if (indeterminate) 
+        {
+            const float bar_fraction = 0.2f;
+            bar_begin = (-value % 1.0f * (1.0f + bar_fraction)) - bar_fraction;
+            bar_end = bar_begin + bar_fraction;
+        }
+
+        ImGuiExtras.RenderFrame(bbMin, bbMax, ImGui.GetColorU32(ImGuiCol.FrameBg), true, style.FrameRounding);
+
+        bbMin += new Vector2(style.FrameBorderSize);
+        bbMax -= new Vector2(style.FrameBorderSize);
+
+        ImGuiExtras.RenderRectFilledRangeH(ImGui.GetWindowDrawList(), new(bbMin.X, bbMin.Y, bbMax.X, bbMax.Y), ImGui.GetColorU32(ImGuiCol.PlotHistogram), bar_begin, bar_end, style.FrameRounding);
+    }
+
     public sealed class ViolinData
     {
         public struct Point(float x, float y, float y2)

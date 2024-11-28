@@ -88,7 +88,7 @@ internal static class DynamicBars
                 var pos = ImGui.GetCursorPos();
                 var screenPos = ImGui.GetCursorScreenPos();
                 using (var color = ImRaii.PushColor(ImGuiCol.PlotHistogram, bar.Color))
-                    ImGui.ProgressBar(Math.Clamp(bar.Value / bar.Max, 0, 1), new(barSize, ImGui.GetFrameHeight()), string.Empty);
+                    ImGuiUtils.ProgressBar(Math.Clamp(bar.Value / bar.Max, 0, 1), new(barSize, ImGui.GetFrameHeight()));
                 if (bar.Collectability is { } collectability)
                 {
                     var i = 0;
@@ -188,19 +188,28 @@ internal static class DynamicBars
         }
 
         var percentWidth = ImGui.CalcTextSize("100%").X;
-        var progressWidth = availSpace.Value - percentWidth - spacing;
+        var progressWidth = availSpace.Value;
         var progressColors = Colors.GetSolverProgressColors(solver.ProgressStage);
 
         fraction = Math.Clamp(fraction, 0, 1);
 
+        if (!solver.IsIndeterminate)
+            progressWidth -= percentWidth + spacing;
+        else
+            fraction = (float)-ImGui.GetTime() * .5f;
+
         using (ImRaii.PushColor(ImGuiCol.FrameBg, progressColors.Background))
         using (ImRaii.PushColor(ImGuiCol.PlotHistogram, progressColors.Foreground))
-            ImGui.ProgressBar(solver.IsIndeterminate ? (float)-ImGui.GetTime() : fraction, new(progressWidth, ImGui.GetFrameHeight()), string.Empty);
+            ImGuiUtils.ProgressBar(fraction, new(progressWidth, ImGui.GetFrameHeight()));
         if (ImGui.IsItemHovered())
             DrawProgressBarTooltip(solver);
-        ImGui.SameLine(0, spacing);
-        ImGui.AlignTextToFramePadding();
-        ImGuiUtils.TextRight($"{fraction * 100:N0}%", percentWidth);
+
+        if (!solver.IsIndeterminate)
+        {
+            ImGui.SameLine(0, spacing);
+            ImGui.AlignTextToFramePadding();
+            ImGuiUtils.TextRight($"{fraction * 100:N0}%", percentWidth);
+        }
     }
 
     public static void DrawProgressBarTooltip(Solver.Solver solver)
