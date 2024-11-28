@@ -118,6 +118,10 @@ public sealed class Plugin : IDalamudPlugin
     public void ExecuteSuggestedSynthHelperAction() =>
         SynthHelperWindow.ExecuteNextAction();
 
+    [Command(name: "/craftretry", description: "Clicks \"Retry\" in the synthesis helper. Can also be run inside a macro. This command is useful for controller players.")]
+    public void ExecuteRetrySynthHelper() =>
+        SynthHelperWindow.AttemptRetry();
+
     [Command(name: "/craftimizer", description: "Open the settings window.")]
     private void OpenSettingsWindowForced() =>
         OpenSettingsWindow(true);

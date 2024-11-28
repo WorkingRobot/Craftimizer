@@ -459,7 +459,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         else
         {
             if (ImGui.Button("Retry", new(-1, 0)))
-                CalculateBestMacro();
+                AttemptRetry();
             if (ImGui.IsItemHovered())
                 ImGuiUtils.TooltipWrapped("Suggest a way to finish the crafting recipe. " +
                                  "Results aren't perfect, and levels of success " +
@@ -480,6 +480,12 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             return true;
         }
         return false;
+    }
+
+    public void AttemptRetry()
+    {
+        if (!SolverRunning)
+            CalculateBestMacro();
     }
 
     private void OnStartCrafting(ushort recipeId)
