@@ -11,6 +11,7 @@ public enum SolverAlgorithm
     Stepwise,
     StepwiseForked,
     StepwiseGenetic,
+    Raphael,
 }
 
 [StructLayout(LayoutKind.Auto)]
@@ -32,6 +33,10 @@ public readonly record struct SolverConfig
     public float ScoreDurability { get; init; }
     public float ScoreCP { get; init; }
     public float ScoreSteps { get; init; }
+
+    public bool Adversarial { get; init; }
+    public bool BackloadProgress { get; init; }
+    public bool UnsoundBranchPruning { get; init; }
 
     public ActionType[] ActionPool { get; init; }
     public SolverAlgorithm Algorithm { get; init; }

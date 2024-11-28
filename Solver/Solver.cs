@@ -39,6 +39,8 @@ public sealed class Solver : IDisposable
         }
     }
 
+    public bool IsIndeterminate => progress == 0 && progressStage == 0;
+
     public delegate void LogDelegate(string text);
     public delegate void NewActionDelegate(ActionType action);
     public delegate void SolutionDelegate(SolverSolution solution);
@@ -46,8 +48,15 @@ public sealed class Solver : IDisposable
     // Print to console or plugin log.
     public event LogDelegate? OnLog;
 
+    // Display as notification.
+    public event LogDelegate? OnWarn;
+
     // Always called when a new step is generated.
     public event NewActionDelegate? OnNewAction;
+
+    // Called when the solver can provide a "probable" solution.
+    // OnNewAction actions precede these proposed solutions. Purely visual.
+    public event SolutionDelegate? OnSuggestSolution;
 
     public Solver(in SolverConfig config, in SimulationState state)
     {
@@ -61,6 +70,7 @@ public sealed class Solver : IDisposable
             SolverAlgorithm.Stepwise => (SearchStepwise, true),
             SolverAlgorithm.StepwiseForked => (SearchStepwiseForked, true),
             SolverAlgorithm.StepwiseGenetic => (SearchStepwiseGenetic, true),
+            SolverAlgorithm.Raphael => (SearchRaphael, true),
             _ => throw new ArgumentOutOfRangeException(nameof(config), config, $"Invalid algorithm: {config.Algorithm}")
         });
 
@@ -134,6 +144,82 @@ public sealed class Solver : IDisposable
 
         Interlocked.Exchange(ref progress, 0);
         Interlocked.Increment(ref progressStage);
+    }
+
+    private async Task<SolverSolution> SearchRaphael()
+    {
+        if (State.ActionCount > 0)
+        {
+            OnWarn?.Invoke("Optimal solver not support existing actions; falling back to Stepwise Genetic.");
+            return await SearchStepwiseGenetic().ConfigureAwait(false);
+        }
+
+        maxProgress = 2000;
+
+        Raphael.SolverConfig config = new()
+        {
+            Adversarial = Config.Adversarial,
+            BackloadProgress = Config.BackloadProgress,
+            UnsoundBranchPruning = Config.UnsoundBranchPruning,
+        };
+
+        ActionType[]? solution = null;
+
+        var s = new SimulatorNoRandom() { State = State };
+        var pool = RaphaelUtils.ConvertToRawActions(Config.ActionPool.Where(a => a.Base().IsPossible(s)).ToArray());
+        var input = new Raphael.SolverInput()
+        {
+            CP = checked((short)State.Input.Stats.CP),
+            Durability = checked((sbyte)State.Input.Recipe.MaxDurability),
+            Progress = checked((ushort)State.Input.Recipe.MaxProgress),
+            Quality = checked((ushort)(State.Input.Recipe.MaxQuality - State.Input.StartingQuality)),
+            BaseProgressGain = checked((ushort)State.Input.BaseProgressGain),
+            BaseQualityGain = checked((ushort)State.Input.BaseQualityGain),
+            JobLevel = checked((byte)State.Input.Stats.Level),
+        };
+
+        using Raphael.Solver solver = new(in config, input, pool);
+
+        solver.OnFinish += s => solution = RaphaelUtils.ConvertRawActions(s);
+        solver.OnSuggestSolution += s =>
+        {
+            var steps = RaphaelUtils.ConvertRawActions(s);
+            var sim = new SimulatorNoRandom();
+            var (resp, outState, failedIdx) = sim.ExecuteMultiple(State, steps);
+            if (resp != ActionResponse.SimulationComplete)
+            {
+                if (failedIdx != -1)
+                    OnLog?.Invoke($"Invalid state; simulation failed to execute solution: {string.Join(',', s)}");
+            }
+
+            OnSuggestSolution?.Invoke(new(steps, in outState));
+        };
+        solver.OnProgress += p =>
+        {
+            var prog = checked((int)p);
+            var stage = prog / maxProgress;
+            while (stage != progressStage)
+                ResetProgress();
+            progress = prog % maxProgress;
+        };
+        
+        await using var registration = Token.Register(solver.Cancel).ConfigureAwait(true);
+        await Task.Run(solver.Solve, Token).ConfigureAwait(true);
+
+        if (solution == null)
+            return new([], State);
+
+        foreach (var action in solution)
+            InvokeNewAction(action);
+
+        var sim = new SimulatorNoRandom();
+        var (resp, outState, failedIdx) = sim.ExecuteMultiple(State, solution);
+        if (resp != ActionResponse.SimulationComplete)
+        {
+            if (failedIdx != -1)
+                throw new Exception($"Invalid state; simulation failed to execute solution: {string.Join(',', solution)}");
+        }
+        return new(solution, outState);
     }
 
     private async Task<SolverSolution> SearchStepwiseGenetic()
