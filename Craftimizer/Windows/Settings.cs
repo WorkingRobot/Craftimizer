@@ -1160,6 +1160,16 @@ public sealed class Settings : Window, IDisposable
 
         ImGuiUtils.TextWrappedTo("Thank you to ");
         ImGui.SameLine(0, 0);
+        ImGuiUtils.Hyperlink("KonaeAkira", "https://github.com/KonaeAkira");
+        ImGui.SameLine(0, 0);
+        ImGuiUtils.TextWrappedTo(" for making ");
+        ImGui.SameLine(0, 0);
+        ImGuiUtils.Hyperlink("raphael-rs", "https://raphael-xiv.com");
+        ImGui.SameLine(0, 0);
+        ImGuiUtils.TextWrappedTo(" and the Optimal algorithm.");
+
+        ImGuiUtils.TextWrappedTo("Thank you to ");
+        ImGui.SameLine(0, 0);
         ImGuiUtils.Hyperlink("FFXIV Teamcraft", "https://ffxivteamcraft.com");
         ImGui.SameLine(0, 0);
         ImGuiUtils.TextWrappedTo(" and its users for their community rotations.");
