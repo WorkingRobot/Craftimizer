@@ -1130,7 +1130,7 @@ public sealed class Settings : Window, IDisposable
                     ImGuiUtils.AlignCentered(ImGui.CalcTextSize($"Support me on Ko-fi!").X);
                     ImGui.TextUnformatted($"Support me on ");
                     ImGui.SameLine(0, 0);
-                    ImGuiUtils.Hyperlink("Ko-fi", "https://ko-fi.com/camora");
+                    ImGuiUtils.Hyperlink("Ko-fi", Plugin.SupportLink);
                     ImGui.SameLine(0, 0);
                     ImGui.TextUnformatted("!");
                 }

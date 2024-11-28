@@ -10,6 +10,7 @@ using Dalamud.Interface.ManagedFontAtlas;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
+using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.UI;
@@ -94,6 +95,12 @@ public sealed unsafe class SynthHelper : Window, IDisposable
                 IconOffset = new(2, 1),
                 Click = _ => Service.Plugin.OpenSettingsTab("Synthesis Helper"),
                 ShowTooltip = () => ImGuiUtils.Tooltip("Open Settings")
+            },
+            new() {
+                Icon = FontAwesomeIcon.Heart,
+                IconOffset = new(2, 1),
+                Click = _ => Util.OpenLink(Plugin.Plugin.SupportLink),
+                ShowTooltip = () => ImGuiUtils.Tooltip("Support me on Ko-fi!")
             }
         ];
 

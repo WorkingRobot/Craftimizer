@@ -591,7 +591,7 @@ internal static class ImGuiUtils
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
             if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
-                Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
+                Dalamud.Utility.Util.OpenLink(url);
             var urlWithoutScheme = url;
             if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
                 urlWithoutScheme = uri.Host + (string.Equals(uri.PathAndQuery, "/", StringComparison.Ordinal) ? string.Empty : uri.PathAndQuery);

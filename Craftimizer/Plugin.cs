@@ -18,6 +18,7 @@ public sealed class Plugin : IDalamudPlugin
     public string Author { get; }
     public string BuildConfiguration { get; }
     public ILoadedTextureIcon Icon { get; }
+    public const string SupportLink = "https://ko-fi.com/camora";
 
     public WindowSystem WindowSystem { get; }
     public Settings SettingsWindow { get; }

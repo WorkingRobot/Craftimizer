@@ -103,6 +103,12 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 IconOffset = new(2, 1),
                 Click = _ => Service.Plugin.OpenSettingsTab("Crafting Log"),
                 ShowTooltip = () => ImGuiUtils.Tooltip("Open Settings")
+            },
+            new() {
+                Icon = FontAwesomeIcon.Heart,
+                IconOffset = new(2, 1),
+                Click = _ => Util.OpenLink(Plugin.Plugin.SupportLink),
+                ShowTooltip = () => ImGuiUtils.Tooltip("Support me on Ko-fi!")
             }
         ];
 
