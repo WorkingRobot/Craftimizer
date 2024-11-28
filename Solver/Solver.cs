@@ -156,15 +156,6 @@ public sealed class Solver : IDisposable
 
         maxProgress = 2000;
 
-        Raphael.SolverConfig config = new()
-        {
-            Adversarial = Config.Adversarial,
-            BackloadProgress = Config.BackloadProgress,
-            UnsoundBranchPruning = Config.UnsoundBranchPruning,
-        };
-
-        ActionType[]? solution = null;
-
         var s = new SimulatorNoRandom() { State = State };
         var pool = RaphaelUtils.ConvertToRawActions(Config.ActionPool.Where(a => a.Base().IsPossible(s)).ToArray());
         var input = new Raphael.SolverInput()
@@ -178,33 +169,83 @@ public sealed class Solver : IDisposable
             JobLevel = checked((byte)State.Input.Stats.Level),
         };
 
-        using Raphael.Solver solver = new(in config, input, pool);
-
-        solver.OnFinish += s => solution = RaphaelUtils.ConvertRawActions(s);
-        solver.OnSuggestSolution += s =>
+        SimulationState ExecuteActions(IEnumerable<ActionType> actions)
         {
-            var steps = RaphaelUtils.ConvertRawActions(s);
             var sim = new SimulatorNoRandom();
-            var (resp, outState, failedIdx) = sim.ExecuteMultiple(State, steps);
+            var (resp, outState, failedIdx) = sim.ExecuteMultiple(State, actions);
             if (resp != ActionResponse.SimulationComplete)
             {
                 if (failedIdx != -1)
-                    OnLog?.Invoke($"Invalid state; simulation failed to execute solution: {string.Join(',', s)}");
+                    throw new ArgumentException($"Invalid state; simulation failed to execute solution: {string.Join(',', actions)}", nameof(actions));
             }
+            return outState;
+        }
 
-            OnSuggestSolution?.Invoke(new(steps, in outState));
-        };
-        solver.OnProgress += p =>
+        ActionType[]? solution = null;
+
+        void OnFinish(Raphael.Action[] s) =>
+            solution = RaphaelUtils.ConvertRawActions(s);
+
+        void OnSuggestSolution(Raphael.Action[] s)
+        {
+            var steps = RaphaelUtils.ConvertRawActions(s);
+            var outState = ExecuteActions(steps);
+            this.OnSuggestSolution?.Invoke(new(steps, in outState));
+        }
+
+        void OnProgress(nuint p)
         {
             var prog = checked((int)p);
             var stage = prog / maxProgress;
             while (stage != progressStage)
                 ResetProgress();
             progress = prog % maxProgress;
-        };
-        
-        await using var registration = Token.Register(solver.Cancel).ConfigureAwait(true);
-        await Task.Run(solver.Solve, Token).ConfigureAwait(true);
+        }
+
+        if (!Config.MinimizeSteps)
+        {
+            Raphael.SolverConfig config = new()
+            {
+                Adversarial = Config.Adversarial,
+                BackloadProgress = true,
+                UnsoundBranchPruning = true
+            };
+
+            using var solver = new Raphael.Solver(in config, in input, pool);
+
+            solver.OnFinish += OnFinish;
+            solver.OnSuggestSolution += OnSuggestSolution;
+            solver.OnProgress += OnProgress;
+
+            progressStage = 0;
+            progress = 0;
+            await using var registration = Token.Register(solver.Cancel).ConfigureAwait(true);
+            await Task.Run(solver.Solve, Token).ConfigureAwait(true);
+            Token.ThrowIfCancellationRequested();
+        }
+
+
+        if (solution == null || ExecuteActions(solution).HQPercent != 100)
+        {
+            Raphael.SolverConfig config = new()
+            {
+                Adversarial = Config.Adversarial,
+                BackloadProgress = Config.BackloadProgress,
+                UnsoundBranchPruning = false
+            };
+
+            using var solver = new Raphael.Solver(in config, in input, pool);
+
+            solver.OnFinish += OnFinish;
+            solver.OnSuggestSolution += OnSuggestSolution;
+            solver.OnProgress += OnProgress;
+
+            progressStage = 0;
+            progress = 0;
+            await using var registration = Token.Register(solver.Cancel).ConfigureAwait(true);
+            await Task.Run(solver.Solve, Token).ConfigureAwait(true);
+            Token.ThrowIfCancellationRequested();
+        }
 
         if (solution == null)
             return new([], State);
@@ -212,14 +253,8 @@ public sealed class Solver : IDisposable
         foreach (var action in solution)
             InvokeNewAction(action);
 
-        var sim = new SimulatorNoRandom();
-        var (resp, outState, failedIdx) = sim.ExecuteMultiple(State, solution);
-        if (resp != ActionResponse.SimulationComplete)
-        {
-            if (failedIdx != -1)
-                throw new Exception($"Invalid state; simulation failed to execute solution: {string.Join(',', solution)}");
-        }
-        return new(solution, outState);
+        var outState = ExecuteActions(solution);
+        return new(solution, in outState);
     }
 
     private async Task<SolverSolution> SearchStepwiseGenetic()

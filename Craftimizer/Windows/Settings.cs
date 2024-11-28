@@ -151,7 +151,7 @@ public sealed class Settings : Window, IDisposable
             SolverAlgorithm.Stepwise => "Stepwise",
             SolverAlgorithm.StepwiseForked => "Stepwise Forked",
             SolverAlgorithm.StepwiseGenetic => "Stepwise Genetic",
-            SolverAlgorithm.Raphael => "Optimal (Slow)",
+            SolverAlgorithm.Raphael => "Optimal",
             _ => "Unknown",
         };
 
@@ -652,7 +652,15 @@ public sealed class Settings : Window, IDisposable
             else
             {
                 DrawOption(
-                    "Ensure 100% Reliability",
+                    "Quick Solve",
+                    "Speeds up solve times. Backloads all Progress " +
+                    "actions to the end of the rotation.",
+                    config.BackloadProgress,
+                    v => config = config with { BackloadProgress = v },
+                    ref isDirty
+                );
+                DrawOption(
+                    "Ensure Reliability",
                     "Find a rotation that can reach the target quality no matter " +
                     "how unlucky the random conditions are.",
                     config.Adversarial,
@@ -660,13 +668,24 @@ public sealed class Settings : Window, IDisposable
                     ref isDirty
                 );
                 DrawOption(
-                    "Backload Progress",
-                    "Find a rotation that only uses Progress-increasing actions " +
-                    "at the end of the rotation. May speed up solve times.",
-                    config.BackloadProgress,
-                    v => config = config with { BackloadProgress = v },
+                    "Minimize Steps",
+                    "Minimizes the number of crafting steps.",
+                    config.MinimizeSteps,
+                    v => config = config with { MinimizeSteps = v },
                     ref isDirty
                 );
+
+                if (config.MinimizeSteps && config.Adversarial)
+                {
+                    ImGui.SameLine();
+                    using (var color = ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudOrange))
+                    {
+                        using var font = ImRaii.PushFont(UiBuilder.IconFont);
+                        ImGui.TextUnformatted(FontAwesomeIcon.ExclamationCircle.ToIconString());
+                    }
+                    if (ImGui.IsItemHovered())
+                        ImGuiUtils.TooltipWrapped("Combining \"Minimize Steps\" and \"Ensure Reliability\" will significantly increase solve times.");
+                }
             }
         }
 
@@ -712,15 +731,6 @@ public sealed class Settings : Window, IDisposable
                 );
             }
         }
-
-        // TODO: Provide better option name than this lol
-        //DrawOption(
-        //    "Unsound Branch Pruning",
-        //    "TBD",
-        //    config.UnsoundBranchPruning,
-        //    v => config = config with { UnsoundBranchPruning = v },
-        //    ref isDirty
-        //);
 
         if (config.Algorithm != SolverAlgorithm.Raphael)
         {

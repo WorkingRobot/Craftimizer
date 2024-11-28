@@ -17,6 +17,7 @@ public enum SolverAlgorithm
 [StructLayout(LayoutKind.Auto)]
 public readonly record struct SolverConfig
 {
+    // MCTS configuration
     public int Iterations { get; init; }
     public int MaxIterations { get; init; }
     public float MaxScoreWeightingConstant { get; init; }
@@ -28,15 +29,17 @@ public readonly record struct SolverConfig
     public int FurcatedActionCount { get; init; }
     public bool StrictActions { get; init; }
 
+    // MCTS score weights
     public float ScoreProgress { get; init; }
     public float ScoreQuality { get; init; }
     public float ScoreDurability { get; init; }
     public float ScoreCP { get; init; }
     public float ScoreSteps { get; init; }
 
+    // Raphael/A* configuration
     public bool Adversarial { get; init; }
     public bool BackloadProgress { get; init; }
-    public bool UnsoundBranchPruning { get; init; }
+    public bool MinimizeSteps { get; init; }
 
     public ActionType[] ActionPool { get; init; }
     public SolverAlgorithm Algorithm { get; init; }
@@ -190,7 +193,8 @@ public readonly record struct SolverConfig
 
     public static readonly SolverConfig EditorDefault = new SolverConfig() with
     {
-        Iterations = 500000
+        Algorithm = SolverAlgorithm.Raphael,
+        Adversarial = true
     };
 
     public static readonly SolverConfig SynthHelperDefault = new SolverConfig() with
