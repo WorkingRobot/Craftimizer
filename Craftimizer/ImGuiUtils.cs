@@ -226,7 +226,25 @@ internal static class ImGuiUtils
 
     public static void ArcProgress(float value, float radius, float ratio, uint backgroundColor, uint filledColor)
     {
-        Arc(MathF.PI / 2, MathF.PI / 2 - MathF.Tau * Math.Clamp(value, 0, 1), radius, ratio, backgroundColor, filledColor);
+        float startAngle, endAngle;
+
+        // https://github.com/ocornut/imgui/commit/c895e987adf746a997b655c64a6a8916c549ff6f#diff-d750e175eb584ba76bc560b8e54cf113ccbb31dd33f75078c1588925e197a3afR1304-R1310
+        if (value < 0)
+        {
+            const float ArcSize = 0.15f;
+            startAngle = -value % 1;
+            endAngle = startAngle + ArcSize;
+
+            startAngle = float.Lerp(MathF.PI / 2, -3 * MathF.PI / 2, startAngle);
+            endAngle = float.Lerp(MathF.PI / 2, -3 * MathF.PI / 2, endAngle);
+        }
+        else
+        {
+            startAngle = MathF.PI / 2;
+            endAngle = MathF.PI / 2 - MathF.Tau * Math.Clamp(value, 0, 1);
+        }
+
+        Arc(startAngle, endAngle, radius, ratio, backgroundColor, filledColor);
     }
 
     public sealed class ViolinData

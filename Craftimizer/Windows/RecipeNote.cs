@@ -844,7 +844,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                         {
                             var progressColors = Colors.GetSolverProgressColors(solver.ProgressStage);
                             ImGuiUtils.ArcProgress(
-                                fraction,
+                                solver.IsIndeterminate ? (float)-ImGui.GetTime() : fraction,
                                 windowHeight / 2f + 2,
                                 .5f,
                                 ImGui.ColorConvertFloat4ToU32(progressColors.Background),
@@ -1187,6 +1187,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
             var solver = new Solver.Solver(config, state) { Token = token };
             solver.OnLog += Log.Debug;
+            solver.OnWarn += t => Service.Plugin.DisplaySolverWarning(t);
             BestMacroSolver = solver;
             solver.Start();
             var solution = solver.GetTask().GetAwaiter().GetResult();

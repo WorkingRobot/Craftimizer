@@ -1,6 +1,7 @@
 using Craftimizer.Plugin;
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
+using DotNext.Collections.Generic;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -95,6 +96,7 @@ internal sealed class SimulatedMacro
     private sealed record Step
     {
         public ActionType Action { get; }
+        public bool IsEphemeral { get; }
         // State *after* executing the action
         public ActionResponse Response { get; private set; }
         public SimulationState State { get; private set; }
@@ -107,9 +109,10 @@ internal sealed class SimulatedMacro
         }
 
         // Call recalculate after this please!
-        public Step(ActionType action)
+        public Step(ActionType action, bool isEphemeral = false)
         {
             Action = action;
+            IsEphemeral = isEphemeral;
         }
 
         public SimulationState Recalculate(Sim sim, in SimulationState lastState)
@@ -125,6 +128,7 @@ internal sealed class SimulatedMacro
     };
 
     private List<Step> Macro { get; set; } = [];
+
     private SimulationState initialState;
     public SimulationState InitialState
     {
@@ -140,6 +144,7 @@ internal sealed class SimulatedMacro
     }
     private object QueueLock { get; } = new();
     private List<Step> QueuedSteps { get; set; } = [];
+    private List<Step> QueuedEphemeralSteps { get; set; } = [];
 
     public SimulationState FirstState => Macro.Count > 0 ? Macro[0].State : InitialState;
     public SimulationState State => Macro.Count > 0 ? Macro[^1].State : InitialState;
@@ -158,7 +163,7 @@ internal sealed class SimulatedMacro
 
     public Reliablity GetReliability(RecipeData recipeData, Index? idx = null) =>
         Macro.Count > 0 ?
-            Macro[idx ?? ^1].GetReliability(InitialState, Macro.Select(m => m.Action), recipeData) :
+            Macro[idx ?? ^1].GetReliability(InitialState, Actions.ToArray(), recipeData) :
             new(InitialState, Array.Empty<ActionType>(), 0, recipeData);
 
     private void TryRecalculateFrom(int index)
@@ -213,15 +218,41 @@ internal sealed class SimulatedMacro
         TryRecalculateFrom(Math.Min(fromIdx, toIdx));
     }
 
+    public void RemoveEphemeral()
+    {
+        for (var i = Macro.Count - 1; i >= 0; --i)
+        {
+            if (Macro[i].IsEphemeral)
+                Macro.RemoveAt(i);
+        }
+    }
+
     public int Enqueue(ActionType action, int? maxSize = null)
     {
         lock (QueueLock)
         {
             if (maxSize is { } size && QueuedSteps.Count + Macro.Count >= size)
                 return size;
-                
+
+            QueuedEphemeralSteps.Clear();
             QueuedSteps.Add(new(action));
-            return QueuedSteps.Count + Macro.Count;
+            return Macro.Count + QueuedSteps.Count;
+        }
+    }
+
+    public int EnqueueEphemeral(IEnumerable<ActionType> actions, int? maxSize = null)
+    {
+        lock (QueueLock)
+        {
+            QueuedEphemeralSteps.Clear();
+            foreach (var action in actions)
+            {
+                if (maxSize is { } size && QueuedSteps.Count + QueuedEphemeralSteps.Count + Macro.Count >= size)
+                    return size;
+
+                QueuedEphemeralSteps.Add(new(action, true));
+            }
+            return Macro.Count + QueuedSteps.Count + QueuedEphemeralSteps.Count;
         }
     }
 
@@ -230,6 +261,7 @@ internal sealed class SimulatedMacro
         lock (QueueLock)
         {
             QueuedSteps.Clear();
+            QueuedEphemeralSteps.Clear();
         }
     }
 
@@ -237,11 +269,15 @@ internal sealed class SimulatedMacro
     {
         lock (QueueLock)
         {
-            if (QueuedSteps.Count > 0)
+            if (QueuedSteps.Count > 0 || QueuedEphemeralSteps.Count > 0)
             {
+                RemoveEphemeral();
                 var startIdx = Macro.Count;
+
                 Macro.AddRange(QueuedSteps);
+                Macro.AddRange(QueuedEphemeralSteps);
                 QueuedSteps.Clear();
+                QueuedEphemeralSteps.Clear();
                 TryRecalculateFrom(startIdx);
             }
         }

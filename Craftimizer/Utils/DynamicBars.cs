@@ -191,9 +191,11 @@ internal static class DynamicBars
         var progressWidth = availSpace.Value - percentWidth - spacing;
         var progressColors = Colors.GetSolverProgressColors(solver.ProgressStage);
 
+        fraction = Math.Clamp(fraction, 0, 1);
+
         using (ImRaii.PushColor(ImGuiCol.FrameBg, progressColors.Background))
         using (ImRaii.PushColor(ImGuiCol.PlotHistogram, progressColors.Foreground))
-            ImGui.ProgressBar(Math.Clamp(fraction, 0, 1), new(progressWidth, ImGui.GetFrameHeight()), string.Empty);
+            ImGui.ProgressBar(solver.IsIndeterminate ? (float)-ImGui.GetTime() : fraction, new(progressWidth, ImGui.GetFrameHeight()), string.Empty);
         if (ImGui.IsItemHovered())
             DrawProgressBarTooltip(solver);
         ImGui.SameLine(0, spacing);
@@ -203,9 +205,15 @@ internal static class DynamicBars
 
     public static void DrawProgressBarTooltip(Solver.Solver solver)
     {
-        var tooltip = $"Solver Progress: {solver.ProgressValue:N0} / {solver.ProgressMax:N0}";
-        if (solver.ProgressValue > solver.ProgressMax)
-            tooltip += $"\n\nThis is taking longer than expected. Check to see if your gear stats are good and the solver settings are adequate.";
+        string tooltip;
+        if (solver.IsIndeterminate)
+            tooltip = "Initializing Solver";
+        else
+        {
+            tooltip = $"Solver Progress: {solver.ProgressValue:N0} / {solver.ProgressMax:N0}";
+            if (solver.ProgressValue > solver.ProgressMax)
+                tooltip += $"\n\nThis is taking longer than expected. Check to see if your gear stats are good and the solver settings are adequate.";
+        }
         ImGuiUtils.TooltipWrapped(tooltip);
     }
 }

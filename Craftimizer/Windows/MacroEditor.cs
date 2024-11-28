@@ -1182,7 +1182,7 @@ public sealed class MacroEditor : Window, IDisposable
                 var actionBase = action.Base();
                 var failedAction = response != ActionResponse.UsedAction;
                 using var id = ImRaii.PushId(i);
-                if (ImGui.ImageButton(action.GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(imageSize), default, Vector2.One, 0, default, failedAction ? new(1, 1, 1, ImGui.GetStyle().DisabledAlpha) : Vector4.One))
+                if (ImGui.ImageButton(action.GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(imageSize), default, Vector2.One, 0, default, failedAction ? new(1, 1, 1, ImGui.GetStyle().DisabledAlpha) : Vector4.One) && !SolverRunning)
                     RemoveStep(i);
                 if (response is ActionResponse.ActionNotUnlocked ||
                     (
@@ -1550,10 +1550,14 @@ public sealed class MacroEditor : Window, IDisposable
 
         var solver = new Solver.Solver(config, state) { Token = token };
         solver.OnLog += Log.Debug;
+        solver.OnWarn += t => Service.Plugin.DisplaySolverWarning(t);
         solver.OnNewAction += a => Macro.Enqueue(a);
+        solver.OnSuggestSolution += a => Macro.EnqueueEphemeral(a.Actions);
         SolverObject = solver;
         solver.Start();
-        _ = solver.GetTask().GetAwaiter().GetResult();
+        var t = solver.GetTask();
+        _ = t.ContinueWith(_ => Macro.RemoveEphemeral());
+        _ = t.GetAwaiter().GetResult();
 
         token.ThrowIfCancellationRequested();
 

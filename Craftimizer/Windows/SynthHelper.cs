@@ -611,6 +611,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
         var solver = new Solver.Solver(config, state) { Token = token };
         solver.OnLog += Log.Debug;
+        solver.OnWarn += t => Service.Plugin.DisplaySolverWarning(t);
         solver.OnNewAction += EnqueueAction;
         SolverObject = solver;
         solver.Start();

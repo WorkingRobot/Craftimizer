@@ -149,6 +149,7 @@ public sealed class Settings : Window, IDisposable
             SolverAlgorithm.Stepwise => "Stepwise",
             SolverAlgorithm.StepwiseForked => "Stepwise Forked",
             SolverAlgorithm.StepwiseGenetic => "Stepwise Genetic",
+            SolverAlgorithm.Raphael => "Optimal (Slow)",
             _ => "Unknown",
         };
 
@@ -160,9 +161,12 @@ public sealed class Settings : Window, IDisposable
             SolverAlgorithm.Stepwise =>         "Run through all iterations and pick the next best step, " +
                                                 "and repeat using previous steps as a starting point",
             SolverAlgorithm.StepwiseForked =>   "Stepwise, but using multiple solvers simultaneously",
-            SolverAlgorithm.StepwiseGenetic => "Stepwise Forked, but the top N next best steps are " +
+            SolverAlgorithm.StepwiseGenetic =>  "Stepwise Forked, but the top N next best steps are " +
                                                 "selected from the solvers, and each one is equally " +
                                                 "used as a starting point",
+            SolverAlgorithm.Raphael =>          "Finds the best solution, every time. This solver has " +
+                                                "very different options compared to the rest, as it " +
+                                                "is designed using an entirely different algorithm.",
             _ => "Unknown"
         };
 
@@ -527,118 +531,140 @@ public sealed class Settings : Window, IDisposable
                 ref isDirty
             );
 
-            DrawOption(
-                "Target Iterations",
-                "The total number of iterations to run per crafting step. " +
-                "Higher values require more computational power. Higher values " +
-                "also may decrease variance, so other values should be tweaked " +
-                "as necessary to get a more favorable outcome.",
-                config.Iterations,
-                1000,
-                1000000,
-                v => config = config with { Iterations = v },
-                ref isDirty
-            );
-
-            DrawOption(
-                "Max Iterations",
-                "The solver may go about the target iteration value if the craft " +
-                "is sufficiently difficult, and it wasn't able to find any way to " +
-                "complete it yet. In rare cases, the solver might go on for a very " +
-                "long time. This maximum is here to prevent the solver from stealing " +
-                "all your RAM.",
-                config.MaxIterations,
-                config.Iterations,
-                5000000,
-                v => config = config with { MaxIterations = v },
-                ref isDirty
-            );
-
-            DrawOption(
-                "Max Step Count",
-                "The maximum number of crafting steps; this is generally the only " +
-                "setting you should change, and it should be set to around 5 steps " +
-                "more than what you'd expect. If this value is too low, the solver " +
-                "won't learn much per iteration; too high and it will waste time " +
-                "on useless extra steps.",
-                config.MaxStepCount,
-                1,
-                100,
-                v => config = config with { MaxStepCount = v },
-                ref isDirty
-            );
-
-            DrawOption(
-                "Exploration Constant",
-                "A constant that decides how often the solver will explore new, " +
-                "possibly good paths. If this value is too high, " +
-                "moves will mostly be decided at random.",
-                config.ExplorationConstant,
-                0,
-                10,
-                v => config = config with { ExplorationConstant = v },
-                ref isDirty
-            );
-
-            DrawOption(
-                "Score Weighting Constant",
-                "A constant ranging from 0 to 1 that configures how the solver " +
-                "scores and picks paths to travel to next. A value of 0 means " +
-                "actions will be chosen based on their average outcome, whereas " +
-                "1 uses their best outcome achieved so far.",
-                config.MaxScoreWeightingConstant,
-                0,
-                1,
-                v => config = config with { MaxScoreWeightingConstant = v },
-                ref isDirty
-            );
-
-            using (var d = ImRaii.Disabled(config.Algorithm is not (SolverAlgorithm.OneshotForked or SolverAlgorithm.StepwiseForked or SolverAlgorithm.StepwiseGenetic)))
+            if (config.Algorithm != SolverAlgorithm.Raphael)
+            {
                 DrawOption(
-                    "Max Core Count",
-                    "The number of cores to use when solving. You should use as many " +
-                    "as you can. If it's too high, it will have an effect on your gameplay " +
-                    $"experience. A good estimate would be 1 or 2 cores less than your " +
-                    $"system (FYI, you have {Environment.ProcessorCount} cores), but make sure to accomodate " +
-                    $"for any other tasks you have in the background, if you have any.\n" +
-                    "(Only used in the Forked and Genetic algorithms)",
-                    config.MaxThreadCount,
-                    1,
-                    Environment.ProcessorCount,
-                    v => config = config with { MaxThreadCount = v },
+                    "Target Iterations",
+                    "The total number of iterations to run per crafting step. " +
+                    "Higher values require more computational power. Higher values " +
+                    "also may decrease variance, so other values should be tweaked " +
+                    "as necessary to get a more favorable outcome.",
+                    config.Iterations,
+                    1000,
+                    1000000,
+                    v => config = config with { Iterations = v },
                     ref isDirty
                 );
 
-            using (var d = ImRaii.Disabled(config.Algorithm is not (SolverAlgorithm.OneshotForked or SolverAlgorithm.StepwiseForked or SolverAlgorithm.StepwiseGenetic)))
                 DrawOption(
-                    "Fork Count",
-                    "Split the number of iterations across different solvers. In general, " +
-                    "you should increase this value to at least the number of cores in " +
-                    $"your system (FYI, you have {Environment.ProcessorCount} cores) to attain the most speedup. " +
-                    "The higher the number, the more chance you have of finding a " +
-                    "better local maximum; this concept similar but not equivalent " +
-                    "to the exploration constant.\n" +
-                    "(Only used in the Forked and Genetic algorithms)",
-                    config.ForkCount,
-                    1,
-                    500,
-                    v => config = config with { ForkCount = v },
+                    "Max Iterations",
+                    "The solver may go about the target iteration value if the craft " +
+                    "is sufficiently difficult, and it wasn't able to find any way to " +
+                    "complete it yet. In rare cases, the solver might go on for a very " +
+                    "long time. This maximum is here to prevent the solver from stealing " +
+                    "all your RAM.",
+                    config.MaxIterations,
+                    config.Iterations,
+                    5000000,
+                    v => config = config with { MaxIterations = v },
                     ref isDirty
                 );
 
-            using (var d = ImRaii.Disabled(config.Algorithm is not SolverAlgorithm.StepwiseGenetic))
                 DrawOption(
-                    "Elitist Action Count",
-                    "On every craft step, pick this many top solutions and use them as " +
-                    "the input for the next craft step. For best results, use Fork Count / 2 " +
-                    "and add about 1 or 2 more if needed.\n" +
-                    "(Only used in the Stepwise Genetic algorithm)",
-                    config.FurcatedActionCount,
+                    "Max Step Count",
+                    "The maximum number of crafting steps; this is generally the only " +
+                    "setting you should change, and it should be set to around 5 steps " +
+                    "more than what you'd expect. If this value is too low, the solver " +
+                    "won't learn much per iteration; too high and it will waste time " +
+                    "on useless extra steps.",
+                    config.MaxStepCount,
                     1,
-                    500,
-                    v => config = config with { FurcatedActionCount = v },
+                    100,
+                    v => config = config with { MaxStepCount = v },
                     ref isDirty
                 );
+
+                DrawOption(
+                    "Exploration Constant",
+                    "A constant that decides how often the solver will explore new, " +
+                    "possibly good paths. If this value is too high, " +
+                    "moves will mostly be decided at random.",
+                    config.ExplorationConstant,
+                    0,
+                    10,
+                    v => config = config with { ExplorationConstant = v },
+                    ref isDirty
+                );
+
+                DrawOption(
+                    "Score Weighting Constant",
+                    "A constant ranging from 0 to 1 that configures how the solver " +
+                    "scores and picks paths to travel to next. A value of 0 means " +
+                    "actions will be chosen based on their average outcome, whereas " +
+                    "1 uses their best outcome achieved so far.",
+                    config.MaxScoreWeightingConstant,
+                    0,
+                    1,
+                    v => config = config with { MaxScoreWeightingConstant = v },
+                    ref isDirty
+                );
+
+                using (ImRaii.Disabled(config.Algorithm is not (SolverAlgorithm.OneshotForked or SolverAlgorithm.StepwiseForked or SolverAlgorithm.StepwiseGenetic)))
+                    DrawOption(
+                        "Max Core Count",
+                        "The number of cores to use when solving. You should use as many " +
+                        "as you can. If it's too high, it will have an effect on your gameplay " +
+                        $"experience. A good estimate would be 1 or 2 cores less than your " +
+                        $"system (FYI, you have {Environment.ProcessorCount} cores), but make sure to accomodate " +
+                        $"for any other tasks you have in the background, if you have any.\n" +
+                        "(Only used in the Forked and Genetic algorithms)",
+                        config.MaxThreadCount,
+                        1,
+                        Environment.ProcessorCount,
+                        v => config = config with { MaxThreadCount = v },
+                        ref isDirty
+                    );
+
+                using (ImRaii.Disabled(config.Algorithm is not (SolverAlgorithm.OneshotForked or SolverAlgorithm.StepwiseForked or SolverAlgorithm.StepwiseGenetic)))
+                    DrawOption(
+                        "Fork Count",
+                        "Split the number of iterations across different solvers. In general, " +
+                        "you should increase this value to at least the number of cores in " +
+                        $"your system (FYI, you have {Environment.ProcessorCount} cores) to attain the most speedup. " +
+                        "The higher the number, the more chance you have of finding a " +
+                        "better local maximum; this concept similar but not equivalent " +
+                        "to the exploration constant.\n" +
+                        "(Only used in the Forked and Genetic algorithms)",
+                        config.ForkCount,
+                        1,
+                        500,
+                        v => config = config with { ForkCount = v },
+                        ref isDirty
+                    );
+
+                using (ImRaii.Disabled(config.Algorithm is not SolverAlgorithm.StepwiseGenetic))
+                    DrawOption(
+                        "Elitist Action Count",
+                        "On every craft step, pick this many top solutions and use them as " +
+                        "the input for the next craft step. For best results, use Fork Count / 2 " +
+                        "and add about 1 or 2 more if needed.\n" +
+                        "(Only used in the Stepwise Genetic algorithm)",
+                        config.FurcatedActionCount,
+                        1,
+                        500,
+                        v => config = config with { FurcatedActionCount = v },
+                        ref isDirty
+                    );
+            }
+            else
+            {
+                DrawOption(
+                    "Ensure 100% Reliability",
+                    "Find a rotation that can reach the target quality no matter " +
+                    "how unlucky the random conditions are.",
+                    config.Adversarial,
+                    v => config = config with { Adversarial = v },
+                    ref isDirty
+                );
+                DrawOption(
+                    "Backload Progress",
+                    "Find a rotation that only uses Progress-increasing actions " +
+                    "at the end of the rotation. May speed up solve times.",
+                    config.BackloadProgress,
+                    v => config = config with { BackloadProgress = v },
+                    ref isDirty
+                );
+            }
         }
 
         using (var panel = ImRaii2.GroupPanel("Action Pool", -1, out var poolWidth))
@@ -658,27 +684,40 @@ public sealed class Settings : Window, IDisposable
 
         using (var panel = ImRaii2.GroupPanel("Advanced", -1, out _))
         {
-            DrawOption(
-                "Max Rollout Step Count",
-                "The maximum number of crafting steps every iteration can consider. " +
-                "Decreasing this value can have unintended side effects. Only change " +
-                "this value if you absolutely know what you're doing.",
-                config.MaxRolloutStepCount,
-                1,
-                50,
-                v => config = config with { MaxRolloutStepCount = v },
-                ref isDirty
-            );
+            if (config.Algorithm != SolverAlgorithm.Raphael)
+            {
+                DrawOption(
+                    "Max Rollout Step Count",
+                    "The maximum number of crafting steps every iteration can consider. " +
+                    "Decreasing this value can have unintended side effects. Only change " +
+                    "this value if you absolutely know what you're doing.",
+                    config.MaxRolloutStepCount,
+                    1,
+                    50,
+                    v => config = config with { MaxRolloutStepCount = v },
+                    ref isDirty
+                );
 
-            DrawOption(
-                "Strict Actions",
-                "When finding the next possible actions to execute, use a heuristic " +
-                "to restrict which actions to attempt taking. This results in a much " +
-                "better macro at the cost of not finding an extremely creative one.",
-                config.StrictActions,
-                v => config = config with { StrictActions = v },
-                ref isDirty
-            );
+                DrawOption(
+                    "Strict Actions",
+                    "When finding the next possible actions to execute, use a heuristic " +
+                    "to restrict which actions to attempt taking. This results in a much " +
+                    "better macro at the cost of not finding an extremely creative one.",
+                    config.StrictActions,
+                    v => config = config with { StrictActions = v },
+                    ref isDirty
+                );
+            }
+            else
+            {
+                DrawOption(
+                    "Unsound Branch Pruning",
+                    "TBD",
+                    config.UnsoundBranchPruning,
+                    v => config = config with { UnsoundBranchPruning = v },
+                    ref isDirty
+                );
+            }
         }
 
         using (var panel = ImRaii2.GroupPanel("Score Weights (Advanced)", -1, out _))

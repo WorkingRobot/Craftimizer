@@ -151,6 +151,14 @@ public sealed class Plugin : IDalamudPlugin
         ClipboardWindow = new(macros);
     }
 
+    public IActiveNotification DisplaySolverWarning(string text) =>
+        DisplayNotification(new()
+        {
+            Content = text,
+            Title = "Solver Warning",
+            Type = NotificationType.Warning
+        });
+
     public IActiveNotification DisplayNotification(Notification notification)
     {
         var ret = Service.NotificationManager.AddNotification(notification);

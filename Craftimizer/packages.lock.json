@@ -28,6 +28,11 @@
           "System.IO.Hashing": "8.0.0"
         }
       },
+      "Raphael.Net": {
+        "type": "Transitive",
+        "resolved": "1.0.0",
+        "contentHash": "J/D1pw2MT52hENysYs7SA++PBT4sHwUcPnTzjb9/lLigNJazob4v7WbBe2enKpfDAI6hO8al7p2Qlt2258fk8g=="
+      },
       "System.IO.Hashing": {
         "type": "Transitive",
         "resolved": "8.0.0",
@@ -40,8 +45,16 @@
         "type": "Project",
         "dependencies": {
           "Craftimizer.Simulator": "[1.0.0, )",
-          "DotNext": "[5.14.0, )"
+          "DotNext": "[5.14.0, )",
+          "Raphael.Net": "[1.0.0, )"
         }
+      }
+    },
+    "net8.0-windows7.0/win-x64": {
+      "Raphael.Net": {
+        "type": "Transitive",
+        "resolved": "1.0.0",
+        "contentHash": "J/D1pw2MT52hENysYs7SA++PBT4sHwUcPnTzjb9/lLigNJazob4v7WbBe2enKpfDAI6hO8al7p2Qlt2258fk8g=="
       }
     }
   }
