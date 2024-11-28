@@ -118,7 +118,7 @@ public sealed class Settings : Window, IDisposable
             ImGuiUtils.TooltipWrapped(tooltip);
     }
 
-    private static void DrawOption<T>(string label, string tooltip, Func<T, string> getName, Func<T, string> getTooltip, T value, Action<T> setter, ref bool isDirty) where T : struct, Enum
+    private static void DrawOption<T>(string label, string tooltip, Func<T, string> getName, Func<T, string> getTooltip, T value, Action<T> setter, ref bool isDirty, params T[] excludedValues) where T : struct, Enum
     {
         ImGui.SetNextItemWidth(OptionWidth);
         using (var combo = ImRaii.Combo(label, getName(value)))
@@ -127,6 +127,8 @@ public sealed class Settings : Window, IDisposable
             {
                 foreach (var type in Enum.GetValues<T>())
                 {
+                    if (excludedValues.Contains(type))
+                        continue;
                     if (ImGui.Selectable(getName(type), value.Equals(type)))
                     {
                         setter(type);
@@ -504,7 +506,7 @@ public sealed class Settings : Window, IDisposable
             Config.Save();
     }
 
-    private static void DrawSolverConfig(ref SolverConfig configRef, SolverConfig defaultConfig, out bool isDirty)
+    private static void DrawSolverConfig(ref SolverConfig configRef, SolverConfig defaultConfig, bool disableOptimal, out bool isDirty)
     {
         isDirty = false;
 
@@ -522,13 +524,14 @@ public sealed class Settings : Window, IDisposable
                 "Algorithm",
                 "The algorithm to use when solving for a macro. Different " +
                 "algorithms provide different pros and cons for using them. " +
-                "By far, the Stepwise Genetic algorithm provides the best " +
-                "results, especially for very difficult crafts.",
+                "By far, the Optimal and Stepwise Genetic algorithms provide " +
+                "the best results, especially for very difficult crafts.",
                 GetAlgorithmName,
                 GetAlgorithmTooltip,
                 config.Algorithm,
                 v => config = config with { Algorithm = v },
-                ref isDirty
+                ref isDirty,
+                disableOptimal ? [SolverAlgorithm.Raphael] : []
             );
 
             if (config.Algorithm != SolverAlgorithm.Raphael)
@@ -682,9 +685,9 @@ public sealed class Settings : Window, IDisposable
             }
         }
 
-        using (var panel = ImRaii2.GroupPanel("Advanced", -1, out _))
+        if (config.Algorithm != SolverAlgorithm.Raphael)
         {
-            if (config.Algorithm != SolverAlgorithm.Raphael)
+            using (var panel = ImRaii2.GroupPanel("Advanced", -1, out _))
             {
                 DrawOption(
                     "Max Rollout Step Count",
@@ -708,70 +711,72 @@ public sealed class Settings : Window, IDisposable
                     ref isDirty
                 );
             }
-            else
+        }
+
+        // TODO: Provide better option name than this lol
+        //DrawOption(
+        //    "Unsound Branch Pruning",
+        //    "TBD",
+        //    config.UnsoundBranchPruning,
+        //    v => config = config with { UnsoundBranchPruning = v },
+        //    ref isDirty
+        //);
+
+        if (config.Algorithm != SolverAlgorithm.Raphael)
+        {
+            using (var panel = ImRaii2.GroupPanel("Score Weights (Advanced)", -1, out _))
             {
                 DrawOption(
-                    "Unsound Branch Pruning",
-                    "TBD",
-                    config.UnsoundBranchPruning,
-                    v => config = config with { UnsoundBranchPruning = v },
+                    "Progress",
+                    "Amount of weight to give to the craft's progress.",
+                    config.ScoreProgress,
+                    0,
+                    100,
+                    v => config = config with { ScoreProgress = v },
+                    ref isDirty
+                );
+
+                DrawOption(
+                    "Quality",
+                    "Amount of weight to give to the craft's quality.",
+                    config.ScoreQuality,
+                    0,
+                    100,
+                    v => config = config with { ScoreQuality = v },
+                    ref isDirty
+                );
+
+                DrawOption(
+                    "Durability",
+                    "Amount of weight to give to the craft's remaining durability.",
+                    config.ScoreDurability,
+                    0,
+                    100,
+                    v => config = config with { ScoreDurability = v },
+                    ref isDirty
+                );
+
+                DrawOption(
+                    "CP",
+                    "Amount of weight to give to the craft's remaining CP.",
+                    config.ScoreCP,
+                    0,
+                    100,
+                    v => config = config with { ScoreCP = v },
+                    ref isDirty
+                );
+
+                DrawOption(
+                    "Steps",
+                    "Amount of weight to give to the craft's number of steps. The lower " +
+                    "the step count, the higher the score.",
+                    config.ScoreSteps,
+                    0,
+                    100,
+                    v => config = config with { ScoreSteps = v },
                     ref isDirty
                 );
             }
-        }
-
-        using (var panel = ImRaii2.GroupPanel("Score Weights (Advanced)", -1, out _))
-        {
-            DrawOption(
-                "Progress",
-                "Amount of weight to give to the craft's progress.",
-                config.ScoreProgress,
-                0,
-                100,
-                v => config = config with { ScoreProgress = v },
-                ref isDirty
-            );
-
-            DrawOption(
-                "Quality",
-                "Amount of weight to give to the craft's quality.",
-                config.ScoreQuality,
-                0,
-                100,
-                v => config = config with { ScoreQuality = v },
-                ref isDirty
-            );
-
-            DrawOption(
-                "Durability",
-                "Amount of weight to give to the craft's remaining durability.",
-                config.ScoreDurability,
-                0,
-                100,
-                v => config = config with { ScoreDurability = v },
-                ref isDirty
-            );
-
-            DrawOption(
-                "CP",
-                "Amount of weight to give to the craft's remaining CP.",
-                config.ScoreCP,
-                0,
-                100,
-                v => config = config with { ScoreCP = v },
-                ref isDirty
-            );
-
-            DrawOption(
-                "Steps",
-                "Amount of weight to give to the craft's number of steps. The lower " +
-                "the step count, the higher the score.",
-                config.ScoreSteps,
-                0,
-                100,
-                v => config = config with { ScoreSteps = v },
-                ref isDirty
-            );
         }
 
         if (isDirty)
@@ -952,7 +957,7 @@ public sealed class Settings : Window, IDisposable
         ImGuiHelpers.ScaledDummy(5);
 
         var solverConfig = Config.RecipeNoteSolverConfig;
-        DrawSolverConfig(ref solverConfig, SolverConfig.RecipeNoteDefault, out var isSolverDirty);
+        DrawSolverConfig(ref solverConfig, SolverConfig.RecipeNoteDefault, false, out var isSolverDirty);
         if (isSolverDirty)
         {
             Config.RecipeNoteSolverConfig = solverConfig;
@@ -974,7 +979,7 @@ public sealed class Settings : Window, IDisposable
         var isDirty = false;
 
         var solverConfig = Config.EditorSolverConfig;
-        DrawSolverConfig(ref solverConfig, SolverConfig.EditorDefault, out var isSolverDirty);
+        DrawSolverConfig(ref solverConfig, SolverConfig.EditorDefault, false, out var isSolverDirty);
         if (isSolverDirty)
         {
             Config.EditorSolverConfig = solverConfig;
@@ -1059,7 +1064,7 @@ public sealed class Settings : Window, IDisposable
         ImGuiHelpers.ScaledDummy(5);
 
         var solverConfig = Config.SynthHelperSolverConfig;
-        DrawSolverConfig(ref solverConfig, SolverConfig.SynthHelperDefault, out var isSolverDirty);
+        DrawSolverConfig(ref solverConfig, SolverConfig.SynthHelperDefault, true, out var isSolverDirty);
         if (isSolverDirty)
         {
             Config.SynthHelperSolverConfig = solverConfig;

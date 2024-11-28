@@ -207,7 +207,7 @@ internal static class DynamicBars
     {
         string tooltip;
         if (solver.IsIndeterminate)
-            tooltip = "Initializing Solver";
+            tooltip = "Initializing";
         else
         {
             tooltip = $"Solver Progress: {solver.ProgressValue:N0} / {solver.ProgressMax:N0}";
