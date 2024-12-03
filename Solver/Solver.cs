@@ -224,8 +224,8 @@ public sealed class Solver : IDisposable
             Token.ThrowIfCancellationRequested();
         }
 
-
-        if (solution == null || ExecuteActions(solution).HQPercent != 100)
+        var state = solution != null ? (SimulationState?)ExecuteActions(solution) : null;
+        if (solution == null || state?.Quality != state?.Input.Recipe.MaxQuality)
         {
             Raphael.SolverConfig config = new()
             {
