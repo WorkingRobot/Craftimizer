@@ -77,20 +77,20 @@ public sealed record RecipeData
             {
                 if (item.ItemId.RowId == Recipe.ItemResult.RowId)
                 {
-                    thresholds = [0, item.CollectabilityMid, item.CollectabilityHigh];
+                    thresholds = [item.CollectabilityMid, item.CollectabilityHigh];
                     break;
                 }
             }
         }
         else if (Recipe.CollectableMetadata.GetValueOrDefault<CollectablesRefine>() is { } row6)
-        {
-            if (row6.CollectabilityHigh != 0)
-                thresholds = [row6.CollectabilityLow, row6.CollectabilityMid, row6.CollectabilityHigh];
-            else
-                thresholds = [0, row6.CollectabilityLow, row6.CollectabilityMid];
-        }
+            thresholds = [row6.CollectabilityLow, row6.CollectabilityMid, row6.CollectabilityHigh];
 
-        CollectableThresholds = thresholds?.Select<int, int?>(t => t == 0 ? null : t).ToArray();
+        if (thresholds != null)
+        {
+            var t = thresholds.Where(t => t != 0).Cast<int?>();
+            t = Enumerable.Concat(Enumerable.Repeat((int?)null, 3 - t.Count()), t);
+            CollectableThresholds = t.ToArray();
+        }
 
         Ingredients = Recipe.Ingredient.Zip(Recipe.AmountIngredient)
             .Take(6)
