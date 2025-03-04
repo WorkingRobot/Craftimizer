@@ -114,9 +114,11 @@ internal static class Intrinsics
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector256<float> ReciprocalSqrt(Vector256<float> data)
     {
+#if !IS_DETERMINISTIC
         // Accurate to 14 bits
         if (Avx512F.VL.IsSupported)
             return Avx512F.VL.ReciprocalSqrt14(data);
+#endif
 
         // Accurate to 12 bits
         if (Avx.IsSupported)
