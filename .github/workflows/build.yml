@@ -110,20 +110,3 @@ jobs:
         with:
           name: BenchmarkResults
           path: BenchmarkDotNet.Artifacts
-
-      - name: Cache Benchmark Data
-        uses: actions/cache@v4
-        with:
-          path: ./bench-cache
-          key: ${{runner.os}}-${{ github.head_ref || github.ref_name }}-benchmark
-
-      - name: Publish Benchmarks
-        uses: rhysd/github-action-benchmark@v1
-        with:
-          tool: benchmarkdotnet
-          output-file-path: BenchmarkDotNet.Artifacts/results/Craftimizer.Benchmark.Bench-report-full-compressed.json
-          external-data-json-path: ./bench-cache/external.json
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          comment-always: true
-          alert-threshold: '150%'
-          alert-comment-cc-users: '@${{github.actor}}'
