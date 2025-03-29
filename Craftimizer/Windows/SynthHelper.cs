@@ -476,7 +476,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         var action = NextAction;
         if (canExecute && action != null)
         {
-            Service.Chat.SendMessage($"/ac \"{action.Value.GetName(RecipeData!.ClassJob)}\"");
+            Chat.SendMessage($"/ac \"{action.Value.GetName(RecipeData!.ClassJob)}\"");
             return true;
         }
         return false;
@@ -542,7 +542,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         {
             foreach (var status in statusManager->Status)
                 if (status.StatusId == id)
-                    return status.StackCount;
+                    return (byte)status.Param;
             return 0;
         }
         bool HasEffect(ushort id)

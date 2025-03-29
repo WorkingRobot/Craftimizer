@@ -31,7 +31,6 @@ public sealed class Plugin : IDalamudPlugin
     public Configuration Configuration { get; }
     public IconManager IconManager { get; }
     public Hooks Hooks { get; }
-    public Chat Chat { get; }
     public CommunityMacros CommunityMacros { get; }
     public Ipc Ipc { get; }
     public AttributeCommandManager AttributeCommandManager { get; }
@@ -44,7 +43,6 @@ public sealed class Plugin : IDalamudPlugin
         Configuration = Configuration.Load();
         IconManager = new();
         Hooks = new();
-        Chat = new();
         CommunityMacros = new();
         Ipc = new();
         AttributeCommandManager = new();

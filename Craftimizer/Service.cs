@@ -32,7 +32,6 @@ public sealed class Service
     public static Configuration Configuration => Plugin.Configuration;
     public static IconManager IconManager => Plugin.IconManager;
     public static WindowSystem WindowSystem => Plugin.WindowSystem;
-    public static Chat Chat => Plugin.Chat;
     public static CommunityMacros CommunityMacros => Plugin.CommunityMacros;
     public static Ipc Ipc => Plugin.Ipc;
 #pragma warning restore CS8618
