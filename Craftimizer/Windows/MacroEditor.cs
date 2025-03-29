@@ -24,6 +24,7 @@ using Sim = Craftimizer.Simulator.Simulator;
 using SimNoRandom = Craftimizer.Simulator.SimulatorNoRandom;
 using Recipe = Lumina.Excel.Sheets.Recipe;
 using Dalamud.Utility;
+using Craftimizer.Solver;
 
 namespace Craftimizer.Windows;
 
@@ -1121,42 +1122,83 @@ public sealed class MacroEditor : Window, IDisposable
             }
         }
 
-        using (var panel = ImRaii2.GroupPanel("Buffs", -1, out _))
+        using (var barsTable = ImRaii.Table("buffBars", 2, ImGuiTableFlags.SizingStretchSame))
         {
-            using var _font = AxisFont.Push();
-
-            var iconHeight = ImGui.GetFrameHeight() * 1.75f;
-            var durationShift = iconHeight * .2f;
-
-            ImGui.Dummy(new(0, iconHeight + ImGui.GetStyle().ItemSpacing.Y + ImGui.GetTextLineHeight() - durationShift));
-            ImGui.SameLine(0, 0);
-
-            var effects = State.ActiveEffects;
-            foreach (var effect in Enum.GetValues<EffectType>())
+            if (barsTable)
             {
-                if (!effects.HasEffect(effect))
-                    continue;
+                ImGui.TableSetupColumn("col1", ImGuiTableColumnFlags.WidthStretch, 3);
+                ImGui.TableSetupColumn("col2", ImGuiTableColumnFlags.WidthStretch, 1);
 
-                using (var group = ImRaii.Group())
+                var buffIconHeight = ImGui.GetFrameHeight() * 1.75f;
+                var buffDurationShift = buffIconHeight * .2f;
+                var buffHeight = buffIconHeight + ImGui.GetStyle().ItemSpacing.Y + ImGui.GetTextLineHeight() - buffDurationShift;
+
+                var infoHeight = 3 * ImGui.GetTextLineHeightWithSpacing();
+
+                var panelHeight = Math.Max(buffHeight, infoHeight);
+
+                ImGui.TableNextColumn();
+                using (ImRaii2.GroupPanel("Buffs", -1, out _))
                 {
-                    var icon = effect.GetIcon(effects.GetStrength(effect));
-                    var size = new Vector2(iconHeight * (icon.AspectRatio ?? 1), iconHeight);
+                    using var _font = AxisFont.Push();
 
-                    ImGui.Image(icon.ImGuiHandle, size);
-                    if (!effect.IsIndefinite())
+                    ImGui.Dummy(new(0, panelHeight));
+                    ImGui.SameLine(0, 0);
+                    ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (panelHeight - buffHeight) / 2f);
+
+                    var effects = State.ActiveEffects;
+                    foreach (var effect in Enum.GetValues<EffectType>())
                     {
-                        ImGui.SetCursorPosY(ImGui.GetCursorPosY() - durationShift);
-                        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 1);
-                        ImGuiUtils.TextCentered($"{effects.GetDuration(effect)}", size.X);
+                        if (!effects.HasEffect(effect))
+                            continue;
+
+                        using (var group = ImRaii.Group())
+                        {
+                            var icon = effect.GetIcon(effects.GetStrength(effect));
+                            var size = new Vector2(buffIconHeight * (icon.AspectRatio ?? 1), buffIconHeight);
+
+                            ImGui.Image(icon.ImGuiHandle, size);
+                            if (!effect.IsIndefinite())
+                            {
+                                ImGui.SetCursorPosY(ImGui.GetCursorPosY() - buffDurationShift);
+                                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 1);
+                                ImGuiUtils.TextCentered($"{effects.GetDuration(effect)}", size.X);
+                            }
+                        }
+                        if (ImGui.IsItemHovered())
+                        {
+                            var status = effect.Status();
+                            using var _reset = ImRaii.DefaultFont();
+                            ImGuiUtils.Tooltip($"{status.Name.ExtractText()}\n{status.Description.ExtractText()}");
+                        }
+                        ImGui.SameLine();
                     }
                 }
-                if (ImGui.IsItemHovered())
+
+                ImGui.TableNextColumn();
+                using (ImRaii2.GroupPanel("Info", -1, out _))
                 {
-                    var status = effect.Status();
-                    using var _reset = ImRaii.DefaultFont();
-                    ImGuiUtils.Tooltip($"{status.Name.ExtractText()}\n{status.Description.ExtractText()}");
+                    var actions = Macro.Actions.ToArray();
+                    var waitTime = actions.Sum(a => a.Base().MacroWaitTime);
+                    var waitTimeOptimal = waitTime - actions.Length * 0.1f;
+                    var delineationCount = actions.Count(SolverConfig.SpecialistActions.Contains);
+
+                    var height = (delineationCount == 0 ? 2 : 3) * ImGui.GetTextLineHeightWithSpacing();
+
+                    ImGui.Dummy(new(0, panelHeight));
+                    ImGui.SameLine(0, 0);
+
+                    using (ImRaii.Group())
+                    {
+                        ImGui.SetCursorPosY(ImGui.GetCursorPos().Y + (panelHeight - height) / 2f);
+                        ImGuiUtils.TextCentered($"{actions.Length} Step{(actions.Length != 1 ? "s" : string.Empty)}");
+                        ImGuiUtils.TextCentered($"{waitTime} sec");
+                        if (ImGui.IsItemHovered())
+                            ImGuiUtils.Tooltip($"Optimal Time: {waitTimeOptimal:0.#} sec");
+                        if (delineationCount != 0)
+                            ImGuiUtils.TextCentered($"{delineationCount} Delineation{(delineationCount != 1 ? "s" : string.Empty)}");
+                    }
                 }
-                ImGui.SameLine();
             }
         }
     }
