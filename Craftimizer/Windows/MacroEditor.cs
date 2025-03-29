@@ -1180,7 +1180,7 @@ public sealed class MacroEditor : Window, IDisposable
                 {
                     var actions = Macro.Actions.ToArray();
                     var waitTime = actions.Sum(a => a.Base().MacroWaitTime);
-                    var waitTimeOptimal = waitTime - actions.Length * 0.1f;
+                    var waitTimeOptimal = waitTime - actions.Length;
                     var delineationCount = actions.Count(SolverConfig.SpecialistActions.Contains);
 
                     var height = (delineationCount == 0 ? 2 : 3) * ImGui.GetTextLineHeightWithSpacing();

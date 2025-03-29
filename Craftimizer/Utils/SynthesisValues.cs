@@ -69,7 +69,7 @@ internal sealed unsafe class SynthesisValues(AddonSynthesis* addon)
         {
             ValueType.ManagedString or
             ValueType.String =>
-                MemoryHelper.ReadSeStringNullTerminated((nint)value.String),
+                MemoryHelper.ReadSeStringNullTerminated((nint)value.String.Value),
             _ => null
         };
     }

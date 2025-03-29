@@ -517,7 +517,7 @@ internal static class ImGuiUtils
         return false;
     }
 
-    private static bool ListClip<T>(IReadOnlyList<T> data, float lineHeight, Predicate<T> func)
+    private static bool ListClip<T>(List<T> data, float lineHeight, Predicate<T> func)
     {
         ImGuiListClipperPtr imGuiListClipperPtr;
         unsafe
