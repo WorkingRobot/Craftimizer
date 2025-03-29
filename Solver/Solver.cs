@@ -154,7 +154,7 @@ public sealed class Solver : IDisposable
             return await SearchStepwiseGenetic().ConfigureAwait(false);
         }
 
-        maxProgress = 2000;
+        maxProgress = 50000;
 
         var s = new SimulatorNoRandom() { State = State };
         var pool = RaphaelUtils.ConvertToRawActions(Config.ActionPool.Where(a => a.Base().IsPossible(s)).ToArray());
