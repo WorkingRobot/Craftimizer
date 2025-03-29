@@ -1,12 +1,18 @@
 {
   "version": 1,
   "dependencies": {
-    "net8.0-windows7.0": {
+    "net9.0-windows7.0": {
       "DalamudPackager": {
         "type": "Direct",
-        "requested": "[11.0.0, )",
-        "resolved": "11.0.0",
-        "contentHash": "bjT7XUlhIJSmsE/O76b7weUX+evvGQctbQB8aKXt94o+oPWxHpCepxAGMs7Thow3AzCyqWs7cOpp9/2wcgRRQA=="
+        "requested": "[12.0.0, )",
+        "resolved": "12.0.0",
+        "contentHash": "J5TJLV3f16T/E2H2P17ClWjtfEBPpq3yxvqW46eN36JCm6wR+EaoaYkqG9Rm5sHqs3/nK/vKjWWyvEs/jhKoXw=="
+      },
+      "DotNet.ReproducibleBuilds": {
+        "type": "Direct",
+        "requested": "[1.2.25, )",
+        "resolved": "1.2.25",
+        "contentHash": "xCXiw7BCxHJ8pF6wPepRUddlh2dlQlbr81gXA72hdk4FLHkKXas7EH/n+fk5UCA/YfMqG1Z6XaPiUjDbUNBUzg=="
       },
       "MathNet.Numerics": {
         "type": "Direct",
@@ -16,14 +22,14 @@
       },
       "Meziantou.Analyzer": {
         "type": "Direct",
-        "requested": "[2.0.179, )",
-        "resolved": "2.0.179",
-        "contentHash": "F5zRPPi1A1lLq4AkBxKWk32gCo9xy8b46InSBUx47gj3DZFfAYi1TtYeChBJedkDETaVKX0+0YtXh/nVAJ/aQw=="
+        "requested": "[2.0.189, )",
+        "resolved": "2.0.189",
+        "contentHash": "/e+dh95vDdvCTbViV2cWpXJEXAj+VHq7FsBXCTTTsLcffV0bkgXDFAPY0zMpy+Vt91Cl2cBoSOfaAoSdtn796Q=="
       },
       "DotNext": {
         "type": "Transitive",
-        "resolved": "5.14.0",
-        "contentHash": "wyRjcjQISQJpLtKTKacLKUGP80AT28WVRHq0etmFJywdeHrUfjyLgrfnSA5sk1ZcdL/55jRalRfm6MyhXOImMw==",
+        "resolved": "5.19.1",
+        "contentHash": "UXCY2ch0fvWNJZfGm1I6ua7uOivxq/o1Te8jf65ymRqCQTsMNMgMYdZtln7gAJwS0t61sBW9lgnEnl119HZO/A==",
         "dependencies": {
           "System.IO.Hashing": "8.0.0"
         }
@@ -45,12 +51,12 @@
         "type": "Project",
         "dependencies": {
           "Craftimizer.Simulator": "[1.0.0, )",
-          "DotNext": "[5.14.0, )",
+          "DotNext": "[5.19.1, )",
           "Raphael.Net": "[1.0.0, )"
         }
       }
     },
-    "net8.0-windows7.0/win-x64": {
+    "net9.0-windows7.0/win-x64": {
       "Raphael.Net": {
         "type": "Transitive",
         "resolved": "1.0.0",
