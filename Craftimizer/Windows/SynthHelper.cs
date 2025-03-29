@@ -14,7 +14,6 @@ using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.UI;
-using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Client.UI.Shell;
 using ImGuiNET;
 using System;
@@ -161,10 +160,9 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         if (!Service.Configuration.EnableSynthHelper)
             return false;
 
-        var agent = AgentRecipeNote.Instance();
-        var recipeId = (ushort)agent->ActiveCraftRecipeId;
+        var recipeId = CSRecipeNote.Instance()->ActiveCraftRecipeId;
 
-        if (agent->ActiveCraftRecipeId == 0)
+        if (recipeId == 0)
         {
             RecipeData = null;
             return false;
@@ -173,7 +171,10 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         Addon = (AddonSynthesis*)Service.GameGui.GetAddonByName("Synthesis");
 
         if (Addon == null)
+        {
+            RecipeData = null;
             return false;
+        }
 
         // Check if Synthesis addon is visible
         if (Addon->AtkUnitBase.WindowNode == null)
@@ -198,7 +199,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             }
         }
 
-        if (RecipeData?.RecipeId != agent->ActiveCraftRecipeId)
+        if (RecipeData?.RecipeId != recipeId)
             OnStartCrafting(recipeId);
 
         if (IsRecalculateQueued)
