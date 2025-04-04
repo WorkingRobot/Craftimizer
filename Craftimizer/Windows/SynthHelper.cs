@@ -389,7 +389,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
                 {
                     var status = effect.Status();
                     using var _reset = ImRaii.DefaultFont();
-                    ImGuiUtils.Tooltip($"{status.Name.ExtractText()}\n{status.Description.ExtractText()}");
+                    ImGuiUtils.Tooltip($"{status.Name.ExtractText().StripSoftHyphen()}\n{status.Description.ExtractText().StripSoftHyphen()}");
                 }
                 ImGui.SameLine();
             }
