@@ -3,6 +3,7 @@ using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using Craftimizer.Solver;
 using Craftimizer.Utils;
+using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface;
@@ -17,12 +18,12 @@ using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.System.String;
-using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
@@ -589,7 +590,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                     if (ImGui.IsItemHovered())
                         ImGuiUtils.Tooltip("Open in map");
 
-                    ImGuiUtils.TextCentered($"{questTerritory} ({questLocation.X:0.0}, {questLocation.Y:0.0})");
+                    ImGuiUtils.TextCentered($"{questTerritory} ({GetCoordinatesString(questLocation)})");
                 }
                 break;
             case CraftableStatus.WrongClassJob:
@@ -624,7 +625,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                     if (ImGui.IsItemHovered())
                         ImGuiUtils.Tooltip("Open in map");
 
-                    ImGuiUtils.TextCentered($"{vendorTerritory} ({vendorLoation.X:0.0}, {vendorLoation.Y:0.0})");
+                    ImGuiUtils.TextCentered($"{vendorTerritory} ({GetCoordinatesString(vendorLoation)})");
                 }
                 break;
             case CraftableStatus.RequiredItem:
@@ -1158,10 +1159,10 @@ public sealed unsafe class RecipeNote : Window, IDisposable
     private static (string NpcName, string Territory, Vector2 MapLocation, MapLinkPayload Payload) ResolveLevelData(uint levelRowId)
     {
         var level = LuminaSheets.LevelSheet.GetRow(levelRowId);
-        var territory = level.Territory.Value.PlaceName.Value.Name.ExtractCleanText();
+        var placeName = ResolvePlaceName(level.Territory.Value.PlaceName.RowId);
         var location = WorldToMap2(new(level.X, level.Z), level.Map.Value!);
 
-        return (ResolveNpcResidentName(level.Object.RowId), territory, location, new(level.Territory.RowId, level.Map.RowId, location.X, location.Y));
+        return (ResolveNpcResidentName(level.Object.RowId), placeName, location, new(level.Territory.RowId, level.Map.RowId, location.X, location.Y));
     }
 
     private static Vector2 WorldToMap2(Vector2 worldCoordinates, Lumina.Excel.Sheets.Map map)
@@ -1171,8 +1172,17 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
     private static string ResolveNpcResidentName(uint npcRowId)
     {
-        var resident = LuminaSheets.ENpcResidentSheet.GetRow(npcRowId);
-        return resident.Singular.ExtractText();
+        return Service.SeStringEvaluator.EvaluateObjStr(ObjectKind.EventNpc, npcRowId);
+    }
+
+    private static string ResolvePlaceName(uint placeNameId)
+    {
+        return Service.SeStringEvaluator.EvaluateFromAddon(1337, [placeNameId]).ExtractText().StripSoftHyphen();
+    }
+
+    private static string GetCoordinatesString(Vector2 pos)
+    {
+        return $"{pos.X.ToString("0.0", CultureInfo.InvariantCulture)}, {pos.Y.ToString("0.0", CultureInfo.InvariantCulture)}";
     }
 
     private static int? GetGearsetForJob(ClassJob job)
