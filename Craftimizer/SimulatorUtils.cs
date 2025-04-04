@@ -14,6 +14,7 @@ using Craftimizer.Utils;
 using Lumina.Text.ReadOnly;
 using Lumina.Text.Payloads;
 using Lumina.Excel.Sheets;
+using Dalamud.Utility;
 
 namespace Craftimizer.Plugin;
 
@@ -146,7 +147,7 @@ internal static class ClassJobUtils
     public static string GetName(this ClassJob me)
     {
         var job = LuminaSheets.ClassJobSheet.GetRow(me.GetClassJobIndex());
-        return job.Name.ExtractText().ToLowerInvariant();
+        return job.Name.ExtractText().StripSoftHyphen();
     }
 
     public static string GetNameArticle(this ClassJob me)
