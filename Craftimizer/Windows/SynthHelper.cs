@@ -392,7 +392,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
                 {
                     var status = effect.Status();
                     using var _reset = ImRaii.DefaultFont();
-                    ImGuiUtils.Tooltip($"{status.Name.ExtractText()}\n{status.Description.ExtractText()}");
+                    ImGuiUtils.Tooltip($"{status.Name.ExtractCleanText()}\n{status.Description.ExtractCleanText()}");
                 }
                 ImGui.SameLine();
             }
