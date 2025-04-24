@@ -200,7 +200,10 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         }
 
         if (RecipeData?.RecipeId != recipeId)
+        {
             OnStartCrafting(recipeId);
+            OnStateUpdated();
+        }
 
         if (IsRecalculateQueued)
             OnStateUpdated();
