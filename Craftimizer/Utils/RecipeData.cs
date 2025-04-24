@@ -93,6 +93,11 @@ public sealed record RecipeData
         }
         else if (Recipe.CollectableMetadata.GetValueOrDefault<CollectablesRefine>() is { } row6)
             thresholds = [row6.CollectabilityLow, row6.CollectabilityMid, row6.CollectabilityHigh];
+        else if (Recipe.CollectableMetadataKey == 7 && LuminaSheets.WKSMissionToDoEvalutionRefinSheet.TryGetRow(Recipe.CollectableMetadata.RowId, out var row7))
+        {
+            thresholds = [row7.Unknown0, row7.Unknown1, row7.Unknown2];
+            thresholds = [.. thresholds.Select(percentage => RecipeInfo.MaxQuality * percentage / 1000)];
+        }
 
         if (thresholds != null)
         {
