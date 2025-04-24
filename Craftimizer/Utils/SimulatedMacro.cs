@@ -5,8 +5,6 @@ using DotNext.Collections.Generic;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Sim = Craftimizer.Simulator.Simulator;
-using SimNoRandom = Craftimizer.Simulator.SimulatorNoRandom;
 
 namespace Craftimizer.Utils;
 
@@ -81,7 +79,7 @@ internal sealed class SimulatedMacro
 
             for (var i = 0; i < iterCount; ++i)
             {
-                var sim = new Sim();
+                var sim = new RotationSimulator();
                 var (_, state, _) = sim.ExecuteMultiple(startState, actions);
                 Progress.Add(state.Progress);
                 Quality.Add(state.Quality);
@@ -102,7 +100,7 @@ internal sealed class SimulatedMacro
         public SimulationState State { get; private set; }
         private Reliablity? Reliability { get; set; }
 
-        public Step(ActionType action, Sim sim, in SimulationState lastState, out SimulationState newState)
+        public Step(ActionType action, RotationSimulator sim, in SimulationState lastState, out SimulationState newState)
         {
             Action = action;
             newState = Recalculate(sim, lastState);
@@ -115,7 +113,7 @@ internal sealed class SimulatedMacro
             IsEphemeral = isEphemeral;
         }
 
-        public SimulationState Recalculate(Sim sim, in SimulationState lastState)
+        public SimulationState Recalculate(RotationSimulator sim, in SimulationState lastState)
         {
             (Response, State) = sim.Execute(lastState, Action);
             Reliability = null;
@@ -283,6 +281,6 @@ internal sealed class SimulatedMacro
         }
     }
 
-    private static Sim CreateSim() =>
-        Service.Configuration.ConditionRandomness ? new Sim() : new SimNoRandom();
+    private static RotationSimulator CreateSim() =>
+        Service.Configuration.ConditionRandomness ? new RotationSimulator() : new RotationSimulatorNoRandom();
 }

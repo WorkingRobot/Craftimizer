@@ -75,7 +75,7 @@ internal static class Program
             Iterations = 30000,
             MaxStepCount = 25
         };
-        var solver = new Solver.Solver(config, new(input));
+        var solver = new Solver.RotationSolver(config, new(input));
         solver.OnNewAction += s => Console.WriteLine($">{s}");
         solver.Start();
         var (_, s) = await solver.GetTask().ConfigureAwait(false);
@@ -85,7 +85,7 @@ internal static class Program
     private static async Task RunOther()
     {
         TypeLayout.PrintLayout<SimulationState>(true);
-        TypeLayout.PrintLayout<Simulator.Simulator>(true);
+        TypeLayout.PrintLayout<Simulator.RotationSimulator>(true);
         TypeLayout.PrintLayout<BaseAction>(true);
         TypeLayout.PrintLayout<SimulationNode>(true);
         return;
@@ -124,7 +124,7 @@ internal static class Program
             MaxStepCount = 30,
         };
 
-        var sim = new SimulatorNoRandom();
+        var sim = new RotationSimulatorNoRandom();
         (_, var state) = sim.Execute(new(input), ActionType.MuscleMemory);
         (_, state) = sim.Execute(state, ActionType.PrudentTouch);
         //(_, state) = sim.Execute(state, ActionType.Manipulation);
@@ -150,7 +150,7 @@ internal static class Program
 
         Console.WriteLine($"{state.Quality} {state.CP} {state.Progress} {state.Durability}");
         //return;
-        var solver = new Solver.Solver(config, state);
+        var solver = new Solver.RotationSolver(config, state);
         solver.OnLog += Console.WriteLine;
         solver.OnNewAction += s => Console.WriteLine(s);
         solver.Start();

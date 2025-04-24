@@ -171,29 +171,29 @@ internal static class DynamicBars
         }
     }
 
-    public static void DrawProgressBar(Solver.Solver solver, float? availSpace = null)
+    public static void DrawProgressBar(Solver.RotationSolver rotationSolver, float? availSpace = null)
     {
         var spacing = ImGui.GetStyle().ItemSpacing.X;
         availSpace ??= ImGui.GetContentRegionAvail().X;
 
-        var fraction = (float)solver.ProgressValue / solver.ProgressMax;
+        var fraction = (float)rotationSolver.ProgressValue / rotationSolver.ProgressMax;
         if (Service.Configuration.ProgressType == Configuration.ProgressBarType.None)
         {
             ImGui.AlignTextToFramePadding();
             ImGuiUtils.TextCentered($"{fraction * 100:N0}%", availSpace.Value);
 
             if (ImGui.IsItemHovered())
-                DrawProgressBarTooltip(solver);
+                DrawProgressBarTooltip(rotationSolver);
             return;
         }
 
         var percentWidth = ImGui.CalcTextSize("100%").X;
         var progressWidth = availSpace.Value;
-        var progressColors = Colors.GetSolverProgressColors(solver.ProgressStage);
+        var progressColors = Colors.GetSolverProgressColors(rotationSolver.ProgressStage);
 
         fraction = Math.Clamp(fraction, 0, 1);
 
-        if (!solver.IsIndeterminate)
+        if (!rotationSolver.IsIndeterminate)
             progressWidth -= percentWidth + spacing;
         else
             fraction = (float)-ImGui.GetTime() * .5f;
@@ -202,9 +202,9 @@ internal static class DynamicBars
         using (ImRaii.PushColor(ImGuiCol.PlotHistogram, progressColors.Foreground))
             ImGuiUtils.ProgressBar(fraction, new(progressWidth, ImGui.GetFrameHeight()));
         if (ImGui.IsItemHovered())
-            DrawProgressBarTooltip(solver);
+            DrawProgressBarTooltip(rotationSolver);
 
-        if (!solver.IsIndeterminate)
+        if (!rotationSolver.IsIndeterminate)
         {
             ImGui.SameLine(0, spacing);
             ImGui.AlignTextToFramePadding();
@@ -212,15 +212,15 @@ internal static class DynamicBars
         }
     }
 
-    public static void DrawProgressBarTooltip(Solver.Solver solver)
+    public static void DrawProgressBarTooltip(Solver.RotationSolver rotationSolver)
     {
         string tooltip;
-        if (solver.IsIndeterminate)
+        if (rotationSolver.IsIndeterminate)
             tooltip = "Initializing";
         else
         {
-            tooltip = $"Solver Progress: {solver.ProgressValue:N0} / {solver.ProgressMax:N0}";
-            if (solver.ProgressValue > solver.ProgressMax)
+            tooltip = $"Solver Progress: {rotationSolver.ProgressValue:N0} / {rotationSolver.ProgressMax:N0}";
+            if (rotationSolver.ProgressValue > rotationSolver.ProgressMax)
                 tooltip += $"\n\nThis is taking longer than expected. Check to see if your gear stats are good and the solver settings are adequate.";
         }
         ImGuiUtils.TooltipWrapped(tooltip);

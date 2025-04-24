@@ -7,11 +7,11 @@ internal sealed class MuscleMemory() : BaseAction(
     defaultEfficiency: 300
     )
 {
-    public override bool IsPossible(Simulator s) => s.IsFirstStep && base.IsPossible(s);
+    public override bool IsPossible(RotationSimulator s) => s.IsFirstStep && base.IsPossible(s);
 
-    public override bool CouldUse(Simulator s) => s.IsFirstStep && base.CouldUse(s);
+    public override bool CouldUse(RotationSimulator s) => s.IsFirstStep && base.CouldUse(s);
 
-    public override void UseSuccess(Simulator s)
+    public override void UseSuccess(RotationSimulator s)
     {
         base.UseSuccess(s);
         s.AddEffect(EffectType.MuscleMemory, 5 + 1);

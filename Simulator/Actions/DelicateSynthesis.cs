@@ -7,7 +7,7 @@ internal sealed class DelicateSynthesis() : BaseAction(
     defaultEfficiency: 100
     )
 {
-    public override void UseSuccess(Simulator s)
+    public override void UseSuccess(RotationSimulator s)
     {
         // Delicate Synthesis Mastery Trait
         var hasTrait = s.Input.Stats.Level >= 94;

@@ -6,6 +6,6 @@ internal sealed class ImmaculateMend() : BaseAction(
     defaultCPCost: 112
     )
 {
-    public override void UseSuccess(Simulator s) =>
+    public override void UseSuccess(RotationSimulator s) =>
         s.RestoreAllDurability();
 }

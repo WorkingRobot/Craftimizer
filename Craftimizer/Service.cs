@@ -28,17 +28,17 @@ public sealed class Service
     [PluginService] public static IGameInteropProvider GameInteropProvider { get; private set; }
     [PluginService] public static INotificationManager NotificationManager { get; private set; }
 
-    public static Plugin Plugin { get; private set; }
-    public static Configuration Configuration => Plugin.Configuration;
-    public static IconManager IconManager => Plugin.IconManager;
-    public static WindowSystem WindowSystem => Plugin.WindowSystem;
-    public static CommunityMacros CommunityMacros => Plugin.CommunityMacros;
-    public static Ipc Ipc => Plugin.Ipc;
+    public static CraftimizerPlugin CraftimizerPlugin { get; private set; }
+    public static Configuration Configuration => CraftimizerPlugin.Configuration;
+    public static IconManager IconManager => CraftimizerPlugin.IconManager;
+    public static WindowSystem WindowSystem => CraftimizerPlugin.WindowSystem;
+    public static CommunityMacros CommunityMacros => CraftimizerPlugin.CommunityMacros;
+    public static Ipc Ipc => CraftimizerPlugin.Ipc;
 #pragma warning restore CS8618
 
-    internal static void Initialize(Plugin plugin, IDalamudPluginInterface iface)
+    internal static void Initialize(CraftimizerPlugin craftimizerPlugin, IDalamudPluginInterface iface)
     {
-        Plugin = plugin;
+        CraftimizerPlugin = craftimizerPlugin;
         iface.Create<Service>();
     }
 }

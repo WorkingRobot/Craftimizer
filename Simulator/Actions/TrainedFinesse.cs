@@ -8,7 +8,7 @@ internal sealed class TrainedFinesse() : BaseAction(
     defaultEfficiency: 100
     )
 {
-    public override bool CouldUse(Simulator s) =>
+    public override bool CouldUse(RotationSimulator s) =>
         s.GetEffectStrength(EffectType.InnerQuiet) == 10
         && base.CouldUse(s);
 }

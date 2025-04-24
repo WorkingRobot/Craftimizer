@@ -6,13 +6,13 @@ internal sealed class ByregotsBlessing() : BaseAction(
     defaultCPCost: 24,
     defaultEfficiency: 100)
 {
-    public override int Efficiency(Simulator s) =>
+    public override int Efficiency(RotationSimulator s) =>
         100 + (20 * s.GetEffectStrength(EffectType.InnerQuiet));
 
-    public override bool CouldUse(Simulator s) =>
+    public override bool CouldUse(RotationSimulator s) =>
         s.HasEffect(EffectType.InnerQuiet) && base.CouldUse(s);
 
-    public override void UseSuccess(Simulator s)
+    public override void UseSuccess(RotationSimulator s)
     {
         base.UseSuccess(s);
         s.RemoveEffect(EffectType.InnerQuiet);

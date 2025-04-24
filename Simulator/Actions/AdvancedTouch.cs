@@ -5,6 +5,6 @@ internal sealed class AdvancedTouch() : BaseAction(
     increasesQuality: true,
     defaultCPCost: 46, defaultEfficiency: 150)
 {
-    public override int CPCost(Simulator s) =>
+    public override int CPCost(RotationSimulator s) =>
         (s.ActionStates.Combo == ActionProc.AdvancedTouch) ? 18 : 46;
 }

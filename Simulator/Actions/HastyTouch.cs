@@ -8,7 +8,7 @@ internal sealed class HastyTouch() : BaseAction(
     defaultSuccessRate: 60
     )
 {
-    public override void UseSuccess(Simulator s)
+    public override void UseSuccess(RotationSimulator s)
     {
         base.UseSuccess(s);
 

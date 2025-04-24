@@ -7,6 +7,6 @@ internal sealed class StandardTouch() : BaseAction(
     defaultEfficiency: 125
     )
 {
-    public override int CPCost(Simulator s) =>
+    public override int CPCost(RotationSimulator s) =>
         s.ActionStates.Combo == ActionProc.UsedBasicTouch ? 18 : 32;
 }

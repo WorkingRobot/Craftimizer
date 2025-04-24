@@ -6,12 +6,12 @@ internal sealed class TrainedPerfection() : BaseBuffAction(
     macroWaitTime: 3
     )
 {
-    public override bool IsPossible(Simulator s) =>
+    public override bool IsPossible(RotationSimulator s) =>
         base.IsPossible(s) && !s.ActionStates.UsedTrainedPerfection;
 
-    public override bool CouldUse(Simulator s) =>
+    public override bool CouldUse(RotationSimulator s) =>
         !s.ActionStates.UsedTrainedPerfection;
 
-    public override string GetTooltip(Simulator s, bool addUsability) =>
+    public override string GetTooltip(RotationSimulator s, bool addUsability) =>
         GetBaseTooltip(s, addUsability);
 }

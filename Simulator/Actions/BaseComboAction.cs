@@ -13,7 +13,7 @@ public abstract class BaseComboAction(
     public readonly ActionType ActionTypeA = actionTypeA;
     public readonly ActionType ActionTypeB = actionTypeB;
 
-    protected bool BaseCouldUse(Simulator s) =>
+    protected bool BaseCouldUse(RotationSimulator s) =>
         base.CouldUse(s);
 
     private static bool VerifyDurability2(int durabilityA, int durability, in Effects effects)
@@ -32,7 +32,7 @@ public abstract class BaseComboAction(
         return true;
     }
 
-    public static bool VerifyDurability2(Simulator s, int durabilityA) =>
+    public static bool VerifyDurability2(RotationSimulator s, int durabilityA) =>
         VerifyDurability2(durabilityA, s.Durability, s.ActiveEffects);
 
     public static bool VerifyDurability3(int durabilityA, int durabilityB, int durability, in Effects effects)
@@ -65,6 +65,6 @@ public abstract class BaseComboAction(
         return true;
     }
 
-    public static bool VerifyDurability3(Simulator s, int durabilityA, int durabilityB) =>
+    public static bool VerifyDurability3(RotationSimulator s, int durabilityA, int durabilityB) =>
         VerifyDurability3(durabilityA, durabilityB, s.Durability, s.ActiveEffects);
 }

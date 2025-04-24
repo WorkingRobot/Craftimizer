@@ -1,10 +1,10 @@
+using System.Diagnostics;
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
-using System.Diagnostics;
 
 namespace Craftimizer.Solver;
 
-public sealed class Solver : IDisposable
+public sealed class RotationSolver : IDisposable
 {
     public SolverConfig Config { get; }
     public SimulationState State { get; }
@@ -58,7 +58,7 @@ public sealed class Solver : IDisposable
     // OnNewAction actions precede these proposed solutions. Purely visual.
     public event SolutionDelegate? OnSuggestSolution;
 
-    public Solver(in SolverConfig config, in SimulationState state)
+    public RotationSolver(in SolverConfig config, in SimulationState state)
     {
         Config = config;
         State = state;
@@ -156,7 +156,7 @@ public sealed class Solver : IDisposable
 
         maxProgress = 50000;
 
-        var s = new SimulatorNoRandom() { State = State };
+        var s = new RotationSimulatorNoRandom() { State = State };
         var pool = RaphaelUtils.ConvertToRawActions(Config.ActionPool.Where(a => a.Base().IsPossible(s)).ToArray());
         var input = new Raphael.SolverInput()
         {
@@ -171,7 +171,7 @@ public sealed class Solver : IDisposable
 
         SimulationState ExecuteActions(IEnumerable<ActionType> actions)
         {
-            var sim = new SimulatorNoRandom();
+            var sim = new RotationSimulatorNoRandom();
             var (resp, outState, failedIdx) = sim.ExecuteMultiple(State, actions);
             if (resp != ActionResponse.SimulationComplete)
             {
@@ -191,15 +191,6 @@ public sealed class Solver : IDisposable
             var steps = RaphaelUtils.ConvertRawActions(s);
             var outState = ExecuteActions(steps);
             this.OnSuggestSolution?.Invoke(new(steps, in outState));
-        }
-
-        void OnProgress(nuint p)
-        {
-            var prog = checked((int)p);
-            var stage = prog / maxProgress;
-            while (stage != progressStage)
-                ResetProgress();
-            progress = prog % maxProgress;
         }
 
         if (!Config.MinimizeSteps)
@@ -255,6 +246,15 @@ public sealed class Solver : IDisposable
 
         var outState = ExecuteActions(solution);
         return new(solution, in outState);
+
+        void OnProgress(nuint p)
+        {
+            var prog = checked((int)p);
+            var stage = prog / maxProgress;
+            while (stage != progressStage)
+                ResetProgress();
+            progress = prog % maxProgress;
+        }
     }
 
     private async Task<SolverSolution> SearchStepwiseGenetic()
@@ -267,7 +267,7 @@ public sealed class Solver : IDisposable
         var bestSims = new List<(float Score, SolverSolution Result)>();
 
         var state = State;
-        var sim = new Simulator(Config.ActionPool, Config.MaxStepCount);
+        var sim = new RotationSimulator(Config.ActionPool, Config.MaxStepCount);
 
         var activeStates = new List<SolverSolution>() { new(Array.Empty<ActionType>(), state) };
 
@@ -383,7 +383,7 @@ public sealed class Solver : IDisposable
 
         var actions = new List<ActionType>();
         var state = State;
-        var sim = new Simulator(Config.ActionPool, Config.MaxStepCount, state);
+        var sim = new RotationSimulator(Config.ActionPool, Config.MaxStepCount, state);
         while (true)
         {
             Token.ThrowIfCancellationRequested();
@@ -441,7 +441,7 @@ public sealed class Solver : IDisposable
 
         var actions = new List<ActionType>();
         var state = State;
-        var sim = new Simulator(Config.ActionPool, Config.MaxStepCount, state);
+        var sim = new RotationSimulator(Config.ActionPool, Config.MaxStepCount, state);
         while (true)
         {
             Token.ThrowIfCancellationRequested();

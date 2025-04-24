@@ -1,7 +1,7 @@
 namespace Craftimizer.Test.Simulator;
 
 [TestClass]
-public class SimulatorTests
+public class RotationSimulatorTests
 {
     // https://craftingway.app/rotation/loud-namazu-jVe9Y
     // Chondrite Saw
@@ -44,7 +44,7 @@ public class SimulatorTests
         int progress, int quality,
         int durability, int cp)
     {
-        var simulator = new SimulatorNoRandom();
+        var simulator = new RotationSimulatorNoRandom();
         var (_, state, _) = simulator.ExecuteMultiple(new(input), actions);
         Assert.AreEqual(progress, state.Progress);
         Assert.AreEqual(quality, state.Quality);
@@ -136,7 +136,7 @@ public class SimulatorTests
             ],
             0, 4588, 15, 332);
         Assert.AreEqual(10, state.ActiveEffects.InnerQuiet);
-        Assert.IsTrue(ActionType.TrainedFinesse.Base().CanUse(new SimulatorNoRandom() { State = state }));
+        Assert.IsTrue(ActionType.TrainedFinesse.Base().CanUse(new RotationSimulatorNoRandom() { State = state }));
     }
 
     [TestMethod]

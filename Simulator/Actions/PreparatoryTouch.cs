@@ -7,7 +7,7 @@ internal sealed class PreparatoryTouch() : BaseAction(
     defaultCPCost: 40,
     defaultEfficiency: 200)
 {
-    public override void UseSuccess(Simulator s)
+    public override void UseSuccess(RotationSimulator s)
     {
         base.UseSuccess(s);
         s.StrengthenEffect(EffectType.InnerQuiet);

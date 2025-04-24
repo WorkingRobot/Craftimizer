@@ -8,7 +8,7 @@ internal sealed class Groundwork() : BaseAction(
     defaultEfficiency: 300
     )
 {
-    public override int Efficiency(Simulator s)
+    public override int Efficiency(RotationSimulator s)
     {
         // Groundwork Mastery Trait
         var eff = s.Input.Stats.Level >= 86 ? 360 : 300;

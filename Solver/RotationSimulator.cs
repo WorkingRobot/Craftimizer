@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace Craftimizer.Solver;
 
-internal sealed class Simulator : SimulatorNoRandom
+internal sealed class RotationSimulator : RotationSimulatorNoRandom
 {
     private readonly (BaseAction Data, ActionType Action)[] actionPoolObjects;
     private readonly int maxStepCount;
@@ -21,7 +21,7 @@ internal sealed class Simulator : SimulatorNoRandom
         }
     }
 
-    public Simulator(ActionType[] actionPool, int maxStepCount, SimulationState? filteringState = null)
+    public RotationSimulator(ActionType[] actionPool, int maxStepCount, SimulationState? filteringState = null)
     {
         var pool = actionPool.Select(x => (x.Base(), x));
         if (filteringState is { } state)

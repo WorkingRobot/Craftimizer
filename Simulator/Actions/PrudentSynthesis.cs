@@ -8,7 +8,7 @@ internal sealed class PrudentSynthesis() : BaseAction(
     defaultEfficiency: 180
     )
 {
-    public override bool CouldUse(Simulator s) =>
+    public override bool CouldUse(RotationSimulator s) =>
         !(s.HasEffect(EffectType.WasteNot) || s.HasEffect(EffectType.WasteNot2))
         && base.CouldUse(s);
 }

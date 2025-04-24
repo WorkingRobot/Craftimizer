@@ -36,32 +36,32 @@ public abstract class BaseAction(
 
     // Instanced properties
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public virtual int CPCost(Simulator s) =>
+    public virtual int CPCost(RotationSimulator s) =>
         DefaultCPCost;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public virtual int Efficiency(Simulator s) =>
+    public virtual int Efficiency(RotationSimulator s) =>
         DefaultEfficiency;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public virtual int SuccessRate(Simulator s) =>
+    public virtual int SuccessRate(RotationSimulator s) =>
         DefaultSuccessRate;
 
     // Return true if it can be in the action pool now or in the future
     // e.g. if Heart and Soul is already used, it is impossible to use it again
     // or if it's a first step action and IsFirstStep is false
-    public virtual bool IsPossible(Simulator s) =>
+    public virtual bool IsPossible(RotationSimulator s) =>
         s.Input.Stats.Level >= Level;
 
     // Return true if it can be used now
     // This already assumes that IsPossible returns true *at some point before*
-    public virtual bool CouldUse(Simulator s) =>
+    public virtual bool CouldUse(RotationSimulator s) =>
         s.CP >= CPCost(s);
 
-    public bool CanUse(Simulator s) =>
+    public bool CanUse(RotationSimulator s) =>
         IsPossible(s) && CouldUse(s);
 
-    public virtual void Use(Simulator s)
+    public virtual void Use(RotationSimulator s)
     {
         if (s.RollSuccess(SuccessRate(s)))
             UseSuccess(s);
@@ -84,7 +84,7 @@ public abstract class BaseAction(
         s.ActionCount++;
     }
 
-    public virtual void UseSuccess(Simulator s)
+    public virtual void UseSuccess(RotationSimulator s)
     {
         var eff = Efficiency(s);
         if (eff != 0)
@@ -96,7 +96,7 @@ public abstract class BaseAction(
         }
     }
 
-    public virtual string GetTooltip(Simulator s, bool addUsability)
+    public virtual string GetTooltip(RotationSimulator s, bool addUsability)
     {
         var cost = CPCost(s);
         var eff = Efficiency(s);

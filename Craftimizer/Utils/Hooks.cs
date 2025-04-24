@@ -66,7 +66,7 @@ public sealed unsafe class Hooks : IDisposable
             if (!Service.Configuration.SynthHelperAbilityAnts)
                 return ret;
 
-            if (Service.Plugin.SynthHelperWindow is not { } window)
+            if (Service.CraftimizerPlugin.SynthHelperWindow is not { } window)
                 return ret;
 
             if (!window.ShouldDrawAnts)

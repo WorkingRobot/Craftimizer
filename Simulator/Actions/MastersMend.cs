@@ -6,6 +6,6 @@ internal sealed class MastersMend() : BaseAction(
     defaultCPCost: 88
     )
 {
-    public override void UseSuccess(Simulator s) =>
+    public override void UseSuccess(RotationSimulator s) =>
         s.RestoreDurability(30);
 }

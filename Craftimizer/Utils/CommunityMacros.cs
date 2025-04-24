@@ -361,16 +361,16 @@ public sealed class CommunityMacros
             Actions = actions;
         }
 
-        public (float Score, SimulationState FinalState) CalculateScore(SimulatorNoRandom simulator, in SimulationState startingState, in MCTSConfig mctsConfig)
+        public (float Score, SimulationState FinalState) CalculateScore(RotationSimulatorNoRandom rotationSimulator, in SimulationState startingState, in MCTSConfig mctsConfig)
         {
-            return CalculateScore(Actions, simulator, startingState, mctsConfig);
+            return CalculateScore(Actions, rotationSimulator, startingState, mctsConfig);
         }
 
-        public static (float Score, SimulationState FinalState) CalculateScore(IReadOnlyCollection<ActionType> actions, SimulatorNoRandom simulator, in SimulationState startingState, in MCTSConfig mctsConfig)
+        public static (float Score, SimulationState FinalState) CalculateScore(IReadOnlyCollection<ActionType> actions, RotationSimulatorNoRandom rotationSimulator, in SimulationState startingState, in MCTSConfig mctsConfig)
         {
-            var (resp, outState, failedIdx) = simulator.ExecuteMultiple(startingState, actions);
+            var (resp, outState, failedIdx) = rotationSimulator.ExecuteMultiple(startingState, actions);
             outState.ActionCount = actions.Count;
-            var score = SimulationNode.CalculateScoreForState(outState, simulator.CompletionState, mctsConfig) ?? 0;
+            var score = SimulationNode.CalculateScoreForState(outState, rotationSimulator.CompletionState, mctsConfig) ?? 0;
             if (resp != ActionResponse.SimulationComplete)
             {
                 if (failedIdx != -1)

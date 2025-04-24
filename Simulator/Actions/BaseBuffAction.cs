@@ -23,16 +23,16 @@ internal abstract class BaseBuffAction(
     public readonly int Duration = duration;
     private readonly int trueDuration = increasesStepCount ? duration + 1 : duration;
 
-    public override void UseSuccess(Simulator s) =>
+    public override void UseSuccess(RotationSimulator s) =>
         s.AddEffect(Effect, trueDuration);
 
-    public override string GetTooltip(Simulator s, bool addUsability)
+    public override string GetTooltip(RotationSimulator s, bool addUsability)
     {
         var builder = new StringBuilder(base.GetTooltip(s, addUsability));
         builder.AppendLine(Duration != 1 ? $"{Duration} Steps" : $"{Duration} Step");
         return builder.ToString();
     }
 
-    protected string GetBaseTooltip(Simulator s, bool addUsability) =>
+    protected string GetBaseTooltip(RotationSimulator s, bool addUsability) =>
         base.GetTooltip(s, addUsability);
 }

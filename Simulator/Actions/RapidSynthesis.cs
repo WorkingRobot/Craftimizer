@@ -9,6 +9,6 @@ internal sealed class RapidSynthesis() : BaseAction(
     )
 {
     // Rapid Synthesis Mastery Trait
-    public override int Efficiency(Simulator s) =>
+    public override int Efficiency(RotationSimulator s) =>
         s.Input.Stats.Level >= 63 ? 500 : 250;
 }

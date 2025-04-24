@@ -6,15 +6,15 @@ internal sealed class CarefulObservation() : BaseAction(
     defaultCPCost: 0
     )
 {
-    public override bool IsPossible(Simulator s) =>
+    public override bool IsPossible(RotationSimulator s) =>
         base.IsPossible(s) && s.Input.Stats.IsSpecialist && s.ActionStates.CarefulObservationCount < 3;
 
-    public override bool CouldUse(Simulator s) =>
+    public override bool CouldUse(RotationSimulator s) =>
         s.ActionStates.CarefulObservationCount < 3;
 
-    public override void UseSuccess(Simulator s) =>
+    public override void UseSuccess(RotationSimulator s) =>
         s.StepCondition();
 
-    public override string GetTooltip(Simulator s, bool addUsability) =>
+    public override string GetTooltip(RotationSimulator s, bool addUsability) =>
         $"{base.GetTooltip(s, addUsability)}Specialist Only\n";
 }

@@ -20,8 +20,6 @@ using System.Numerics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Sim = Craftimizer.Simulator.Simulator;
-using SimNoRandom = Craftimizer.Simulator.SimulatorNoRandom;
 using Recipe = Lumina.Excel.Sheets.Recipe;
 using Dalamud.Utility;
 using Craftimizer.Solver;
@@ -87,7 +85,7 @@ public sealed class MacroEditor : Window, IDisposable
 
     private BackgroundTask<int>? SolverTask { get; set; }
     private bool SolverRunning => (!SolverTask?.Completed) ?? false;
-    private Solver.Solver? SolverObject { get; set; }
+    private Solver.RotationSolver? SolverObject { get; set; }
     private int? SolverStartStepCount { get; set; }
 
     private ILoadedTextureIcon ExpertBadge { get; }
@@ -147,13 +145,13 @@ public sealed class MacroEditor : Window, IDisposable
             {
                 Icon = FontAwesomeIcon.Cog,
                 IconOffset = new(2, 1),
-                Click = _ => Service.Plugin.OpenSettingsTab("Macro Editor"),
+                Click = _ => Service.CraftimizerPlugin.OpenSettingsTab("Macro Editor"),
                 ShowTooltip = () => ImGuiUtils.Tooltip("Open Settings")
             },
             new() {
                 Icon = FontAwesomeIcon.Heart,
                 IconOffset = new(2, 1),
-                Click = _ => Util.OpenLink(Plugin.Plugin.SupportLink),
+                Click = _ => Util.OpenLink(Plugin.CraftimizerPlugin.SupportLink),
                 ShowTooltip = () => ImGuiUtils.Tooltip("Support me on Ko-fi!")
             }
         ];
@@ -1492,7 +1490,7 @@ public sealed class MacroEditor : Window, IDisposable
                         foreach (var action in parsedActions)
                             AddStep(action);
 
-                        Service.Plugin.DisplayNotification(new()
+                        Service.CraftimizerPlugin.DisplayNotification(new()
                         {
                             Content = $"Imported macro with {parsedActions.Count} step{(parsedActions.Count != 1 ? "s" : "")}",
                             MinimizedText = $"Imported {parsedActions.Count} step macro",
@@ -1548,7 +1546,7 @@ public sealed class MacroEditor : Window, IDisposable
                     Macro.Clear();
                     foreach (var action in actions)
                         AddStep(action);
-                    Service.Plugin.DisplayNotification(new()
+                    Service.CraftimizerPlugin.DisplayNotification(new()
                     {
                         Content = $"Imported macro \"{name}\"",
                         Title = "Macro Imported",
@@ -1597,9 +1595,9 @@ public sealed class MacroEditor : Window, IDisposable
 
         token.ThrowIfCancellationRequested();
 
-        var solver = new Solver.Solver(config, state) { Token = token };
+        var solver = new Solver.RotationSolver(config, state) { Token = token };
         solver.OnLog += Log.Debug;
-        solver.OnWarn += t => Service.Plugin.DisplaySolverWarning(t);
+        solver.OnWarn += t => Service.CraftimizerPlugin.DisplaySolverWarning(t);
         solver.OnNewAction += a => Macro.Enqueue(a);
         solver.OnSuggestSolution += a => Macro.EnqueueEphemeral(a.Actions);
         SolverObject = solver;
@@ -1629,8 +1627,8 @@ public sealed class MacroEditor : Window, IDisposable
         Macro.InitialState = new SimulationState(new(CharacterStats, RecipeData.RecipeInfo, StartingQuality));
     }
 
-    private static Sim CreateSim(in SimulationState state) =>
-        Service.Configuration.ConditionRandomness ? new Sim() { State = state } : new SimNoRandom() { State = state };
+    private static RotationSimulator CreateSim(in SimulationState state) =>
+        Service.Configuration.ConditionRandomness ? new RotationSimulator() { State = state } : new RotationSimulatorNoRandom() { State = state };
 
     private void AddStep(ActionType action)
     {

@@ -65,7 +65,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
     private BackgroundTask<SolverSolution>? SuggestedMacroTask { get; set; }
     private BackgroundTask<(CommunityMacros.CommunityMacro?, SimulationState?)>? CommunityMacroTask { get; set; }
 
-    private Solver.Solver? BestMacroSolver { get; set; }
+    private Solver.RotationSolver? BestMacroSolver { get; set; }
     public bool HasSavedMacro { get; private set; }
 
     private ILoadedTextureIcon ExpertBadge { get; }
@@ -101,13 +101,13 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             {
                 Icon = FontAwesomeIcon.Cog,
                 IconOffset = new(2, 1),
-                Click = _ => Service.Plugin.OpenSettingsTab("Crafting Log"),
+                Click = _ => Service.CraftimizerPlugin.OpenSettingsTab("Crafting Log"),
                 ShowTooltip = () => ImGuiUtils.Tooltip("Open Settings")
             },
             new() {
                 Icon = FontAwesomeIcon.Heart,
                 IconOffset = new(2, 1),
-                Click = _ => Util.OpenLink(Plugin.Plugin.SupportLink),
+                Click = _ => Util.OpenLink(Plugin.CraftimizerPlugin.SupportLink),
                 ShowTooltip = () => ImGuiUtils.Tooltip("Support me on Ko-fi!")
             }
         ];
@@ -447,10 +447,10 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         ImGuiHelpers.ScaledDummy(5);
 
         if (ImGui.Button("View Saved Macros", new(availWidth, 0)))
-            Service.Plugin.OpenMacroListWindow();
+            Service.CraftimizerPlugin.OpenMacroListWindow();
 
         if (ImGui.Button("Open in Macro Editor", new(availWidth, 0)))
-            Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), CalculateIngredientHqCounts(), [], null);
+            Service.CraftimizerPlugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), CalculateIngredientHqCounts(), [], null);
     }
 
     private void DrawCharacterStats()
@@ -758,7 +758,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         public string? MacroName;
         public string? MacroUrl;
         public SimulationState? State;
-        public Solver.Solver? Solver;
+        public Solver.RotationSolver? Solver;
         public Action<IEnumerable<ActionType>>? MacroEditorSetter;
     }
 
@@ -994,7 +994,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 ImGui.TableNextColumn();
                 {
                     if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Edit, miniRowHeight))
-                        Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), CalculateIngredientHqCounts(), actions, state.MacroEditorSetter);
+                        Service.CraftimizerPlugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), CalculateIngredientHqCounts(), actions, state.MacroEditorSetter);
                     if (ImGui.IsItemHovered())
                         ImGuiUtils.Tooltip("Open in Macro Editor");
                     if (ImGuiUtils.IconButtonSquare(FontAwesomeIcon.Paste, miniRowHeight))
@@ -1154,7 +1154,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             if (!canUseDelineations)
                 config = config.FilterSpecialistActions();
             var mctsConfig = new MCTSConfig(config);
-            var simulator = new SimulatorNoRandom();
+            var simulator = new RotationSimulatorNoRandom();
             List<Macro> macros = new(Service.Configuration.Macros);
 
             token.ThrowIfCancellationRequested();
@@ -1191,9 +1191,9 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
             token.ThrowIfCancellationRequested();
 
-            var solver = new Solver.Solver(config, state) { Token = token };
+            var solver = new Solver.RotationSolver(config, state) { Token = token };
             solver.OnLog += Log.Debug;
-            solver.OnWarn += t => Service.Plugin.DisplaySolverWarning(t);
+            solver.OnWarn += t => Service.CraftimizerPlugin.DisplaySolverWarning(t);
             BestMacroSolver = solver;
             solver.Start();
             var solution = solver.GetTask().GetAwaiter().GetResult();
@@ -1218,7 +1218,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             if (!canUseDelineations)
                 config = config.FilterSpecialistActions();
             var mctsConfig = new MCTSConfig(config);
-            var simulator = new SimulatorNoRandom();
+            var simulator = new RotationSimulatorNoRandom();
             var macros = Service.CommunityMacros.RetrieveRotations((int)RecipeData.Table.RowId, token).GetAwaiter().GetResult();
 
             token.ThrowIfCancellationRequested();

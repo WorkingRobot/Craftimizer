@@ -22,8 +22,6 @@ using System.Linq;
 using System.Numerics;
 using System.Threading;
 using ActionType = Craftimizer.Simulator.Actions.ActionType;
-using Sim = Craftimizer.Simulator.Simulator;
-using SimNoRandom = Craftimizer.Simulator.SimulatorNoRandom;
 
 namespace Craftimizer.Windows;
 
@@ -65,7 +63,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
     private BackgroundTask<int>? SolverTask { get; set; }
     private bool SolverRunning => (!SolverTask?.Completed) ?? false;
-    private Solver.Solver? SolverObject { get; set; }
+    private Solver.RotationSolver? SolverObject { get; set; }
 
     private IFontHandle AxisFont { get; }
 
@@ -73,7 +71,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
     {
         AxisFont = Service.PluginInterface.UiBuilder.FontAtlas.NewGameFontHandle(new(GameFontFamilyAndSize.Axis14));
 
-        Service.Plugin.Hooks.OnActionUsed += OnUseAction;
+        Service.CraftimizerPlugin.Hooks.OnActionUsed += OnUseAction;
 
         RespectCloseHotkey = false;
         DisableWindowSounds = true;
@@ -92,13 +90,13 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             {
                 Icon = FontAwesomeIcon.Cog,
                 IconOffset = new(2, 1),
-                Click = _ => Service.Plugin.OpenSettingsTab("Synthesis Helper"),
+                Click = _ => Service.CraftimizerPlugin.OpenSettingsTab("Synthesis Helper"),
                 ShowTooltip = () => ImGuiUtils.Tooltip("Open Settings")
             },
             new() {
                 Icon = FontAwesomeIcon.Heart,
                 IconOffset = new(2, 1),
-                Click = _ => Util.OpenLink(Plugin.Plugin.SupportLink),
+                Click = _ => Util.OpenLink(Plugin.CraftimizerPlugin.SupportLink),
                 ShowTooltip = () => ImGuiUtils.Tooltip("Support me on Ko-fi!")
             }
         ];
@@ -259,6 +257,8 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         ImGui.PopStyleVar();
 
         base.PostDraw();
+        ExecuteNextAction();
+
     }
 
     public override void Draw()
@@ -468,7 +468,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         }
 
         if (ImGui.Button("Open in Macro Editor", new(-1, 0)))
-            Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), null, [], null);
+            Service.CraftimizerPlugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), null, [], null);
     }
 
     public bool ExecuteNextAction()
@@ -525,7 +525,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
     private void OnUseAction(ActionType action)
     {
-        (_, CurrentState) = new SimNoRandom().Execute(GetCurrentState(), action);
+        (_, CurrentState) = new RotationSimulatorNoRandom().Execute(GetCurrentState(), action);
         CurrentActionCount = CurrentState.ActionCount;
         CurrentActionStates = CurrentState.ActionStates;
     }
@@ -623,9 +623,9 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
         token.ThrowIfCancellationRequested();
 
-        var solver = new Solver.Solver(config, state) { Token = token };
+        var solver = new Solver.RotationSolver(config, state) { Token = token };
         solver.OnLog += Log.Debug;
-        solver.OnWarn += t => Service.Plugin.DisplaySolverWarning(t);
+        solver.OnWarn += t => Service.CraftimizerPlugin.DisplaySolverWarning(t);
         solver.OnNewAction += EnqueueAction;
         SolverObject = solver;
         solver.Start();
@@ -643,12 +643,12 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             SolverTask?.Cancel();
     }
 
-    private static Sim CreateSim(in SimulationState state) =>
-        Service.Configuration.ConditionRandomness ? new Sim() { State = state } : new SimNoRandom() { State = state };
+    private static RotationSimulator CreateSim(in SimulationState state) =>
+        Service.Configuration.ConditionRandomness ? new RotationSimulator() { State = state } : new RotationSimulatorNoRandom() { State = state };
 
     public void Dispose()
     {
-        Service.Plugin.Hooks.OnActionUsed -= OnUseAction;
+        Service.CraftimizerPlugin.Hooks.OnActionUsed -= OnUseAction;
 
         Service.WindowSystem.RemoveWindow(this);
 

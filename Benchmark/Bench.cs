@@ -99,7 +99,7 @@ public class Bench
     // [Benchmark]
     public async Task<float> SolveAsync()
     {
-        var solver = new Solver.Solver(Config, State);
+        var solver = new Solver.RotationSolver(Config, State);
         solver.Start();
         var (_, s) = await solver.GetTask().ConfigureAwait(false);
         return (float)s.Quality / s.Input.Recipe.MaxQuality;

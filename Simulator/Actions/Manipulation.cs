@@ -5,10 +5,10 @@ internal sealed class Manipulation() : BaseBuffAction(
     EffectType.Manipulation, duration: 8,
     defaultCPCost: 96)
 {
-    public override bool IsPossible(Simulator s) =>
+    public override bool IsPossible(RotationSimulator s) =>
         s.Input.Stats.CanUseManipulation && base.IsPossible(s);
 
-    public override void Use(Simulator s)
+    public override void Use(RotationSimulator s)
     {
         UseSuccess(s);
 

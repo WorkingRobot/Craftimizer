@@ -8,6 +8,6 @@ internal sealed class CarefulSynthesis() : BaseAction(
     )
 {
     // Careful Synthesis Mastery Trait
-    public override int Efficiency(Simulator s) =>
+    public override int Efficiency(RotationSimulator s) =>
         s.Input.Stats.Level >= 82 ? 180 : 150;
 }

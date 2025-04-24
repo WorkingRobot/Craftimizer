@@ -22,7 +22,7 @@ public sealed class MCTS
     public MCTS(in MCTSConfig config, in SimulationState state)
     {
         this.config = config;
-        var sim = new Simulator(config.ActionPool, config.MaxStepCount, state);
+        var sim = new RotationSimulator(config.ActionPool, config.MaxStepCount, state);
         rootNode = new(new(
             state,
             null,
@@ -32,18 +32,18 @@ public sealed class MCTS
         rootScores = new();
     }
 
-    private static SimulationNode Execute(Simulator simulator, in SimulationState state, ActionType action, bool strict)
+    private static SimulationNode Execute(RotationSimulator rotationSimulator, in SimulationState state, ActionType action, bool strict)
     {
-        var newState = simulator.ExecuteUnchecked(state, action);
+        var newState = rotationSimulator.ExecuteUnchecked(state, action);
         return new(
             newState,
             action,
-            simulator.CompletionState,
-            simulator.AvailableActionsHeuristic(strict)
+            rotationSimulator.CompletionState,
+            rotationSimulator.AvailableActionsHeuristic(strict)
         );
     }
 
-    private static Node ExecuteActions(Simulator simulator, Node startNode, ReadOnlySpan<ActionType> actions, bool strict)
+    private static Node ExecuteActions(RotationSimulator rotationSimulator, Node startNode, ReadOnlySpan<ActionType> actions, bool strict)
     {
         foreach (var action in actions)
         {
@@ -55,7 +55,7 @@ public sealed class MCTS
                 return startNode;
             state.AvailableActions.RemoveAction(action);
 
-            startNode = startNode.Add(Execute(simulator, state.State, action, strict));
+            startNode = startNode.Add(Execute(rotationSimulator, state.State, action, strict));
         }
 
         return startNode;
@@ -176,7 +176,7 @@ public sealed class MCTS
     }
 
     [SkipLocalsInit]
-    private (Node ExpandedNode, float Score) ExpandAndRollout(Random random, Simulator simulator, Node initialNode, Span<ActionType> actionBuffer)
+    private (Node ExpandedNode, float Score) ExpandAndRollout(Random random, RotationSimulator rotationSimulator, Node initialNode, Span<ActionType> actionBuffer)
     {
         ref var initialState = ref initialNode.State;
         // expand once
@@ -184,7 +184,7 @@ public sealed class MCTS
             return (initialNode, initialState.CalculateScore(config) ?? 0);
 
         var poppedAction = initialState.AvailableActions.PopRandom(random);
-        var expandedNode = initialNode.Add(Execute(simulator, initialState.State, poppedAction, true));
+        var expandedNode = initialNode.Add(Execute(rotationSimulator, initialState.State, poppedAction, true));
 
         // playout to a terminal state
         var currentState = expandedNode.State.State;
@@ -200,11 +200,11 @@ public sealed class MCTS
             {
                 var nextAction = currentActions.SelectRandom(random);
                 actions[actionCount++] = nextAction;
-                currentState = simulator.ExecuteUnchecked(currentState, nextAction);
-                currentCompletionState = simulator.CompletionState;
+                currentState = rotationSimulator.ExecuteUnchecked(currentState, nextAction);
+                currentCompletionState = rotationSimulator.CompletionState;
                 if (currentCompletionState != CompletionState.Incomplete)
                     break;
-                currentActions = simulator.AvailableActionsHeuristic(true);
+                currentActions = rotationSimulator.AvailableActionsHeuristic(true);
             }
         }
 
@@ -256,7 +256,7 @@ public sealed class MCTS
     public unsafe void Search(int iterations, int maxIterations, ref int progress, CancellationToken token)
     {
         maxIterations = Math.Max(iterations, maxIterations);
-        var simulator = new Simulator(config.ActionPool, config.MaxStepCount, rootNode.State.State);
+        var simulator = new RotationSimulator(config.ActionPool, config.MaxStepCount, rootNode.State.State);
         var random = rootNode.State.State.Input.Random;
         var staleCounter = 0;
         var i = 0;

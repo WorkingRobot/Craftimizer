@@ -7,7 +7,7 @@ internal sealed class RefinedTouch() : BaseAction(
     defaultEfficiency: 100
     )
 {
-    public override void UseSuccess(Simulator s)
+    public override void UseSuccess(RotationSimulator s)
     {
         base.UseSuccess(s);
         if (s.ActionStates.Combo == ActionProc.UsedBasicTouch)

@@ -8,6 +8,6 @@ internal sealed class BasicSynthesis() : BaseAction(
     )
 {
     // Basic Synthesis Mastery Trait
-    public override int Efficiency(Simulator s) =>
+    public override int Efficiency(RotationSimulator s) =>
         s.Input.Stats.Level >= 31 ? 120 : 100;
 }

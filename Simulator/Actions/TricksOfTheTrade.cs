@@ -6,11 +6,11 @@ internal sealed class TricksOfTheTrade() : BaseAction(
     defaultCPCost: 0
     )
 {
-    public override bool CouldUse(Simulator s) =>
+    public override bool CouldUse(RotationSimulator s) =>
         (s.Condition is Condition.Good or Condition.Excellent || s.HasEffect(EffectType.HeartAndSoul))
         && base.CouldUse(s);
 
-    public override void UseSuccess(Simulator s)
+    public override void UseSuccess(RotationSimulator s)
     {
         s.RestoreCP(20);
         if (s.Condition is not (Condition.Good or Condition.Excellent))

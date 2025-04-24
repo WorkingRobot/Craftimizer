@@ -7,12 +7,12 @@ internal sealed class HeartAndSoul() : BaseBuffAction(
     increasesStepCount: false
     )
 {
-    public override bool IsPossible(Simulator s) =>
+    public override bool IsPossible(RotationSimulator s) =>
         base.IsPossible(s) && s.Input.Stats.IsSpecialist && !s.ActionStates.UsedHeartAndSoul;
 
-    public override bool CouldUse(Simulator s) =>
+    public override bool CouldUse(RotationSimulator s) =>
         !s.ActionStates.UsedHeartAndSoul;
 
-    public override string GetTooltip(Simulator s, bool addUsability) =>
+    public override string GetTooltip(RotationSimulator s, bool addUsability) =>
         $"{GetBaseTooltip(s, addUsability)}Specialist Only\n";
 }

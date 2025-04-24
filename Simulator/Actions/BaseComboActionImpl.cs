@@ -12,17 +12,17 @@ internal abstract class BaseComboAction<A, B>(
     protected static readonly A ActionA = new();
     protected static readonly B ActionB = new();
 
-    public override bool IsPossible(Simulator s) => ActionA.IsPossible(s) && ActionB.IsPossible(s);
+    public override bool IsPossible(RotationSimulator s) => ActionA.IsPossible(s) && ActionB.IsPossible(s);
 
-    public override bool CouldUse(Simulator s) =>
+    public override bool CouldUse(RotationSimulator s) =>
         BaseCouldUse(s) && VerifyDurability2(s, ActionA.DurabilityCost);
 
-    public override void Use(Simulator s)
+    public override void Use(RotationSimulator s)
     {
         ActionA.Use(s);
         ActionB.Use(s);
     }
 
-    public override string GetTooltip(Simulator s, bool addUsability) =>
+    public override string GetTooltip(RotationSimulator s, bool addUsability) =>
         $"{ActionA.GetTooltip(s, addUsability)}\n\n{ActionB.GetTooltip(s, addUsability)}";
 }

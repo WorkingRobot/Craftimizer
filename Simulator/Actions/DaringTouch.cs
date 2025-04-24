@@ -8,6 +8,6 @@ internal sealed class DaringTouch() : BaseAction(
     defaultSuccessRate: 60
     )
 {
-    public override bool CouldUse(Simulator s) =>
+    public override bool CouldUse(RotationSimulator s) =>
         s.HasEffect(EffectType.Expedience) && base.CouldUse(s);
 }

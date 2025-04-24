@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace Craftimizer.Simulator;
 
-public class Simulator
+public class RotationSimulator
 {
     public SimulationState State { init => state = value; }
 

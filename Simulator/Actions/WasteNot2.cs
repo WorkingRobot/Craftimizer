@@ -6,7 +6,7 @@ internal sealed class WasteNot2() : BaseBuffAction(
     defaultCPCost: 98
     )
 {
-    public override void UseSuccess(Simulator s)
+    public override void UseSuccess(RotationSimulator s)
     {
         base.UseSuccess(s);
         s.RemoveEffect(EffectType.WasteNot);

@@ -12,7 +12,7 @@ using System.Reflection;
 
 namespace Craftimizer.Plugin;
 
-public sealed class Plugin : IDalamudPlugin
+public sealed class CraftimizerPlugin : IDalamudPlugin
 {
     public string Version { get; }
     public string Author { get; }
@@ -35,7 +35,7 @@ public sealed class Plugin : IDalamudPlugin
     public Ipc Ipc { get; }
     public AttributeCommandManager AttributeCommandManager { get; }
 
-    public Plugin(IDalamudPluginInterface pluginInterface)
+    public CraftimizerPlugin(IDalamudPluginInterface pluginInterface)
     {
         Service.Initialize(this, pluginInterface);
 
@@ -73,8 +73,8 @@ public sealed class Plugin : IDalamudPlugin
     public (CharacterStats? Character, RecipeData? Recipe, MacroEditor.CrafterBuffs? Buffs) GetOpenedStats()
     {
         var editorWindow = (EditorWindow?.IsOpen ?? false) ? EditorWindow : null;
-        var recipeData = editorWindow?.RecipeData ?? Service.Plugin.RecipeNoteWindow.RecipeData;
-        var characterStats = editorWindow?.CharacterStats ?? Service.Plugin.RecipeNoteWindow.CharacterStats;
+        var recipeData = editorWindow?.RecipeData ?? Service.CraftimizerPlugin.RecipeNoteWindow.RecipeData;
+        var characterStats = editorWindow?.CharacterStats ?? Service.CraftimizerPlugin.RecipeNoteWindow.CharacterStats;
         var buffs = editorWindow?.Buffs ?? (RecipeNoteWindow.CharacterStats != null ? new(Service.ClientState.LocalPlayer?.StatusList) : null);
 
         return (characterStats, recipeData, buffs);

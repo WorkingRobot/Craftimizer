@@ -797,7 +797,7 @@ public sealed class Settings : Window, IDisposable
     {
         isDirty = false;
 
-        var recipeData = Service.Plugin.GetDefaultStats().Recipe;
+        var recipeData = Service.CraftimizerPlugin.GetDefaultStats().Recipe;
         HashSet<ActionType> pool = new(actionPool);
 
         var imageSize = ImGui.GetFrameHeight() * 2;
@@ -1093,7 +1093,7 @@ public sealed class Settings : Window, IDisposable
 
         ImGuiHelpers.ScaledDummy(5);
 
-        var plugin = Service.Plugin;
+        var plugin = Service.CraftimizerPlugin;
         var icon = plugin.Icon;
         var iconDim = new Vector2(128) * ImGuiHelpers.GlobalScale;
 
@@ -1130,7 +1130,7 @@ public sealed class Settings : Window, IDisposable
                     ImGuiUtils.AlignCentered(ImGui.CalcTextSize($"Support me on Ko-fi!").X);
                     ImGui.TextUnformatted($"Support me on ");
                     ImGui.SameLine(0, 0);
-                    ImGuiUtils.Hyperlink("Ko-fi", Plugin.SupportLink);
+                    ImGuiUtils.Hyperlink("Ko-fi", CraftimizerPlugin.SupportLink);
                     ImGui.SameLine(0, 0);
                     ImGui.TextUnformatted("!");
                 }

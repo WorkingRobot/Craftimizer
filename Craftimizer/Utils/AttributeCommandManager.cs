@@ -21,7 +21,7 @@ public sealed class AttributeCommandManager : IDisposable
 
     public AttributeCommandManager()
     {
-        var target = Service.Plugin;
+        var target = Service.CraftimizerPlugin;
         foreach (var method in target.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
         {
             if (method.GetCustomAttribute<CommandAttribute>() is not { } command)

@@ -10,7 +10,6 @@ using Craftimizer.Simulator.Actions;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using Sim = Craftimizer.Simulator.SimulatorNoRandom;
 using Dalamud.Interface.Utility;
 using Dalamud.Utility;
 
@@ -44,13 +43,13 @@ public sealed class MacroList : Window, IDisposable
             {
                 Icon = FontAwesomeIcon.Cog,
                 IconOffset = new(2, 1),
-                Click = _ => Service.Plugin.OpenSettingsTab("General"),
+                Click = _ => Service.CraftimizerPlugin.OpenSettingsTab("General"),
                 ShowTooltip = () => ImGuiUtils.Tooltip("Open Settings")
             },
             new() {
                 Icon = FontAwesomeIcon.Heart,
                 IconOffset = new(2, 1),
-                Click = _ => Util.OpenLink(Plugin.Plugin.SupportLink),
+                Click = _ => Util.OpenLink(Plugin.CraftimizerPlugin.SupportLink),
                 ShowTooltip = () => ImGuiUtils.Tooltip("Support me on Ko-fi!")
             }
         ];
@@ -68,7 +67,7 @@ public sealed class MacroList : Window, IDisposable
         var oldCharacterStats = CharacterStats;
         var oldRecipeData = RecipeData;
 
-        (CharacterStats, RecipeData, _) = Service.Plugin.GetDefaultStats();
+        (CharacterStats, RecipeData, _) = Service.CraftimizerPlugin.GetDefaultStats();
 
         if (oldCharacterStats != CharacterStats || oldRecipeData != RecipeData)
             RecalculateStats();
@@ -129,7 +128,7 @@ public sealed class MacroList : Window, IDisposable
             ImGuiUtils.TextCentered(text2);
             ImGuiUtils.AlignCentered(buttonRowWidth);
             if (ImGui.Button(text3))
-                Service.Plugin.OpenCraftingLog();
+                Service.CraftimizerPlugin.OpenCraftingLog();
             ImGui.SameLine();
             if (ImGui.Button(text4))
                 OpenEditor(null);
@@ -358,8 +357,8 @@ public sealed class MacroList : Window, IDisposable
 
     private void OpenEditor(Macro? macro)
     {
-        var stats = Service.Plugin.GetDefaultStats();
-        Service.Plugin.OpenMacroEditor(stats.Character, stats.Recipe, stats.Buffs, null, macro?.Actions ?? Enumerable.Empty<ActionType>(), macro != null ? (actions => { macro.ActionEnumerable = actions; Service.Configuration.Save(); }) : null);
+        var stats = Service.CraftimizerPlugin.GetDefaultStats();
+        Service.CraftimizerPlugin.OpenMacroEditor(stats.Character, stats.Recipe, stats.Buffs, null, macro?.Actions ?? Enumerable.Empty<ActionType>(), macro != null ? (actions => { macro.ActionEnumerable = actions; Service.Configuration.Save(); }) : null);
     }
 
     private void OnMacroChanged(Macro macro)
@@ -381,7 +380,7 @@ public sealed class MacroList : Window, IDisposable
             return state;
 
         state = new SimulationState(new(CharacterStats, RecipeData.RecipeInfo));
-        var sim = new Sim();
+        var sim = new RotationSimulatorNoRandom();
         (_, state, _) = sim.ExecuteMultiple(state, macro.Actions);
         return MacroStateCache[macro] = state;
     }
