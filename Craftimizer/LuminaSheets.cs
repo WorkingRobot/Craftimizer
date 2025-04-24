@@ -23,4 +23,7 @@ public static class LuminaSheets
     public static readonly ExcelSheet<BaseParam> BaseParamSheet = Module.GetSheet<BaseParam>();
     public static readonly ExcelSheet<ItemFood> ItemFoodSheet = Module.GetSheet<ItemFood>();
     public static readonly SubrowExcelSheet<SatisfactionSupply> SatisfactionSupplySheet = Module.GetSubrowSheet<SatisfactionSupply>();
+    public static readonly ExcelSheet<WKSMissionToDoEvalutionRefin> WKSMissionToDoEvalutionRefinSheet = Module.GetSheet<WKSMissionToDoEvalutionRefin>();
+    public static readonly ExcelSheet<RecipeLevelTable> RecipeLevelTableSheet = Module.GetSheet<RecipeLevelTable>();
+    public static readonly ExcelSheet<GathererCrafterLvAdjustTable> GathererCrafterLvAdjustTableSheet = Module.GetSheet<GathererCrafterLvAdjustTable>();
 }
