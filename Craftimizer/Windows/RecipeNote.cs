@@ -1159,7 +1159,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
     private static (string NpcName, string Territory, Vector2 MapLocation, MapLinkPayload Payload) ResolveLevelData(uint levelRowId)
     {
         var level = LuminaSheets.LevelSheet.GetRow(levelRowId);
-        var placeName = ResolvePlaceName(level.Territory.Value.PlaceName.RowId);
+        var placeName = level.Territory.Value.PlaceName.Value.Name.ExtractCleanText();
         var location = WorldToMap2(new(level.X, level.Z), level.Map.Value!);
 
         return (ResolveNpcResidentName(level.Object.RowId), placeName, location, new(level.Territory.RowId, level.Map.RowId, location.X, location.Y));
@@ -1173,11 +1173,6 @@ public sealed unsafe class RecipeNote : Window, IDisposable
     private static string ResolveNpcResidentName(uint npcRowId)
     {
         return Service.SeStringEvaluator.EvaluateObjStr(ObjectKind.EventNpc, npcRowId);
-    }
-
-    private static string ResolvePlaceName(uint placeNameId)
-    {
-        return Service.SeStringEvaluator.EvaluateFromAddon(1337, [placeNameId]).ExtractText().StripSoftHyphen();
     }
 
     private static string GetCoordinatesString(Vector2 pos)
