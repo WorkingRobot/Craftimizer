@@ -19,6 +19,7 @@ using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.System.String;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
+using FFXIVClientStructs.FFXIV.Component.GUI;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
@@ -55,7 +56,9 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         ControlTooLow,
     }
 
-    public AddonRecipeNote* Addon { get; private set; }
+    public AtkUnitBase* Addon { get; private set; }
+    public bool IsWKS { get; private set; }
+
     public RecipeData? RecipeData { get; private set; }
     public CharacterStats? CharacterStats { get; private set; }
     private int StartingQuality { get; set; }
@@ -70,6 +73,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
     private ILoadedTextureIcon ExpertBadge { get; }
     private ILoadedTextureIcon CollectibleBadge { get; }
+    private ILoadedTextureIcon CosmicExplorationBadge { get; }
     private ILoadedTextureIcon SplendorousBadge { get; }
     private ILoadedTextureIcon SpecialistBadge { get; }
     private ILoadedTextureIcon NoManipulationBadge { get; }
@@ -79,6 +83,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
     {
         ExpertBadge = IconManager.GetAssemblyTexture("Graphics.expert_badge.png");
         CollectibleBadge = IconManager.GetAssemblyTexture("Graphics.collectible_badge.png");
+        CosmicExplorationBadge = IconManager.GetIcon(60810);
         SplendorousBadge = IconManager.GetAssemblyTexture("Graphics.splendorous.png");
         SpecialistBadge = IconManager.GetAssemblyTexture("Graphics.specialist.png");
         NoManipulationBadge = IconManager.GetAssemblyTexture("Graphics.no_manip.png");
@@ -186,19 +191,46 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         if (Service.ClientState.LocalPlayer == null)
             return false;
 
+        bool ShouldUseRecipeNote()
         {
-            Addon = (AddonRecipeNote*)Service.GameGui.GetAddonByName("RecipeNote");
+            Addon = (AtkUnitBase*)Service.GameGui.GetAddonByName("RecipeNote");
             if (Addon == null)
                 return false;
 
             // Check if RecipeNote addon is visible
-            if (Addon->AtkUnitBase.WindowNode == null)
+            if (Addon->WindowNode == null)
                 return false;
 
             // Check if RecipeNote has a visible selected recipe
             if (!Addon->GetNodeById(57)->IsVisible())
                 return false;
+
+            return true;
         }
+
+        bool ShouldUseWKSRecipeNote()
+        {
+            Addon = (AtkUnitBase*)Service.GameGui.GetAddonByName("WKSRecipeNotebook");
+            if (Addon == null)
+                return false;
+
+            // Check if WKS addon is visible
+            if (Addon->WindowNode == null)
+                return false;
+
+            // Check if WKS has a visible selected recipe
+            if (!Addon->GetNodeById(13)->IsVisible())
+                return false;
+
+            return true;
+        }
+
+        if (ShouldUseRecipeNote())
+            IsWKS = false;
+        else if (ShouldUseWKSRecipeNote())
+            IsWKS = true;
+        else
+            return false;
 
         StatsChanged = false;
         {
@@ -325,19 +357,31 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
         if (Service.Configuration.PinRecipeNoteToWindow)
         {
-            ref var unit = ref Addon->AtkUnitBase;
+            ref var unit = ref *Addon;
             var scale = unit.Scale;
             var pos = new Vector2(unit.X, unit.Y);
             var size = new Vector2(unit.WindowNode->AtkResNode.Width, unit.WindowNode->AtkResNode.Height) * scale;
-
-            var node = Addon->GetNodeById(59);
-            var nodeParent = Addon->GetNodeById(57);
 
             var newAlpha = unit.WindowNode->AtkResNode.Alpha_2;
             StyleAlpha = LastAlpha ?? newAlpha;
             LastAlpha = newAlpha;
 
+            uint nodeId, nodeParentId;
+            if (IsWKS)
+            {
+                nodeId = 15;
+                nodeParentId = 13;
+            }
+            else
+            {
+                nodeId = 59;
+                nodeParentId = 57;
+            }
+
+            var node = Addon->GetNodeById(nodeId);
+            var nodeParent = Addon->GetNodeById(nodeParentId);
             var newPosition = pos + new Vector2(size.X, (nodeParent->Y + node->Y) * scale);
+
             Position = ImGuiHelpers.MainViewport.Pos + (LastPosition ?? newPosition);
             LastPosition = newPosition;
             Flags = WindowFlagsPinned;
@@ -667,9 +711,10 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             if (!string.IsNullOrEmpty(textStars)) {
                 textStarsSize = AxisFont.CalcTextSize(textStars);
             }
-            var textLevel = SqText.LevelPrefix.ToIconChar() + SqText.ToLevelString(RecipeData.RecipeInfo.ClassJobLevel);
+            var textLevel = SqText.LevelPrefix.ToIconChar() + SqText.ToLevelString(RecipeData.AdjustedJobLevel ?? RecipeData.RecipeInfo.ClassJobLevel);
             var isExpert = RecipeData.RecipeInfo.IsExpert;
             var isCollectable = RecipeData.IsCollectable;
+            var isAdjustable = RecipeData.AdjustedJobLevel.HasValue;
             var imageSize = ImGui.GetFrameHeight();
             var textSize = ImGui.GetFontSize();
             var badgeSize = new Vector2(textSize * (ExpertBadge.AspectRatio ?? 1), textSize);
@@ -679,6 +724,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 imageSize + 5 +
                 ImGui.CalcTextSize(textLevel).X +
                 (textStarsSize != Vector2.Zero ? textStarsSize.X + 3 : 0) +
+                (isAdjustable ? imageSize + 3 : 0) +
                 (isCollectable ? badgeSize.X + 3 : 0) +
                 (isExpert ? badgeSize.X + 3 : 0)
                 );
@@ -696,6 +742,14 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 // Aligns better
                 ImGui.SetCursorPosY(ImGui.GetCursorPosY() - 1);
                 AxisFont.Text(textStars);
+            }
+
+            if (isAdjustable)
+            {
+                ImGui.SameLine(0, 3);
+                ImGui.Image(CosmicExplorationBadge.ImGuiHandle, new(imageSize));
+                if (ImGui.IsItemHovered())
+                    ImGuiUtils.Tooltip($"Cosmic Exploration");
             }
 
             if (isCollectable)
@@ -1249,6 +1303,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         AxisFont?.Dispose();
         ExpertBadge.Dispose();
         CollectibleBadge.Dispose();
+        CosmicExplorationBadge.Dispose();
         SplendorousBadge.Dispose();
         SpecialistBadge.Dispose();
         NoManipulationBadge.Dispose();
