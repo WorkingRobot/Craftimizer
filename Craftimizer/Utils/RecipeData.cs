@@ -21,23 +21,32 @@ public sealed record RecipeData
     public IReadOnlyList<int?>? CollectableThresholds { get; }
     public IReadOnlyList<(Item Item, int Amount)> Ingredients { get; }
     public int MaxStartingQuality { get; }
+    public ushort? AdjustedJobLevel { get; }
     private int TotalHqILvls { get; }
 
-    public RecipeData(ushort recipeId)
+    public RecipeData(ushort recipeId, ushort? explicitlyAdjustedJobLevel = null)
     {
         RecipeId = recipeId;
 
         Recipe = LuminaSheets.RecipeSheet.GetRowOrDefault(recipeId) ??
             throw new ArgumentException($"Invalid recipe id {recipeId}", nameof(recipeId));
 
-        Table = Recipe.RecipeLevelTable.Value;
         ClassJob = (ClassJob)Recipe.CraftType.RowId;
+
+        var resolvedLevelTableRow = Recipe.RecipeLevelTable.RowId;
+        if (Recipe.Unknown0 != 0)
+        {
+            AdjustedJobLevel = Math.Min(explicitlyAdjustedJobLevel ?? ClassJob.GetWKSSyncedLevel(), Recipe.Unknown0);
+            resolvedLevelTableRow = LuminaSheets.GathererCrafterLvAdjustTableSheet.GetRow(AdjustedJobLevel.Value).Unknown0;
+        }
+        Table = LuminaSheets.RecipeLevelTableSheet.GetRow(resolvedLevelTableRow);
+
         RecipeInfo = new()
         {
             IsExpert = Recipe.IsExpert,
             ClassJobLevel = Table.ClassJobLevel,
             ConditionsFlag = Table.ConditionsFlag,
-            MaxDurability = Table.Durability * Recipe.DurabilityFactor / 100,
+            MaxDurability = (Recipe.Unknown0 != 0 ? 80 : Table.Durability) * Recipe.DurabilityFactor / 100,
             MaxQuality = (Recipe.CanHq || Recipe.IsExpert) ? (int)Table.Quality * Recipe.QualityFactor / 100 : 0,
             MaxProgress = Table.Difficulty * Recipe.DifficultyFactor / 100,
             QualityModifier = Table.QualityModifier,

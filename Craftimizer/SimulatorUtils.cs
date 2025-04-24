@@ -14,6 +14,7 @@ using Craftimizer.Utils;
 using Lumina.Text.ReadOnly;
 using Lumina.Text.Payloads;
 using Lumina.Excel.Sheets;
+using FFXIVClientStructs.FFXIV.Client.Game.Event;
 
 namespace Craftimizer.Plugin;
 
@@ -139,6 +140,21 @@ internal static class ClassJobUtils
 
     public static unsafe short GetPlayerLevel(this ClassJob me) =>
         PlayerState.Instance()->ClassJobLevels[me.GetExpArrayIdx()];
+
+    public static unsafe ushort GetWKSSyncedLevel(this ClassJob me)
+    {
+        var jobLevel = (ushort)me.GetPlayerLevel();
+        var handler = CSCraftEventHandler.Instance();
+        if (handler != null)
+        {
+            for (var i = 0; i < 2; ++i)
+            {
+                if (handler->WKSClassJobs[i] == me.GetClassJobIndex())
+                    return Math.Min(jobLevel, handler->WKSClassLevels[i]);
+            }
+        }
+        return jobLevel;
+    }
 
     public static unsafe bool CanPlayerUseManipulation(this ClassJob me) =>
         UIState.Instance()->IsUnlockLinkUnlockedOrQuestCompleted(ActionType.Manipulation.GetActionRow(me).Action!.Value.UnlockLink.RowId);
