@@ -92,6 +92,7 @@ public sealed class MacroEditor : Window, IDisposable
 
     private ILoadedTextureIcon ExpertBadge { get; }
     private ILoadedTextureIcon CollectibleBadge { get; }
+    private ILoadedTextureIcon CosmicExplorationBadge { get; }
     private ILoadedTextureIcon SplendorousBadge { get; }
     private ILoadedTextureIcon SpecialistBadge { get; }
     private ILoadedTextureIcon NoManipulationBadge { get; }
@@ -116,7 +117,7 @@ public sealed class MacroEditor : Window, IDisposable
         RecipeData = recipeData;
         Buffs = buffs;
         MacroSetter = setter;
-        DefaultActions = actions.ToArray();
+        DefaultActions = [.. actions];
 
         HQIngredientCounts = [.. ingredientHqCounts ?? Enumerable.Repeat(0, RecipeData.Ingredients.Count)];
 
@@ -126,6 +127,7 @@ public sealed class MacroEditor : Window, IDisposable
 
         ExpertBadge = IconManager.GetAssemblyTexture("Graphics.expert_badge.png");
         CollectibleBadge = IconManager.GetAssemblyTexture("Graphics.collectible_badge.png");
+        CosmicExplorationBadge = IconManager.GetIcon(60810);
         SplendorousBadge = IconManager.GetAssemblyTexture("Graphics.splendorous.png");
         SpecialistBadge = IconManager.GetAssemblyTexture("Graphics.specialist.png");
         NoManipulationBadge = IconManager.GetAssemblyTexture("Graphics.no_manip.png");
@@ -319,29 +321,18 @@ public sealed class MacroEditor : Window, IDisposable
                 ImGui.TableSetupColumn("col3", ImGuiTableColumnFlags.WidthStretch, 2);
 
                 ImGui.TableNextColumn();
-                var levelTextWidth = ImGui.CalcTextSize(SqText.ToLevelString(100)).X + ImGui.GetStyle().FramePadding.X * 2 + 5;
-                ImGuiUtils.AlignCentered(
-                    ImGui.CalcTextSize(SqText.LevelPrefix.ToIconString()).X + 5 +
-                    levelTextWidth);
+                ImGuiUtils.AlignCentered(GetLevelEntryWidth());
 
-                ImGui.AlignTextToFramePadding();
-                ImGui.TextUnformatted(SqText.LevelPrefix.ToIconString());
-                ImGui.SameLine(0, 3);
-                ImGui.SetNextItemWidth(levelTextWidth);
-                var levelText = SqText.ToLevelString(CharacterStats.Level);
-                bool textChanged;
-                unsafe
                 {
-                    textChanged = ImGui.InputText("##levelText", ref levelText, 12, ImGuiInputTextFlags.CallbackCharFilter | ImGuiInputTextFlags.AutoSelectAll, LevelInputCallback);
-                }
-                if (textChanged)
-                    CharacterStats = CharacterStats with
+                    var level = CharacterStats.Level;
+                    if (DrawLevelEntry(ref level))
                     {
-                        Level =
-                            SqText.TryParseLevelString(levelText, out var newLevel)
-                            ? Math.Clamp(newLevel, 1, 100)
-                            : 1
-                    };
+                        CharacterStats = CharacterStats with
+                        {
+                            Level = level
+                        };
+                    }
+                }
 
                 var disabledTint = new Vector4(0.5f, 0.5f, 0.5f, 0.75f);
                 var imageButtonPadding = (int)(ImGui.GetStyle().FramePadding.Y / 2f);
@@ -576,19 +567,6 @@ public sealed class MacroEditor : Window, IDisposable
         return oldStats != CharacterStats;
     }
 
-    private static unsafe int LevelInputCallback(ImGuiInputTextCallbackData* data)
-    {
-        if (data->EventFlag == ImGuiInputTextFlags.CallbackCharFilter)
-        {
-            if (SqText.LevelNumReplacements.TryGetValue((char)data->EventChar, out var seChar))
-                data->EventChar = seChar.ToIconChar();
-            else
-                return 1;
-        }
-
-        return 0;
-    }
-
     private static string FormatItemBuff((uint ItemId, bool IsHQ) input)
     {
         if (input.ItemId == 0)
@@ -748,6 +726,7 @@ public sealed class MacroEditor : Window, IDisposable
     private bool DrawRecipeParams()
     {
         var oldStartingQuality = StartingQuality;
+        var adjustedJobLevel = RecipeData.AdjustedJobLevel;
 
         ImGuiUtils.TextCentered("Recipe");
 
@@ -755,17 +734,31 @@ public sealed class MacroEditor : Window, IDisposable
         var textStarsSize = Vector2.Zero;
         if (!string.IsNullOrEmpty(textStars))
             textStarsSize = AxisFont.CalcTextSize(textStars);
-        var textLevel = SqText.LevelPrefix.ToIconChar() + SqText.ToLevelString(RecipeData.RecipeInfo.ClassJobLevel);
+
+        string? textLevel = null;
+        float textLevelSize;
+        if (adjustedJobLevel is { } adjJobLevel)
+        {
+            textLevelSize = GetLevelEntryWidth();
+        }
+        else
+        {
+            textLevel = SqText.LevelPrefix.ToIconChar() + SqText.ToLevelString(RecipeData.RecipeInfo.ClassJobLevel);
+            textLevelSize = ImGui.CalcTextSize(textLevel).X;
+        }
+
         var isExpert = RecipeData.RecipeInfo.IsExpert;
         var isCollectable = RecipeData.IsCollectable;
+        var isAdjustable = RecipeData.AdjustedJobLevel.HasValue;
         var imageSize = ImGui.GetFrameHeight();
         var textSize = ImGui.GetFontSize();
         var badgeSize = new Vector2(textSize * (ExpertBadge.AspectRatio ?? 1), textSize);
         var badgeOffset = (imageSize - badgeSize.Y) / 2;
 
         var rightSideWidth =
-            5 + ImGui.CalcTextSize(textLevel).X +
+            5 + textLevelSize +
             (textStarsSize != Vector2.Zero ? textStarsSize.X + 3 : 0) +
+            (isAdjustable ? imageSize + 3 : 0) +
             (isCollectable ? badgeSize.X + 3 : 0) +
             (isExpert ? badgeSize.X + 3 : 0);
         ImGui.AlignTextToFramePadding();
@@ -818,8 +811,19 @@ public sealed class MacroEditor : Window, IDisposable
             }
         }
 
+        ushort? newAdjustedJobLevel = null;
         ImGui.SameLine(0, 5);
-        ImGui.TextUnformatted(textLevel);
+        if (adjustedJobLevel.HasValue)
+        {
+            var level = (int)adjustedJobLevel.Value;
+            if (DrawLevelEntry(ref level))
+            {
+                newAdjustedJobLevel = (ushort)level;
+            }
+        }
+        else {
+            ImGui.TextUnformatted(textLevel);
+        }
 
         if (textStarsSize != Vector2.Zero)
         {
@@ -828,6 +832,14 @@ public sealed class MacroEditor : Window, IDisposable
             // Aligns better
             ImGui.SetCursorPosY(ImGui.GetCursorPosY() - 1);
             AxisFont.Text(textStars);
+        }
+
+        if (isAdjustable)
+        {
+            ImGui.SameLine(0, 3);
+            ImGui.Image(CosmicExplorationBadge.ImGuiHandle, new(imageSize));
+            if (ImGui.IsItemHovered())
+                ImGuiUtils.Tooltip($"Cosmic Exploration");
         }
 
         if (isCollectable)
@@ -907,15 +919,26 @@ public sealed class MacroEditor : Window, IDisposable
             }
         }
 
-        if (newRecipe is { } recipeId)
+        var modified = false;
+
+        if (newAdjustedJobLevel is { } jobLevel)
         {
-            RecipeData = new(recipeId);
-            HQIngredientCounts.Clear();
-            HQIngredientCounts.AddRange(Enumerable.Repeat(0, RecipeData.Ingredients.Count));
-            return true;
+            RecipeData = new((ushort)RecipeData.Recipe.RowId, jobLevel);
+            modified = true;
         }
 
-        return oldStartingQuality != StartingQuality;
+        if (newRecipe is { } recipeId)
+        {
+            RecipeData = new(recipeId, RecipeData.AdjustedJobLevel);
+            HQIngredientCounts.Clear();
+            HQIngredientCounts.AddRange(Enumerable.Repeat(0, RecipeData.Ingredients.Count));
+            modified = true;
+        }
+
+        if (oldStartingQuality != StartingQuality)
+            modified = true;
+
+        return modified;
     }
 
     private void DrawIngredientHQEntry(int idx)
@@ -971,6 +994,54 @@ public sealed class MacroEditor : Window, IDisposable
         ImGui.SameLine(0, 5);
         ImGui.AlignTextToFramePadding();
         ImGuiUtils.TextCentered($"{ingredient.Amount}");
+    }
+
+    private const int MAX_LEVEL = 100;
+    private float GetLevelEntryWidth()
+    {
+        var levelTextWidth = ImGui.CalcTextSize(SqText.ToLevelString(MAX_LEVEL)).X + ImGui.GetStyle().FramePadding.X * 2 + 5;
+        return ImGui.CalcTextSize(SqText.LevelPrefix.ToIconString()).X + 5 + levelTextWidth;
+    }
+    
+    private bool DrawLevelEntry(ref int level)
+    {
+        static unsafe int LevelInputCallback(ImGuiInputTextCallbackData* data)
+        {
+            if (data->EventFlag == ImGuiInputTextFlags.CallbackCharFilter)
+            {
+                if (SqText.LevelNumReplacements.TryGetValue((char)data->EventChar, out var seChar))
+                    data->EventChar = seChar.ToIconChar();
+                else
+                    return 1;
+            }
+
+            return 0;
+        }
+
+        var levelTextWidth = ImGui.CalcTextSize(SqText.ToLevelString(MAX_LEVEL)).X + ImGui.GetStyle().FramePadding.X * 2 + 5;
+
+        ImGui.AlignTextToFramePadding();
+        ImGui.TextUnformatted(SqText.LevelPrefix.ToIconString());
+        ImGui.SameLine(0, 3);
+        ImGui.SetNextItemWidth(levelTextWidth);
+        var levelText = SqText.ToLevelString(level);
+        bool textChanged;
+        unsafe
+        {
+            textChanged = ImGui.InputText("##levelText", ref levelText, 12, ImGuiInputTextFlags.CallbackCharFilter | ImGuiInputTextFlags.AutoSelectAll, LevelInputCallback);
+        }
+        if (textChanged)
+        {
+            var newLevel = SqText.TryParseLevelString(levelText, out var lv)
+                    ? Math.Clamp(lv, 1, MAX_LEVEL)
+                    : 1;
+            if (newLevel != level)
+            {
+                level = newLevel;
+                return true;
+            }
+        }
+        return false;
     }
 
     private void DrawActionHotbars()
@@ -1657,6 +1728,7 @@ public sealed class MacroEditor : Window, IDisposable
 
         ExpertBadge.Dispose();
         CollectibleBadge.Dispose();
+        CosmicExplorationBadge.Dispose();
         SplendorousBadge.Dispose();
         SpecialistBadge.Dispose();
         NoManipulationBadge.Dispose();
