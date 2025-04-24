@@ -15,7 +15,7 @@ internal sealed unsafe class SynthesisValues(AddonSynthesis* addon)
     private ReadOnlySpan<AtkValue> Values => new(Addon->AtkUnitBase.AtkValues, Addon->AtkUnitBase.AtkValuesCount);
 
     // Always 0?
-    private uint Unk0 => GetUInt(0);
+    private uint IsInitializing => GetUInt(0);
     private bool IsTrialSynthesis => TryGetBool(1) ?? false;
     public SeString ItemName => GetString(2);
     public uint ItemIconId => GetUInt(3);
