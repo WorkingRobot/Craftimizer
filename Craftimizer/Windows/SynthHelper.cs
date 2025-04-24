@@ -36,6 +36,8 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
     private const string WindowNamePinned = "Craftimizer Synthesis Helper###CraftimizerSynthHelper";
     private const string WindowNameFloating = $"{WindowNamePinned}Floating";
+    
+    private bool AutoCraftEnabled { get; set; } = false;
 
     public AddonSynthesis* Addon { get; private set; }
     public RecipeData? RecipeData { get; private set; }
@@ -257,7 +259,10 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         ImGui.PopStyleVar();
 
         base.PostDraw();
-        ExecuteNextAction();
+        if (AutoCraftEnabled)
+        {
+            ExecuteNextAction();
+        }
 
     }
 
@@ -634,6 +639,11 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         token.ThrowIfCancellationRequested();
 
         return 0;
+    }
+
+    public void SwapAutoCraftMode()
+    {
+        AutoCraftEnabled = !AutoCraftEnabled;
     }
 
     private void EnqueueAction(ActionType action)

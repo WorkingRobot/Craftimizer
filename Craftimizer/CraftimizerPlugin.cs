@@ -116,6 +116,12 @@ public sealed class CraftimizerPlugin : IDalamudPlugin
     public void ExecuteSuggestedSynthHelperAction() =>
         SynthHelperWindow.ExecuteNextAction();
 
+    [Command(name: "/craftauto",
+             description:
+             "Turns on autocraft mode")]
+    public void SwitchAutoCraftMode() =>
+        SynthHelperWindow.SwapAutoCraftMode();
+
     [Command(name: "/craftretry", description: "Clicks \"Retry\" in the synthesis helper. Can also be run inside a macro. This command is useful for controller players.")]
     public void ExecuteRetrySynthHelper() =>
         SynthHelperWindow.AttemptRetry();
