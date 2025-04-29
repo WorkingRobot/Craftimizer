@@ -528,7 +528,10 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
     private void OnUseAction(ActionType action)
     {
-        if (!ShouldOpen || IsCollapsed)
+        Addon = (AddonSynthesis*)Service.GameGui.GetAddonByName("Synthesis");
+        if (Addon == null)
+            return;
+        if (Addon->AtkUnitBase.WindowNode == null)
             return;
 
         (_, CurrentState) = new SimNoRandom().Execute(GetCurrentState(), action);
