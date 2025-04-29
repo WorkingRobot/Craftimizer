@@ -61,20 +61,15 @@ public sealed class IconManager : IDisposable
     }
 
     // TODO: Unload when unused, but with a custom timer?
-    private sealed class CachedIcon : ITextureIcon
+    private sealed class CachedIcon(ISharedImmediateTexture source) : ITextureIcon
     {
-        private LoadedIcon Base { get; }
+        private LoadedIcon Base { get; } = new(source);
 
         public ISharedImmediateTexture Source => Base.Source;
 
         public Vector2? Dimensions => Base.Dimensions;
 
         public nint ImGuiHandle => Base.ImGuiHandle;
-
-        public CachedIcon(ISharedImmediateTexture source)
-        {
-            Base = new(source);
-        }
 
         public void Release()
         {
