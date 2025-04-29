@@ -16,13 +16,11 @@ public static class LuminaSheets
     public static readonly ExcelSheet<ClassJob> ClassJobSheet = Module.GetSheet<ClassJob>();
     public static readonly ExcelSheet<Item> ItemSheet = Module.GetSheet<Item>();
     public static readonly ExcelSheet<Item> ItemSheetEnglish = Module.GetSheet<Item>(Language.English)!;
-    public static readonly ExcelSheet<ENpcResident> ENpcResidentSheet = Module.GetSheet<ENpcResident>();
     public static readonly ExcelSheet<Level> LevelSheet = Module.GetSheet<Level>();
     public static readonly ExcelSheet<Quest> QuestSheet = Module.GetSheet<Quest>();
     public static readonly ExcelSheet<Materia> MateriaSheet = Module.GetSheet<Materia>();
     public static readonly ExcelSheet<BaseParam> BaseParamSheet = Module.GetSheet<BaseParam>();
     public static readonly ExcelSheet<ItemFood> ItemFoodSheet = Module.GetSheet<ItemFood>();
-    public static readonly SubrowExcelSheet<SatisfactionSupply> SatisfactionSupplySheet = Module.GetSubrowSheet<SatisfactionSupply>();
     public static readonly ExcelSheet<WKSMissionToDoEvalutionRefin> WKSMissionToDoEvalutionRefinSheet = Module.GetSheet<WKSMissionToDoEvalutionRefin>();
     public static readonly ExcelSheet<RecipeLevelTable> RecipeLevelTableSheet = Module.GetSheet<RecipeLevelTable>();
     public static readonly ExcelSheet<GathererCrafterLvAdjustTable> GathererCrafterLvAdjustTableSheet = Module.GetSheet<GathererCrafterLvAdjustTable>();

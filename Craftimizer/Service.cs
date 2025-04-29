@@ -9,6 +9,8 @@ using Dalamud.Storage.Assets;
 
 namespace Craftimizer.Plugin;
 
+#pragma warning disable SeStringEvaluator
+
 public sealed class Service
 {
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
@@ -27,6 +29,7 @@ public sealed class Service
     [PluginService] public static IPluginLog PluginLog { get; private set; }
     [PluginService] public static IGameInteropProvider GameInteropProvider { get; private set; }
     [PluginService] public static INotificationManager NotificationManager { get; private set; }
+    [PluginService] public static ISeStringEvaluator SeStringEvaluator { get; private set; }
 
     public static Plugin Plugin { get; private set; }
     public static Configuration Configuration => Plugin.Configuration;
