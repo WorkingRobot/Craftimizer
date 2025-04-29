@@ -528,6 +528,9 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
     private void OnUseAction(ActionType action)
     {
+        if (!ShouldOpen || IsCollapsed)
+            return;
+
         (_, CurrentState) = new SimNoRandom().Execute(GetCurrentState(), action);
         CurrentActionCount = CurrentState.ActionCount;
         CurrentActionStates = CurrentState.ActionStates;

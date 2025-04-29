@@ -48,6 +48,8 @@ internal sealed unsafe class SynthesisValues(AddonSynthesis* addon)
 
     private uint? TryGetUInt(int i)
     {
+        if (Addon == null)
+            return null;
         var value = Values[i];
         return value.Type == ValueType.UInt ?
             value.UInt :
@@ -56,6 +58,8 @@ internal sealed unsafe class SynthesisValues(AddonSynthesis* addon)
 
     private bool? TryGetBool(int i)
     {
+        if (Addon == null)
+            return null;
         var value = Values[i];
         return value.Type == ValueType.Bool ?
             value.Byte != 0 :
@@ -64,6 +68,8 @@ internal sealed unsafe class SynthesisValues(AddonSynthesis* addon)
 
     private SeString? TryGetString(int i)
     {
+        if (Addon == null)
+            return null;
         var value = Values[i];
         return value.Type switch
         {
