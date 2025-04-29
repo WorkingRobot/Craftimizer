@@ -534,6 +534,22 @@ public sealed class Settings : Window, IDisposable
                 disableOptimal ? [SolverAlgorithm.Raphael] : []
             );
 
+            using (ImRaii.Disabled(config.Algorithm is not (SolverAlgorithm.OneshotForked or SolverAlgorithm.StepwiseForked or SolverAlgorithm.StepwiseGenetic or SolverAlgorithm.Raphael)))
+                DrawOption(
+                    "Max Core Count",
+                    "The number of cores to use when solving. You should use as many " +
+                    "as you can. If it's too high, it will have an effect on your gameplay " +
+                    $"experience. A good estimate would be 1 or 2 cores less than your " +
+                    $"system (FYI, you have {Environment.ProcessorCount} cores), but make sure to accomodate " +
+                    $"for any other tasks you have in the background, if you have any.\n" +
+                    "(Only used in the Forked, Genetic, and Optimal algorithms)",
+                    config.MaxThreadCount,
+                    1,
+                    Environment.ProcessorCount,
+                    v => config = config with { MaxThreadCount = v },
+                    ref isDirty
+                );
+
             if (config.Algorithm != SolverAlgorithm.Raphael)
             {
                 DrawOption(
@@ -601,22 +617,6 @@ public sealed class Settings : Window, IDisposable
                     v => config = config with { MaxScoreWeightingConstant = v },
                     ref isDirty
                 );
-
-                using (ImRaii.Disabled(config.Algorithm is not (SolverAlgorithm.OneshotForked or SolverAlgorithm.StepwiseForked or SolverAlgorithm.StepwiseGenetic)))
-                    DrawOption(
-                        "Max Core Count",
-                        "The number of cores to use when solving. You should use as many " +
-                        "as you can. If it's too high, it will have an effect on your gameplay " +
-                        $"experience. A good estimate would be 1 or 2 cores less than your " +
-                        $"system (FYI, you have {Environment.ProcessorCount} cores), but make sure to accomodate " +
-                        $"for any other tasks you have in the background, if you have any.\n" +
-                        "(Only used in the Forked and Genetic algorithms)",
-                        config.MaxThreadCount,
-                        1,
-                        Environment.ProcessorCount,
-                        v => config = config with { MaxThreadCount = v },
-                        ref isDirty
-                    );
 
                 using (ImRaii.Disabled(config.Algorithm is not (SolverAlgorithm.OneshotForked or SolverAlgorithm.StepwiseForked or SolverAlgorithm.StepwiseGenetic)))
                     DrawOption(

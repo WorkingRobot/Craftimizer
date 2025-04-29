@@ -160,8 +160,8 @@ public sealed class Solver : IDisposable
         var pool = RaphaelUtils.ConvertToRawActions(Config.ActionPool.Where(a => a.Base().IsPossible(s)).ToArray());
         var input = new Raphael.SolverInput()
         {
-            CP = checked((short)State.Input.Stats.CP),
-            Durability = checked((sbyte)State.Input.Recipe.MaxDurability),
+            CP = checked((ushort)State.Input.Stats.CP),
+            Durability = checked((ushort)State.Input.Recipe.MaxDurability),
             Progress = checked((ushort)State.Input.Recipe.MaxProgress),
             Quality = checked((ushort)(State.Input.Recipe.MaxQuality - State.Input.StartingQuality)),
             BaseProgressGain = checked((ushort)State.Input.BaseProgressGain),
@@ -202,13 +202,18 @@ public sealed class Solver : IDisposable
             progress = prog % maxProgress;
         }
 
+        void Log(string s) =>
+            OnLog?.Invoke(s);
+
         if (!Config.MinimizeSteps)
         {
             Raphael.SolverConfig config = new()
             {
                 Adversarial = Config.Adversarial,
                 BackloadProgress = true,
-                UnsoundBranchPruning = true
+                UnsoundBranchPruning = true,
+                LogLevel = Raphael.LevelFilter.Debug,
+                ThreadCount = Config.MaxThreadCount,
             };
 
             using var solver = new Raphael.Solver(in config, in input, pool);
@@ -216,6 +221,7 @@ public sealed class Solver : IDisposable
             solver.OnFinish += OnFinish;
             solver.OnSuggestSolution += OnSuggestSolution;
             solver.OnProgress += OnProgress;
+            solver.OnLog += Log;
 
             progressStage = 0;
             progress = 0;
@@ -231,7 +237,9 @@ public sealed class Solver : IDisposable
             {
                 Adversarial = Config.Adversarial,
                 BackloadProgress = Config.BackloadProgress,
-                UnsoundBranchPruning = false
+                UnsoundBranchPruning = false,
+                LogLevel = Raphael.LevelFilter.Debug,
+                ThreadCount = Config.MaxThreadCount,
             };
 
             using var solver = new Raphael.Solver(in config, in input, pool);
@@ -239,6 +247,7 @@ public sealed class Solver : IDisposable
             solver.OnFinish += OnFinish;
             solver.OnSuggestSolution += OnSuggestSolution;
             solver.OnProgress += OnProgress;
+            solver.OnLog += Log;
 
             progressStage = 0;
             progress = 0;
