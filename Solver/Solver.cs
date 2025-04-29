@@ -213,7 +213,7 @@ public sealed class Solver : IDisposable
                 BackloadProgress = true,
                 UnsoundBranchPruning = true,
                 LogLevel = Raphael.LevelFilter.Debug,
-                ThreadCount = Config.MaxThreadCount,
+                ThreadCount = (ushort)Config.MaxThreadCount,
             };
 
             using var solver = new Raphael.Solver(in config, in input, pool);
@@ -239,7 +239,7 @@ public sealed class Solver : IDisposable
                 BackloadProgress = Config.BackloadProgress,
                 UnsoundBranchPruning = false,
                 LogLevel = Raphael.LevelFilter.Debug,
-                ThreadCount = Config.MaxThreadCount,
+                ThreadCount = (ushort)Config.MaxThreadCount,
             };
 
             using var solver = new Raphael.Solver(in config, in input, pool);
