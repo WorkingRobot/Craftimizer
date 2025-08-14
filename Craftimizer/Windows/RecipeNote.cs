@@ -243,8 +243,12 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             if (instance == null)
                 return false;
 
-            var recipeEntry = instance->RecipeList->SelectedRecipe;
+            var list = instance->RecipeList;
 
+            if (list == null)
+                return false;
+
+            var recipeEntry = list->SelectedRecipe;
             if (recipeEntry == null)
                 return false;
 
