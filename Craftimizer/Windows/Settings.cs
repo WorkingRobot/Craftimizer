@@ -75,38 +75,37 @@ public sealed class Settings : Window, IDisposable
     }
 
     private static void DrawOption<T>(string label, string tooltip, T value, T min, T max, Action<T> setter, ref bool isDirty) where T : struct, INumber<T>
-{
-    ImGui.SetNextItemWidth(OptionWidth);
-
-    System.Text.Encoding.UTF8.GetBytes(value.ToString() + "\0", TextBuffer);
-
-    if (ImGui.InputText(label, TextBuffer, ImGuiInputTextFlags.AutoSelectAll | ImGuiInputTextFlags.CharsDecimal))
     {
-        var newText = System.Text.Encoding.UTF8.GetString(TextBuffer, 0, Array.IndexOf(TextBuffer, (byte)'\0'));
+        ImGui.SetNextItemWidth(OptionWidth);
 
-        if (T.TryParse(newText, null, out var newValue))
+        System.Text.Encoding.UTF8.GetBytes(value.ToString() + "\0", TextBuffer);
+
+        if (ImGui.InputText(label, TextBuffer, ImGuiInputTextFlags.AutoSelectAll | ImGuiInputTextFlags.CharsDecimal))
         {
-            newValue = T.Clamp(newValue, min, max);
+            var newText = System.Text.Encoding.UTF8.GetString(TextBuffer, 0, Array.IndexOf(TextBuffer, (byte)'\0'));
+
+            if (T.TryParse(newText, null, out var newValue))
+            {
+                newValue = T.Clamp(newValue, min, max);
+                if (value != newValue)
+                {
+                    setter(newValue);
+                    isDirty = true;
+                }
+            }
+        }
+        else
+        {
+            var newValue = T.Clamp(value, min, max);
             if (value != newValue)
             {
                 setter(newValue);
                 isDirty = true;
             }
         }
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+            ImGuiUtils.TooltipWrapped(tooltip);
     }
-    else
-    {
-        var newValue = T.Clamp(value, min, max);
-        if (value != newValue)
-        {
-            setter(newValue);
-            isDirty = true;
-        }
-    }
-
-    if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-        ImGuiUtils.TooltipWrapped(tooltip);
-}
 
     private static void DrawOption(string label, string tooltip, string value, Action<string> setter, ref bool isDirty)
     {

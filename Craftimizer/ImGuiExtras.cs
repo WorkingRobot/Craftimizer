@@ -179,7 +179,7 @@ internal static unsafe class ImGuiExtras
         igRenderFrame(p_min, p_max, fill_col, border, rounding);
 
     public static unsafe void RenderRectFilledRangeH(ImDrawListPtr draw_list, Vector4 rect, uint col, float x_start_norm, float x_end_norm, float rounding) =>
-        igRenderRectFilledRangeH(draw_list.NativePtr, &rect, col, x_start_norm, x_end_norm, rounding);
+        igRenderRectFilledRangeH(draw_list, &rect, col, x_start_norm, x_end_norm, rounding);
 
     public static unsafe bool ItemSize(Vector2 size, float text_baseline_y = -1.0f) =>
         igItemSize_Vec2(size, text_baseline_y);
