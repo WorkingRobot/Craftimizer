@@ -1115,12 +1115,12 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             ImGui.TableNextColumn();
             ImGui.TextUnformatted("Current");
             ImGui.TableNextColumn();
-            ImGui.TextColored(new(0, 1, 0, 1), $"{current}");
+            ImGui.TextColored(new Vector4(0f, 1f, 0f, 1f), $"{current}");
 
             ImGui.TableNextColumn();
             ImGui.TextUnformatted("Required");
             ImGui.TableNextColumn();
-            ImGui.TextColored(new(1, 0, 0, 1), $"{required}");
+            ImGui.TextColored(new Vector4(1f, 0f, 0f, 1f), $"{required}");
 
             ImGui.TableNextColumn();
             ImGui.TextUnformatted("You need");
