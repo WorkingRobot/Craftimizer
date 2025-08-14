@@ -322,7 +322,7 @@ internal static class ImGuiUtils
         using var plot = ImRaii2.Plot("##violin", size, ImPlotFlags.CanvasOnly | ImPlotFlags.NoInputs | ImPlotFlags.NoChild | ImPlotFlags.NoFrame);
         if (plot)
         {
-            ImPlot.SetupAxes(null, null, ImPlotAxisFlags.NoDecorations, ImPlotAxisFlags.NoDecorations | ImPlotAxisFlags.AutoFit);
+            ImPlot.SetupAxes([], [], ImPlotAxisFlags.NoDecorations, ImPlotAxisFlags.NoDecorations | ImPlotAxisFlags.AutoFit);
             ImPlot.SetupAxisLimits(ImAxis.X1, data.Min, data.Max, ImPlotCond.Always);
             ImPlot.SetupFinish();
 
@@ -333,7 +333,7 @@ internal static class ImGuiUtils
                     var label_id = stackalloc byte[] { (byte)'\0' };
                     fixed (ViolinData.Point* p = points)
                     {
-                        ImPlotNative.ImPlot_PlotShaded_FloatPtrFloatPtrFloatPtr(label_id, &p->X, &p->Y, &p->Y2, points.Length, ImPlotShadedFlags.None, 0, sizeof(ViolinData.Point));
+                        ImPlot.PlotShaded(label_id, &p->X, &p->Y, &p->Y2, points.Length, ImPlotShadedFlags.None, 0, sizeof(ViolinData.Point));
                     }
                 }
             }
