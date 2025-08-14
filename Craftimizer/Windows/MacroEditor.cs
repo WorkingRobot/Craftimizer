@@ -25,6 +25,7 @@ using SimNoRandom = Craftimizer.Simulator.SimulatorNoRandom;
 using Recipe = Lumina.Excel.Sheets.Recipe;
 using Dalamud.Utility;
 using Craftimizer.Solver;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Craftimizer.Windows;
 
@@ -719,6 +720,18 @@ public sealed class MacroEditor : Window, IDisposable
 
         public bool Equals(RecipeWrapper other) =>
             Recipe.RowId == other.Recipe.RowId;
+
+        public override int GetHashCode() =>
+            Recipe.RowId.GetHashCode();
+
+        public override bool Equals(object? obj) =>
+            obj is RecipeWrapper other && Equals(other);
+
+        public static bool operator ==(RecipeWrapper left, RecipeWrapper right) =>
+            left.Equals(right);
+
+        public static bool operator !=(RecipeWrapper left, RecipeWrapper right) =>
+            !left.Equals(right);
     }
 
     private readonly List<RecipeWrapper> searchableRecipes = LuminaSheets.RecipeSheet.Where(r => r.RecipeLevelTable.RowId != 0 && r.ItemResult.RowId != 0).Select(r => new RecipeWrapper(r)).ToList();
