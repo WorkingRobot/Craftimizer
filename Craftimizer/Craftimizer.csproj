@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Dalamud.NET.Sdk/12.0.2">
+<Project Sdk="Dalamud.NET.Sdk/13.0.0">
   <PropertyGroup>
     <Authors>Asriel Camora</Authors>
-    <Version>2.7.2.1</Version>
+    <Version>2.7.2.2</Version>
     <PackageProjectUrl>https://github.com/WorkingRobot/Craftimizer.git</PackageProjectUrl>
     <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
