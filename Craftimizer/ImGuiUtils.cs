@@ -522,18 +522,15 @@ internal static class ImGuiUtils
         ImGuiListClipperPtr imGuiListClipperPtr;
         unsafe
         {
-            imGuiListClipperPtr = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
+            imGuiListClipperPtr = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper());
         }
         try
         {
             imGuiListClipperPtr.Begin(data.Count, lineHeight);
             while (imGuiListClipperPtr.Step())
             {
-                for (var i = imGuiListClipperPtr.DisplayStart; i <= imGuiListClipperPtr.DisplayEnd; i++)
+                for (var i = imGuiListClipperPtr.DisplayStart; i < imGuiListClipperPtr.DisplayEnd; i++)
                 {
-                    if (i >= data.Count)
-                        return false;
-
                     if (i >= 0)
                     {
                         if (func(data[i]))
