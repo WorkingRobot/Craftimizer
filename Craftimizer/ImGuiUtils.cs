@@ -315,8 +315,8 @@ internal static class ImGuiUtils
 
     public static void ViolinPlot(in ViolinData data, Vector2 size)
     {
-        using var padding = ImRaii2.PushStyle(ImPlotStyleVar.PlotPadding, Vector2.Zero);
-        using var plotBg = ImRaii2.PushColor(ImPlotCol.PlotBg, Vector4.Zero);
+        using var padding = ImRaii2.PushStyle(ImPlotStyleVar.Padding, Vector2.Zero);
+        using var plotBg = ImRaii2.PushColor(ImPlotCol.Bg, Vector4.Zero);
         using var fill = ImRaii2.PushColor(ImPlotCol.Fill, Vector4.One.WithAlpha(.5f));
 
         using var plot = ImRaii2.Plot("##violin", size, ImPlotFlags.CanvasOnly | ImPlotFlags.NoInputs | ImPlotFlags.NoChild | ImPlotFlags.NoFrame);

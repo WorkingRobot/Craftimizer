@@ -210,7 +210,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
         Macro.FlushQueue();
 
-        var isInCraftAction = Service.Condition[ConditionFlag.Crafting40];
+        var isInCraftAction = Service.Condition[ConditionFlag.ExecutingCraftingAction];
         if (!isInCraftAction && wasInCraftAction)
             RefreshCurrentState();
         wasInCraftAction = isInCraftAction;
@@ -289,7 +289,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
     {
         var spacing = ImGui.GetStyle().ItemSpacing.X;
         var imageSize = ImGui.GetFrameHeight() * 2;
-        var canExecute = !Service.Condition[ConditionFlag.Crafting40];
+        var canExecute = !Service.Condition[ConditionFlag.ExecutingCraftingAction];
         var lastState = Macro.InitialState;
         hoveredState = null;
 
@@ -476,7 +476,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
     public bool ExecuteNextAction()
     {
-        var canExecute = !Service.Condition[ConditionFlag.Crafting40];
+        var canExecute = !Service.Condition[ConditionFlag.ExecutingCraftingAction];
         var action = NextAction;
         if (canExecute && action != null)
         {

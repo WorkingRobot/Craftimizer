@@ -17,9 +17,11 @@ public sealed class MacroClipboard : Window, IDisposable
 
     private List<string> Macros { get; }
 
+    private readonly byte[] macroBuffer = [];
+
     public MacroClipboard(IEnumerable<string> macros) : base("Macro Clipboard", WindowFlags)
     {
-        Macros = new(macros);
+        Macros = [.. macros];
 
         IsOpen = true;
         AllowPinning = false;
@@ -77,7 +79,7 @@ public sealed class MacroClipboard : Window, IDisposable
             using var padding = ImRaii.PushStyle(ImGuiStyleVar.FramePadding, Vector2.Zero);
             using var bg = ImRaii.PushColor(ImGuiCol.FrameBg, Vector4.Zero);
             var lineCount = macro.Count(c => c == '\n') + 1;
-            ImGui.InputTextMultiline("", ref macro, (uint)macro.Length + 1, new(availWidth, ImGui.GetTextLineHeight() * Math.Max(15, lineCount) + ImGui.GetStyle().FramePadding.Y), ImGuiInputTextFlags.ReadOnly | ImGuiInputTextFlags.AutoSelectAll);
+            ImGui.InputTextMultiline("", macro, new(availWidth, ImGui.GetTextLineHeight() * Math.Max(15, lineCount) + ImGui.GetStyle().FramePadding.Y), ImGuiInputTextFlags.ReadOnly | ImGuiInputTextFlags.AutoSelectAll);
         }
 
         if (buttonHovered)
