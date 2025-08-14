@@ -240,11 +240,11 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         {
             var instance = CSRecipeNote.Instance();
 
-            var list = instance->RecipeList;
-            if (list == null)
+            if (instance == null)
                 return false;
 
-            var recipeEntry = list->SelectedRecipe;
+            var recipeEntry = instance->RecipeList->SelectedRecipe;
+
             if (recipeEntry == null)
                 return false;
 
