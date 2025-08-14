@@ -1002,19 +1002,19 @@ public sealed class MacroEditor : Window, IDisposable
         var levelTextWidth = ImGui.CalcTextSize(SqText.ToLevelString(MAX_LEVEL)).X + ImGui.GetStyle().FramePadding.X * 2 + 5;
         return ImGui.CalcTextSize(SqText.LevelPrefix.ToIconString()).X + 5 + levelTextWidth;
     }
-    
+
+    private byte[] levelTextBuffer = new byte[16];
     private bool DrawLevelEntry(ref int level)
     {
-        static unsafe int LevelInputCallback(ImGuiInputTextCallbackData* data)
+        static int LevelInputCallback(ref ImGuiInputTextCallbackData data)
         {
-            if (data->EventFlag == ImGuiInputTextFlags.CallbackCharFilter)
+            if (data.EventFlag == ImGuiInputTextFlags.CallbackCharFilter)
             {
-                if (SqText.LevelNumReplacements.TryGetValue((char)data->EventChar, out var seChar))
-                    data->EventChar = seChar.ToIconChar();
+                if (SqText.LevelNumReplacements.TryGetValue((char)data.EventChar, out var seChar))
+                    data.EventChar = seChar.ToIconChar();
                 else
                     return 1;
             }
-
             return 0;
         }
 
@@ -1024,15 +1024,17 @@ public sealed class MacroEditor : Window, IDisposable
         ImGui.TextUnformatted(SqText.LevelPrefix.ToIconString());
         ImGui.SameLine(0, 3);
         ImGui.SetNextItemWidth(levelTextWidth);
-        var levelText = SqText.ToLevelString(level);
-        bool textChanged;
-        unsafe
-        {
-            textChanged = ImGui.InputText("##levelText", ref levelText, 12, ImGuiInputTextFlags.CallbackCharFilter | ImGuiInputTextFlags.AutoSelectAll, LevelInputCallback);
-        }
+
+        var currentlevelText = SqText.ToLevelString(level);
+        System.Text.Encoding.UTF8.GetBytes(currentlevelText + "\0", levelTextBuffer);
+
+        bool textChanged = ImGui.InputText("##levelText", levelTextBuffer, ImGuiInputTextFlags.CallbackCharFilter | ImGuiInputTextFlags.AutoSelectAll, LevelInputCallback);
+
         if (textChanged)
         {
-            var newLevel = SqText.TryParseLevelString(levelText, out var lv)
+            var newLevelText = System.Text.Encoding.UTF8.GetString(levelTextBuffer, 0, Array.IndexOf(levelTextBuffer, (byte)'\0'));
+
+            var newLevel = SqText.TryParseLevelString(newLevelText, out var lv)
                     ? Math.Clamp(lv, 1, MAX_LEVEL)
                     : 1;
             if (newLevel != level)
