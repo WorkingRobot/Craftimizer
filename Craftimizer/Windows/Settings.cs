@@ -31,6 +31,7 @@ public sealed class Settings : Window, IDisposable
     private IFontHandle HeaderFont { get; }
     private IFontHandle SubheaderFont { get; }
 
+    private static byte[] TextBuffer = new byte[32];
     public Settings() : base("Craftimizer Settings", WindowFlags)
     {
         Service.WindowSystem.AddWindow(this);
@@ -74,33 +75,38 @@ public sealed class Settings : Window, IDisposable
     }
 
     private static void DrawOption<T>(string label, string tooltip, T value, T min, T max, Action<T> setter, ref bool isDirty) where T : struct, INumber<T>
+{
+    ImGui.SetNextItemWidth(OptionWidth);
+
+    System.Text.Encoding.UTF8.GetBytes(value.ToString() + "\0", TextBuffer);
+
+    if (ImGui.InputText(label, TextBuffer, ImGuiInputTextFlags.AutoSelectAll | ImGuiInputTextFlags.CharsDecimal))
     {
-        ImGui.SetNextItemWidth(OptionWidth);
-        var text = value.ToString();
-        if (ImGui.InputText(label, ref text, 8, ImGuiInputTextFlags.AutoSelectAll | ImGuiInputTextFlags.CharsDecimal))
+        var newText = System.Text.Encoding.UTF8.GetString(TextBuffer, 0, Array.IndexOf(TextBuffer, (byte)'\0'));
+
+        if (T.TryParse(newText, null, out var newValue))
         {
-            if (T.TryParse(text, null, out var newValue))
-            {
-                newValue = T.Clamp(newValue, min, max);
-                if (value != newValue)
-                {
-                    setter(newValue);
-                    isDirty = true;
-                }
-            }
-        }
-        else
-        {
-            var newValue = T.Clamp(value, min, max);
+            newValue = T.Clamp(newValue, min, max);
             if (value != newValue)
             {
                 setter(newValue);
                 isDirty = true;
             }
         }
-        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-            ImGuiUtils.TooltipWrapped(tooltip);
     }
+    else
+    {
+        var newValue = T.Clamp(value, min, max);
+        if (value != newValue)
+        {
+            setter(newValue);
+            isDirty = true;
+        }
+    }
+
+    if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+        ImGuiUtils.TooltipWrapped(tooltip);
+}
 
     private static void DrawOption(string label, string tooltip, string value, Action<string> setter, ref bool isDirty)
     {
