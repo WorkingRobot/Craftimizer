@@ -4,7 +4,7 @@ using Dalamud.Interface.ManagedFontAtlas;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Bindings.ImGui;
-using ImPlotNET;
+using Dalamud.Bindings.ImPlot;
 using MathNet.Numerics.Statistics;
 using System;
 using System.Collections.Generic;
