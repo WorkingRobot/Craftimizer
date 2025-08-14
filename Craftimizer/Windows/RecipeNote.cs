@@ -533,7 +533,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             uv0 /= new Vector2(56);
             uv1 /= new Vector2(56);
 
-            ImGui.Image(Service.IconManager.GetIconCached(RecipeData.ClassJob.GetIconId()).ImGuiHandle, new Vector2(imageSize), uv0, uv1);
+            ImGui.Image(Service.IconManager.GetIconCached(RecipeData.ClassJob.GetIconId()).Handle, new Vector2(imageSize), uv0, uv1);
             ImGui.SameLine(0, 5);
 
             if (level != 0)
@@ -547,7 +547,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             if (hasSplendorous)
             {
                 ImGui.SameLine(0, 3);
-                ImGui.Image(SplendorousBadge.ImGuiHandle, new Vector2(imageSize));
+                ImGui.Image(SplendorousBadge.Handle, new Vector2(imageSize));
                 if (ImGui.IsItemHovered())
                     ImGuiUtils.Tooltip($"Splendorous Tool");
             }
@@ -555,7 +555,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             if (hasSpecialist)
             {
                 ImGui.SameLine(0, 3);
-                ImGui.Image(SpecialistBadge.ImGuiHandle, new Vector2(imageSize), Vector2.Zero, Vector2.One, new(0.99f, 0.97f, 0.62f, 1f));
+                ImGui.Image(SpecialistBadge.Handle, new Vector2(imageSize), Vector2.Zero, Vector2.One, new(0.99f, 0.97f, 0.62f, 1f));
                 if (ImGui.IsItemHovered())
                     ImGuiUtils.Tooltip($"Specialist");
             }
@@ -563,7 +563,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             if (shouldHaveManip)
             {
                 ImGui.SameLine(0, 3);
-                ImGui.Image(NoManipulationBadge.ImGuiHandle, new Vector2(imageSize));
+                ImGui.Image(NoManipulationBadge.Handle, new Vector2(imageSize));
                 if (ImGui.IsItemHovered())
                     ImGuiUtils.Tooltip($"No Manipulation (Missing Job Quest)");
             }
@@ -637,7 +637,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                     ImGuiUtils.TextCentered($"You are missing the required equipment.");
                     ImGuiUtils.AlignCentered(imageSize + 5 + ImGui.CalcTextSize(itemName).X);
                     ImGui.AlignTextToFramePadding();
-                    ImGui.Image(Service.IconManager.GetIconCached(item.Icon).ImGuiHandle, new(imageSize));
+                    ImGui.Image(Service.IconManager.GetIconCached(item.Icon).Handle, new(imageSize));
                     ImGui.SameLine(0, 5);
                     ImGui.TextUnformatted(itemName);
                 }
@@ -652,7 +652,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                     ImGuiUtils.TextCentered($"You are missing the required status effect.");
                     ImGuiUtils.AlignCentered(imageSize.X + 5 + ImGui.CalcTextSize(statusName).X);
                     ImGui.AlignTextToFramePadding();
-                    ImGui.Image(statusIcon.ImGuiHandle, imageSize);
+                    ImGui.Image(statusIcon.Handle, imageSize);
                     ImGui.SameLine(0, 5);
                     ImGui.TextUnformatted(statusName);
                 }
@@ -731,7 +731,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 );
             ImGui.AlignTextToFramePadding();
 
-            ImGui.Image(Service.IconManager.GetIconCached(RecipeData.Recipe.ItemResult.Value!.Icon).ImGuiHandle, new Vector2(imageSize));
+            ImGui.Image(Service.IconManager.GetIconCached(RecipeData.Recipe.ItemResult.Value!.Icon).Handle, new Vector2(imageSize));
 
             ImGui.SameLine(0, 5);
             ImGui.TextUnformatted(textLevel);
@@ -748,7 +748,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             if (isAdjustable)
             {
                 ImGui.SameLine(0, 3);
-                ImGui.Image(CosmicExplorationBadge.ImGuiHandle, new(imageSize));
+                ImGui.Image(CosmicExplorationBadge.Handle, new(imageSize));
                 if (ImGui.IsItemHovered())
                     ImGuiUtils.Tooltip($"Cosmic Exploration");
             }
@@ -757,7 +757,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             {
                 ImGui.SameLine(0, 3);
                 ImGui.SetCursorPosY(ImGui.GetCursorPosY() + badgeOffset);
-                ImGui.Image(CollectibleBadge.ImGuiHandle, badgeSize);
+                ImGui.Image(CollectibleBadge.Handle, badgeSize);
                 if (ImGui.IsItemHovered())
                     ImGuiUtils.Tooltip($"Collectible");
             }
@@ -766,7 +766,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             {
                 ImGui.SameLine(0, 3);
                 ImGui.SetCursorPosY(ImGui.GetCursorPosY() + badgeOffset);
-                ImGui.Image(ExpertBadge.ImGuiHandle, badgeSize);
+                ImGui.Image(ExpertBadge.Handle, badgeSize);
                 if (ImGui.IsItemHovered())
                     ImGuiUtils.Tooltip($"Expert Recipe");
             }
@@ -1071,7 +1071,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                             var shouldShowMore = i + 1 == itemsPerRow * 2 && i + 1 < itemCount;
                             if (!shouldShowMore)
                             {
-                                ImGui.Image(actions[i].GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(miniRowHeight));
+                                ImGui.Image(actions[i].GetIcon(RecipeData!.ClassJob).Handle, new(miniRowHeight));
                                 if (ImGui.IsItemHovered())
                                     ImGuiUtils.Tooltip(actions[i].GetName(RecipeData!.ClassJob));
                             }
@@ -1079,7 +1079,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                             {
                                 var amtMore = itemCount - itemsPerRow * 2;
                                 var pos = ImGui.GetCursorPos();
-                                ImGui.Image(actions[i].GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(miniRowHeight), default, Vector2.One, new(1, 1, 1, .5f));
+                                ImGui.Image(actions[i].GetIcon(RecipeData!.ClassJob).Handle, new(miniRowHeight), default, Vector2.One, new(1, 1, 1, .5f));
                                 if (ImGui.IsItemHovered())
                                     ImGuiUtils.Tooltip($"{actions[i].GetName(RecipeData!.ClassJob)}\nand {amtMore} more");
                                 ImGui.SetCursorPos(pos);

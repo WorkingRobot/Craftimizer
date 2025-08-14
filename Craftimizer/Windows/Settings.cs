@@ -834,7 +834,7 @@ public sealed class Settings : Window, IDisposable
                         iconTint = new(1, 1f, .5f, 1);
                     else if (isRisky)
                         iconTint = new(1, .5f, .5f, 1);
-                    if (ImGui.ImageButton(actions[i].GetIcon(recipeData.ClassJob).ImGuiHandle, new(imageSize), default, Vector2.One, 0, default, iconTint))
+                    if (ImGui.ImageButton(actions[i].GetIcon(recipeData.ClassJob).Handle, new(imageSize), default, Vector2.One, 0, default, iconTint))
                     {
                         isDirty = true;
                         if (isEnabled)
@@ -1104,7 +1104,7 @@ public sealed class Settings : Window, IDisposable
                 ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, iconDim.X);
 
                 ImGui.TableNextColumn();
-                ImGui.Image(icon.ImGuiHandle, iconDim);
+                ImGui.Image(icon.Handle, iconDim);
 
                 ImGui.TableNextColumn();
                 ImGuiUtils.AlignMiddle(new(float.PositiveInfinity, HeaderFont.GetFontSize() + SubheaderFont.GetFontSize() + ImGui.GetFontSize() * 3 + ImGui.GetStyle().ItemSpacing.Y * 4), new(0, iconDim.Y));

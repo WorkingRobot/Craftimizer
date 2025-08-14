@@ -168,7 +168,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             return false;
         }
 
-        Addon = (AddonSynthesis*)Service.GameGui.GetAddonByName("Synthesis");
+        Addon = (AddonSynthesis*)Service.GameGui.GetAddonByName("Synthesis").Address;
 
         if (Addon == null)
         {
@@ -331,7 +331,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
                 
                 isPressed = ImGuiExtras.ButtonBehavior(bb, id, out isHovered, out isHeld, ImGuiButtonFlags.None);
             }
-            ImGui.ImageButton(action.GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(imageSize), default, Vector2.One, 0, default, failedAction ? new(1, 1, 1, ImGui.GetStyle().DisabledAlpha) : Vector4.One);
+            ImGui.ImageButton(action.GetIcon(RecipeData!.ClassJob).Handle, new(imageSize), default, Vector2.One, 0, default, failedAction ? new(1, 1, 1, ImGui.GetStyle().DisabledAlpha) : Vector4.One);
             if (isPressed && i == 0)
             {
                 if (ExecuteNextAction())
@@ -380,7 +380,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
                     var icon = effect.GetIcon(effects.GetStrength(effect));
                     var size = new Vector2(iconHeight * (icon.AspectRatio ?? 1), iconHeight);
 
-                    ImGui.Image(icon.ImGuiHandle, size);
+                    ImGui.Image(icon.Handle, size);
                     if (!effect.IsIndefinite())
                     {
                         ImGui.SetCursorPosY(ImGui.GetCursorPosY() - durationShift);
