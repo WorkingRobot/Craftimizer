@@ -205,11 +205,9 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             if (Addon->WindowNode == null)
                 return false;
 
-            // Check if RecipeNote has a visible selected recipe
-            if (!Addon->GetNodeById(57)->IsVisible())
-                return false;
-
-            return true;
+            // Check if RecipeNote has a visible selected recipe and has returned a valid pointer 
+            var recipeDisplayNode = Addon->GetNodeById(57);
+            return recipeDisplayNode != null && recipeDisplayNode->IsVisible();
         }
 
         bool ShouldUseWKSRecipeNote()
@@ -226,11 +224,9 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             if (Addon->WindowNode == null)
                 return false;
 
-            // Check if WKS has a visible selected recipe
-            if (!Addon->GetNodeById(13)->IsVisible())
-                return false;
-
-            return true;
+            // Check if WKS has a visible selected recipe and has returned a valid pointer
+            var wksRecipeDisplayNode = Addon->GetNodeById(13);
+            return wksRecipeDisplayNode != null && wksRecipeDisplayNode->IsVisible();
         }
 
         if (ShouldUseRecipeNote())
