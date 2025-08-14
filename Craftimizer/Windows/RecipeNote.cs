@@ -194,9 +194,12 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
         bool ShouldUseRecipeNote()
         {
-            Addon = (AtkUnitBase*)Service.GameGui.GetAddonByName("RecipeNote");
-            if (Addon == null)
+            var recipeNotePtr = Service.GameGui.GetAddonByName("RecipeNote");
+
+            if (recipeNotePtr.IsNull)
                 return false;
+
+            Addon = (AtkUnitBase*)recipeNotePtr.Address;
 
             // Check if RecipeNote addon is visible
             if (Addon->WindowNode == null)
@@ -211,7 +214,11 @@ public sealed unsafe class RecipeNote : Window, IDisposable
 
         bool ShouldUseWKSRecipeNote()
         {
-            Addon = (AtkUnitBase*)Service.GameGui.GetAddonByName("WKSRecipeNotebook");
+            var wksNotePtr = Service.GameGui.GetAddonByName("WKSRecipeNotebook");
+            if (wksNotePtr.IsNull)
+                return false;
+
+            Addon = (AtkUnitBase*)wksNotePtr.Address;
             if (Addon == null)
                 return false;
 
