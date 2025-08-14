@@ -659,7 +659,8 @@ internal static class ImGuiUtils
             currentWrapWidth = wrapPosX - currentPos;
 
         var textBuf = text.AsSpan();
-        var lineSize = font.CalcWordWrapPositionA(ImGuiHelpers.GlobalScale, textBuf, currentWrapWidth) ?? textBuf.Length;
+        var wrapIndex = font.CalcWordWrapPositionA(ImGuiHelpers.GlobalScale, textBuf, currentWrapWidth);
+        var lineSize = wrapIndex == 0 ? textBuf.Length : wrapIndex;
         var lineBuf = textBuf[..lineSize];
         ImGui.TextUnformatted(lineBuf.ToString());
         var remainingBuf = textBuf[lineSize..].TrimStart();
