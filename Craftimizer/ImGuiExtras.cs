@@ -202,17 +202,19 @@ internal static unsafe class ImGuiExtras
         }
         GetUtf8(text, utf8TextBytes, utf8TextByteCount);
 
-        var ret = ImGuiNative.ImFont_CalcWordWrapPositionA(font.NativePtr, scale, utf8TextBytes, utf8TextBytes + utf8TextByteCount, wrap_width);
+        var textSpan = new ReadOnlySpan<byte>(utf8TextBytes, utf8TextByteCount);
+
+        var ret = font.CalcWordWrapPositionA(scale, textSpan, wrap_width);
 
         int? retVal = null;
-        if (utf8TextBytes <= ret && ret <= utf8TextBytes + utf8TextByteCount)
+
+        if (ret > 0 && ret <= utf8TextByteCount)
         {
-            var retIndex = (int)(ret - utf8TextBytes);
-            retVal = Encoding.UTF8.GetCharCount(utf8TextBytes, retIndex);
+            retVal = Encoding.UTF8.GetCharCount(utf8TextBytes, ret);
         }
 
         if (utf8TextByteCount > StackAllocationSizeLimit)
-            Free(utf8TextBytes);
+                Free(utf8TextBytes);
 
         return retVal;
     }
