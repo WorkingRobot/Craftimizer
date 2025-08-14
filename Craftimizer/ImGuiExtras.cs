@@ -219,17 +219,25 @@ internal static unsafe class ImGuiExtras
         return retVal;
     }
 
-    public static unsafe bool SetDragDropPayload<T>(string type, T data) where T : unmanaged =>
-        ImGui.SetDragDropPayload(type, (nint)(&data), (uint)sizeof(T));
+    public static unsafe bool SetDragDropPayload<T>(string type, T data) where T : unmanaged
+    {
+        var span = new ReadOnlySpan<T>(&data, 1);
+
+        var byteSpan = MemoryMarshal.AsBytes(span);
+
+        return ImGui.SetDragDropPayload(type, byteSpan);
+    }
 
     public static unsafe bool AcceptDragDropPayload<T>(string type, out T data) where T : unmanaged
     {
         var payload = ImGui.AcceptDragDropPayload(type);
-        if (payload.NativePtr == null || payload.DataSize != sizeof(T))
+
+        if (payload.Handle == null || !payload.IsDataType(type) || payload.DataSize != sizeof(T))
         {
             data = default;
             return false;
         }
+
         data = *(T*)payload.Data;
         return true;
     }
