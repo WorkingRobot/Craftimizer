@@ -528,9 +528,13 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
     private void OnUseAction(ActionType action)
     {
-        Addon = (AddonSynthesis*)Service.GameGui.GetAddonByName("Synthesis");
-        if (Addon == null)
+        var addonPtr = Service.GameGui.GetAddonByName("Synthesis");
+
+        if (addonPtr.IsNull)
             return;
+
+        Addon = (AddonSynthesis*)addonPtr.Address;
+        
         if (Addon->AtkUnitBase.WindowNode == null)
             return;
 
