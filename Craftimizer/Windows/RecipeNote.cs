@@ -607,7 +607,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             case CraftableStatus.RequiredItem:
                 {
                     var item = RecipeData.Recipe.ItemRequired.Value!;
-                    var itemName = item.Name.ExtractCleanText();
+                    var itemName = item.Name.ToString();
                     var imageSize = ImGui.GetFrameHeight();
 
                     ImGuiUtils.TextCentered($"You are missing the required equipment.");
@@ -621,7 +621,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             case CraftableStatus.RequiredStatus:
                 {
                     var status = RecipeData.Recipe.StatusRequired.Value!;
-                    var statusName = status.Name.ExtractCleanText();
+                    var statusName = status.Name.ToString();
                     var statusIcon = Service.IconManager.GetIconCached(status.Icon);
                     var imageSize = new Vector2(ImGui.GetFrameHeight() * (statusIcon.AspectRatio ?? 1), ImGui.GetFrameHeight());
 
@@ -1136,7 +1136,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
     private static (string NpcName, string Territory, Vector2 MapLocation, MapLinkPayload Payload) ResolveLevelData(uint levelRowId)
     {
         var level = LuminaSheets.LevelSheet.GetRow(levelRowId);
-        var placeName = level.Territory.Value.PlaceName.Value.Name.ExtractCleanText();
+        var placeName = level.Territory.Value.PlaceName.Value.Name.ToString();
         var location = WorldToMap2(new(level.X, level.Z), level.Map.Value!);
 
         return (ResolveNpcResidentName(level.Object.RowId), placeName, location, new(level.Territory.RowId, level.Map.RowId, location.X, location.Y));

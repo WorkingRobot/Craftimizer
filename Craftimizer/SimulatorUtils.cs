@@ -76,7 +76,7 @@ internal static class ActionUtils
     public static string GetName(this ActionType me, ClassJob classJob)
     {
         var (craftAction, action) = GetActionRow(me, classJob);
-        return (craftAction?.Name ?? action?.Name)?.AsSpan().ExtractText() ?? "Unknown";
+        return (craftAction?.Name ?? action?.Name)?.AsSpan().ToString() ?? "Unknown";
     }
 
     public static ITextureIcon GetIcon(this ActionType me, ClassJob classJob)
@@ -163,7 +163,7 @@ internal static class ClassJobUtils
     public static string GetName(this ClassJob me)
     {
         var job = LuminaSheets.ClassJobSheet.GetRow(me.GetClassJobIndex());
-        return job.Name.ExtractCleanText();
+        return job.Name.ToString();
     }
 
     public static string GetNameArticle(this ClassJob me)
@@ -180,7 +180,7 @@ internal static class ClassJobUtils
     public static string GetAbbreviation(this ClassJob me)
     {
         var job = LuminaSheets.ClassJobSheet.GetRow(me.GetClassJobIndex());
-        return job.Abbreviation.ExtractText();
+        return job.Abbreviation.ToString();
     }
 
     public static Quest GetUnlockQuest(this ClassJob me) =>
@@ -298,13 +298,13 @@ internal static class ConditionUtils
     }
 
     public static string Name(this Condition me) =>
-        LuminaSheets.AddonSheet.GetRow(me.AddonIds().Name).Text.ExtractText();
+        LuminaSheets.AddonSheet.GetRow(me.AddonIds().Name).Text.ToString();
 
     public static string Description(this Condition me, bool isRelic)
     {
         var text = LuminaSheets.AddonSheet.GetRow(me.AddonIds().Description).Text;
         if (!text.Any(p => p is { Type: ReadOnlySePayloadType.Macro, MacroCode: MacroCode.Float }))
-            return text.ExtractText();
+            return text.ToString();
 
         ReadOnlySeString finalText = new();
         foreach (var payload in text)
@@ -314,7 +314,7 @@ internal static class ConditionUtils
             else
                 finalText += payload;
         }
-        return finalText.ExtractText();
+        return finalText.ToString();
     }
 }
 
@@ -360,7 +360,7 @@ internal static class EffectUtils
     {
         var status = me.Status();
         var name = new StringBuilder();
-        name.Append(status.Name.ExtractText());
+        name.Append(status.Name.ToString());
         if (status.MaxStacks != 0)
             name.Append($" {strength}");
         if (!status.IsPermanent)

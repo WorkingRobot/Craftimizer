@@ -129,7 +129,7 @@ public static unsafe class Gearsets
     }
 
     public static bool IsSplendorousTool(GearsetItem item) =>
-        LuminaSheets.ItemSheetEnglish.GetRow(item.ItemId).Description.ExtractText().Contains("Increases to quality are 1.75 times higher than normal when material condition is Good.", StringComparison.Ordinal);
+        LuminaSheets.ItemSheetEnglish.GetRow(item.ItemId).Description.ToString().Contains("Increases to quality are 1.75 times higher than normal when material condition is Good.", StringComparison.Ordinal);
 
     // https://github.com/ffxiv-teamcraft/ffxiv-teamcraft/blob/24d0db2d9676f264edf53651b21005305267c84c/apps/client/src/app/modules/gearsets/materia.service.ts#L265
     private static int CalculateParamCap(Item item, uint paramId)

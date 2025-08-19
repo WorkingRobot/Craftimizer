@@ -572,7 +572,7 @@ public sealed class MacroEditor : Window, IDisposable
         if (input.ItemId == 0)
             return "None";
 
-        var name = LuminaSheets.ItemSheet.GetRowOrDefault(input.ItemId)?.Name.ExtractCleanText() ?? $"Unknown ({input.ItemId})";
+        var name = LuminaSheets.ItemSheet.GetRowOrDefault(input.ItemId)?.Name.ToString() ?? $"Unknown ({input.ItemId})";
         return input.IsHQ ? $"{name} (HQ)" : name;
     }
 
@@ -788,11 +788,11 @@ public sealed class MacroEditor : Window, IDisposable
                 searchableRecipes,
                 fontHandle,
                 ImGui.GetContentRegionAvail().X - rightSideWidth,
-                r => r.Recipe.ItemResult.Value.Name.ExtractCleanText(),
+                r => r.Recipe.ItemResult.Value.Name.ToString(),
                 r => r.Recipe.RowId.ToString(),
                 r =>
                 {
-                    ImGui.TextUnformatted($"{r.Recipe.ItemResult.Value.Name.ExtractCleanText()}");
+                    ImGui.TextUnformatted($"{r.Recipe.ItemResult.Value.Name}");
 
                     var classJob = (ClassJob)r.Recipe.CraftType.RowId;
                     var textLevel = SqText.LevelPrefix.ToIconChar() + SqText.ToLevelString(r.Recipe.RecipeLevelTable.Value!.ClassJobLevel);
@@ -975,10 +975,10 @@ public sealed class MacroEditor : Window, IDisposable
             {
                 var perItem = RecipeData.CalculateItemStartingQuality(idx, 1);
                 var total = RecipeData.CalculateItemStartingQuality(idx, hqCount);
-                ImGuiUtils.Tooltip($"{ingredient.Item.Name.ExtractCleanText()} {SeIconChar.HighQuality.ToIconString()}\n+{perItem} Quality/Item{(total > 0 ? $"\n+{total} Quality" : "")}");
+                ImGuiUtils.Tooltip($"{ingredient.Item.Name} {SeIconChar.HighQuality.ToIconString()}\n+{perItem} Quality/Item{(total > 0 ? $"\n+{total} Quality" : "")}");
             }
             else if (ingredient.Amount != 0)
-                ImGuiUtils.Tooltip($"{ingredient.Item.Name.ExtractCleanText()}");
+                ImGuiUtils.Tooltip($"{ingredient.Item.Name}");
         }
         ImGui.SameLine(0, 5);
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - (5 + ImGui.CalcTextSize("/").X + 5 + ImGui.CalcTextSize($"99").X));
@@ -1247,7 +1247,7 @@ public sealed class MacroEditor : Window, IDisposable
                         {
                             var status = effect.Status();
                             using var _reset = ImRaii.DefaultFont();
-                            ImGuiUtils.Tooltip($"{status.Name.ExtractCleanText()}\n{status.Description.ExtractCleanText()}");
+                            ImGuiUtils.Tooltip($"{status.Name}\n{status.Description}");
                         }
                         ImGui.SameLine();
                     }
