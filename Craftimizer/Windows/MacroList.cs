@@ -3,7 +3,7 @@ using Craftimizer.Utils;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using System;
 using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
@@ -82,7 +82,7 @@ public sealed class MacroList : Window, IDisposable
         {
             var width = ImGui.GetContentRegionAvail().X;
             var macros = new List<Macro>(sortedMacros);
-            for(var i = 0; i < macros.Count; ++i)
+            for (var i = 0; i < macros.Count; ++i)
             {
                 var pos = ImGui.GetCursorPos();
                 DrawMacro(macros[i]);
@@ -281,7 +281,7 @@ public sealed class MacroList : Window, IDisposable
                         var shouldShowMore = i + 1 == itemsPerRow * 2 && i + 1 < itemCount;
                         if (!shouldShowMore)
                         {
-                            ImGui.Image(macro.Actions[i].GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(miniRowHeight));
+                            ImGui.Image(macro.Actions[i].GetIcon(RecipeData!.ClassJob).Handle, new(miniRowHeight));
                             if (ImGui.IsItemHovered())
                                 ImGuiUtils.Tooltip(macro.Actions[i].GetName(RecipeData!.ClassJob));
                         }
@@ -289,7 +289,7 @@ public sealed class MacroList : Window, IDisposable
                         {
                             var amtMore = itemCount - itemsPerRow * 2;
                             var pos = ImGui.GetCursorPos();
-                            ImGui.Image(macro.Actions[i].GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(miniRowHeight), default, Vector2.One, new(1, 1, 1, .5f));
+                            ImGui.Image(macro.Actions[i].GetIcon(RecipeData!.ClassJob).Handle, new(miniRowHeight), default, Vector2.One, new(1, 1, 1, .5f));
                             if (ImGui.IsItemHovered())
                                 ImGuiUtils.Tooltip($"{macro.Actions[i].GetName(RecipeData!.ClassJob)}\nand {amtMore} more");
                             ImGui.SetCursorPos(pos);

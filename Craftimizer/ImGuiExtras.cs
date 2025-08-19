@@ -1,4 +1,4 @@
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -101,7 +101,7 @@ internal static unsafe class ImGuiExtras
             utf8HintBytes = stackPtr;
         }
         GetUtf8(hint, utf8HintBytes, utf8HintByteCount);
-        
+
         var utf8InputByteCount = Encoding.UTF8.GetByteCount(input);
         var inputBufSize = Math.Max(maxLength + 1, utf8InputByteCount + 1);
 
@@ -179,7 +179,7 @@ internal static unsafe class ImGuiExtras
         igRenderFrame(p_min, p_max, fill_col, border, rounding);
 
     public static unsafe void RenderRectFilledRangeH(ImDrawListPtr draw_list, Vector4 rect, uint col, float x_start_norm, float x_end_norm, float rounding) =>
-        igRenderRectFilledRangeH(draw_list.NativePtr, &rect, col, x_start_norm, x_end_norm, rounding);
+        igRenderRectFilledRangeH(draw_list, &rect, col, x_start_norm, x_end_norm, rounding);
 
     public static unsafe bool ItemSize(Vector2 size, float text_baseline_y = -1.0f) =>
         igItemSize_Vec2(size, text_baseline_y);
@@ -202,7 +202,7 @@ internal static unsafe class ImGuiExtras
         }
         GetUtf8(text, utf8TextBytes, utf8TextByteCount);
 
-        var ret = ImGuiNative.ImFont_CalcWordWrapPositionA(font.NativePtr, scale, utf8TextBytes, utf8TextBytes + utf8TextByteCount, wrap_width);
+        var ret = ImGuiNative.CalcWordWrapPositionA(font, scale, utf8TextBytes, utf8TextBytes + utf8TextByteCount, wrap_width);
 
         int? retVal = null;
         if (utf8TextBytes <= ret && ret <= utf8TextBytes + utf8TextByteCount)
@@ -218,12 +218,12 @@ internal static unsafe class ImGuiExtras
     }
 
     public static unsafe bool SetDragDropPayload<T>(string type, T data) where T : unmanaged =>
-        ImGui.SetDragDropPayload(type, (nint)(&data), (uint)sizeof(T));
+        ImGui.SetDragDropPayload(type, MemoryMarshal.AsBytes(new ReadOnlySpan<T>(&data, 1)));
 
     public static unsafe bool AcceptDragDropPayload<T>(string type, out T data) where T : unmanaged
     {
         var payload = ImGui.AcceptDragDropPayload(type);
-        if (payload.NativePtr == null || payload.DataSize != sizeof(T))
+        if (payload.IsNull || payload.DataSize != sizeof(T))
         {
             data = default;
             return false;

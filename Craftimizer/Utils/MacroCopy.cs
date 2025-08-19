@@ -5,7 +5,7 @@ using Dalamud.Interface.ImGuiNotification;
 using FFXIVClientStructs.FFXIV.Client.System.Memory;
 using FFXIVClientStructs.FFXIV.Client.System.String;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using System;
 using System.Collections.Generic;
 
@@ -54,7 +54,7 @@ public static class MacroCopy
         var mustSplit = (config.Type == MacroCopyConfiguration.CopyType.CopyToMacro || !config.CombineMacro) && config.Type != MacroCopyConfiguration.CopyType.CopyToMacroMate;
 
         var macros = new List<string>();
-        
+
         var m = new List<string>();
 
         for (var i = 0; i < actions.Count; ++i)

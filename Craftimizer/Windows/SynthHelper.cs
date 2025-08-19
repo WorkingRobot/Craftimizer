@@ -15,7 +15,7 @@ using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Shell;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,7 +32,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
     private const ImGuiWindowFlags WindowFlagsPinned = WindowFlagsFloating
       | ImGuiWindowFlags.NoSavedSettings;
 
-    private const ImGuiWindowFlags WindowFlagsFloating = 
+    private const ImGuiWindowFlags WindowFlagsFloating =
         ImGuiWindowFlags.AlwaysAutoResize
       | ImGuiWindowFlags.NoFocusOnAppearing;
 
@@ -168,7 +168,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             return false;
         }
 
-        Addon = (AddonSynthesis*)Service.GameGui.GetAddonByName("Synthesis");
+        Addon = (AddonSynthesis*)Service.GameGui.GetAddonByName("Synthesis").Address;
 
         if (Addon == null)
         {
@@ -210,7 +210,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
         Macro.FlushQueue();
 
-        var isInCraftAction = Service.Condition[ConditionFlag.Crafting40];
+        var isInCraftAction = Service.Condition[ConditionFlag.ExecutingCraftingAction];
         if (!isInCraftAction && wasInCraftAction)
             RefreshCurrentState();
         wasInCraftAction = isInCraftAction;
@@ -289,7 +289,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
     {
         var spacing = ImGui.GetStyle().ItemSpacing.X;
         var imageSize = ImGui.GetFrameHeight() * 2;
-        var canExecute = !Service.Condition[ConditionFlag.Crafting40];
+        var canExecute = !Service.Condition[ConditionFlag.ExecutingCraftingAction];
         var lastState = Macro.InitialState;
         hoveredState = null;
 
@@ -328,10 +328,10 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
                 var id = ImGui.GetID($"###ButtonContainer");
                 var isClipped = !ImGuiExtras.ItemAdd(bb, id, out _, 0);
-                
+
                 isPressed = ImGuiExtras.ButtonBehavior(bb, id, out isHovered, out isHeld, ImGuiButtonFlags.None);
             }
-            ImGui.ImageButton(action.GetIcon(RecipeData!.ClassJob).ImGuiHandle, new(imageSize), default, Vector2.One, 0, default, failedAction ? new(1, 1, 1, ImGui.GetStyle().DisabledAlpha) : Vector4.One);
+            ImGui.ImageButton(action.GetIcon(RecipeData!.ClassJob).Handle, new(imageSize), default, Vector2.One, 0, default, failedAction ? new(1, 1, 1, ImGui.GetStyle().DisabledAlpha) : Vector4.One);
             if (isPressed && i == 0)
             {
                 if (ExecuteNextAction())
@@ -380,7 +380,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
                     var icon = effect.GetIcon(effects.GetStrength(effect));
                     var size = new Vector2(iconHeight * (icon.AspectRatio ?? 1), iconHeight);
 
-                    ImGui.Image(icon.ImGuiHandle, size);
+                    ImGui.Image(icon.Handle, size);
                     if (!effect.IsIndefinite())
                     {
                         ImGui.SetCursorPosY(ImGui.GetCursorPosY() - durationShift);
@@ -476,7 +476,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
     public bool ExecuteNextAction()
     {
-        var canExecute = !Service.Condition[ConditionFlag.Crafting40];
+        var canExecute = !Service.Condition[ConditionFlag.ExecutingCraftingAction];
         var action = NextAction;
         if (canExecute && action != null)
         {
@@ -528,7 +528,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
     private void OnUseAction(ActionType action)
     {
-        Addon = (AddonSynthesis*)Service.GameGui.GetAddonByName("Synthesis");
+        Addon = (AddonSynthesis*)Service.GameGui.GetAddonByName("Synthesis").Address;
         if (Addon == null)
             return;
         if (Addon->AtkUnitBase.WindowNode == null)

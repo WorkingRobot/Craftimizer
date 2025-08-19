@@ -2,7 +2,7 @@ using Craftimizer.Plugin;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -32,7 +32,7 @@ public sealed class MacroClipboard : Window, IDisposable
     public override void Draw()
     {
         var idx = 0;
-        foreach(var macro in Macros)
+        foreach (var macro in Macros)
             DrawMacro(idx++, macro);
     }
 
@@ -77,7 +77,7 @@ public sealed class MacroClipboard : Window, IDisposable
             using var padding = ImRaii.PushStyle(ImGuiStyleVar.FramePadding, Vector2.Zero);
             using var bg = ImRaii.PushColor(ImGuiCol.FrameBg, Vector4.Zero);
             var lineCount = macro.Count(c => c == '\n') + 1;
-            ImGui.InputTextMultiline("", ref macro, (uint)macro.Length + 1, new(availWidth, ImGui.GetTextLineHeight() * Math.Max(15, lineCount) + ImGui.GetStyle().FramePadding.Y), ImGuiInputTextFlags.ReadOnly | ImGuiInputTextFlags.AutoSelectAll);
+            ImGui.InputTextMultiline("", ref macro, macro.Length + 1, new(availWidth, ImGui.GetTextLineHeight() * Math.Max(15, lineCount) + ImGui.GetStyle().FramePadding.Y), ImGuiInputTextFlags.ReadOnly | ImGuiInputTextFlags.AutoSelectAll);
         }
 
         if (buttonHovered)
