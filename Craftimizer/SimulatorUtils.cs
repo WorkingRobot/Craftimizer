@@ -15,6 +15,7 @@ using Lumina.Text.ReadOnly;
 using Lumina.Text.Payloads;
 using Lumina.Excel.Sheets;
 using Dalamud.Utility;
+using FFXIVClientStructs.FFXIV.Client.Game.Event;
 
 namespace Craftimizer.Plugin;
 
@@ -54,7 +55,7 @@ internal static class ActionUtils
                         r.Icon == baseAction.Icon &&
                         r.ActionCategory.RowId == baseAction.ActionCategory.RowId &&
                         r.Name.Equals(baseAction.Name));
-                
+
                 foreach (var classJob in classJobs)
                     ActionRows[(int)actionType, (int)classJob] = (null, possibleActions.First(r => r.ClassJobCategory.ValueNullable?.IsClassJob(classJob) ?? false));
             }
@@ -144,7 +145,7 @@ internal static class ClassJobUtils
     public static unsafe ushort GetWKSSyncedLevel(this ClassJob me)
     {
         var jobLevel = (ushort)me.GetPlayerLevel();
-        var handler = CSCraftEventHandler.Instance();
+        var handler = EventFramework.Instance()->GetCraftEventHandler();
         if (handler != null)
         {
             for (var i = 0; i < 2; ++i)

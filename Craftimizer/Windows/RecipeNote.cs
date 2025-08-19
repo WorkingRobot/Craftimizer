@@ -30,6 +30,7 @@ using System.Runtime.InteropServices;
 using ActionType = Craftimizer.Simulator.Actions.ActionType;
 using ClassJob = Craftimizer.Simulator.ClassJob;
 using CSRecipeNote = FFXIVClientStructs.FFXIV.Client.Game.UI.RecipeNote;
+using RecipeIngredient2 = Craftimizer.Utils.CSRecipeNote.RecipeIngredient;
 
 namespace Craftimizer.Windows;
 
@@ -310,31 +311,6 @@ public sealed unsafe class RecipeNote : Window, IDisposable
         }
 
         return true;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 136)]
-    public struct RecipeIngredient2
-    {
-        [FieldOffset(8)]
-        public byte NQCount;
-
-        [FieldOffset(9)]
-        public byte HQCount;
-
-        [FieldOffset(16)]
-        public Utf8String Name;
-
-        [FieldOffset(120)]
-        public uint ItemId;
-
-        [FieldOffset(124)]
-        public uint IconId;
-
-        [FieldOffset(130)]
-        public byte Amount;
-
-        [FieldOffset(131)]
-        public byte Flags;
     }
 
     private IEnumerable<int> CalculateIngredientHqCounts()
