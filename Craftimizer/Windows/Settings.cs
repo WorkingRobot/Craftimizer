@@ -667,15 +667,8 @@ public sealed class Settings : Window, IDisposable
                     v => config = config with { Adversarial = v },
                     ref isDirty
                 );
-                DrawOption(
-                    "Minimize Steps",
-                    "Minimizes the number of crafting steps.",
-                    config.MinimizeSteps,
-                    v => config = config with { MinimizeSteps = v },
-                    ref isDirty
-                );
 
-                if (config.MinimizeSteps && config.Adversarial)
+                if (config.Adversarial)
                 {
                     ImGui.SameLine();
                     using (var color = ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudOrange))
@@ -684,7 +677,7 @@ public sealed class Settings : Window, IDisposable
                         ImGui.TextUnformatted(FontAwesomeIcon.ExclamationCircle.ToIconString());
                     }
                     if (ImGui.IsItemHovered())
-                        ImGuiUtils.TooltipWrapped("Combining \"Minimize Steps\" and \"Ensure Reliability\" will significantly increase solve times.");
+                        ImGuiUtils.TooltipWrapped("\"Ensure Reliability\" uses a lot more memory and can significantly increase solve times.");
                 }
             }
         }

@@ -38,7 +38,6 @@ public readonly record struct SolverConfig
     // Raphael/A* configuration
     public bool Adversarial { get; init; }
     public bool BackloadProgress { get; init; }
-    public bool MinimizeSteps { get; init; }
 
     public int MaxThreadCount { get; init; }
     public ActionType[] ActionPool { get; init; }

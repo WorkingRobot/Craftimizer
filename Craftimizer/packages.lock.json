@@ -36,8 +36,8 @@
       },
       "Raphael.Net": {
         "type": "Transitive",
-        "resolved": "2.1.1",
-        "contentHash": "4+7HyDa7lVokXObqv8ADeTgi74Cz7W99N07DYtzuOXEt6tJtMlJt8RxLGoPtakVf1mURDMuD5kDKw0oz3EaoDA=="
+        "resolved": "3.0.0",
+        "contentHash": "9yY+jR2gddw52HtShBL/JikQ4gZa8lxFYSUIi2y510HLsaK86iqtuRgrv8/akrHR66QRWEPtmHXyehW1hrmP9Q=="
       },
       "System.IO.Hashing": {
         "type": "Transitive",
@@ -52,15 +52,15 @@
         "dependencies": {
           "Craftimizer.Simulator": "[1.0.0, )",
           "DotNext": "[5.21.0, )",
-          "Raphael.Net": "[2.1.1, )"
+          "Raphael.Net": "[3.0.0, )"
         }
       }
     },
     "net9.0-windows7.0/win-x64": {
       "Raphael.Net": {
         "type": "Transitive",
-        "resolved": "2.1.1",
-        "contentHash": "4+7HyDa7lVokXObqv8ADeTgi74Cz7W99N07DYtzuOXEt6tJtMlJt8RxLGoPtakVf1mURDMuD5kDKw0oz3EaoDA=="
+        "resolved": "3.0.0",
+        "contentHash": "9yY+jR2gddw52HtShBL/JikQ4gZa8lxFYSUIi2y510HLsaK86iqtuRgrv8/akrHR66QRWEPtmHXyehW1hrmP9Q=="
       }
     }
   }

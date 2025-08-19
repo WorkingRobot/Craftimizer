@@ -205,56 +205,26 @@ public sealed class Solver : IDisposable
         void Log(string s) =>
             OnLog?.Invoke(s);
 
-        if (!Config.MinimizeSteps)
+        Raphael.SolverConfig config = new()
         {
-            Raphael.SolverConfig config = new()
-            {
-                Adversarial = Config.Adversarial,
-                BackloadProgress = true,
-                UnsoundBranchPruning = true,
-                LogLevel = Raphael.LevelFilter.Debug,
-                ThreadCount = (ushort)Config.MaxThreadCount,
-            };
+            Adversarial = Config.Adversarial,
+            BackloadProgress = Config.BackloadProgress,
+            LogLevel = Raphael.LevelFilter.Debug,
+            ThreadCount = (ushort)Config.MaxThreadCount,
+        };
 
-            using var solver = new Raphael.Solver(in config, in input, pool);
+        using var solver = new Raphael.Solver(in config, in input, pool);
 
-            solver.OnFinish += OnFinish;
-            solver.OnSuggestSolution += OnSuggestSolution;
-            solver.OnProgress += OnProgress;
-            solver.OnLog += Log;
+        solver.OnFinish += OnFinish;
+        solver.OnSuggestSolution += OnSuggestSolution;
+        solver.OnProgress += OnProgress;
+        solver.OnLog += Log;
 
-            progressStage = 0;
-            progress = 0;
-            await using var registration = Token.Register(solver.Cancel).ConfigureAwait(true);
-            await Task.Run(solver.Solve, Token).ConfigureAwait(true);
-            Token.ThrowIfCancellationRequested();
-        }
-
-        var state = solution != null ? (SimulationState?)ExecuteActions(solution) : null;
-        if (solution == null || state?.Quality != state?.Input.Recipe.MaxQuality)
-        {
-            Raphael.SolverConfig config = new()
-            {
-                Adversarial = Config.Adversarial,
-                BackloadProgress = Config.BackloadProgress,
-                UnsoundBranchPruning = false,
-                LogLevel = Raphael.LevelFilter.Debug,
-                ThreadCount = (ushort)Config.MaxThreadCount,
-            };
-
-            using var solver = new Raphael.Solver(in config, in input, pool);
-
-            solver.OnFinish += OnFinish;
-            solver.OnSuggestSolution += OnSuggestSolution;
-            solver.OnProgress += OnProgress;
-            solver.OnLog += Log;
-
-            progressStage = 0;
-            progress = 0;
-            await using var registration = Token.Register(solver.Cancel).ConfigureAwait(true);
-            await Task.Run(solver.Solve, Token).ConfigureAwait(true);
-            Token.ThrowIfCancellationRequested();
-        }
+        progressStage = 0;
+        progress = 0;
+        await using var registration = Token.Register(solver.Cancel).ConfigureAwait(true);
+        await Task.Run(solver.Solve, Token).ConfigureAwait(true);
+        Token.ThrowIfCancellationRequested();
 
         if (solution == null)
             return new([], State);
