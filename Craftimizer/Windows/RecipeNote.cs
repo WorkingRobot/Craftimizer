@@ -1191,7 +1191,7 @@ public sealed unsafe class RecipeNote : Window, IDisposable
                 config = config.FilterSpecialistActions();
             var mctsConfig = new MCTSConfig(config);
             var simulator = new SimulatorNoRandom();
-            List<Macro> macros = new(Service.Configuration.Macros);
+            List<Macro> macros = [.. Service.Configuration.Macros];
 
             token.ThrowIfCancellationRequested();
 

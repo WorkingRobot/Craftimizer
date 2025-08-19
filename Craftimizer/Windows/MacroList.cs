@@ -343,7 +343,7 @@ public sealed class MacroList : Window, IDisposable
     {
         if (string.IsNullOrWhiteSpace(searchText))
         {
-            sortedMacros = new(Macros);
+            sortedMacros = [.. Macros];
             isUnsorted = true;
             return;
         }

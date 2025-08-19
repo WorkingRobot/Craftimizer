@@ -356,7 +356,7 @@ internal static class ImGuiUtils
 
         public SearchableComboData(IEnumerable<T> items, T selectedItem, Func<T, string> getString)
         {
-            this.items = items.ToImmutableArray();
+            this.items = [.. items];
             filteredItems = [selectedItem];
             this.selectedItem = selectedItem;
             this.getString = getString;

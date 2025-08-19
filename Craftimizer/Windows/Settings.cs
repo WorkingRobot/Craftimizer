@@ -77,6 +77,7 @@ public sealed class Settings : Window, IDisposable
     {
         ImGui.SetNextItemWidth(OptionWidth);
         var text = value.ToString();
+        ArgumentNullException.ThrowIfNull(text, nameof(value));
         if (ImGui.InputText(label, ref text, 8, ImGuiInputTextFlags.AutoSelectAll | ImGuiInputTextFlags.CharsDecimal))
         {
             if (T.TryParse(text, null, out var newValue))
@@ -791,7 +792,7 @@ public sealed class Settings : Window, IDisposable
         isDirty = false;
 
         var recipeData = Service.Plugin.GetDefaultStats().Recipe;
-        HashSet<ActionType> pool = new(actionPool);
+        HashSet<ActionType> pool = [.. actionPool];
 
         var imageSize = ImGui.GetFrameHeight() * 2;
         var spacing = ImGui.GetStyle().ItemSpacing.Y;

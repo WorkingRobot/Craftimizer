@@ -719,9 +719,19 @@ public sealed class MacroEditor : Window, IDisposable
 
         public bool Equals(RecipeWrapper other) =>
             Recipe.RowId == other.Recipe.RowId;
+
+        public override bool Equals(object? obj)
+        {
+            return obj is RecipeWrapper other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return unchecked((int)Recipe.RowId);
+        }
     }
 
-    private readonly List<RecipeWrapper> searchableRecipes = LuminaSheets.RecipeSheet.Where(r => r.RecipeLevelTable.RowId != 0 && r.ItemResult.RowId != 0).Select(r => new RecipeWrapper(r)).ToList();
+    private readonly List<RecipeWrapper> searchableRecipes = [.. LuminaSheets.RecipeSheet.Where(r => r.RecipeLevelTable.RowId != 0 && r.ItemResult.RowId != 0).Select(r => new RecipeWrapper(r))];
 
     private bool DrawRecipeParams()
     {

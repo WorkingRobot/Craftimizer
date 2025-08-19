@@ -19,7 +19,7 @@ public sealed class MacroClipboard : Window, IDisposable
 
     public MacroClipboard(IEnumerable<string> macros) : base("Macro Clipboard", WindowFlags)
     {
-        Macros = new(macros);
+        Macros = [.. macros];
 
         IsOpen = true;
         AllowPinning = false;
