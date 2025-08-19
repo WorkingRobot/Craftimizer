@@ -151,7 +151,7 @@ internal static class ClassJobUtils
             for (var i = 0; i < 2; ++i)
             {
                 if (handler->WKSClassJobs[i] == me.GetClassJobIndex())
-                    return Math.Min(jobLevel, handler->WKSClassLevels[i]);
+                    return Math.Max(jobLevel, handler->WKSClassLevels[i]);
             }
         }
         return jobLevel;
