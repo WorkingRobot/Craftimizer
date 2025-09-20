@@ -203,6 +203,7 @@ public partial class Configuration
     public ProgressBarType ProgressType { get; set; } = ProgressBarType.Colorful;
 
     public bool PinSynthHelperToWindow { get; set; } = true;
+    public bool CollapseSynthHelper { get; set; }
     public bool PinRecipeNoteToWindow { get; set; } = true;
 
     public MacroCopyConfiguration MacroCopy { get; set; } = new();

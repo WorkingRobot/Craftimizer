@@ -921,6 +921,15 @@ public sealed class Settings : Window, IDisposable
         );
 
         DrawOption(
+            "Always Collapse Helper Window",
+            "Enabling this will cause the Helper Window to be collapsed whenever you start " +
+            "a new craft, preventing the solver from running automatically.",
+            Config.CollapseSynthHelper,
+            v => Config.CollapseSynthHelper = v,
+            ref isDirty
+        );
+
+        DrawOption(
             "Automatically Suggest Macro",
             "(Can cause frame drops!) When navigating to a new recipe or changing your gear " +
             "stats, automatically suggest a new macro (equivalent to clicking \"Generate\" " +

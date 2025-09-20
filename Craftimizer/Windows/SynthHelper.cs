@@ -112,6 +112,11 @@ public sealed unsafe class SynthHelper : Window, IDisposable
     private bool WasOpen { get; set; }
     private bool WasCollapsed { get; set; }
 
+    /// <summary>
+    /// Used to automatically collapse the helper window when a new craft starts.
+    /// </summary>
+    private bool ShouldCollapse { get; set; }
+
     private bool ShouldCalculate => !IsCollapsed && ShouldOpen;
     private bool WasCalculatable { get; set; }
 
@@ -203,6 +208,8 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         {
             OnStartCrafting(recipeId);
             OnStateUpdated();
+
+            if (Service.Configuration.CollapseSynthHelper) ShouldCollapse = true;
         }
 
         if (IsRecalculateQueued)
@@ -266,6 +273,13 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
     public override void Draw()
     {
+
+        if (ShouldCollapse)
+        {
+            ImGui.SetWindowCollapsed(true);
+            ShouldCollapse = false;
+        }
+
         IsCollapsed = false;
 
         DrawMacro();
@@ -285,6 +299,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
     private SimulationState? hoveredState;
     private SimulationState DisplayedState => hoveredState ?? (Service.Configuration.SynthHelperDisplayOnlyFirstStep ? Macro.FirstState : Macro.State);
+
     private void DrawMacro()
     {
         var spacing = ImGui.GetStyle().ItemSpacing.X;
