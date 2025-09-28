@@ -267,6 +267,11 @@ public sealed unsafe class RecipeNote : Window, IDisposable
             var characterStats = Gearsets.CalculateCharacterStats(gearStats, gearItems, RecipeData.ClassJob.GetPlayerLevel(), RecipeData.ClassJob.CanPlayerUseManipulation());
             if (characterStats != CharacterStats)
             {
+                // Re-initialize recipe data to recalculate adjusted level if needed
+                if (RecipeData.AdjustedJobLevel != null && characterStats.Level != CharacterStats?.Level)
+                {
+                    RecipeData = new(RecipeData.RecipeId);
+                }
                 CharacterStats = characterStats;
                 StatsChanged = true;
             }
