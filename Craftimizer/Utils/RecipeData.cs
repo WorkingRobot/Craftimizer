@@ -47,7 +47,7 @@ public sealed record RecipeData
             ClassJobLevel = Table.ClassJobLevel,
             ConditionsFlag = Table.ConditionsFlag,
             MaxDurability = (Recipe.MaxAdjustableJobLevel.RowId != 0 ? 80 : Table.Durability) * Recipe.DurabilityFactor / 100,
-            MaxQuality = (Recipe.CanHq || Recipe.IsExpert) ? (int)Table.Quality * Recipe.QualityFactor / 100 : 0,
+            MaxQuality = (Recipe.CanHq || Recipe.IsExpert || Recipe.RequiredQuality > 0) ? (int)Table.Quality * Recipe.QualityFactor / 100 : 0,
             MaxProgress = Table.Difficulty * Recipe.DifficultyFactor / 100,
             QualityModifier = Table.QualityModifier,
             QualityDivider = Table.QualityDivider,
