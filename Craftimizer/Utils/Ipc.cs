@@ -26,7 +26,7 @@ public sealed class Ipc
             if (prop.GetMethod is not { } getMethod)
                 throw new InvalidOperationException("Property must have a getter");
 
-            if (getMethod.GetCustomAttribute<CompilerGeneratedAttribute>() is null)
+            if (!getMethod.IsDefined<CompilerGeneratedAttribute>())
                 throw new InvalidOperationException("Property must have an auto getter");
 
             var type = prop.PropertyType;

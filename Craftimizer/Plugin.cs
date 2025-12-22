@@ -75,7 +75,7 @@ public sealed class Plugin : IDalamudPlugin
         var editorWindow = (EditorWindow?.IsOpen ?? false) ? EditorWindow : null;
         var recipeData = editorWindow?.RecipeData ?? Service.Plugin.RecipeNoteWindow.RecipeData;
         var characterStats = editorWindow?.CharacterStats ?? Service.Plugin.RecipeNoteWindow.CharacterStats;
-        var buffs = editorWindow?.Buffs ?? (RecipeNoteWindow.CharacterStats != null ? new(Service.ClientState.LocalPlayer?.StatusList) : null);
+        var buffs = editorWindow?.Buffs ?? (RecipeNoteWindow.CharacterStats != null ? new(Service.Objects.LocalPlayer?.StatusList) : null);
 
         return (characterStats, recipeData, buffs);
     }
@@ -143,7 +143,7 @@ public sealed class Plugin : IDalamudPlugin
         ListWindow.BringToFront();
     }
 
-    public void OpenCraftingLog()
+    public static void OpenCraftingLog()
     {
         Chat.SendMessage("/craftinglog");
     }
@@ -154,7 +154,7 @@ public sealed class Plugin : IDalamudPlugin
         ClipboardWindow = new(macros);
     }
 
-    public IActiveNotification DisplaySolverWarning(string text) =>
+    public static IActiveNotification DisplaySolverWarning(string text) =>
         DisplayNotification(new()
         {
             Content = text,
@@ -162,7 +162,7 @@ public sealed class Plugin : IDalamudPlugin
             Type = NotificationType.Warning
         });
 
-    public IActiveNotification DisplayNotification(Notification notification)
+    public static IActiveNotification DisplayNotification(Notification notification)
     {
         var ret = Service.NotificationManager.AddNotification(notification);
         // ret.SetIconTexture(Icon.RentAsync().ContinueWith(t => (IDalamudTextureWrap?)t));

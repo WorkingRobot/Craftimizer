@@ -37,7 +37,7 @@ public sealed unsafe class Hooks : IDisposable
         var ret = UseActionHook.Original(manager, actionType, actionId, targetId, extraParam, mode, comboRouteId, optOutAreaTargeted);
         if (canCast && ret && actionType is CSActionType.CraftAction or CSActionType.Action)
         {
-            var classJob = ClassJobUtils.GetClassJobFromIdx((byte)(Service.ClientState.LocalPlayer?.ClassJob.RowId ?? 0));
+            var classJob = ClassJobUtils.GetClassJobFromIdx((byte)(Service.Objects.LocalPlayer?.ClassJob.RowId ?? 0));
             if (classJob != null)
             {
                 var simActionType = ActionUtils.GetActionTypeFromId(actionId, classJob.Value, actionType == CSActionType.CraftAction);
@@ -75,7 +75,7 @@ public sealed unsafe class Hooks : IDisposable
             if (actionType is not (CSActionType.CraftAction or CSActionType.Action))
                 return ret;
 
-            var jobId = Service.ClientState.LocalPlayer?.ClassJob.RowId;
+            var jobId = Service.Objects.LocalPlayer?.ClassJob.RowId;
             if (jobId == null)
                 return ret;
 

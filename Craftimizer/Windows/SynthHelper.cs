@@ -159,7 +159,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
     private bool wasInCraftAction;
     private bool CalculateShouldOpen()
     {
-        if (Service.ClientState.LocalPlayer == null)
+        if (Service.Objects.LocalPlayer == null)
             return false;
 
         if (!Service.Configuration.EnableSynthHelper)
@@ -486,7 +486,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
         }
 
         if (ImGui.Button("Open in Macro Editor", new(-1, 0)))
-            Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.ClientState.LocalPlayer!.StatusList), null, [], null);
+            Service.Plugin.OpenMacroEditor(CharacterStats!, RecipeData!, new(Service.Objects.LocalPlayer!.StatusList), null, [], null);
     }
 
     public bool ExecuteNextAction()
@@ -559,7 +559,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
     private SimulationState GetCurrentState()
     {
-        var player = Service.ClientState.LocalPlayer!;
+        var player = Service.Objects.LocalPlayer!;
         var values = new SynthesisValues(Addon);
         var statusManager = ((Character*)player.Address)->GetStatusManager();
 
@@ -649,7 +649,7 @@ public sealed unsafe class SynthHelper : Window, IDisposable
 
         var solver = new Solver.Solver(config, state) { Token = token };
         solver.OnLog += Log.Debug;
-        solver.OnWarn += t => Service.Plugin.DisplaySolverWarning(t);
+        solver.OnWarn += t => Plugin.Plugin.DisplaySolverWarning(t);
         solver.OnNewAction += EnqueueAction;
         SolverObject = solver;
         solver.Start();

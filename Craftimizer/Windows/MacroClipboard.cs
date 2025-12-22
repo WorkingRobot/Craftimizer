@@ -58,7 +58,7 @@ public sealed class MacroClipboard : Window, IDisposable
                 ImGui.SetClipboardText(macro);
                 if (Service.Configuration.MacroCopy.ShowCopiedMessage)
                 {
-                    Service.Plugin.DisplayNotification(new()
+                    Plugin.Plugin.DisplayNotification(new()
                     {
                         Content = Macros.Count == 1 ? "Copied macro to clipboard." : $"Copied macro {idx + 1} to clipboard.",
                         MinimizedText = Macros.Count == 1 ? "Copied macro" : $"Copied macro {idx + 1}",

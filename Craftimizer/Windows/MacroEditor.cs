@@ -1008,13 +1008,13 @@ public sealed class MacroEditor : Window, IDisposable
     }
 
     private const int MAX_LEVEL = 100;
-    private float GetLevelEntryWidth()
+    private static float GetLevelEntryWidth()
     {
         var levelTextWidth = ImGui.CalcTextSize(SqText.ToLevelString(MAX_LEVEL)).X + ImGui.GetStyle().FramePadding.X * 2 + 5;
         return ImGui.CalcTextSize(SqText.LevelPrefix.ToIconString()).X + 5 + levelTextWidth;
     }
 
-    private bool DrawLevelEntry(ref int level)
+    private static bool DrawLevelEntry(ref int level)
     {
         static int LevelInputCallback(ImGuiInputTextCallbackDataPtr data)
         {
@@ -1570,7 +1570,7 @@ public sealed class MacroEditor : Window, IDisposable
                         foreach (var action in parsedActions)
                             AddStep(action);
 
-                        Service.Plugin.DisplayNotification(new()
+                        Plugin.Plugin.DisplayNotification(new()
                         {
                             Content = $"Imported macro with {parsedActions.Count} step{(parsedActions.Count != 1 ? "s" : "")}",
                             MinimizedText = $"Imported {parsedActions.Count} step macro",
@@ -1626,7 +1626,7 @@ public sealed class MacroEditor : Window, IDisposable
                     Macro.Clear();
                     foreach (var action in actions)
                         AddStep(action);
-                    Service.Plugin.DisplayNotification(new()
+                    Plugin.Plugin.DisplayNotification(new()
                     {
                         Content = $"Imported macro \"{name}\"",
                         Title = "Macro Imported",
@@ -1677,7 +1677,7 @@ public sealed class MacroEditor : Window, IDisposable
 
         var solver = new Solver.Solver(config, state) { Token = token };
         solver.OnLog += Log.Debug;
-        solver.OnWarn += t => Service.Plugin.DisplaySolverWarning(t);
+        solver.OnWarn += t => Plugin.Plugin.DisplaySolverWarning(t);
         solver.OnNewAction += a => Macro.Enqueue(a);
         solver.OnSuggestSolution += a => Macro.EnqueueEphemeral(a.Actions);
         SolverObject = solver;

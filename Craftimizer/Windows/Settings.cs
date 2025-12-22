@@ -159,15 +159,15 @@ public sealed class Settings : Window, IDisposable
     private static string GetAlgorithmTooltip(SolverAlgorithm algorithm) =>
         algorithm switch
         {
-            SolverAlgorithm.Oneshot =>          "Run through all iterations and pick the best macro",
-            SolverAlgorithm.OneshotForked =>    "Oneshot, but using multiple solvers simultaneously",
-            SolverAlgorithm.Stepwise =>         "Run through all iterations and pick the next best step, " +
+            SolverAlgorithm.Oneshot => "Run through all iterations and pick the best macro",
+            SolverAlgorithm.OneshotForked => "Oneshot, but using multiple solvers simultaneously",
+            SolverAlgorithm.Stepwise => "Run through all iterations and pick the next best step, " +
                                                 "and repeat using previous steps as a starting point",
-            SolverAlgorithm.StepwiseForked =>   "Stepwise, but using multiple solvers simultaneously",
-            SolverAlgorithm.StepwiseGenetic =>  "Stepwise Forked, but the top N next best steps are " +
+            SolverAlgorithm.StepwiseForked => "Stepwise, but using multiple solvers simultaneously",
+            SolverAlgorithm.StepwiseGenetic => "Stepwise Forked, but the top N next best steps are " +
                                                 "selected from the solvers, and each one is equally " +
                                                 "used as a starting point",
-            SolverAlgorithm.Raphael =>          "Finds the best solution, every time. This solver has " +
+            SolverAlgorithm.Raphael => "Finds the best solution, every time. This solver has " +
                                                 "very different options compared to the rest, as it " +
                                                 "is designed using an entirely different algorithm.",
             _ => "Unknown"
@@ -186,11 +186,11 @@ public sealed class Settings : Window, IDisposable
     private static string GetCopyTypeTooltip(MacroCopyConfiguration.CopyType type) =>
         type switch
         {
-            MacroCopyConfiguration.CopyType.OpenWindow =>       "Open a dedicated window with all macros being copied. " +
+            MacroCopyConfiguration.CopyType.OpenWindow => "Open a dedicated window with all macros being copied. " +
                                                                 "Copy, view, and choose at your own leisure.",
-            MacroCopyConfiguration.CopyType.CopyToMacro =>      "Copy directly to the game's macro system.",
-            MacroCopyConfiguration.CopyType.CopyToClipboard =>  "Copy to your clipboard. Macros are separated by a blank line.",
-            MacroCopyConfiguration.CopyType.CopyToMacroMate =>  "Copy directly to a Macro Mate macro. Requires the Macro Mate plugin.",
+            MacroCopyConfiguration.CopyType.CopyToMacro => "Copy directly to the game's macro system.",
+            MacroCopyConfiguration.CopyType.CopyToClipboard => "Copy to your clipboard. Macros are separated by a blank line.",
+            MacroCopyConfiguration.CopyType.CopyToMacroMate => "Copy directly to a Macro Mate macro. Requires the Macro Mate plugin.",
             _ => "Unknown"
         };
 
@@ -653,7 +653,7 @@ public sealed class Settings : Window, IDisposable
             else
             {
                 DrawOption(
-                    "Quick Solve",
+                    "Backload Progress",
                     "Speeds up solve times. Backloads all Progress " +
                     "actions to the end of the rotation.",
                     config.BackloadProgress,

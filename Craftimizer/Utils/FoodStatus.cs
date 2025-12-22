@@ -33,7 +33,7 @@ public static class FoodStatus
             if (item.ItemAction.ValueNullable is not { } itemAction)
                 continue;
 
-            if (itemAction.Type is not (844 or 845 or 846))
+            if (itemAction.Action.RowId is not (844 or 845 or 846))
                 continue;
 
             if (LuminaSheets.ItemFoodSheet.GetRowOrDefault(itemAction.Data[1]) is not { } itemFood)
@@ -66,12 +66,12 @@ public static class FoodStatus
             lut.TryAdd(itemFood.RowId, item.RowId);
         }
 
-        ItemFoodToItemLUT = lut.ToFrozenDictionary();       
+        ItemFoodToItemLUT = lut.ToFrozenDictionary();
         FoodItems = foods.ToFrozenDictionary();
         MedicineItems = medicines.ToFrozenDictionary();
 
-        FoodOrder = FoodItems.OrderByDescending(a => a.Value.Item.LevelItem.RowId).Select(a => a.Key).ToImmutableArray();
-        MedicineOrder = MedicineItems.OrderByDescending(a => a.Value.Item.LevelItem.RowId).Select(a => a.Key).ToImmutableArray();
+        FoodOrder = [.. FoodItems.OrderByDescending(a => a.Value.Item.LevelItem.RowId).Select(a => a.Key)];
+        MedicineOrder = [.. MedicineItems.OrderByDescending(a => a.Value.Item.LevelItem.RowId).Select(a => a.Key)];
     }
 
     public static void Initialize() { }

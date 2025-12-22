@@ -20,7 +20,7 @@ public static class MacroCopy
     {
         if (actions.Count == 0)
         {
-            Service.Plugin.DisplayNotification(new()
+            Plugin.Plugin.DisplayNotification(new()
             {
                 Content = "Cannot copy an empty macro.",
                 MinimizedText = "Cannot copy empty macro",
@@ -152,7 +152,7 @@ public static class MacroCopy
 
         if (config.ShowCopiedMessage)
         {
-            Service.Plugin.DisplayNotification(new()
+            Plugin.Plugin.DisplayNotification(new()
             {
                 Content = i > 1 ? "Copied macro to User Macros." : $"Copied {i} macros to User Macros.",
                 MinimizedText = i > 1 ? "Copied macro" : $"Copied {i} macros",
@@ -164,7 +164,7 @@ public static class MacroCopy
         {
             Service.Plugin.OpenMacroClipboard(macros);
             var rest = macros.Count - i;
-            Service.Plugin.DisplayNotification(new()
+            Plugin.Plugin.DisplayNotification(new()
             {
                 Content = $"Couldn't copy {rest} macro{(rest == 1 ? "" : "s")}, so a window was opened with all of them.",
                 Minimized = false,
@@ -201,7 +201,7 @@ public static class MacroCopy
         ImGui.SetClipboardText(string.Join(Environment.NewLine + Environment.NewLine, macros));
         if (Service.Configuration.MacroCopy.ShowCopiedMessage)
         {
-            Service.Plugin.DisplayNotification(new()
+            Plugin.Plugin.DisplayNotification(new()
             {
                 Content = macros.Count == 1 ? "Copied macro to clipboard." : $"Copied {macros.Count} macros to clipboard.",
                 MinimizedText = macros.Count == 1 ? "Copied macro" : $"Copied {macros.Count} macros",
@@ -215,7 +215,7 @@ public static class MacroCopy
     {
         if (!Service.Ipc.MacroMateIsAvailable())
         {
-            Service.Plugin.DisplayNotification(new()
+            Plugin.Plugin.DisplayNotification(new()
             {
                 Content = "Please check if it installed and enabled.",
                 MinimizedText = "Macro Mate is unavailable",
@@ -232,7 +232,7 @@ public static class MacroCopy
         var (isValidParent, parentError) = Service.Ipc.MacroMateValidateGroupPath(parentPath);
         if (!isValidParent)
         {
-            Service.Plugin.DisplayNotification(new()
+            Plugin.Plugin.DisplayNotification(new()
             {
                 Content = parentError!,
                 MinimizedText = parentError,
@@ -246,7 +246,7 @@ public static class MacroCopy
 
         if (Service.Configuration.MacroCopy.ShowCopiedMessage)
         {
-            Service.Plugin.DisplayNotification(new()
+            Plugin.Plugin.DisplayNotification(new()
             {
                 Content = "Copied macro to Macro Mate.",
                 MinimizedText = "Copied macro",
