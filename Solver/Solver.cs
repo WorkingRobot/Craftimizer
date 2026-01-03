@@ -209,6 +209,7 @@ public sealed class Solver : IDisposable
         {
             Adversarial = Config.Adversarial,
             BackloadProgress = Config.BackloadProgress,
+            AllowNonMaxQualitySolutions = true,
             LogLevel = Raphael.LevelFilter.Debug,
             ThreadCount = (ushort)Config.MaxThreadCount,
         };
