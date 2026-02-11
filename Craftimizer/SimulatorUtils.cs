@@ -219,6 +219,7 @@ internal static class ConditionUtils
             Condition.Malleable => (13455, 14208),
             Condition.Primed => (13454, 14207),
             Condition.GoodOmen => (14214, 14215),
+            Condition.Robust => (14218, 14219),
             _ => (226, 14200) // Unknown
         };
 

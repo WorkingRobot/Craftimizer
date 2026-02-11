@@ -13,6 +13,7 @@ public enum Condition : byte
     Malleable,
     Primed,
     GoodOmen,
+    Robust,
 }
 
 public static class ConditionUtils
@@ -31,6 +32,7 @@ public static class ConditionUtils
         Malleable = 1 << 7, // 0x0080
         Primed    = 1 << 8, // 0x0100
         GoodOmen  = 1 << 9, // 0x0200
+        Robust    = 1 << 10, // 0x0400
     }
 
     public static Condition[] GetPossibleConditions(ushort conditionsFlag) =>
