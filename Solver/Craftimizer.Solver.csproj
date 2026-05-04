@@ -10,8 +10,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DotNext" Version="5.26.1" />
-    <PackageReference Include="Meziantou.Analyzer" Version="2.0.264">
+    <PackageReference Include="DotNext" Version="6.1.0" />
+    <PackageReference Include="Meziantou.Analyzer" Version="3.0.61">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

@@ -8,78 +8,116 @@ namespace Craftimizer.Plugin;
 
 public static class ImRaii2
 {
-    private struct EndUnconditionally(Action endAction, bool success) : ImRaii.IEndObject, IDisposable
+    // Custom ref structs for each UI element. 
+    // This eliminates the need for allocating 'Action' delegates and boxing.
+
+    public ref struct GroupPanelDisposable
     {
-        private Action EndAction { get; } = endAction;
-
-        public bool Success { get; } = success;
-
-        public bool Disposed { get; private set; } = false;
+        private bool Disposed;
 
         public void Dispose()
         {
-            if (!Disposed)
-            {
-                EndAction();
-                Disposed = true;
-            }
+            if (Disposed) return;
+            ImGuiUtils.EndGroupPanel();
+            Disposed = true;
         }
+
+        public static implicit operator bool(GroupPanelDisposable _) => true;
     }
 
-    private struct EndConditionally(Action endAction, bool success) : ImRaii.IEndObject, IDisposable
-    {
-        public bool Success { get; } = success;
-
-        public bool Disposed { get; private set; } = false;
-
-        private Action EndAction { get; } = endAction;
-
-        public void Dispose()
-        {
-            if (!Disposed)
-            {
-                if (Success)
-                {
-                    EndAction();
-                }
-
-                Disposed = true;
-            }
-        }
-    }
-
-    public static ImRaii.IEndObject GroupPanel(string name, float width, out float internalWidth)
+    public static GroupPanelDisposable GroupPanel(string name, float width, out float internalWidth)
     {
         internalWidth = ImGuiUtils.BeginGroupPanel(name, width);
-        return new EndUnconditionally(ImGuiUtils.EndGroupPanel, true);
+        return new GroupPanelDisposable();
     }
 
-    public static ImRaii.IEndObject Plot(string title_id, Vector2 size, ImPlotFlags flags)
+    public ref struct PlotDisposable
     {
-        return new EndConditionally(new Action(ImPlot.EndPlot), ImPlot.BeginPlot(title_id, size, flags));
+        public bool Success { get; }
+        private bool Disposed;
+
+        public PlotDisposable(bool success)
+        {
+            Success = success;
+            Disposed = false;
+        }
+
+        public void Dispose()
+        {
+            if (Disposed) return;
+            if (Success)
+            {
+                ImPlot.EndPlot();
+            }
+            Disposed = true;
+        }
+
+        // Allows you to do: using var plot = ImRaii2.Plot(...); if (plot) { ... }
+        public static implicit operator bool(PlotDisposable d) => d.Success;
     }
 
-    public static ImRaii.IEndObject PushStyle(ImPlotStyleVar idx, Vector2 val)
+    public static PlotDisposable Plot(string title_id, Vector2 size, ImPlotFlags flags)
+    {
+        return new PlotDisposable(ImPlot.BeginPlot(title_id, size, flags));
+    }
+
+    public ref struct ImPlotStyleDisposable
+    {
+        private bool Disposed;
+
+        public void Dispose()
+        {
+            if (Disposed) return;
+            ImPlot.PopStyleVar();
+            Disposed = true;
+        }
+    }
+
+    public static ImPlotStyleDisposable PushStyle(ImPlotStyleVar idx, Vector2 val)
     {
         ImPlot.PushStyleVar(idx, val);
-        return new EndUnconditionally(ImPlot.PopStyleVar, true);
+        return new ImPlotStyleDisposable();
     }
 
-    public static ImRaii.IEndObject PushStyle(ImPlotStyleVar idx, float val)
+    public static ImPlotStyleDisposable PushStyle(ImPlotStyleVar idx, float val)
     {
         ImPlot.PushStyleVar(idx, val);
-        return new EndUnconditionally(ImPlot.PopStyleVar, true);
+        return new ImPlotStyleDisposable();
     }
 
-    public static ImRaii.IEndObject PushColor(ImPlotCol idx, Vector4 col)
+    public ref struct ImPlotColorDisposable
+    {
+        private bool Disposed;
+
+        public void Dispose()
+        {
+            if (Disposed) return;
+            ImPlot.PopStyleColor();
+            Disposed = true;
+        }
+    }
+
+    public static ImPlotColorDisposable PushColor(ImPlotCol idx, Vector4 col)
     {
         ImPlot.PushStyleColor(idx, col);
-        return new EndUnconditionally(ImPlot.PopStyleColor, true);
+        return new ImPlotColorDisposable();
     }
 
-    public static ImRaii.IEndObject TextWrapPos(float wrap_local_pos_x)
+    public ref struct TextWrapPosDisposable
+    {
+        private bool Disposed;
+
+        public void Dispose()
+        {
+            if (Disposed) return;
+            ImGui.PopTextWrapPos();
+            Disposed = true;
+        }
+    }
+
+    public static TextWrapPosDisposable TextWrapPos(float wrap_local_pos_x)
     {
         ImGui.PushTextWrapPos(wrap_local_pos_x);
-        return new EndUnconditionally(ImGui.PopTextWrapPos, true);
+        return new TextWrapPosDisposable();
     }
 }

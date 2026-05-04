@@ -33,12 +33,17 @@
 
   <ItemGroup>
     <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
-    <PackageReference Include="Meziantou.Analyzer" Version="2.0.264">
+    <PackageReference Include="Meziantou.Analyzer" Version="3.0.61">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <ProjectReference Include="..\Simulator\Craftimizer.Simulator.csproj" />
     <ProjectReference Include="..\Solver\Craftimizer.Solver.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="DalamudPackager" Version="15.0.0" />
+    <PackageReference Update="DotNet.ReproducibleBuilds" Version="2.0.2" />
   </ItemGroup>
 
 </Project>
