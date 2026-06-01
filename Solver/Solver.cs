@@ -167,6 +167,7 @@ public sealed class Solver : IDisposable
             BaseProgressGain = checked((ushort)State.Input.BaseProgressGain),
             BaseQualityGain = checked((ushort)State.Input.BaseQualityGain),
             JobLevel = checked((byte)State.Input.Stats.Level),
+            StellarSteadyHandCharges = 0,
         };
 
         SimulationState ExecuteActions(IEnumerable<ActionType> actions)
