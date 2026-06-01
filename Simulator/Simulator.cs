@@ -144,6 +144,7 @@ public class Simulator
             Condition.Malleable => 0.13f,
             Condition.Primed => 0.15f,
             Condition.GoodOmen => 0.12f, // https://github.com/ffxiv-teamcraft/simulator/issues/77
+            Condition.Robust => 0.10f, // https://github.com/ffxiv-teamcraft/simulator/commit/4b2949f935450d54324cba84f9214fcb945ecbcb
             _ => 0.00f
         };
 
@@ -166,6 +167,7 @@ public class Simulator
             Condition.Good => Condition.Normal,
             Condition.Excellent => Condition.Poor,
             Condition.GoodOmen => Condition.Good,
+            Condition.Robust => Condition.Sturdy,
             _ => GetNextRandomCondition()
         };
     }
@@ -214,7 +216,7 @@ public class Simulator
         var amt = (double)amount;
         if (HasEffect(EffectType.WasteNot) || HasEffect(EffectType.WasteNot2))
             amt /= 2;
-        if (Condition == Condition.Sturdy)
+        if (Condition == Condition.Sturdy || Condition == Condition.Robust)
             amt /= 2;
         return (int)Math.Ceiling(amt);
     }
