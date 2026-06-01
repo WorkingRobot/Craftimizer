@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -8,28 +7,23 @@
     <Platforms>x64</Platforms>
     <Configurations>Debug;Release;Deterministic</Configurations>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="DotNext" Version="6.1.0" />
     <PackageReference Include="Meziantou.Analyzer" Version="3.0.61">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Raphael.Net" Version="4.1.0" />
+    <PackageReference Include="Raphael.Net" Version="5.0.0" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Simulator\Craftimizer.Simulator.csproj" />
   </ItemGroup>
-
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>Craftimizer.Test</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
-
   <PropertyGroup Condition="'$(IS_BENCH)'=='1' Or '$(Configuration)'=='Deterministic'">
     <DefineConstants>$(DefineConstants);IS_DETERMINISTIC</DefineConstants>
   </PropertyGroup>
-
 </Project>
