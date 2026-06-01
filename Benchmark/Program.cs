@@ -12,6 +12,58 @@ internal static class Program
     {
         // Cross-implementation timing / correctness, available in any build configuration.
         // (In a non-deterministic build these exercise the real random-rollout path.)
+        if (args.Length > 0 && args[0] == "quality")
+        {
+            // Stochastic results+speed harness for the REAL (random-rollout) path.
+            // usage: quality <nSeeds> <iters> [maxSteps]
+            // Per recipe: mean/median/stdev MaxScore, mean Quality/MaxQuality, mean ms/search.
+            var nSeeds = args.Length > 1 ? int.Parse(args[1]) : 32;
+            var iters = args.Length > 2 ? int.Parse(args[2]) : 30_000;
+            var maxStepsArg = args.Length > 3 ? int.Parse(args[3]) : -1;
+            var baseCfg = Bench.Configs.First().Data;
+
+            foreach (var stateWrap in Bench.States)
+            {
+                var recipe = stateWrap.Data.Input.Recipe;
+                var stats = stateWrap.Data.Input.Stats;
+                var cfgData = maxStepsArg > 0 ? baseCfg with { MaxStepCount = maxStepsArg } : baseCfg;
+                var cfg = new MCTSConfig(cfgData);
+
+                // warm up (JIT)
+                for (var w = 0; w < 3; ++w)
+                {
+                    var ws = new MCTS(cfg, new SimulationState(new SimulationInput(stats, recipe, 0, 99999 + w)));
+                    var wp = 0;
+                    ws.Search(iters, iters, ref wp, CancellationToken.None);
+                }
+
+                var scores = new double[nSeeds];
+                var quals = new double[nSeeds];
+                var sw = Stopwatch.StartNew();
+                for (var seed = 0; seed < nSeeds; ++seed)
+                {
+                    var solver = new MCTS(cfg, new SimulationState(new SimulationInput(stats, recipe, 0, seed)));
+                    var progress = 0;
+                    solver.Search(iters, iters, ref progress, CancellationToken.None);
+                    var st = solver.Solution().State;
+                    scores[seed] = solver.MaxScore;
+                    quals[seed] = recipe.MaxQuality > 0 ? (double)st.Quality / recipe.MaxQuality : 1.0;
+                }
+                sw.Stop();
+
+                var mean = scores.Average();
+                var sorted = (double[])scores.Clone();
+                Array.Sort(sorted);
+                var median = sorted[nSeeds / 2];
+                var variance = scores.Sum(s => (s - mean) * (s - mean)) / nSeeds;
+                var stdev = Math.Sqrt(variance);
+                Console.WriteLine($"recipe P{recipe.MaxProgress}Q{recipe.MaxQuality}D{recipe.MaxDurability}: " +
+                    $"score mean={mean:F4} median={median:F4} stdev={stdev:F4} | qual mean={quals.Average():P1} | " +
+                    $"{sw.Elapsed.TotalMilliseconds / nSeeds:F2}ms/search (n={nSeeds}, {iters} iters)");
+            }
+            return;
+        }
+
         if (args.Length > 0 && args[0] == "seedfp")
         {
             // Seeded correctness oracle for the REAL (random-rollout) path: with a fixed RNG

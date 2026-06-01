@@ -142,6 +142,7 @@ internal sealed class Simulator : SimulatorNoRandom
     }
 
     private readonly PoolEntry[] actionPool;
+    private readonly int trainedEyeIndex; // index of TrainedEye in actionPool, or -1
     private readonly int maxStepCount;
 
     public override CompletionState CompletionState
@@ -164,7 +165,75 @@ internal sealed class Simulator : SimulatorNoRandom
             pool = pool.Where(x => x.Item1.IsPossible(this));
         }
         this.actionPool = [.. pool.OrderBy(x => x.x).Select(x => new PoolEntry(x.Item1, x.x, this))];
+        this.trainedEyeIndex = Array.FindIndex(this.actionPool, e => e.Action == ActionType.TrainedEye);
         this.maxStepCount = maxStepCount;
+    }
+
+    // Picks ONE uniform-random valid action for a rollout playout step WITHOUT materializing the
+    // full ActionSet (the dominant cost when only one action is needed). Distribution is identical
+    // to building AvailableActionsHeuristic(strict: true) and calling ActionSet.SelectRandom on it.
+    // Returns false when no action is valid (== NoMoreActions terminal). Caller must only invoke
+    // this on an Incomplete state.
+    public bool TryPickRolloutAction(Random random, out ActionType action)
+    {
+        var ctx = new StepContext(this);
+        var pool = actionPool;
+        var n = pool.Length;
+
+        // Trained Eye dominates the set when usable (mirrors AvailableActionsHeuristic).
+        if (trainedEyeIndex >= 0 && ShouldUseAction(in ctx, in pool[trainedEyeIndex]))
+        {
+            action = ActionType.TrainedEye;
+            return true;
+        }
+
+#if IS_DETERMINISTIC
+        // First valid action in ascending pool order == First() of the valid set, so the
+        // deterministic fingerprint stays byte-identical to the old AvailableActionsHeuristic path.
+        for (var i = 0; i < n; i++)
+        {
+            if (i == trainedEyeIndex)
+                continue;
+            if (ShouldUseAction(in ctx, in pool[i]))
+            {
+                action = pool[i].Action;
+                return true;
+            }
+        }
+        action = default;
+        return false;
+#else
+        // Rejection sampling: uniform over the valid set, same distribution as ActionSet.SelectRandom.
+        var attempts = n * 2;
+        for (var a = 0; a < attempts; a++)
+        {
+            var idx = random.Next(n);
+            if (idx == trainedEyeIndex)
+                continue;
+            if (ShouldUseAction(in ctx, in pool[idx]))
+            {
+                action = pool[idx].Action;
+                return true;
+            }
+        }
+        // Sparse/empty valid set: fall back to a single scan that picks uniformly or reports empty.
+        Span<int> valid = stackalloc int[n];
+        var count = 0;
+        for (var i = 0; i < n; i++)
+        {
+            if (i == trainedEyeIndex)
+                continue;
+            if (ShouldUseAction(in ctx, in pool[i]))
+                valid[count++] = i;
+        }
+        if (count == 0)
+        {
+            action = default;
+            return false;
+        }
+        action = pool[valid[random.Next(count)]].Action;
+        return true;
+#endif
     }
 
     // https://github.com/alostsock/crafty/blob/cffbd0cad8bab3cef9f52a3e3d5da4f5e3781842/crafty/src/craft_state.rs#L146
