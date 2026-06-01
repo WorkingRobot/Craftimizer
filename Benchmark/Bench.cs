@@ -8,8 +8,7 @@ using System.Runtime.CompilerServices;
 
 namespace Craftimizer.Benchmark;
 
-[SimpleJob(RuntimeMoniker.Net80, baseline: true)]
-//[SimpleJob(RuntimeMoniker.Net90)]
+[SimpleJob(RuntimeMoniker.Net10_0, baseline: true)]
 [MinColumn, Q1Column, Q3Column, MaxColumn]
 //[DotTraceDiagnoser]
 //[MemoryDiagnoser]
@@ -21,7 +20,9 @@ public class Bench
         public static implicit operator T(HashWrapper<T> wrapper) => wrapper.Data;
 
         public override readonly string ToString() =>
-            $"{HashCode.Combine(Data.ToString()!):X8}";
+            Data is SimulationState s
+                ? $"P{s.Input.Recipe.MaxProgress}Q{s.Input.Recipe.MaxQuality}D{s.Input.Recipe.MaxDurability}"
+                : $"{HashCode.Combine(Data.ToString()!):X8}";
     }
 
     private static SimulationInput[] Inputs { get; } =

@@ -10,6 +10,84 @@ internal static class Program
 {
     private static void Main(string[] args)
     {
+        // Cross-implementation timing / correctness, available in any build configuration.
+        // (In a non-deterministic build these exercise the real random-rollout path.)
+        if (args.Length > 0 && args[0] == "seedfp")
+        {
+            // Seeded correctness oracle for the REAL (random-rollout) path: with a fixed RNG
+            // seed the whole search is reproducible, so output must be byte-identical before/after
+            // a behaviour-preserving optimization. Run in a non-deterministic (Release) build.
+            var seed = args.Length > 1 ? int.Parse(args[1]) : 12345;
+            var iters = args.Length > 2 ? int.Parse(args[2]) : 30_000;
+            var baseState = Bench.States.First().Data;
+            var seededInput = new SimulationInput(baseState.Input.Stats, baseState.Input.Recipe, 0, seed);
+            var cfg = new MCTSConfig(Bench.Configs.First().Data);
+            var solver = new MCTS(cfg, new SimulationState(seededInput));
+            var progress = 0;
+            solver.Search(iters, iters, ref progress, CancellationToken.None);
+            var sol = solver.Solution();
+            var st = sol.State;
+            Console.WriteLine($"seed={seed} MaxScore={solver.MaxScore:R}");
+            Console.WriteLine($"Quality={st.Quality} Progress={st.Progress} Durability={st.Durability} CP={st.CP} Steps={st.StepCount}");
+            Console.WriteLine($"Actions={string.Join(",", sol.Actions)}");
+            return;
+        }
+
+        if (args.Length > 0 && (args[0] == "solve" || args[0] == "fingerprint"))
+        {
+            var initConfig0 = Bench.Configs.First();
+            var initState0 = Bench.States.First();
+
+            if (args[0] == "solve")
+            {
+                // Matched single-search timing for cross-implementation comparison.
+                // usage: solve <iterations> <maxStepCount> <count>
+                var iters = args.Length > 1 ? int.Parse(args[1]) : 30_000;
+                var maxSteps = args.Length > 2 ? int.Parse(args[2]) : 30;
+                var count = args.Length > 3 ? int.Parse(args[3]) : 100;
+                var cfg = new MCTSConfig(initConfig0.Data with { Iterations = iters, MaxIterations = iters, MaxStepCount = maxSteps });
+
+                for (var i = 0; i < 3; ++i) // warm up
+                {
+                    var warm = new MCTS(cfg, initState0);
+                    var p = 0;
+                    warm.Search(iters, iters, ref p, CancellationToken.None);
+                }
+
+                var gc0 = GC.CollectionCount(0);
+                var gc1 = GC.CollectionCount(1);
+                var gc2 = GC.CollectionCount(2);
+                var alloc0 = GC.GetTotalAllocatedBytes(precise: true);
+                var sw = Stopwatch.StartNew();
+                for (var i = 0; i < count; ++i)
+                {
+                    var solver = new MCTS(cfg, initState0);
+                    var progress = 0;
+                    solver.Search(iters, iters, ref progress, CancellationToken.None);
+                    _ = solver.Solution();
+                }
+                sw.Stop();
+                var allocPerSearch = (GC.GetTotalAllocatedBytes(precise: true) - alloc0) / (double)count;
+                Console.WriteLine($"{sw.Elapsed.TotalMilliseconds / count:0.000}ms/search ({iters} iters, maxSteps {maxSteps}, n={count})");
+                Console.WriteLine($"  alloc/search={allocPerSearch / 1024:0.0}KB  GC gen0={GC.CollectionCount(0) - gc0} gen1={GC.CollectionCount(1) - gc1} gen2={GC.CollectionCount(2) - gc2} (over n={count})");
+            }
+            else
+            {
+                // Deterministic correctness oracle: solve once and dump a fingerprint so
+                // optimizations can be verified to produce byte-identical solver output.
+                var cfg = new MCTSConfig(initConfig0.Data);
+                var solver = new MCTS(cfg, initState0);
+                var progress = 0;
+                solver.Search(initConfig0.Data.Iterations, initConfig0.Data.MaxIterations, ref progress, CancellationToken.None);
+                var solution = solver.Solution();
+                var st = solution.State;
+                Console.WriteLine($"MaxScore={solver.MaxScore:R}");
+                Console.WriteLine($"Quality={st.Quality} Progress={st.Progress} Durability={st.Durability} CP={st.CP} Steps={st.StepCount} ActionCount={st.ActionCount}");
+                Console.WriteLine($"Actions={string.Join(",", solution.Actions)}");
+            }
+            return;
+        }
+
 #if IS_DETERMINISTIC
         var b = new Bench();
 
