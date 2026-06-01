@@ -23,7 +23,8 @@ public class Simulator
 
     public bool IsFirstStep => state.StepCount == 0;
 
-    public virtual CompletionState CompletionState {
+    public virtual CompletionState CompletionState
+    {
         get
         {
             if (Progress >= Input.Recipe.MaxProgress)
@@ -80,7 +81,7 @@ public class Simulator
     {
         this.state = state;
         var i = 0;
-        foreach(var action in actions)
+        foreach (var action in actions)
         {
             var resp = Execute(action);
             if (resp != ActionResponse.UsedAction)
@@ -216,7 +217,7 @@ public class Simulator
         var amt = (double)amount;
         if (HasEffect(EffectType.WasteNot) || HasEffect(EffectType.WasteNot2))
             amt /= 2;
-        if (Condition == Condition.Sturdy || Condition == Condition.Robust)
+        if (Condition is Condition.Sturdy or Condition.Robust)
             amt /= 2;
         return (int)Math.Ceiling(amt);
     }

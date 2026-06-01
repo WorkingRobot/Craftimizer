@@ -14,7 +14,6 @@ using Craftimizer.Utils;
 using Lumina.Text.ReadOnly;
 using Lumina.Text.Payloads;
 using Lumina.Excel.Sheets;
-using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game.Event;
 
 namespace Craftimizer.Plugin;
@@ -223,20 +222,21 @@ internal static class ConditionUtils
             _ => (226, 14200) // Unknown
         };
 
-    private static Vector3 AddRGB(this Condition me) =>
+    private static (Vector3 Start, Vector3 End) AddRGB(this Condition me) =>
         me switch
         {
-            Condition.Poor => new(-50, -50, -50),
-            Condition.Normal => new(32, 48, 64),
-            Condition.Good => new(80, -80, 0),
-            Condition.Excellent => Vector3.Zero, // All the other conditions are just a single lerp, this one is different
-            Condition.Centered => new(200, 200, 0),
-            Condition.Sturdy => new(-100, 45, 155),
-            Condition.Pliant => new(0, 250, 0),
-            Condition.Malleable => new(-80, -40, 180),
-            Condition.Primed => new(30, -155, 200),
-            Condition.GoodOmen => new(100, 20, 0),
-            _ => Vector3.Zero // Unknown
+            Condition.Poor => (new(-50, -50, -50), new(-1, -1, -1)),
+            Condition.Normal => (new(32, 48, 64), new(63, 95, 127)),
+            Condition.Good => (new(80, -80, 0), new(159, -1, 0)),
+            Condition.Excellent => default, // All the other conditions are just a single lerp, this one is different
+            Condition.Centered => (new(200, 200, 0), new(100, 100, 0)),
+            Condition.Sturdy => (new(-100, 45, 155), new(-51, 89, 254)),
+            Condition.Pliant => (new(0, 150, 0), new(0, 249, 0)),
+            Condition.Malleable => (new(-80, -40, 180), new(-41, -1, 254)),
+            Condition.Primed => (new(-30, -255, 50), new(29, -156, 199)),
+            Condition.GoodOmen => (new(100, 20, 0), new(100, 99, 99)),
+            Condition.Robust => (new(-100, 45, 155), new(-50, 90, 254)),
+            _ => default // Unknown
         };
 
     private const float ConditionCyclePeriod = 19 / 30f;
@@ -245,6 +245,8 @@ internal static class ConditionUtils
     public static Vector4 GetColor(this Condition me, float interp)
     {
         //var baseColor = new Vector3(0.85f, 0.85f, 0.85f); // Middle-ish pixels of synthesis2_hr1.tex's condition circle
+
+        var (start, end) = me.AddRGB();
 
         Vector3 addRgb;
         // Excellent has 6 lerps and 1 ending constant
@@ -269,25 +271,14 @@ internal static class ConditionUtils
             if (interp > .25f)
                 interp = .25f - (interp - .25f);
             interp *= 4;
-            addRgb = Vector3.Lerp(new(-80, -40, 180), new(-41, -1, 254), interp);
+            addRgb = Vector3.Lerp(start, end, interp);
         }
         else
         {
             if (interp > .5f)
                 interp = .5f - (interp - .5f);
             interp *= 2;
-            addRgb = me switch
-            {
-                Condition.Poor => Vector3.Lerp(new(-50, -50, -50), new(-1, -1, -1), interp),
-                Condition.Normal => Vector3.Lerp(new(32, 48, 64), new(63, 95, 127), interp),
-                Condition.Good => Vector3.Lerp(new(80, -80, 0), new(159, -1, 0), interp),
-                Condition.Centered => Vector3.Lerp(new(199, 199, 0), new(100, 100, 0), interp),
-                Condition.Sturdy => Vector3.Lerp(new(-100, 45, 155), new(-51, 89, 254), interp),
-                Condition.Pliant => Vector3.Lerp(new(0, 150, 0), new(0, 249, 0), interp),
-                Condition.Primed => Vector3.Lerp(new(-30, -255, 50), new(29, -156, 199), interp),
-                Condition.GoodOmen => Vector3.Lerp(new(100, 20, 0), new(100, 99, 99), interp),
-                _ => default
-            };
+            addRgb = Vector3.Lerp(start, end, interp);
         }
 
         return new(addRgb / 255, 1);

@@ -1,7 +1,5 @@
-using Dalamud.Interface.Utility.Raii;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Bindings.ImPlot;
-using System;
 using System.Numerics;
 
 namespace Craftimizer.Plugin;
@@ -13,13 +11,13 @@ public static class ImRaii2
 
     public ref struct GroupPanelDisposable
     {
-        private bool Disposed;
+        private bool disposed;
 
         public void Dispose()
         {
-            if (Disposed) return;
+            if (disposed) return;
             ImGuiUtils.EndGroupPanel();
-            Disposed = true;
+            disposed = true;
         }
 
         public static implicit operator bool(GroupPanelDisposable _) => true;
@@ -31,25 +29,19 @@ public static class ImRaii2
         return new GroupPanelDisposable();
     }
 
-    public ref struct PlotDisposable
+    public ref struct PlotDisposable(bool success)
     {
-        public bool Success { get; }
-        private bool Disposed;
-
-        public PlotDisposable(bool success)
-        {
-            Success = success;
-            Disposed = false;
-        }
+        public bool Success { get; } = success;
+        private bool disposed = false;
 
         public void Dispose()
         {
-            if (Disposed) return;
+            if (disposed) return;
             if (Success)
             {
                 ImPlot.EndPlot();
             }
-            Disposed = true;
+            disposed = true;
         }
 
         // Allows you to do: using var plot = ImRaii2.Plot(...); if (plot) { ... }
@@ -63,13 +55,13 @@ public static class ImRaii2
 
     public ref struct ImPlotStyleDisposable
     {
-        private bool Disposed;
+        private bool disposed;
 
         public void Dispose()
         {
-            if (Disposed) return;
+            if (disposed) return;
             ImPlot.PopStyleVar();
-            Disposed = true;
+            disposed = true;
         }
     }
 
@@ -87,13 +79,13 @@ public static class ImRaii2
 
     public ref struct ImPlotColorDisposable
     {
-        private bool Disposed;
+        private bool disposed;
 
         public void Dispose()
         {
-            if (Disposed) return;
+            if (disposed) return;
             ImPlot.PopStyleColor();
-            Disposed = true;
+            disposed = true;
         }
     }
 
@@ -105,13 +97,13 @@ public static class ImRaii2
 
     public ref struct TextWrapPosDisposable
     {
-        private bool Disposed;
+        private bool disposed;
 
         public void Dispose()
         {
-            if (Disposed) return;
+            if (disposed) return;
             ImGui.PopTextWrapPos();
-            Disposed = true;
+            disposed = true;
         }
     }
 
