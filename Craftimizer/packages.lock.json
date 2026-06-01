@@ -34,6 +34,11 @@
           "System.IO.Hashing": "10.0.3"
         }
       },
+      "Raphael.Net": {
+        "type": "Transitive",
+        "resolved": "5.0.0",
+        "contentHash": "NSD9eUqKXLMKAjgMK6Ou0UxndYdmKV2S3Q52ndjxUIoO44OYwuQ72HOVqZUyTOxgBJfLPoPjGX2UyW71msM1uw=="
+      },
       "System.IO.Hashing": {
         "type": "Transitive",
         "resolved": "10.0.3",
@@ -51,6 +56,12 @@
         }
       }
     },
-    "net10.0-windows7.0/win-x64": {}
+    "net10.0-windows7.0/win-x64": {
+      "Raphael.Net": {
+        "type": "Transitive",
+        "resolved": "5.0.0",
+        "contentHash": "NSD9eUqKXLMKAjgMK6Ou0UxndYdmKV2S3Q52ndjxUIoO44OYwuQ72HOVqZUyTOxgBJfLPoPjGX2UyW71msM1uw=="
+      }
+    }
   }
 }
