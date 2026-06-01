@@ -4,15 +4,15 @@
     "net10.0-windows7.0": {
       "DalamudPackager": {
         "type": "Direct",
-        "requested": "[14.0.1, )",
-        "resolved": "14.0.1",
-        "contentHash": "y0WWyUE6dhpGdolK3iKgwys05/nZaVf4ZPtIjpLhJBZvHxkkiE23zYRo7K7uqAgoK/QvK5cqF6l3VG5AbgC6KA=="
+        "requested": "[15.0.0, )",
+        "resolved": "15.0.0",
+        "contentHash": "411vwC8/X8Z/sQ2TI6v3SvOn66xFPeOjFn3Zn+h0d3Ox2t1kFm66AhDvmx/qcMwVrR+Hidxj0dadpQ2dgyXMBQ=="
       },
       "DotNet.ReproducibleBuilds": {
         "type": "Direct",
-        "requested": "[1.2.39, )",
-        "resolved": "1.2.39",
-        "contentHash": "fcFN01tDTIQqDuTwr1jUQK/geofiwjG5DycJQOnC72i1SsLAk1ELe+apBOuZ11UMQG8YKFZG1FgvjZPbqHyatg=="
+        "requested": "[2.0.2, )",
+        "resolved": "2.0.2",
+        "contentHash": "VaHoEN6YHp0jXucxm67vfuRy8zo9ufiKSuaZ4ZudRi8xmWcEFMKxfCsg2nvYNvdISFTURDu+IHqADGh53+Bamw=="
       },
       "MathNet.Numerics": {
         "type": "Direct",
@@ -22,16 +22,16 @@
       },
       "Meziantou.Analyzer": {
         "type": "Direct",
-        "requested": "[2.0.264, )",
-        "resolved": "2.0.264",
-        "contentHash": "zRG13RDG446rZNdd/YjKRd4utpbjleRDUqNQSrX0etMnH8Rz9NBlXUpS5aR2ExoOokhNfkdOW8HpLzjLj5x0hQ=="
+        "requested": "[3.0.61, )",
+        "resolved": "3.0.61",
+        "contentHash": "Ed/5bKmY38QbQJgL9wmWnweX4mq3WaNYNq8kp4Hk/WPIFuLuK/P/dEB/ZnenQius+NNDXxTIiCXFPmQdLrHWMg=="
       },
       "DotNext": {
         "type": "Transitive",
-        "resolved": "5.26.1",
-        "contentHash": "rcy6Yrpb64B7qYm/+D+4sfBUzwX/IOGeJBYReDL8/TAIp8aZrZPtXx8nwkYjWCuakYn2tBppwefIM6pd/cOnMw==",
+        "resolved": "6.1.0",
+        "contentHash": "oUvq/a1Fydh1dC2QtGp+opiG9XjzJNRctigtC60+PlKiqdVr3TOgkBIYy/U/Q3PfzmLudpsI2i1OdVSho9wbSQ==",
         "dependencies": {
-          "System.IO.Hashing": "8.0.0"
+          "System.IO.Hashing": "10.0.3"
         }
       },
       "Raphael.Net": {
@@ -41,8 +41,8 @@
       },
       "System.IO.Hashing": {
         "type": "Transitive",
-        "resolved": "8.0.0",
-        "contentHash": "ne1843evDugl0md7Fjzy6QjJrzsjh46ZKbhf8GwBXb5f/gw97J4bxMs0NQKifDuThh/f0bZ0e62NPl1jzTuRqA=="
+        "resolved": "10.0.3",
+        "contentHash": "La6ICwsdTKhVX+LKN+pvFjQRR3LhLwq3uKdi2knjLzRyPYBSydF4cjXidYxIiTcDD6XVYdsBWQEI8ZxiZ/OdIg=="
       },
       "craftimizer.simulator": {
         "type": "Project"
@@ -51,7 +51,7 @@
         "type": "Project",
         "dependencies": {
           "Craftimizer.Simulator": "[1.0.0, )",
-          "DotNext": "[5.26.1, )",
+          "DotNext": "[6.1.0, )",
           "Raphael.Net": "[4.1.0, )"
         }
       }

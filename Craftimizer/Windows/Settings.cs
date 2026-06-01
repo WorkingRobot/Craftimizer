@@ -50,14 +50,14 @@ public sealed class Settings : Window, IDisposable
         SelectedTab = label;
     }
 
-    private ImRaii.IEndObject TabItem(string label)
+    private ImRaii.TabItemDisposable TabItem(string label)
     {
         var isSelected = string.Equals(SelectedTab, label, StringComparison.Ordinal);
         if (isSelected)
         {
             SelectedTab = null;
-            var open = true;
-            return ImRaii.TabItem(label, ref open, ImGuiTabItemFlags.SetSelected);
+            // Use the overload that takes flags directly without the 'ref bool'
+            return ImRaii.TabItem(label, ImGuiTabItemFlags.SetSelected);
         }
         return ImRaii.TabItem(label);
     }
@@ -122,9 +122,10 @@ public sealed class Settings : Window, IDisposable
     private static void DrawOption<T>(string label, string tooltip, Func<T, string> getName, Func<T, string> getTooltip, T value, Action<T> setter, ref bool isDirty, params T[] excludedValues) where T : struct, Enum
     {
         ImGui.SetNextItemWidth(OptionWidth);
+        // ImRaii.Combo returns a ComboDisposable ref struct
         using (var combo = ImRaii.Combo(label, getName(value)))
         {
-            if (combo)
+            if (combo) // Uses the implicit bool operator
             {
                 foreach (var type in Enum.GetValues<T>())
                 {
