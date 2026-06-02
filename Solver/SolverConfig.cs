@@ -49,6 +49,14 @@ public readonly record struct SolverConfig
     // Wall-clock budget for NextActionForked, in milliseconds. 0 = iteration-based.
     public int MaxTimeMs { get; init; }
 
+    // NextActionForked candidate screening. When the solver has more candidate next actions than
+    // PruneActionCount, it spends ScreenBudgetPercent of its time giving every candidate a quick look,
+    // then puts the rest into the best PruneActionCount of them. PruneActionCount defaults to the core
+    // count (so screening only happens when actions outnumber cores); raise it past the action pool
+    // size to search every option. ScreenBudgetPercent is a percentage of the budget.
+    public int PruneActionCount { get; init; }
+    public int ScreenBudgetPercent { get; init; }
+
     public ActionType[] ActionPool { get; init; }
     public SolverAlgorithm Algorithm { get; init; }
 
@@ -66,6 +74,11 @@ public readonly record struct SolverConfig
         ForkCount = Math.Max(Environment.ProcessorCount, 32);
         FurcatedActionCount = ForkCount / 2;
         StrictActions = true;
+
+        // Keep at most this many candidate actions; defaults to the core count so screening only
+        // kicks in when there are more actions than cores (otherwise each already gets a full search).
+        PruneActionCount = MaxThreadCount;
+        ScreenBudgetPercent = 33;
 
         ScoreProgress = 10;
         ScoreQuality = 80;

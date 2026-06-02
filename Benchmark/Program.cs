@@ -38,7 +38,15 @@ internal static class Program
                 var maxStep = new SolverConfig().MaxStepCount;
                 while (state.Progress < recipe.MaxProgress && state.ActionCount < maxStep)
                 {
-                    var cfg = new SolverConfig { Algorithm = algo, Iterations = iters, MaxThreadCount = threads, MaxTimeMs = int.TryParse(Environment.GetEnvironmentVariable("CRAFT_MAXMS"), out var mm) ? mm : 0 };
+                    var cfg = new SolverConfig
+                    {
+                        Algorithm = algo,
+                        Iterations = iters,
+                        MaxThreadCount = threads,
+                        MaxTimeMs = int.TryParse(Environment.GetEnvironmentVariable("CRAFT_MAXMS"), out var mm) ? mm : 0,
+                        PruneActionCount = int.TryParse(Environment.GetEnvironmentVariable("CRAFT_TOPK"), out var tk) ? tk : 0,
+                        ScreenBudgetPercent = float.TryParse(Environment.GetEnvironmentVariable("CRAFT_SCREEN"), out var sc) ? (int)(sc * 100) : 33,
+                    };
                     using var solver = new Solver.Solver(cfg, state);
                     solver.Start();
                     var sol = solver.GetTask().GetAwaiter().GetResult();

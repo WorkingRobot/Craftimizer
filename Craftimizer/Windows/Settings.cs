@@ -175,8 +175,7 @@ public sealed class Settings : Window, IDisposable
                                                 "splitting the iterations and cores between them), and the " +
                                                 "one leading to the best craft is chosen. Far more accurate " +
                                                 "per step and much faster than the other solvers, especially " +
-                                                "mid-craft — ideal for the Synthesis Helper. Does not " +
-                                                "support existing actions the way a full-macro solver does.",
+                                                "mid-craft. Ideal for the Synthesis Helper.",
             SolverAlgorithm.Raphael => "Finds the best solution, every time. This solver has " +
                                                 "very different options compared to the rest, as it " +
                                                 "is designed using an entirely different algorithm.",
@@ -568,14 +567,13 @@ public sealed class Settings : Window, IDisposable
                 // Next Action is wall-clock-budgeted: the Time Limit replaces the iteration budget.
                 if (config.Algorithm == SolverAlgorithm.NextActionForked)
                     DrawOption(
-                        "Time Limit",
-                        "Wall-clock budget, in milliseconds. The Next Action algorithm " +
-                        "spends about this long deciding the next action, so a suggestion arrives within roughly " +
+                        "Time Limit (secs)",
+                        "Spends about this long deciding the next action, so a suggestion arrives within roughly " +
                         "this time no matter how fast your hardware is.",
-                        config.MaxTimeMs,
-                        200,
-                        10000,
-                        v => config = config with { MaxTimeMs = v },
+                        config.MaxTimeMs / 1000f,
+                        2f,
+                        10f,
+                        v => config = config with { MaxTimeMs = (int)MathF.Round(v * 1000f) },
                         ref isDirty
                     );
 
@@ -648,7 +646,7 @@ public sealed class Settings : Window, IDisposable
                     ref isDirty
                 );
 
-                using (ImRaii.Disabled(config.Algorithm is not (SolverAlgorithm.OneshotForked or SolverAlgorithm.StepwiseForked or SolverAlgorithm.StepwiseGenetic)))
+                if (config.Algorithm is SolverAlgorithm.OneshotForked or SolverAlgorithm.StepwiseForked or SolverAlgorithm.StepwiseGenetic)
                     DrawOption(
                         "Fork Count",
                         "Split the number of iterations across different solvers. In general, " +
@@ -656,8 +654,7 @@ public sealed class Settings : Window, IDisposable
                         $"your system (FYI, you have {Environment.ProcessorCount} cores) to attain the most speedup. " +
                         "The higher the number, the more chance you have of finding a " +
                         "better local maximum; this concept similar but not equivalent " +
-                        "to the exploration constant.\n" +
-                        "(Only used in the Forked and Genetic algorithms)",
+                        "to the exploration constant.",
                         config.ForkCount,
                         1,
                         500,
@@ -665,13 +662,12 @@ public sealed class Settings : Window, IDisposable
                         ref isDirty
                     );
 
-                using (ImRaii.Disabled(config.Algorithm is not SolverAlgorithm.StepwiseGenetic))
+                if (config.Algorithm is SolverAlgorithm.StepwiseGenetic)
                     DrawOption(
                         "Elitist Action Count",
                         "On every craft step, pick this many top solutions and use them as " +
                         "the input for the next craft step. For best results, use Fork Count / 2 " +
-                        "and add about 1 or 2 more if needed.\n" +
-                        "(Only used in the Stepwise Genetic algorithm)",
+                        "and add about 1 or 2 more if needed.",
                         config.FurcatedActionCount,
                         1,
                         500,
@@ -752,6 +748,36 @@ public sealed class Settings : Window, IDisposable
                     v => config = config with { StrictActions = v },
                     ref isDirty
                 );
+
+                if (config.Algorithm == SolverAlgorithm.NextActionForked)
+                {
+                    DrawOption(
+                        "Screened Action Count",
+                        "The most candidate next actions the Next Action algorithm will fully " +
+                        "search at once. When there are more options than this, it takes a quick " +
+                        "look at all of them and then spends the rest of its time on the best ones. " +
+                        "The default is based on your core count, since extra actions only have to " +
+                        "share time when they outnumber your cores. Raise it past the size of your " +
+                        "action pool to search every option.",
+                        config.PruneActionCount,
+                        1,
+                        40,
+                        v => config = config with { PruneActionCount = v },
+                        ref isDirty
+                    );
+
+                    DrawOption(
+                        "Screening Budget",
+                        "How much of the solve time, as a percentage, goes into that first look " +
+                        "at every action before narrowing down. The rest is spent on the actions " +
+                        "that made the cut. Only used when the screening above is active.",
+                        config.ScreenBudgetPercent,
+                        5,
+                        95,
+                        v => config = config with { ScreenBudgetPercent = v },
+                        ref isDirty
+                    );
+                }
             }
         }
 

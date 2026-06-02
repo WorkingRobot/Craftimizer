@@ -613,54 +613,122 @@ public sealed class Solver : IDisposable
         var mctsConfig = MCTSConfig;
         var progressTarget = State.Input.Recipe.MaxProgress;
 
+        // Candidate screening: when there are more candidates than PruneActionCount, screen them all
+        // briefly then spend the rest of the budget deepening only the best PruneActionCount. With the
+        // default (the core count) this only happens when actions outnumber cores, since otherwise
+        // every candidate already gets the full budget in one wave. (Fall back to the core count if an
+        // older saved config predates the field and left it at 0.)
+        var screenFrac = Math.Clamp((Config.ScreenBudgetPercent <= 0 ? 33 : Config.ScreenBudgetPercent) / 100f, 0.05f, 0.95f);
+        var topK = Math.Min(n, Config.PruneActionCount > 0 ? Config.PruneActionCount : Math.Max(1, Config.MaxThreadCount));
+        var prune = topK < n;
+
         var results = new (bool Completed, int Quality, int Steps, SolverSolution Sol)[n];
+        var mctsList = new MCTS?[n];
 
         var options = new ParallelOptions
         {
             MaxDegreeOfParallelism = Math.Max(1, Config.MaxThreadCount),
             CancellationToken = Token,
         };
+
+        // Search candidate i for a budget (wall-clock ms when useTime, else iterations; maxBudget is
+        // the iteration ceiling for the "no completion found yet" extension). The MCTS instance is
+        // reused across calls and accumulates, so "screen then deepen" just keeps searching.
+        void RunSearch(int i, int budget, int maxBudget)
+        {
+            if (mctsList[i] is not { } mcts)
+                return;
+            using var cts = useTime ? CancellationTokenSource.CreateLinkedTokenSource(Token) : null;
+            cts?.CancelAfter(budget);
+            try
+            {
+                mcts.Search(useTime ? int.MaxValue : budget, useTime ? int.MaxValue : maxBudget, ref progress, cts?.Token ?? Token);
+            }
+            catch (OperationCanceledException) { } // time slice / cancellation: keep best-so-far
+        }
+
+        // Cheap interim ranking key (no trim) — only used to decide which candidates to deepen.
+        (bool Completed, int Quality, int Steps) Interim(int i)
+        {
+            if (mctsList[i] is { } mcts)
+            {
+                var sub = mcts.Solution();
+                return (sub.State.Progress >= progressTarget, sub.State.Quality, sub.State.ActionCount);
+            }
+            var r = results[i];
+            return r.Sol.Actions is null ? (false, -1, int.MaxValue) : (r.Completed, r.Quality, r.Steps);
+        }
+
+        // Final (trimmed) result for candidate i from its (possibly deepened) MCTS.
+        void Finalize(int i)
+        {
+            if (mctsList[i] is not { } mcts)
+                return; // terminal/invalid: result already stored (or left null = unusable)
+            var sub = mcts.Solution();
+            List<ActionType> rotation = [candidates[i], .. sub.Actions];
+            var finalState = sub.State;
+            if (rotation.Count > 1)
+                (rotation, finalState) = TrimRotation(State, rotation, progressTarget);
+            results[i] = (finalState.Progress >= progressTarget, finalState.Quality, finalState.ActionCount, new SolverSolution(rotation, finalState));
+        }
+
         var s = Stopwatch.StartNew();
         progressTimer = s;
         try
         {
+            // Setup: execute each candidate once. Immediate finishes get a final result; the rest get
+            // a fresh (unsearched) MCTS to be searched below.
             Parallel.For(0, n, options, i =>
             {
-                var action = candidates[i];
-                var execSim = new Simulator(Config.ActionPool, Config.MaxStepCount);
-                var (resp, after) = execSim.Execute(State, action);
+                var (resp, after) = new Simulator(Config.ActionPool, Config.MaxStepCount).Execute(State, candidates[i]);
                 if (resp != ActionResponse.UsedAction)
                     return;
-
-                List<ActionType> rotation;
-                SimulationState finalState;
                 if (after.Progress >= progressTarget || after.ActionCount >= Config.MaxStepCount)
-                {
-                    rotation = [action];
-                    finalState = after;
-                }
+                    results[i] = (after.Progress >= progressTarget, after.Quality, after.ActionCount, new SolverSolution([candidates[i]], after));
                 else
-                {
-                    var mcts = new MCTS(mctsConfig, after, new Random(candidateSeeds[i]));
-                    using var cts = useTime ? CancellationTokenSource.CreateLinkedTokenSource(Token) : null;
-                    cts?.CancelAfter(sliceMs);
-                    try
-                    {
-                        mcts.Search(iterCount, maxIterCount, ref progress, cts?.Token ?? Token);
-                    }
-                    catch (OperationCanceledException) { } // time slice / cancellation: keep best-so-far
-                    var sub = mcts.Solution();
-                    rotation = [action, .. sub.Actions];
-                    finalState = sub.State;
-                }
-                if (rotation.Count > 1)
-                    (rotation, finalState) = TrimRotation(State, rotation, progressTarget);
-                results[i] = (finalState.Progress >= progressTarget, finalState.Quality, finalState.ActionCount, new SolverSolution(rotation, finalState));
+                    mctsList[i] = new MCTS(mctsConfig, after, new Random(candidateSeeds[i]));
             });
+
+            if (!prune)
+            {
+                // Default: evaluate every candidate with the full per-candidate slice.
+                Parallel.For(0, n, options, i => { RunSearch(i, useTime ? sliceMs : iterCount, useTime ? sliceMs : maxIterCount); Finalize(i); });
+            }
+            else
+            {
+                // Phase 1 — screen all candidates shallowly.
+                var screenBudget = useTime
+                    ? Math.Max(1, (int)(Config.MaxTimeMs * screenFrac) / waveCount)
+                    : Math.Max(1, (int)(Config.Iterations * screenFrac) / n);
+                Parallel.For(0, n, options, i => RunSearch(i, screenBudget, screenBudget));
+
+                // Keep the top-K survivors by interim (completed, quality, fewest steps).
+                var survivors = Enumerable.Range(0, n)
+                    .Where(i => mctsList[i] is not null)
+                    .Select(i => (i, key: Interim(i)))
+                    .OrderByDescending(t => t.key.Completed)
+                    .ThenByDescending(t => t.key.Quality)
+                    .ThenBy(t => t.key.Steps)
+                    .Take(topK)
+                    .Select(t => t.i)
+                    .ToArray();
+
+                // Phase 2 — deepen just the survivors with the remaining budget.
+                var deepParallelism = Math.Min(Math.Max(1, Config.MaxThreadCount), Math.Max(1, survivors.Length));
+                var deepWaves = Math.Max(1, (survivors.Length + deepParallelism - 1) / deepParallelism);
+                var deepBudget = useTime
+                    ? Math.Max(1, (int)(Config.MaxTimeMs * (1 - screenFrac)) / deepWaves)
+                    : Math.Max(1, (int)(Config.Iterations * (1 - screenFrac)) / Math.Max(1, survivors.Length));
+                Parallel.ForEach(survivors, options, i => RunSearch(i, deepBudget, deepBudget));
+
+                // Finalize every candidate we created an MCTS for (survivors are deeper; the rest keep
+                // their screen-level rotation so a genuinely-best pruned candidate can still win).
+                Parallel.For(0, n, options, Finalize);
+            }
         }
         catch (OperationCanceledException) { }
         s.Stop();
-        OnLog?.Invoke($"{s.Elapsed.TotalMilliseconds:0.00}ms, {n} candidates @ {iterCount} iters");
+        OnLog?.Invoke($"{s.Elapsed.TotalMilliseconds:0.00}ms, {n} candidates{(prune ? $" (top-{topK} of {n})" : "")}");
 
         // argmax: completed first, then highest quality, then fewest steps.
         var bestIdx = -1;
