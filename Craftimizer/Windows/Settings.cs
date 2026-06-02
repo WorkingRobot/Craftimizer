@@ -153,6 +153,7 @@ public sealed class Settings : Window, IDisposable
             SolverAlgorithm.Stepwise => "Stepwise",
             SolverAlgorithm.StepwiseForked => "Stepwise Forked",
             SolverAlgorithm.StepwiseGenetic => "Stepwise Genetic",
+            SolverAlgorithm.NextActionForked => "Next Action",
             SolverAlgorithm.Raphael => "Optimal",
             _ => "Unknown",
         };
@@ -168,6 +169,14 @@ public sealed class Settings : Window, IDisposable
             SolverAlgorithm.StepwiseGenetic => "Stepwise Forked, but the top N next best steps are " +
                                                 "selected from the solvers, and each one is equally " +
                                                 "used as a starting point",
+            SolverAlgorithm.NextActionForked => "Spends the entire iteration budget finding the single " +
+                                                "best NEXT action rather than a full macro: every possible " +
+                                                "next action is evaluated in parallel (one solver each, " +
+                                                "splitting the iterations and cores between them), and the " +
+                                                "one leading to the best craft is chosen. Far more accurate " +
+                                                "per step and much faster than the other solvers, especially " +
+                                                "mid-craft — ideal for the Synthesis Helper. Does not " +
+                                                "support existing actions the way a full-macro solver does.",
             SolverAlgorithm.Raphael => "Finds the best solution, every time. This solver has " +
                                                 "very different options compared to the rest, as it " +
                                                 "is designed using an entirely different algorithm.",
@@ -526,8 +535,10 @@ public sealed class Settings : Window, IDisposable
                 "Algorithm",
                 "The algorithm to use when solving for a macro. Different " +
                 "algorithms provide different pros and cons for using them. " +
-                "By far, the Optimal and Stepwise Genetic algorithms provide " +
-                "the best results, especially for very difficult crafts.",
+                "For full macros, the Optimal and Stepwise Genetic algorithms " +
+                "provide the best results, especially for very difficult crafts. " +
+                "For the Synthesis Helper's next-step suggestions, the Next Action " +
+                "algorithm is the most accurate and responsive.",
                 GetAlgorithmName,
                 GetAlgorithmTooltip,
                 config.Algorithm,
@@ -536,7 +547,7 @@ public sealed class Settings : Window, IDisposable
                 disableOptimal ? [SolverAlgorithm.Raphael] : []
             );
 
-            using (ImRaii.Disabled(config.Algorithm is not (SolverAlgorithm.OneshotForked or SolverAlgorithm.StepwiseForked or SolverAlgorithm.StepwiseGenetic or SolverAlgorithm.Raphael)))
+            using (ImRaii.Disabled(config.Algorithm is not (SolverAlgorithm.OneshotForked or SolverAlgorithm.StepwiseForked or SolverAlgorithm.StepwiseGenetic or SolverAlgorithm.NextActionForked or SolverAlgorithm.Raphael)))
                 DrawOption(
                     "Max Core Count",
                     "The number of cores to use when solving. You should use as many " +
@@ -544,7 +555,7 @@ public sealed class Settings : Window, IDisposable
                     $"experience. A good estimate would be 1 or 2 cores less than your " +
                     $"system (FYI, you have {Environment.ProcessorCount} cores), but make sure to accomodate " +
                     $"for any other tasks you have in the background, if you have any.\n" +
-                    "(Only used in the Forked, Genetic, and Optimal algorithms)",
+                    "(Only used in the Forked, Genetic, Next Action, and Optimal algorithms)",
                     config.MaxThreadCount,
                     1,
                     Environment.ProcessorCount,
@@ -554,32 +565,49 @@ public sealed class Settings : Window, IDisposable
 
             if (config.Algorithm != SolverAlgorithm.Raphael)
             {
-                DrawOption(
-                    "Target Iterations",
-                    "The total number of iterations to run per crafting step. " +
-                    "Higher values require more computational power. Higher values " +
-                    "also may decrease variance, so other values should be tweaked " +
-                    "as necessary to get a more favorable outcome.",
-                    config.Iterations,
-                    1000,
-                    1000000,
-                    v => config = config with { Iterations = v },
-                    ref isDirty
-                );
+                // Next Action is wall-clock-budgeted: the Time Limit replaces the iteration budget.
+                if (config.Algorithm == SolverAlgorithm.NextActionForked)
+                    DrawOption(
+                        "Time Limit",
+                        "Wall-clock budget, in milliseconds. The Next Action algorithm " +
+                        "spends about this long deciding the next action, so a suggestion arrives within roughly " +
+                        "this time no matter how fast your hardware is.",
+                        config.MaxTimeMs,
+                        200,
+                        10000,
+                        v => config = config with { MaxTimeMs = v },
+                        ref isDirty
+                    );
 
-                DrawOption(
-                    "Max Iterations",
-                    "The solver may go about the target iteration value if the craft " +
-                    "is sufficiently difficult, and it wasn't able to find any way to " +
-                    "complete it yet. In rare cases, the solver might go on for a very " +
-                    "long time. This maximum is here to prevent the solver from stealing " +
-                    "all your RAM.",
-                    config.MaxIterations,
-                    config.Iterations,
-                    5000000,
-                    v => config = config with { MaxIterations = v },
-                    ref isDirty
-                );
+                if (config.Algorithm != SolverAlgorithm.NextActionForked)
+                {
+                    DrawOption(
+                        "Target Iterations",
+                        "The total number of iterations to run per crafting step. " +
+                        "Higher values require more computational power. Higher values " +
+                        "also may decrease variance, so other values should be tweaked " +
+                        "as necessary to get a more favorable outcome.",
+                        config.Iterations,
+                        1000,
+                        1000000,
+                        v => config = config with { Iterations = v },
+                        ref isDirty
+                    );
+
+                    DrawOption(
+                        "Max Iterations",
+                        "The solver may go about the target iteration value if the craft " +
+                        "is sufficiently difficult, and it wasn't able to find any way to " +
+                        "complete it yet. In rare cases, the solver might go on for a very " +
+                        "long time. This maximum is here to prevent the solver from stealing " +
+                        "all your RAM.",
+                        config.MaxIterations,
+                        config.Iterations,
+                        5000000,
+                        v => config = config with { MaxIterations = v },
+                        ref isDirty
+                    );
+                }
 
                 DrawOption(
                     "Max Step Count",
@@ -1054,7 +1082,9 @@ public sealed class Settings : Window, IDisposable
         DrawOption(
             "Solver Step Count",
             "The minimum number of future steps to solve for during an in-game craft. " +
-            "The solver may still give more than this amount if it's at no cost to you.",
+            "The solver may still give more than this amount if it's at no cost to you. " +
+            "(The Next Action algorithm always solves the single best next step and shows " +
+            "its planned continuation, so this mainly controls how many steps are displayed.)",
             Config.SynthHelperStepCount,
             1,
             100,

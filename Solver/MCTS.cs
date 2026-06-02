@@ -11,6 +11,7 @@ namespace Craftimizer.Solver;
 public sealed class MCTS
 {
     private readonly MCTSConfig config;
+    private readonly Random rng;
     private readonly Node rootNode;
     private readonly RootScores rootScores;
 
@@ -21,7 +22,7 @@ public sealed class MCTS
     // simulated and return that. Valid because the solver's simulator is deterministic
     // (SimulatorNoRandom: fixed conditions/success), so a recorded sequence re-executes exactly.
     private float bestScore = -1f;
-    private readonly List<ActionType> bestActions = new();
+    private readonly List<ActionType> bestActions = [];
     private SimulationState bestState;
     private bool hasBest;
 
@@ -49,9 +50,11 @@ public sealed class MCTS
         hasBest = true;
     }
 
-    public MCTS(in MCTSConfig config, in SimulationState state)
+    public MCTS(in MCTSConfig config, in SimulationState state, Random rng)
     {
+        ArgumentNullException.ThrowIfNull(rng);
         this.config = config;
+        this.rng = rng;
         var sim = new Simulator(config.ActionPool, config.MaxStepCount, state);
         rootNode = new(new(
             state,
@@ -292,15 +295,15 @@ public sealed class MCTS
     }
 
     [SkipLocalsInit]
-    public unsafe void Search(int iterations, int maxIterations, ref int progress, CancellationToken token)
+    public void Search(int iterations, int maxIterations, ref int progress, CancellationToken token)
     {
         maxIterations = Math.Max(iterations, maxIterations);
         var simulator = new Simulator(config.ActionPool, config.MaxStepCount, rootNode.State.State);
-        var random = rootNode.State.State.Input.Random;
+        var random = rng;
         var staleCounter = 0;
         var i = 0;
 
-        for (; (i < iterations || MaxScore == 0); i++)
+        for (; i < iterations || MaxScore == 0; i++)
         {
             var selectedNode = Select();
             var (endNode, score) = ExpandAndRollout(random, simulator, selectedNode);
