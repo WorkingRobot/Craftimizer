@@ -14,10 +14,40 @@ public sealed class MCTS
     private readonly Node rootNode;
     private readonly RootScores rootScores;
 
+    // Anytime best-solution tracking: MCTS here is an OPTIMIZER (we will execute the single best
+    // rotation found, not a robust tree policy). Rollouts simulate full rotations but normally
+    // discard their actions, so the actual best rotation is lost and Solution() can only recover a
+    // shallow tree prefix. Instead we record the highest-scoring complete action sequence ever
+    // simulated and return that. Valid because the solver's simulator is deterministic
+    // (SimulatorNoRandom: fixed conditions/success), so a recorded sequence re-executes exactly.
+    private float bestScore = -1f;
+    private readonly List<ActionType> bestActions = new();
+    private SimulationState bestState;
+    private bool hasBest;
+
     public const int ProgressUpdateFrequency = 1 << 10;
     private const int StaleProgressThreshold = 1 << 12;
 
     public float MaxScore => rootScores.MaxScore;
+
+    private void RecordBest(Node leaf, ReadOnlySpan<ActionType> rollout, in SimulationState finalState, float score)
+    {
+        if (score <= bestScore)
+            return;
+        bestScore = score;
+        bestState = finalState;
+        bestActions.Clear();
+        // Tree path from leaf up to root (actions in reverse), then the rollout actions.
+        for (var n = leaf; n != rootNode; n = n.Parent!)
+        {
+            if (n.State.Action is { } a)
+                bestActions.Add(a);
+        }
+        bestActions.Reverse();
+        foreach (var a in rollout)
+            bestActions.Add(a);
+        hasBest = true;
+    }
 
     public MCTS(in MCTSConfig config, in SimulationState state)
     {
@@ -175,20 +205,27 @@ public sealed class MCTS
         }
     }
 
+    [SkipLocalsInit]
     private (Node ExpandedNode, float Score) ExpandAndRollout(Random random, Simulator simulator, Node initialNode)
     {
         ref var initialState = ref initialNode.State;
         // expand once
         if (initialState.IsComplete)
-            return (initialNode, initialState.CalculateScore(config) ?? 0);
+        {
+            var s = initialState.CalculateScore(config) ?? 0;
+            RecordBest(initialNode, ReadOnlySpan<ActionType>.Empty, in initialState.State, s);
+            return (initialNode, s);
+        }
 
         var poppedAction = initialState.AvailableActions.PopRandom(random);
         var expandedNode = initialNode.Add(Execute(simulator, initialState.State, poppedAction, true));
         // simulator's internal state is now the expanded node's state.
 
-        // playout to a terminal state
+        // playout to a terminal state (capturing the rollout actions for best-solution tracking)
         var currentState = expandedNode.State.State;
         var currentCompletionState = expandedNode.State.SimulationCompletionState;
+        Span<ActionType> rollout = stackalloc ActionType[config.MaxRolloutStepCount];
+        var rolloutCount = 0;
 
         if (currentCompletionState == CompletionState.Incomplete &&
             !expandedNode.State.AvailableActions.IsEmpty &&
@@ -201,6 +238,7 @@ public sealed class MCTS
             {
                 if (!simulator.TryPickRolloutAction(random, out var nextAction))
                     break; // no valid action => NoMoreActions terminal
+                rollout[rolloutCount++] = nextAction;
                 currentState = simulator.ExecuteUnchecked(currentState, nextAction);
                 currentCompletionState = simulator.CompletionState;
                 if (currentCompletionState != CompletionState.Incomplete)
@@ -209,6 +247,7 @@ public sealed class MCTS
         }
 
         var score = SimulationNode.CalculateScoreForState(currentState, currentCompletionState, config) ?? 0;
+        RecordBest(expandedNode, rollout[..rolloutCount], in currentState, score);
         return (expandedNode, score);
     }
 
@@ -296,6 +335,11 @@ public sealed class MCTS
     [Pure]
     public SolverSolution Solution()
     {
+        // Return the best complete rotation actually simulated (the optimizer's job).
+        if (hasBest)
+            return new(new List<ActionType>(bestActions), bestState);
+
+        // Fallback (no scored solution found yet): the tree's max-score principal variation.
         var actions = new List<ActionType>();
         var node = rootNode;
 

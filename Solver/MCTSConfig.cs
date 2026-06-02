@@ -21,6 +21,8 @@ public readonly record struct MCTSConfig
     public float ScoreCP { get; init; }
     public float ScoreSteps { get; init; }
 
+    public int QualityTarget { get; init; }
+
     public ActionType[] ActionPool { get; init; }
 
     public MCTSConfig(in SolverConfig config)
@@ -43,6 +45,8 @@ public readonly record struct MCTSConfig
         ScoreDurability = config.ScoreDurability / total;
         ScoreCP = config.ScoreCP / total;
         ScoreSteps = config.ScoreSteps / total;
+
+        QualityTarget = config.QualityTarget;
 
         ActionPool = config.ActionPool;
     }

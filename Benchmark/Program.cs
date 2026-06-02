@@ -12,33 +12,115 @@ internal static class Program
     {
         // Cross-implementation timing / correctness, available in any build configuration.
         // (In a non-deterministic build these exercise the real random-rollout path.)
+        if (args.Length > 0 && args[0] == "rotation")
+        {
+            // FULL-rotation harness (the real plugin output): runs Stepwise to completion per seed
+            // and reports the final rotation's metrics. This is where end-of-craft padding shows.
+            // usage: rotation <nSeeds> <itersPerStep>
+            var nSeeds = args.Length > 1 ? int.Parse(args[1]) : 16;
+            var iters = args.Length > 2 ? int.Parse(args[2]) : 5000;
+
+            var panel = new List<(CharacterStats Stats, RecipeInfo Recipe, string Label)>();
+            foreach (var sw0 in Bench.States)
+                panel.Add((sw0.Data.Input.Stats, sw0.Data.Input.Recipe,
+                    $"P{sw0.Data.Input.Recipe.MaxProgress}Q{sw0.Data.Input.Recipe.MaxQuality}D{sw0.Data.Input.Recipe.MaxDurability}"));
+            var first0 = Bench.States.First().Data.Input;
+            panel.Add((first0.Stats, first0.Recipe with { MaxDurability = 20 }, "lowDur(D20)"));
+
+            foreach (var (stats, recipe, label) in panel)
+            {
+                // Raphael oracle: the optimal quality/steps for this recipe (the target to approach).
+                double rQual = double.NaN; int rSteps = 0;
+                try
+                {
+                    var rInput = new SimulationInput(stats, recipe, 0, 0);
+                    var rCfg = new SolverConfig { Algorithm = SolverAlgorithm.Raphael };
+                    using var rSolver = new Solver.Solver(rCfg, new SimulationState(rInput));
+                    rSolver.Start();
+                    var rSt = rSolver.GetTask().GetAwaiter().GetResult().State;
+                    rQual = recipe.MaxQuality > 0 ? Math.Min(1.0, (double)rSt.Quality / recipe.MaxQuality) : 1.0;
+                    rSteps = rSt.ActionCount;
+                }
+                catch (Exception e) { Console.WriteLine($"{label,-16}: RAPHAEL failed: {e.GetType().Name} {e.Message}"); }
+
+                double qualSum = 0, stepSum = 0, durSum = 0, cpSum = 0, completed = 0;
+                // count trailing durability-restore actions (the #6/#44 padding signal)
+                double trailingMends = 0;
+                var sw = Stopwatch.StartNew();
+                for (var seed = 0; seed < nSeeds; ++seed)
+                {
+                    var input = new SimulationInput(stats, recipe, 0, seed);
+                    var algo = Environment.GetEnvironmentVariable("ROT_ALGO") switch
+                    {
+                        "genetic" => SolverAlgorithm.StepwiseGenetic,
+                        "oneshot" => SolverAlgorithm.Oneshot,
+                        "oneshotforked" => SolverAlgorithm.OneshotForked,
+                        "stepwiseforked" => SolverAlgorithm.StepwiseForked,
+                        _ => SolverAlgorithm.Stepwise,
+                    };
+                    var rotCfg = new SolverConfig { Algorithm = algo, Iterations = iters };
+                    using var solver = new Solver.Solver(rotCfg, new SimulationState(input));
+                    solver.Start();
+                    var sol = solver.GetTask().GetAwaiter().GetResult();
+                    var st = sol.State;
+                    qualSum += recipe.MaxQuality > 0 ? Math.Min(1.0, (double)st.Quality / recipe.MaxQuality) : 1.0;
+                    stepSum += st.ActionCount;
+                    durSum += (double)st.Durability / recipe.MaxDurability;
+                    cpSum += (double)st.CP / stats.CP;
+                    if (st.Progress >= recipe.MaxProgress)
+                        completed++;
+                    // trailing durability-restore / non-quality padding actions at the end
+                    for (var i = sol.Actions.Count - 1; i >= 0; --i)
+                    {
+                        var a = sol.Actions[i];
+                        if (a is ActionType.MastersMend or ActionType.ImmaculateMend or ActionType.Manipulation
+                            or ActionType.WasteNot or ActionType.WasteNot2 or ActionType.TrainedPerfection)
+                            trailingMends++;
+                        else
+                            break;
+                    }
+                }
+                sw.Stop();
+                var mctsQual = qualSum / nSeeds;
+                var gap = double.IsNaN(rQual) ? double.NaN : rQual - mctsQual;
+                Console.WriteLine($"{label,-16}: MCTS qual={mctsQual:P1} steps={stepSum / nSeeds:F1} | " +
+                    $"RAPHAEL qual={rQual:P1} steps={rSteps} | gap={gap:P1} | " +
+                    $"leftDur={durSum / nSeeds:P0} leftCP={cpSum / nSeeds:P0} {sw.Elapsed.TotalMilliseconds / nSeeds:F0}ms (n={nSeeds},{iters}it)");
+            }
+            return;
+        }
+
         if (args.Length > 0 && args[0] == "quality")
         {
             // Stochastic results+speed harness for the REAL (random-rollout) path.
             // usage: quality <nSeeds> <iters> [maxSteps]
-            // Per recipe: mean/median/stdev MaxScore, mean Quality/MaxQuality, mean ms/search.
+            // Per recipe: quality%, completion%, mean steps, leftover dur%/cp% (padding signal), ms.
             var nSeeds = args.Length > 1 ? int.Parse(args[1]) : 32;
             var iters = args.Length > 2 ? int.Parse(args[2]) : 30_000;
             var maxStepsArg = args.Length > 3 ? int.Parse(args[3]) : -1;
             var baseCfg = Bench.Configs.First().Data;
 
-            foreach (var stateWrap in Bench.States)
+            // Panel: the two bench recipes + a low-durability stress recipe (issue #42).
+            var panel = new List<(CharacterStats Stats, RecipeInfo Recipe, string Label)>();
+            foreach (var sw0 in Bench.States)
+                panel.Add((sw0.Data.Input.Stats, sw0.Data.Input.Recipe,
+                    $"P{sw0.Data.Input.Recipe.MaxProgress}Q{sw0.Data.Input.Recipe.MaxQuality}D{sw0.Data.Input.Recipe.MaxDurability}"));
+            var first = Bench.States.First().Data.Input;
+            panel.Add((first.Stats, first.Recipe with { MaxDurability = 20 }, "lowDur(D20)"));
+
+            foreach (var (stats, recipe, label) in panel)
             {
-                var recipe = stateWrap.Data.Input.Recipe;
-                var stats = stateWrap.Data.Input.Stats;
                 var cfgData = maxStepsArg > 0 ? baseCfg with { MaxStepCount = maxStepsArg } : baseCfg;
                 var cfg = new MCTSConfig(cfgData);
 
-                // warm up (JIT)
-                for (var w = 0; w < 3; ++w)
+                for (var w = 0; w < 3; ++w) // warm up (JIT)
                 {
                     var ws = new MCTS(cfg, new SimulationState(new SimulationInput(stats, recipe, 0, 99999 + w)));
                     var wp = 0;
                     ws.Search(iters, iters, ref wp, CancellationToken.None);
                 }
 
-                var scores = new double[nSeeds];
-                var quals = new double[nSeeds];
+                double scoreSum = 0, qualSum = 0, stepSum = 0, durSum = 0, cpSum = 0, completed = 0;
                 var sw = Stopwatch.StartNew();
                 for (var seed = 0; seed < nSeeds; ++seed)
                 {
@@ -46,20 +128,19 @@ internal static class Program
                     var progress = 0;
                     solver.Search(iters, iters, ref progress, CancellationToken.None);
                     var st = solver.Solution().State;
-                    scores[seed] = solver.MaxScore;
-                    quals[seed] = recipe.MaxQuality > 0 ? (double)st.Quality / recipe.MaxQuality : 1.0;
+                    scoreSum += solver.MaxScore;
+                    qualSum += recipe.MaxQuality > 0 ? Math.Min(1.0, (double)st.Quality / recipe.MaxQuality) : 1.0;
+                    stepSum += st.ActionCount;
+                    durSum += (double)st.Durability / recipe.MaxDurability;
+                    cpSum += (double)st.CP / stats.CP;
+                    if (st.Progress >= recipe.MaxProgress)
+                        completed++;
                 }
                 sw.Stop();
 
-                var mean = scores.Average();
-                var sorted = (double[])scores.Clone();
-                Array.Sort(sorted);
-                var median = sorted[nSeeds / 2];
-                var variance = scores.Sum(s => (s - mean) * (s - mean)) / nSeeds;
-                var stdev = Math.Sqrt(variance);
-                Console.WriteLine($"recipe P{recipe.MaxProgress}Q{recipe.MaxQuality}D{recipe.MaxDurability}: " +
-                    $"score mean={mean:F4} median={median:F4} stdev={stdev:F4} | qual mean={quals.Average():P1} | " +
-                    $"{sw.Elapsed.TotalMilliseconds / nSeeds:F2}ms/search (n={nSeeds}, {iters} iters)");
+                Console.WriteLine($"{label,-16}: qual={qualSum / nSeeds:P1} steps={stepSum / nSeeds:F1} " +
+                    $"complete={completed / nSeeds:P0} leftoverDur={durSum / nSeeds:P0} leftoverCP={cpSum / nSeeds:P0} " +
+                    $"| score={scoreSum / nSeeds:F4} | {sw.Elapsed.TotalMilliseconds / nSeeds:F1}ms (n={nSeeds},{iters}it)");
             }
             return;
         }

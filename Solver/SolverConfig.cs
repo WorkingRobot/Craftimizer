@@ -35,6 +35,10 @@ public readonly record struct SolverConfig
     public float ScoreCP { get; init; }
     public float ScoreSteps { get; init; }
 
+    // Quality goal: if > 0, quality is rewarded only up to this target (e.g. an HQ/collectability
+    // threshold); 0 means use the recipe's MaxQuality.
+    public int QualityTarget { get; init; }
+
     // Raphael/A* configuration
     public bool Adversarial { get; init; }
     public bool BackloadProgress { get; init; }

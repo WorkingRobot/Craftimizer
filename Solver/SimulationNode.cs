@@ -27,65 +27,38 @@ public struct SimulationNode(in SimulationState state, ActionType? action, Compl
     public readonly float? CalculateScore(in MCTSConfig config) =>
         CalculateScoreForState(State, SimulationCompletionState, config);
 
+    // A tiny constant so any completed craft scores strictly > 0 (preserves MCTS.Search's
+    // "MaxScore == 0 => no finish found yet" logic, and avoids a 0 score when stepBonus is 0).
+    private const float CompletionBase = 0.01f;
+
     public static float? CalculateScoreForState(in SimulationState state, CompletionState completionState, in MCTSConfig config)
     {
+        // Strictly lexicographic objective, mirroring Raphael:
+        //   completion  >  quality (up to target)  >  fewer steps.
+        // Only completed crafts are scored (the gate enforces "synthesis finished" as top priority).
+        // Durability and CP are deliberately NOT in the objective (they are feasibility/search
+        // currency, not goals) — rewarding leftover dur/CP pads the end of a craft (issues #6/#44).
         if (completionState != CompletionState.ProgressComplete)
             return null;
 
-        var stepScore = 1f - ((float)(state.ActionCount + 1) / config.MaxStepCount);
+        var stepBonus = 1f - ((float)(state.ActionCount + 1) / config.MaxStepCount);
 
-        if (state.Input.Recipe.MaxQuality == 0)
-            return stepScore;
+        var target = config.QualityTarget > 0
+            ? Math.Min(config.QualityTarget, state.Input.Recipe.MaxQuality)
+            : state.Input.Recipe.MaxQuality;
 
-        [Pure]
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        static float Apply(float multiplier, float value, float target) =>
-            multiplier * (target > 0 ? Math.Clamp(value / target, 0, 1) : 1);
+        // No-quality recipe (or zero target): the only objective is fewer steps.
+        if (target <= 0)
+            return CompletionBase + ((1f - CompletionBase) * stepBonus);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        static float ApplyNondominant(float multiplier, float dominance, float value, float target) =>
-            Apply(float.Lerp(multiplier, 0, dominance), value, target);
+        var qualityFrac = Math.Clamp((float)state.Quality / target, 0f, 1f);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        static float ApplyNondominant2(float multiplier, float dominance, float score) =>
-            float.Lerp(multiplier, 0, dominance) * score;
+        // stepWeight is set just below the value of a single quality point, so quality strictly
+        // dominates: no quality is ever traded for fewer steps; steps only break (near-)ties.
+        var remaining = 1f - CompletionBase;
+        var stepWeight = remaining / (target + 1);
+        var qualityWeight = remaining - stepWeight;
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        static float ApplyDominant(float multiplier, float dominance, float value, float target) =>
-            Apply(float.Lerp(multiplier, 1, dominance), value, target);
-
-        var qualityDominance = state.ActionCount / config.MaxStepCount;
-
-        var progressScore = ApplyNondominant(
-            config.ScoreProgress,
-            qualityDominance,
-            state.Progress,
-            state.Input.Recipe.MaxProgress
-        );
-
-        var qualityScore = ApplyDominant(
-            config.ScoreQuality,
-            qualityDominance,
-            state.Quality,
-            state.Input.Recipe.MaxQuality
-        );
-
-        var durabilityScore = ApplyNondominant(
-            config.ScoreDurability,
-            qualityDominance,
-            state.Durability,
-            state.Input.Recipe.MaxDurability
-        );
-
-        var cpScore = ApplyNondominant(
-            config.ScoreCP,
-            qualityDominance,
-            state.CP,
-            state.Input.Stats.CP
-        );
-
-        var fewerStepsScore = ApplyNondominant2(config.ScoreSteps, qualityDominance, stepScore);
-
-        return progressScore + qualityScore + durabilityScore + cpScore + fewerStepsScore;
+        return CompletionBase + (qualityWeight * qualityFrac) + (stepWeight * stepBonus);
     }
 }
