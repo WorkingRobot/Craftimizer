@@ -208,7 +208,7 @@ internal static class Program
             foreach (var (stats, recipe, label) in panel)
             {
                 var cfgData = maxStepsArg > 0 ? baseCfg with { MaxStepCount = maxStepsArg } : baseCfg;
-                var cfg = new MCTSConfig(cfgData);
+                var cfg = new MCTSConfig(cfgData, recipe);
 
                 for (var w = 0; w < 3; ++w) // warm up (JIT)
                 {
@@ -253,7 +253,7 @@ internal static class Program
             var iters = args.Length > 2 ? int.Parse(args[2]) : 30_000;
             var baseState = Bench.States.First().Data;
             var seededInput = new SimulationInput(baseState.Input.Stats, baseState.Input.Recipe, 0, seed);
-            var cfg = new MCTSConfig(Bench.Configs.First().Data);
+            var cfg = new MCTSConfig(Bench.Configs.First().Data, seededInput.Recipe);
             var solver = new MCTS(cfg, new SimulationState(seededInput), seededInput.Random);
             var progress = 0;
             solver.Search(iters, iters, ref progress, CancellationToken.None);
@@ -277,7 +277,7 @@ internal static class Program
                 var iters = args.Length > 1 ? int.Parse(args[1]) : 30_000;
                 var maxSteps = args.Length > 2 ? int.Parse(args[2]) : 30;
                 var count = args.Length > 3 ? int.Parse(args[3]) : 100;
-                var cfg = new MCTSConfig(initConfig0.Data with { Iterations = iters, MaxIterations = iters, MaxStepCount = maxSteps });
+                var cfg = new MCTSConfig(initConfig0.Data with { Iterations = iters, MaxIterations = iters, MaxStepCount = maxSteps }, initState0.Data.Input.Recipe);
 
                 for (var i = 0; i < 3; ++i) // warm up
                 {
@@ -307,7 +307,7 @@ internal static class Program
             {
                 // Deterministic correctness oracle: solve once and dump a fingerprint so
                 // optimizations can be verified to produce byte-identical solver output.
-                var cfg = new MCTSConfig(initConfig0.Data);
+                var cfg = new MCTSConfig(initConfig0.Data, initState0.Data.Input.Recipe);
                 var solver = new MCTS(cfg, initState0, initState0.Data.Input.Random);
                 var progress = 0;
                 solver.Search(initConfig0.Data.Iterations, initConfig0.Data.MaxIterations, ref progress, CancellationToken.None);
@@ -326,7 +326,7 @@ internal static class Program
         var initConfig = Bench.Configs.First();
         var initState = Bench.States.First();
 
-        var config = new MCTSConfig(initConfig.Data);
+        var config = new MCTSConfig(initConfig.Data, initState.Data.Input.Recipe);
 
         var s = Stopwatch.StartNew();
         for (var i = 0; i < 100; ++i)

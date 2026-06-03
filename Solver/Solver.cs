@@ -17,7 +17,7 @@ public sealed class Solver : IDisposable
     public bool IsCompleted => CompletionTask?.IsCompleted ?? false;
 
     private Func<Task<SolverSolution>> SearchFunc { get; }
-    private MCTSConfig MCTSConfig => new(Config);
+    private MCTSConfig MCTSConfig => new(Config, State.Input.Recipe);
     private Task? CompletionTask { get; set; }
 
     private int progress;

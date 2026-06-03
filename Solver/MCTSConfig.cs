@@ -1,3 +1,4 @@
+using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using System.Runtime.InteropServices;
 
@@ -21,11 +22,12 @@ public readonly record struct MCTSConfig
     public float ScoreCP { get; init; }
     public float ScoreSteps { get; init; }
 
+    // Absolute quality value the score rewards up to (resolved once from the config + recipe).
     public int QualityTarget { get; init; }
 
     public ActionType[] ActionPool { get; init; }
 
-    public MCTSConfig(in SolverConfig config)
+    public MCTSConfig(in SolverConfig config, in RecipeInfo recipe)
     {
         MaxStepCount = config.MaxStepCount;
         MaxRolloutStepCount = config.MaxRolloutStepCount;
@@ -46,8 +48,20 @@ public readonly record struct MCTSConfig
         ScoreCP = config.ScoreCP / total;
         ScoreSteps = config.ScoreSteps / total;
 
-        QualityTarget = config.QualityTarget;
+        QualityTarget = ResolveQualityTarget(in config, in recipe);
 
         ActionPool = config.ActionPool;
+    }
+
+    private static int ResolveQualityTarget(in SolverConfig config, in RecipeInfo recipe)
+    {
+        var maxQuality = recipe.MaxQuality;
+        if (maxQuality <= 0)
+            return 0;
+
+        var target = maxQuality * config.QualityTargetPercent / 100;
+        if (config.QualityTargetToMaxCollectability && recipe.CollectableTargetQuality is { } maxCollectableQuality)
+            target = Math.Min(target, maxCollectableQuality);
+        return Math.Min(target, maxQuality);
     }
 }

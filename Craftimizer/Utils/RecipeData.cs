@@ -104,6 +104,9 @@ public sealed record RecipeData
             var t = thresholds.Where(t => t != 0).Cast<int?>();
             t = Enumerable.Concat(Enumerable.Repeat((int?)null, 3 - t.Count()), t);
             CollectableThresholds = t.ToArray();
+
+            if (CollectableThresholds.LastOrDefault(v => v.HasValue) is { } highestThreshold)
+                RecipeInfo = RecipeInfo with { CollectableTargetQuality = highestThreshold * SimulationState.CollectabilityDivisor };
         }
 
         Ingredients = Recipe.Ingredient.Zip(Recipe.AmountIngredient)

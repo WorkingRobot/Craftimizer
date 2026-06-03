@@ -36,9 +36,10 @@ public readonly record struct SolverConfig
     public float ScoreCP { get; init; }
     public float ScoreSteps { get; init; }
 
-    // Quality goal: if > 0, quality is rewarded only up to this target (e.g. an HQ/collectability
-    // threshold); 0 means use the recipe's MaxQuality.
-    public int QualityTarget { get; init; }
+    // Quality is rewarded only up to this target
+    public int QualityTargetPercent { get; init; }
+    // Override QualityTargetPercent if it's higher than the max collectability for the recipe.
+    public bool QualityTargetToMaxCollectability { get; init; }
 
     // Raphael/A* configuration
     public bool Adversarial { get; init; }
@@ -85,6 +86,9 @@ public readonly record struct SolverConfig
         ScoreDurability = 2;
         ScoreCP = 3;
         ScoreSteps = 5;
+
+        QualityTargetPercent = 100;
+        QualityTargetToMaxCollectability = true;
 
         ActionPool = DeterministicActionPool;
         Algorithm = SolverAlgorithm.StepwiseGenetic;

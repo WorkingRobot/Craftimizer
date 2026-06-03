@@ -136,7 +136,7 @@ public class Bench
     [MethodImpl(MethodImplOptions.NoInlining)]
     public (float MaxScore, SolverSolution Solution) Solve()
     {
-        var config = new MCTSConfig(Config.Data);
+        var config = new MCTSConfig(Config.Data, State.Data.Input.Recipe);
 
         var solver = new MCTS(config, State, State.Data.Input.Random);
         var progress = 0;
