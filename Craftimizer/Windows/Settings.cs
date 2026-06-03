@@ -560,6 +560,28 @@ public sealed class Settings : Window, IDisposable
                     ref isDirty
                 );
 
+            DrawOption(
+                    "Quality Target (%)",
+                    "The solver aims for this percentage of the recipe's maximum quality and " +
+                    "stops spending effort once it gets there. Lower it when you don't need full " +
+                    "quality, like when a lower HQ chance or collectability tier is good enough.",
+                    config.QualityTargetPercent,
+                    1,
+                    100,
+                    v => config = config with { QualityTargetPercent = v },
+                    ref isDirty
+                );
+
+            DrawOption(
+                "Cap Quality to Max Collectable Threshold",
+                "For collectable recipes, stop at the quality that reaches the highest " +
+                "collectability tier instead of chasing the full Quality Target above. " +
+                "Has no effect on recipes that aren't collectable.",
+                config.QualityTargetToMaxCollectability,
+                v => config = config with { QualityTargetToMaxCollectability = v },
+                ref isDirty
+            );
+
             if (config.Algorithm != SolverAlgorithm.Raphael)
             {
                 if (config.Algorithm == SolverAlgorithm.NextActionForked)

@@ -169,12 +169,13 @@ public sealed class Solver : IDisposable
 
         var s = new SimulatorNoRandom() { State = State };
         var pool = RaphaelUtils.ConvertToRawActions(Config.ActionPool.Where(a => a.Base().IsPossible(s)).ToArray());
+        var targetQuality = Math.Max(State.Input.StartingQuality, Config.ResolveQualityTarget(State.Input.Recipe));
         var input = new Raphael.SolverInput()
         {
             CP = checked((ushort)State.Input.Stats.CP),
             Durability = checked((ushort)State.Input.Recipe.MaxDurability),
             Progress = checked((ushort)State.Input.Recipe.MaxProgress),
-            Quality = checked((ushort)(State.Input.Recipe.MaxQuality - State.Input.StartingQuality)),
+            Quality = checked((ushort)(targetQuality - State.Input.StartingQuality)),
             BaseProgressGain = checked((ushort)State.Input.BaseProgressGain),
             BaseQualityGain = checked((ushort)State.Input.BaseQualityGain),
             JobLevel = checked((byte)State.Input.Stats.Level),

@@ -48,20 +48,8 @@ public readonly record struct MCTSConfig
         ScoreCP = config.ScoreCP / total;
         ScoreSteps = config.ScoreSteps / total;
 
-        QualityTarget = ResolveQualityTarget(in config, in recipe);
+        QualityTarget = config.ResolveQualityTarget(in recipe);
 
         ActionPool = config.ActionPool;
-    }
-
-    private static int ResolveQualityTarget(in SolverConfig config, in RecipeInfo recipe)
-    {
-        var maxQuality = recipe.MaxQuality;
-        if (maxQuality <= 0)
-            return 0;
-
-        var target = maxQuality * config.QualityTargetPercent / 100;
-        if (config.QualityTargetToMaxCollectability && recipe.CollectableTargetQuality is { } maxCollectableQuality)
-            target = Math.Min(target, maxCollectableQuality);
-        return Math.Min(target, maxQuality);
     }
 }

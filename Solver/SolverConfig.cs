@@ -1,3 +1,4 @@
+using Craftimizer.Simulator;
 using Craftimizer.Simulator.Actions;
 using System.Collections.Frozen;
 using System.Runtime.InteropServices;
@@ -224,17 +225,22 @@ public readonly record struct SolverConfig
 
     public static readonly SolverConfig SynthHelperDefault = new SolverConfig() with
     {
-        // Latency-bounded "best next action" solver: spends the whole budget ranking the immediate
-        // actions (one MCTS per candidate) instead of furcating toward full rotations. Beats the
-        // genetic solver on mid-craft next-step accuracy and is much faster per suggestion.
-        //
-        // Budget is a 2s wall-clock cap (MaxTimeMs), time-sliced across candidate actions × cores so
-        // a suggestion lands in ~2s regardless of hardware speed (set MaxTimeMs = 0 to fall back to
-        // the fixed Iterations budget instead). Suggested rotations are then trimmed of redundant
-        // actions, so the macro stays short without ever sacrificing quality.
         Algorithm = SolverAlgorithm.NextActionForked,
         Iterations = 1_000_000,
         MaxTimeMs = 2000,
         ActionPool = RandomizedActionPool
     };
+
+    public int ResolveQualityTarget(in RecipeInfo recipe)
+    {
+        var maxQuality = recipe.MaxQuality;
+        if (maxQuality <= 0)
+            return 0;
+
+        var target = maxQuality * QualityTargetPercent / 100;
+        if (QualityTargetToMaxCollectability && recipe.CollectableTargetQuality is { } maxCollectableQuality)
+            target = Math.Min(target, maxCollectableQuality);
+
+        return Math.Min(target, maxQuality);
+    }
 }
