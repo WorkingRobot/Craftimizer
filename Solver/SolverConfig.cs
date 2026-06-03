@@ -30,13 +30,6 @@ public readonly record struct SolverConfig
     public int FurcatedActionCount { get; init; }
     public bool StrictActions { get; init; }
 
-    // MCTS score weights
-    public float ScoreProgress { get; init; }
-    public float ScoreQuality { get; init; }
-    public float ScoreDurability { get; init; }
-    public float ScoreCP { get; init; }
-    public float ScoreSteps { get; init; }
-
     // Quality is rewarded only up to this target
     public int QualityTargetPercent { get; init; }
     // Override QualityTargetPercent if it's higher than the max collectability for the recipe.
@@ -81,12 +74,6 @@ public readonly record struct SolverConfig
         // kicks in when there are more actions than cores (otherwise each already gets a full search).
         PruneActionCount = MaxThreadCount;
         ScreenBudgetPercent = 33;
-
-        ScoreProgress = 10;
-        ScoreQuality = 80;
-        ScoreDurability = 2;
-        ScoreCP = 3;
-        ScoreSteps = 5;
 
         QualityTargetPercent = 100;
         QualityTargetToMaxCollectability = true;
