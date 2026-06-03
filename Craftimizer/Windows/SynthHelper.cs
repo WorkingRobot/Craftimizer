@@ -24,6 +24,7 @@ using System.Threading;
 using ActionType = Craftimizer.Simulator.Actions.ActionType;
 using Sim = Craftimizer.Simulator.Simulator;
 using SimNoRandom = Craftimizer.Simulator.SimulatorNoRandom;
+using System.Text;
 
 namespace Craftimizer.Windows;
 
@@ -354,9 +355,12 @@ public sealed unsafe class SynthHelper : Window, IDisposable
             }
             if (isHovered)
             {
-                ImGuiUtils.Tooltip($"{action.GetName(RecipeData!.ClassJob)}\n" +
-                    $"{actionBase.GetTooltip(CreateSim(lastState), true)}" +
-                    $"{(canExecute && i == 0 ? "Click or run /craftaction to execute" : string.Empty)}");
+                var tooltip = new StringBuilder();
+                tooltip.AppendLine(action.GetName(RecipeData!.ClassJob));
+                tooltip.Append(actionBase.GetTooltip(CreateSim(lastState), true));
+                if (canExecute && i == 0)
+                    tooltip.Append("Click or run /craftaction to execute");
+                ImGuiUtils.Tooltip(tooltip.ToString());
                 hoveredState = state;
             }
             lastState = state;
