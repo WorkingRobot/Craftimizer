@@ -10,26 +10,15 @@ internal sealed class Simulator : SimulatorNoRandom
     // Per-action metadata that is constant for the lifetime of the pool (never depends on
     // simulation state). Precomputed once so the heuristic hot loop never reads virtual
     // fields/methods off the BaseAction object.
-    private readonly struct PoolEntry
+    private readonly struct PoolEntry(BaseAction data, ActionType action, Simulator s)
     {
-        public readonly BaseAction Data;
-        public readonly ActionType Action;
-        public readonly int DurabilityCost;
-        public readonly int SuccessRate;
-        public readonly ActionCategory Category;
-        public readonly bool IncreasesProgress;
-        public readonly bool IncreasesQuality;
-
-        public PoolEntry(BaseAction data, ActionType action, Simulator s)
-        {
-            Data = data;
-            Action = action;
-            DurabilityCost = data.DurabilityCost;
-            SuccessRate = data.SuccessRate(s); // never state-dependent (no action overrides it)
-            Category = data.Category;
-            IncreasesProgress = data.IncreasesProgress;
-            IncreasesQuality = data.IncreasesQuality;
-        }
+        public readonly BaseAction Data = data;
+        public readonly ActionType Action = action;
+        public readonly int DurabilityCost = data.DurabilityCost;
+        public readonly int SuccessRate = data.SuccessRate(s); // never state-dependent (no action overrides it)
+        public readonly ActionCategory Category = data.Category;
+        public readonly bool IncreasesProgress = data.IncreasesProgress;
+        public readonly bool IncreasesQuality = data.IncreasesQuality;
     }
 
     // State-invariant values hoisted out of the per-action loop. Computed once per

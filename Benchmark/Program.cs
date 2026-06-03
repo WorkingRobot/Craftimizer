@@ -64,7 +64,7 @@ internal static class Program
             {
                 // Raphael oracle: optimal rotation R + final quality Q*.
                 IReadOnlyList<ActionType> R = Array.Empty<ActionType>();
-                double qStar = double.NaN;
+                var qStar = double.NaN;
                 try
                 {
                     var rCfg = new SolverConfig { Algorithm = SolverAlgorithm.Raphael };
@@ -81,8 +81,8 @@ internal static class Program
                 var algoFilter = args.Length > 4 ? args[4] : "both";
                 var algos = algoFilter switch
                 {
-                    "n" => new[] { SolverAlgorithm.NextActionForked },
-                    "g" => new[] { SolverAlgorithm.StepwiseGenetic },
+                    "n" => [SolverAlgorithm.NextActionForked],
+                    "g" => [SolverAlgorithm.StepwiseGenetic],
                     _ => new[] { SolverAlgorithm.StepwiseGenetic, SolverAlgorithm.NextActionForked },
                 };
                 foreach (var k in new[] { 0, R.Count / 2 })
@@ -127,7 +127,7 @@ internal static class Program
             foreach (var (stats, recipe, label) in panel)
             {
                 // Raphael oracle: the optimal quality/steps for this recipe (the target to approach).
-                double rQual = double.NaN; int rSteps = 0;
+                var rQual = double.NaN; var rSteps = 0;
                 try
                 {
                     var rInput = new SimulationInput(stats, recipe, 0, 0);
@@ -261,11 +261,11 @@ internal static class Program
             var st = sol.State;
             Console.WriteLine($"seed={seed} MaxScore={solver.MaxScore:R}");
             Console.WriteLine($"Quality={st.Quality} Progress={st.Progress} Durability={st.Durability} CP={st.CP} Steps={st.StepCount}");
-            Console.WriteLine($"Actions={string.Join(",", sol.Actions)}");
+            Console.WriteLine($"Actions={string.Join(',', sol.Actions)}");
             return;
         }
 
-        if (args.Length > 0 && (args[0] == "solve" || args[0] == "fingerprint"))
+        if (args.Length > 0 && (args[0] is "solve" or "fingerprint"))
         {
             var initConfig0 = Bench.Configs.First();
             var initState0 = Bench.States.First();
@@ -315,7 +315,7 @@ internal static class Program
                 var st = solution.State;
                 Console.WriteLine($"MaxScore={solver.MaxScore:R}");
                 Console.WriteLine($"Quality={st.Quality} Progress={st.Progress} Durability={st.Durability} CP={st.CP} Steps={st.StepCount} ActionCount={st.ActionCount}");
-                Console.WriteLine($"Actions={string.Join(",", solution.Actions)}");
+                Console.WriteLine($"Actions={string.Join(',', solution.Actions)}");
             }
             return;
         }

@@ -43,9 +43,7 @@ public struct SimulationNode(in SimulationState state, ActionType? action, Compl
 
         var stepBonus = 1f - ((float)(state.ActionCount + 1) / config.MaxStepCount);
 
-        var target = config.QualityTarget > 0
-            ? Math.Min(config.QualityTarget, state.Input.Recipe.MaxQuality)
-            : state.Input.Recipe.MaxQuality;
+        var target = config.QualityTarget;
 
         // No-quality recipe (or zero target): the only objective is fewer steps.
         if (target <= 0)

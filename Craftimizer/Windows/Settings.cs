@@ -171,8 +171,7 @@ public sealed class Settings : Window, IDisposable
                                                 "used as a starting point",
             SolverAlgorithm.NextActionForked => "Spends the entire iteration budget finding the single " +
                                                 "best NEXT action rather than a full macro: every possible " +
-                                                "next action is evaluated in parallel (one solver each, " +
-                                                "splitting the iterations and cores between them), and the " +
+                                                "next action is evaluated in parallel, and the " +
                                                 "one leading to the best craft is chosen. Far more accurate " +
                                                 "per step and much faster than the other solvers, especially " +
                                                 "mid-craft. Ideal for the Synthesis Helper.",
@@ -546,15 +545,14 @@ public sealed class Settings : Window, IDisposable
                 disableOptimal ? [SolverAlgorithm.Raphael] : []
             );
 
-            using (ImRaii.Disabled(config.Algorithm is not (SolverAlgorithm.OneshotForked or SolverAlgorithm.StepwiseForked or SolverAlgorithm.StepwiseGenetic or SolverAlgorithm.NextActionForked or SolverAlgorithm.Raphael)))
+            if (config.Algorithm is SolverAlgorithm.OneshotForked or SolverAlgorithm.StepwiseForked or SolverAlgorithm.StepwiseGenetic or SolverAlgorithm.NextActionForked or SolverAlgorithm.Raphael)
                 DrawOption(
                     "Max Core Count",
                     "The number of cores to use when solving. You should use as many " +
                     "as you can. If it's too high, it will have an effect on your gameplay " +
                     $"experience. A good estimate would be 1 or 2 cores less than your " +
                     $"system (FYI, you have {Environment.ProcessorCount} cores), but make sure to accomodate " +
-                    $"for any other tasks you have in the background, if you have any.\n" +
-                    "(Only used in the Forked, Genetic, Next Action, and Optimal algorithms)",
+                    $"for any other tasks you have in the background, if you have any.",
                     config.MaxThreadCount,
                     1,
                     Environment.ProcessorCount,
@@ -564,7 +562,6 @@ public sealed class Settings : Window, IDisposable
 
             if (config.Algorithm != SolverAlgorithm.Raphael)
             {
-                // Next Action is wall-clock-budgeted: the Time Limit replaces the iteration budget.
                 if (config.Algorithm == SolverAlgorithm.NextActionForked)
                     DrawOption(
                         "Time Limit (secs)",
@@ -576,8 +573,7 @@ public sealed class Settings : Window, IDisposable
                         v => config = config with { MaxTimeMs = (int)MathF.Round(v * 1000f) },
                         ref isDirty
                     );
-
-                if (config.Algorithm != SolverAlgorithm.NextActionForked)
+                else
                 {
                     DrawOption(
                         "Target Iterations",

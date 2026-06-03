@@ -94,7 +94,7 @@ public readonly record struct SolverConfig
         [.. actions.Order()];
 
     public SolverConfig FilterSpecialistActions() =>
-        this with { ActionPool = ActionPool.Where(action => !SpecialistActions.Contains(action)).ToArray() };
+        this with { ActionPool = [.. ActionPool.Where(action => !SpecialistActions.Contains(action))] };
 
     public static readonly ActionType[] DeterministicActionPool = OptimizeActionPool(new[]
     {
