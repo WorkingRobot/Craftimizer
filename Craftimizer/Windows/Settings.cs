@@ -1155,6 +1155,10 @@ public sealed class Settings : Window, IDisposable
                     ImGui.SameLine(0, 0);
                     ImGui.TextUnformatted("!");
                 }
+
+                ImGuiUtils.AlignCentered(ImGui.CalcTextSize("Open Changelog").X + ImGui.GetStyle().ItemSpacing.X);
+                if (ImGui.Button("Open Changelog"))
+                    Service.Plugin.ChangelogWindow.Open();
             }
         }
 

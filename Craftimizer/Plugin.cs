@@ -24,6 +24,7 @@ public sealed class Plugin : IDalamudPlugin
     public Settings SettingsWindow { get; }
     public RecipeNote RecipeNoteWindow { get; }
     public SynthHelper SynthHelperWindow { get; }
+    public ChangelogWindow ChangelogWindow { get; }
     public MacroList ListWindow { get; private set; }
     public MacroEditor? EditorWindow { get; private set; }
     public MacroClipboard? ClipboardWindow { get; private set; }
@@ -59,6 +60,7 @@ public sealed class Plugin : IDalamudPlugin
         SettingsWindow = new();
         RecipeNoteWindow = new();
         SynthHelperWindow = new();
+        ChangelogWindow = new();
         ListWindow = new();
 
         // Trigger static constructors so a hitch doesn't occur on first RecipeNote frame.
@@ -68,6 +70,8 @@ public sealed class Plugin : IDalamudPlugin
         Service.PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
         Service.PluginInterface.UiBuilder.OpenConfigUi += OpenSettingsWindowForced;
         Service.PluginInterface.UiBuilder.OpenMainUi += OpenCraftingLog;
+
+        ChangelogWindow.OpenIfUpdated();
     }
 
     public (CharacterStats? Character, RecipeData? Recipe, MacroEditor.CrafterBuffs? Buffs) GetOpenedStats()
@@ -175,6 +179,7 @@ public sealed class Plugin : IDalamudPlugin
         SettingsWindow.Dispose();
         RecipeNoteWindow.Dispose();
         SynthHelperWindow.Dispose();
+        ChangelogWindow.Dispose();
         ListWindow.Dispose();
         EditorWindow?.Dispose();
         ClipboardWindow?.Dispose();

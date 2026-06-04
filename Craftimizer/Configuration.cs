@@ -101,7 +101,8 @@ public class Macro
     public static event Action<Macro>? OnMacroChanged;
 
     public string Name { get; set; } = string.Empty;
-    [JsonInclude] [JsonPropertyName("Actions")]
+    [JsonInclude]
+    [JsonPropertyName("Actions")]
     internal ActionType[] actions { get; set; } = [];
     [JsonIgnore]
     public IReadOnlyList<ActionType> Actions
@@ -177,7 +178,8 @@ public partial class Configuration
 
     public static event Action? OnMacroListChanged;
 
-    [JsonInclude] [JsonPropertyName("Macros")]
+    [JsonInclude]
+    [JsonPropertyName("Macros")]
     internal List<Macro> macros { get; private set; } = [];
     [JsonIgnore]
     public IReadOnlyList<Macro> Macros => macros;
@@ -207,6 +209,8 @@ public partial class Configuration
     public bool PinRecipeNoteToWindow { get; set; } = true;
 
     public MacroCopyConfiguration MacroCopy { get; set; } = new();
+
+    public string? LastSeenChangelogVersion { get; set; }
 
     public void AddMacro(Macro macro)
     {
