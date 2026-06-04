@@ -18,6 +18,13 @@ public sealed class ChangelogWindow : Window, IDisposable
     private static readonly Release[] Releases =
     [
         // Add new releases at the top
+        new("2.11.0.1", "Hotfix for 2.11.0",
+        [
+            new("Bug Fixes",
+            [
+                "\"Cap Quality to Max Collectable Threshold\" no longer applies to Cosmic Exploration collectables. These crafts give bonuses past the highest tier, so the solver will now push for max quality.",
+            ]),
+        ]),
         new("2.11.0.0", "A Smarter Synthesis Helper!",
         [
             new("New Features / Changes",
