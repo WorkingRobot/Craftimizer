@@ -56,9 +56,11 @@ public sealed record RecipeData
         };
 
         int[]? thresholds = null;
-        if (Recipe.CollectableMetadata.GetValueOrDefault<CollectablesShopRefine>() is { } row)
+        // Set to false if it's in the crafter's best interest to exceed the highest threshold (i.e. bonus rewards or xp)
+        var limitMaxThreshold = true;
+        if (Recipe.CollectableMetadata.GetValueOrDefault<CollectablesShopRefine>() is { } row) // Scrips
             thresholds = [row.LowCollectability, row.MidCollectability, row.HighCollectability];
-        else if (Recipe.CollectableMetadata.GetValueOrDefault<HWDCrafterSupply>() is { } row2)
+        else if (Recipe.CollectableMetadata.GetValueOrDefault<HWDCrafterSupply>() is { } row2) // Ishgardian Restoration
         {
             foreach (var entry in row2.HWDCrafterSupplyParams)
             {
@@ -69,7 +71,7 @@ public sealed record RecipeData
                 }
             }
         }
-        else if (Recipe.CollectableMetadata.GetValueOrDefaultSubrow<SatisfactionSupply>() is { } row3)
+        else if (Recipe.CollectableMetadata.GetValueOrDefaultSubrow<SatisfactionSupply>() is { } row3) // Custom Deliveries
         {
             foreach (var subrow in row3)
             {
@@ -80,9 +82,9 @@ public sealed record RecipeData
                 }
             }
         }
-        else if (Recipe.CollectableMetadata.GetValueOrDefault<SharlayanCraftWorksSupply>() is { } row5)
+        else if (Recipe.CollectableMetadata.GetValueOrDefault<SharlayanCraftWorksSupply>() is { } row4) // Sharlayan Studium Quests
         {
-            foreach (var item in row5.Item)
+            foreach (var item in row4.Item)
             {
                 if (item.ItemId.RowId == Recipe.ItemResult.RowId)
                 {
@@ -91,12 +93,14 @@ public sealed record RecipeData
                 }
             }
         }
-        else if (Recipe.CollectableMetadata.GetValueOrDefault<CollectablesRefine>() is { } row6)
+        else if (Recipe.CollectableMetadata.GetValueOrDefault<CollectablesRefine>() is { } row6) // Tuliyollal Wachumeqimeqi Deliveries
             thresholds = [row6.CollectabilityLow, row6.CollectabilityMid, row6.CollectabilityHigh];
-        else if (Recipe.CollectableMetadataKey == 7 && LuminaSheets.WKSMissionToDoEvalutionRefinSheet.TryGetRow(Recipe.CollectableMetadata.RowId, out var row7))
+        // TODO: https://github.com/xivdev/EXDSchema/commit/f0972b4ef800d544961f9a0b3e38082e295a3b67
+        else if (Recipe.CollectableMetadataKey == 7 && LuminaSheets.WKSMissionToDoEvalutionRefinSheet.TryGetRow(Recipe.CollectableMetadata.RowId, out var row7)) // Cosmic Exploration
         {
             thresholds = [row7.Unknown0, row7.Unknown1, row7.Unknown2];
             thresholds = [.. thresholds.Select(percentage => RecipeInfo.MaxQuality * percentage / 1000)];
+            limitMaxThreshold = false;
         }
 
         if (thresholds != null)
@@ -105,7 +109,7 @@ public sealed record RecipeData
             t = Enumerable.Concat(Enumerable.Repeat((int?)null, 3 - t.Count()), t);
             CollectableThresholds = t.ToArray();
 
-            if (CollectableThresholds.LastOrDefault(v => v.HasValue) is { } highestThreshold)
+            if (limitMaxThreshold && CollectableThresholds.LastOrDefault(v => v.HasValue) is { } highestThreshold)
                 RecipeInfo = RecipeInfo with { CollectableTargetQuality = highestThreshold * SimulationState.CollectabilityDivisor };
         }
 

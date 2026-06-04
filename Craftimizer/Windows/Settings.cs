@@ -576,7 +576,7 @@ public sealed class Settings : Window, IDisposable
                 "Cap Quality to Max Collectable Threshold",
                 "For collectable recipes, stop at the quality that reaches the highest " +
                 "collectability tier instead of chasing the full Quality Target above. " +
-                "Has no effect on recipes that aren't collectable.",
+                "Has no effect on recipes that aren't collectable and Cosmic Exploration crafts.",
                 config.QualityTargetToMaxCollectability,
                 v => config = config with { QualityTargetToMaxCollectability = v },
                 ref isDirty
