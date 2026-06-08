@@ -18,6 +18,13 @@ public sealed class ChangelogWindow : Window, IDisposable
     private static readonly Release[] Releases =
     [
         // Add new releases at the top
+        new("2.11.0.2", "Attempted Crash Hotfix",
+        [
+            new("Bug Fixes",
+            [
+                "An attempted hotfix for a rare GC corruption crash that may occur randomly.",
+            ]),
+        ]),
         new("2.11.0.1", "Hotfix for 2.11.0",
         [
             new("Bug Fixes",
